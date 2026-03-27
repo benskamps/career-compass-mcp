@@ -1,0 +1,113 @@
+applications:
+  - id: demo-001
+    company: Veridian Health
+    role: Director of Operations
+    industry: Healthcare Technology
+    location: Austin, TX (Hybrid)
+    remote: hybrid
+    postingUrl: https://veridianhealth.com/careers/director-operations
+    status: interviewing
+    dateDiscovered: "2026-03-10"
+    dateApplied: "2026-03-12"
+    dateUpdated: "2026-03-24T14:22:00.000Z"
+    priority: high
+    excitement: 9
+    source: LinkedIn
+    salaryRange:
+      min: 155000
+      max: 185000
+      currency: USD
+    contacts:
+      - name: Rachel Torres
+        title: Talent Acquisition Partner
+        email: r.torres@veridianhealth.com
+        relationship: Recruiter
+      - name: David Kim
+        title: Chief Operating Officer
+        relationship: Hiring Manager
+    interviewRounds:
+      - type: phone_screen
+        date: "2026-03-17"
+        interviewers: [Rachel Torres]
+        outcome: Passed — advancing to panel
+      - type: panel
+        date: "2026-03-28"
+        interviewers: [David Kim, Head of Clinical Ops, VP Engineering]
+        notes: 90-minute panel. Prep STAR stories around cross-functional change management.
+    notes:
+      - "[2026-03-12] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD."
+      - "[2026-03-17] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal."
+      - "[2026-03-24] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops."
+    followUpDue: "2026-03-30"
+    coverLetterGenerated: true
+    tags: [healthcare, operations, director, panel-stage]
+
+  - id: demo-002
+    company: Meridian Logistics Group
+    role: Head of Customer Success
+    industry: Logistics & Supply Chain
+    location: Remote
+    remote: remote
+    status: applied
+    dateDiscovered: "2026-03-18"
+    dateApplied: "2026-03-20"
+    dateUpdated: "2026-03-20T09:15:00.000Z"
+    priority: medium
+    excitement: 7
+    source: Company site
+    referral: "Marcus Chen (former Apex colleague)"
+    salaryRange:
+      min: 140000
+      max: 165000
+      currency: USD
+    contacts:
+      - name: Marcus Chen
+        title: VP of Sales
+        relationship: Internal referral contact
+    interviewRounds: []
+    notes:
+      - "[2026-03-18] Marcus flagged this opening. Direct referral — he'll put in a word with the hiring manager."
+      - "[2026-03-20] Applied via company site. Tailored to emphasize NRR and QBR redesign from Brightline days."
+    followUpDue: "2026-03-27"
+    coverLetterGenerated: true
+    tags: [logistics, customer-success, referral]
+
+  - id: demo-003
+    company: Novare Capital Partners
+    role: Chief of Staff
+    industry: Fintech
+    location: Chicago, IL (Hybrid)
+    remote: hybrid
+    status: rejected
+    dateDiscovered: "2026-02-28"
+    dateApplied: "2026-03-01"
+    dateUpdated: "2026-03-19T16:00:00.000Z"
+    priority: high
+    excitement: 8
+    source: LinkedIn
+    salaryRange:
+      min: 160000
+      max: 190000
+      currency: USD
+    contacts:
+      - name: Jennifer Wu
+        title: Head of People
+        email: j.wu@novarecapital.com
+        relationship: Recruiter
+    interviewRounds:
+      - type: phone_screen
+        date: "2026-03-07"
+        interviewers: [Jennifer Wu]
+        outcome: Advanced
+      - type: behavioral
+        date: "2026-03-14"
+        interviewers: [Partner, Chief of Staff (outgoing)]
+        outcome: Did not advance — preferred fintech-native background
+    notes:
+      - "[2026-03-01] Stretch role but strong culture fit signal from job description."
+      - "[2026-03-14] Behavioral went well subjectively, but feedback was they prioritized someone with direct fintech P&L experience."
+      - "[2026-03-19] Graceful rejection received. Will send keep-the-door-open response and connect with Jennifer on LinkedIn."
+    coverLetterGenerated: true
+    tags: [fintech, chief-of-staff, rejected, learnings]
+
+lastUpdated: "2026-03-27T00:00:00.000Z"

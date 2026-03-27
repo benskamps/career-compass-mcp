@@ -1,0 +1,71 @@
+- name: Program Management
+  category: Leadership
+  proficiency: 5
+  yearsUsed: 9
+  lastUsed: current
+
+- name: Cross-functional Team Leadership
+  category: Leadership
+  proficiency: 5
+  yearsUsed: 7
+  lastUsed: current
+
+- name: Executive Stakeholder Management
+  category: Leadership
+  proficiency: 5
+  yearsUsed: 6
+  lastUsed: current
+
+- name: Process Improvement / Lean
+  category: Operations
+  proficiency: 4
+  yearsUsed: 8
+  lastUsed: current
+
+- name: Vendor Management & Procurement
+  category: Operations
+  proficiency: 4
+  yearsUsed: 6
+  lastUsed: current
+
+- name: Customer Success
+  category: Domain
+  proficiency: 4
+  yearsUsed: 5
+  lastUsed: "2021"
+
+- name: Healthcare Operations (HIPAA, EHR)
+  category: Domain
+  proficiency: 4
+  yearsUsed: 4
+  lastUsed: current
+
+- name: Supply Chain / 3PL Operations
+  category: Domain
+  proficiency: 4
+  yearsUsed: 3
+  lastUsed: "2021"
+
+- name: Data Analysis (SQL, Excel, Tableau)
+  category: Technical
+  proficiency: 3
+  yearsUsed: 5
+  lastUsed: current
+
+- name: Salesforce CRM
+  category: Technical
+  proficiency: 3
+  yearsUsed: 4
+  lastUsed: current
+
+- name: JIRA / Confluence
+  category: Technical
+  proficiency: 4
+  yearsUsed: 6
+  lastUsed: current
+
+- name: Budget Management ($1M–$10M)
+  category: Operations
+  proficiency: 4
+  yearsUsed: 5
+  lastUsed: current

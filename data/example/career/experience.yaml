@@ -1,0 +1,67 @@
+- role: Senior Program Manager
+  company: MedFlow Health Systems
+  industry: Healthcare Technology
+  location: Austin, TX (Remote)
+  startDate: "2021-03"
+  endDate: present
+  summary: >
+    Led enterprise-scale digital health initiatives across 14 hospital systems,
+    managing $8M in annual program budgets and a team of 6 PMs.
+  achievements:
+    - metric: Reduced average patient onboarding time from 47 days to 11 days
+      context: Inherited a manual, paper-heavy onboarding process after acquisition of 3 regional health systems
+      impact: Enabled 3x faster revenue recognition and eliminated $2.1M in compliance penalties over 18 months
+      keywords: [process improvement, healthcare, compliance, onboarding, automation]
+    - metric: Launched real-time capacity dashboard adopted by 94% of clinical staff within 60 days
+      context: COVID surge created critical visibility gaps across ICU bed availability
+      impact: Reduced emergency diversion incidents by 34% across 6 facilities
+      keywords: [stakeholder adoption, product launch, data visualization, cross-functional leadership]
+    - metric: Rebuilt vendor evaluation framework, reducing tool procurement cycle from 9 months to 6 weeks
+      context: Legacy RFP process was bottlenecking 7 technology initiatives simultaneously
+      impact: Unlocked $4.3M in modernization budget and reduced vendor cost overruns by 22%
+      keywords: [vendor management, procurement, operations, frameworks, cost reduction]
+  tags: [healthcare, program management, executive stakeholders, cross-functional, remote]
+
+- role: Operations Manager
+  company: Apex Logistics Partners
+  industry: Logistics & Supply Chain
+  location: Denver, CO
+  startDate: "2018-06"
+  endDate: "2021-02"
+  summary: >
+    Managed end-to-end operations for a regional 3PL serving 120+ retail clients,
+    overseeing warehouse operations, carrier relationships, and a team of 42.
+  achievements:
+    - metric: Grew on-time delivery rate from 81% to 97.3% in 14 months
+      context: Inherited an underperforming network with high carrier churn and manual routing
+      impact: Retained 3 major retail accounts worth $6.8M annually that were at risk of churning
+      keywords: [operations, logistics, KPI improvement, team leadership, process optimization]
+    - metric: Reduced headcount costs 18% while increasing throughput 31%
+      context: Executive leadership mandated cost reduction without service degradation
+      impact: Avoided layoffs by restructuring shifts; saved $1.4M annually
+      keywords: [cost reduction, workforce optimization, leadership, change management]
+    - metric: Implemented first warehouse automation system — ROI achieved in 11 months vs. 18-month projection
+      context: First-ever automation initiative for a $45M family-owned business
+      impact: Set foundation for $12M Series A fundraise the following year
+      keywords: [automation, ROI, project management, change management, stakeholder buy-in]
+  tags: [logistics, operations, team leadership, automation, retail]
+
+- role: Customer Success Manager
+  company: Brightline Software (acquired by Salesforce)
+  industry: SaaS / CRM
+  location: Chicago, IL
+  startDate: "2016-01"
+  endDate: "2018-05"
+  summary: >
+    Owned post-sale relationship for enterprise accounts in the $100K–$500K ARR range,
+    driving adoption, expansion, and retention across a 22-account portfolio.
+  achievements:
+    - metric: Maintained 118% net revenue retention across portfolio for 8 consecutive quarters
+      context: Joined during product pivot that created significant customer confusion
+      impact: Recognized as top CS rep company-wide; accounts became pilot group for new product line
+      keywords: [customer success, NRR, retention, enterprise, SaaS, ARR]
+    - metric: Identified and closed $1.2M in expansion revenue through QBR process redesign
+      context: Standard QBRs were perceived as low-value and skipped by 60% of customers
+      impact: Redesigned to ROI-focused format; 100% executive attendance within 2 quarters
+      keywords: [expansion revenue, QBR, executive relationships, SaaS, account management]
+  tags: [saas, customer success, enterprise, revenue, retention]

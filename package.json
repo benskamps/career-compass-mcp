@@ -1,0 +1,58 @@
+{
+  "name": "career-compass-mcp",
+  "version": "0.1.0",
+  "description": "AI-native career co-pilot for Claude — Career KB, resume tailoring, job pipeline, interview prep, and offer evaluation via MCP",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "career-compass-mcp": "build/index.js"
+  },
+  "files": [
+    "build/",
+    "data/example/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "inspect": "mcp-inspector node build/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "career",
+    "job-search",
+    "resume",
+    "interview-prep",
+    "application-tracking",
+    "claude",
+    "anthropic",
+    "ai"
+  ],
+  "author": "Ben Schippers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/benskamps/career-compass-mcp.git"
+  },
+  "homepage": "https://github.com/benskamps/career-compass-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/benskamps/career-compass-mcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.21.1",
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}

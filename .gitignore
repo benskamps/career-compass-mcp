@@ -1,0 +1,22 @@
+node_modules/
+
+# Compiled output — built from src/, not tracked in git
+# (npm publish uses the `files` field to include build/)
+build/
+
+# Personal career data — never commit this
+data/career/
+data/pipeline/
+
+# Environment / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

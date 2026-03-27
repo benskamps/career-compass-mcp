@@ -1,0 +1,31 @@
+name: Alex Rivera
+email: alex.rivera@email.com
+phone: "+1-555-0142"
+location: Austin, TX
+linkedIn: linkedin.com/in/alexrivera
+portfolio: alexrivera.dev
+summary: >
+  Operations and program manager with 9 years of experience driving cross-functional
+  initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous
+  problems into structured execution plans and building high-trust relationships with
+  both technical and non-technical stakeholders.
+targetRoles:
+  - Program Manager
+  - Director of Operations
+  - Head of Customer Success
+  - Chief of Staff
+targetIndustries:
+  - Healthcare Technology
+  - SaaS
+  - Logistics
+  - Fintech
+targetCompanySize:
+  - Series B
+  - Series C
+  - Mid-market (200-2000 employees)
+salaryMin: 140000
+salaryMax: 180000
+salaryCurrency: USD
+openToRemote: true
+openToRelocation: false
+noticePeriod: 3 weeks
