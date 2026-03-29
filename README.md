@@ -40,6 +40,28 @@ Claude: 3 things:
 
 ---
 
+## Dashboard
+
+v2.0 ships a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.
+
+Four views:
+
+**Pipeline kanban board** — All your applications laid out by stage (Exploring → Applied → Screening → Interviewing → Offer → Closed). Drag to advance stages. See stale applications at a glance. Click any card to drill in.
+
+**Application detail view** — Full timeline for a single application: every status change, contacts associated with the role, notes from conversations, and next action. Everything Claude knows about that opportunity in one place.
+
+**Career KB overview** — Visual summary of your career data: skills radar (proficiency × recency), experience timeline, testimonials, and a completeness indicator showing what Claude has to work with. Useful for spotting gaps before you onboard a new role.
+
+**Analytics** — Funnel conversion rates, response rates by source, time-in-stage averages, and source effectiveness. See which channels are actually working.
+
+Open the dashboard:
+
+```bash
+career-compass-mcp dashboard
+```
+
+---
+
 ## Quick Start
 
 ### 1. Install
@@ -67,7 +89,15 @@ Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config:
 
 Create the `career-data` directory anywhere you like — Career Compass will initialize it on first run.
 
-### 3. Onboard (first conversation)
+### 3. Open the dashboard
+
+```bash
+career-compass-mcp dashboard
+```
+
+This opens the dashboard in your browser at `http://localhost:3333` (or the next available port). Use it to finish onboarding and get a visual overview of your pipeline.
+
+### 4. Onboard (first conversation)
 
 Open Claude and say:
 
@@ -78,7 +108,19 @@ Claude will:
 - Ask clarifying questions about gaps or unclear metrics
 - Save everything to your `CAREER_DATA_PATH`
 
+Then open the dashboard to complete the second phase: the onboarding wizard walks you through setting job targets, salary expectations, and confirming your skills inventory. Claude pulls the raw data from your resume; the wizard fills the gaps that a resume doesn't naturally contain.
+
 That's it. From there, every tool has full context on who you are.
+
+---
+
+## Dashboard CLI
+
+```bash
+career-compass-mcp dashboard                  # open dashboard (default port 3333)
+career-compass-mcp dashboard --port 3000      # specify port
+career-compass-mcp dashboard --no-open        # start server without opening browser
+```
 
 ---
 
@@ -164,6 +206,8 @@ cd career-compass-mcp
 npm install
 npm run build
 ```
+
+`npm run build` compiles both the MCP server (TypeScript → `build/`) and the Next.js dashboard (`dashboard/.next/`). To work on just the MCP server, use `npm run build:mcp`. For dashboard development with hot reload, use `npm run dev:dashboard`.
 
 Then point your MCP config to `node /path/to/career-compass-mcp/build/index.js`.
 
