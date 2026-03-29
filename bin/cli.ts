@@ -30,7 +30,8 @@ if (!isDashboard) {
 
   // Resolve standalone server path
   const __dirname = fileURLToPath(new URL(".", import.meta.url));
-  const standalonePath = join(__dirname, "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
+  // __dirname is build/bin/ at runtime; go up two levels to repo root
+  const standalonePath = join(__dirname, "..", "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
 
   if (!existsSync(standalonePath)) {
     console.error("Dashboard not built. Run 'npm run build' first.");
