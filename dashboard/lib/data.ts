@@ -1,4 +1,4 @@
-import { loadCareerData, loadPipeline } from "@shared/storage/file-store.js";
+import { loadCareerData, loadPipeline } from "@shared/storage/file-store";
 import { existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
