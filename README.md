@@ -2,7 +2,7 @@
 
 **Your AI-native career co-pilot, built for Claude.**
 
-Career Compass turns Claude into a full job-search partner — one that knows your entire career history, tailors every resume and cover letter, tracks every application, and preps you for every interview. No forms. No dashboards. Just conversation.
+Career Compass turns Claude into a full job-search partner — one that knows your entire career history, tailors every resume and cover letter, tracks every application, and preps you for every interview. Initiate via conversation, onboard, and track multiple applications in moments.
 
 ---
 
