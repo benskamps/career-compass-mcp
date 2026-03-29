@@ -503,3 +503,16 @@ Calculated as a percentage of filled sections, weighted by importance:
 | Testimonials | 10% | At least 1 testimonial |
 
 Formula: sum of (weight * 1 if criteria met, else 0). Displayed as percentage with circular progress indicator in nav bar.
+
+---
+
+## README Update
+
+Update the GitHub README (`README.md`) to reflect v2.0:
+
+- Add a **Dashboard** section with feature overview (pipeline board, career KB, analytics, onboarding)
+- Update **Quick Start** to include `career-compass-mcp dashboard` as step 3 (after install and Claude config)
+- Add onboarding flow description (Claude extracts resume → dashboard wizard fills gaps)
+- Add dashboard CLI flags (`--port`, `--no-open`)
+- Update version references from 0.1.0 to 2.0.0
+- Add screenshots placeholder section (to be populated after implementation)
