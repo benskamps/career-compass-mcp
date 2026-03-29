@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #0d0d0d;
+  --color-bg-surface: #1a1a1a;
+  --color-bg-elevated: #242424;
+  --color-border: #333333;
+  --color-text-primary: #E8E0D5;
+  --color-text-secondary: #999999;
+  --color-text-muted: #666666;
+  --color-accent: #D97706;
+  --color-accent-hover: #F59E0B;
+  --color-accent-muted: rgba(217, 119, 6, 0.2);
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+::selection {
+  background-color: var(--color-accent-muted);
+  color: var(--color-text-primary);
+}

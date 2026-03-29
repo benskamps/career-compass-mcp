@@ -17,8 +17,10 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:dashboard",
+    "build:dashboard": "cd dashboard && npx next build",
     "dev": "tsc --watch",
+    "dev:dashboard": "cd dashboard && npx next dev --turbopack",
     "start": "node build/index.js",
     "inspect": "mcp-inspector node build/index.js",
     "prepublishOnly": "npm run build"
@@ -47,12 +49,19 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.21.1",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2"
   }
 }
