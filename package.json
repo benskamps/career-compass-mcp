@@ -23,6 +23,7 @@
     "dev:dashboard": "cd dashboard && npx next dev --turbopack",
     "start": "node build/index.js",
     "inspect": "mcp-inspector node build/index.js",
+    "test": "cd dashboard && npx vitest run",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
