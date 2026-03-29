@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "description": "AI-native career co-pilot for Claude — Career KB, resume tailoring, job pipeline, interview prep, and offer evaluation via MCP",
   "type": "module",
-  "main": "build/index.js",
+  "main": "build/src/index.js",
   "bin": {
-    "career-compass-mcp": "build/index.js"
+    "career-compass-mcp": "build/bin/cli.js"
   },
   "files": [
     "build/",
+    "dashboard/.next/standalone/",
+    "dashboard/.next/static/",
+    "dashboard/public/",
     "data/example/",
     "README.md",
     "LICENSE"
@@ -19,11 +22,13 @@
   "scripts": {
     "build": "tsc && npm run build:dashboard",
     "build:dashboard": "cd dashboard && npx next build",
+    "build:mcp": "tsc",
     "dev": "tsc --watch",
     "dev:dashboard": "cd dashboard && npx next dev --turbopack",
-    "start": "node build/index.js",
-    "inspect": "mcp-inspector node build/index.js",
+    "start": "node build/src/index.js",
+    "dashboard": "node build/bin/cli.js dashboard",
     "test": "cd dashboard && npx vitest run",
+    "inspect": "mcp-inspector node build/src/index.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
