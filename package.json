@@ -1,14 +1,17 @@
 {
   "name": "career-compass-mcp",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "AI-native career co-pilot for Claude — Career KB, resume tailoring, job pipeline, interview prep, and offer evaluation via MCP",
   "type": "module",
-  "main": "build/index.js",
+  "main": "build/src/index.js",
   "bin": {
-    "career-compass-mcp": "build/index.js"
+    "career-compass-mcp": "build/bin/cli.js"
   },
   "files": [
     "build/",
+    "dashboard/.next/standalone/",
+    "dashboard/.next/static/",
+    "dashboard/public/",
     "data/example/",
     "README.md",
     "LICENSE"
@@ -17,10 +20,15 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:dashboard",
+    "build:dashboard": "cd dashboard && npx next build",
+    "build:mcp": "tsc",
     "dev": "tsc --watch",
-    "start": "node build/index.js",
-    "inspect": "mcp-inspector node build/index.js",
+    "dev:dashboard": "cd dashboard && npx next dev --turbopack",
+    "start": "node build/src/index.js",
+    "dashboard": "node build/bin/cli.js dashboard",
+    "test": "cd dashboard && npx vitest run",
+    "inspect": "mcp-inspector node build/src/index.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -47,12 +55,19 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.21.1",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2"
   }
 }

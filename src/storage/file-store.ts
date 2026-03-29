@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
+import { homedir } from "os";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { CareerData, Pipeline } from "../schemas/career-schema.js";
 import type { z } from "zod";
@@ -8,7 +9,7 @@ import type { z } from "zod";
 // ─── Path resolution ──────────────────────────────────────────────────────────
 
 function getDataDir(): string {
-  return process.env.CAREER_DATA_PATH ?? join(process.cwd(), "data");
+  return process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
 }
 
 function careerDir(): string { return join(getDataDir(), "career"); }

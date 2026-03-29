@@ -1,5 +1,8 @@
 node_modules/
 
+# Next.js build output
+dashboard/.next/
+
 # Compiled output — built from src/, not tracked in git
 # (npm publish uses the `files` field to include build/)
 build/

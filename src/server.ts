@@ -10,7 +10,7 @@ import { registerPrompts } from "./prompts/index.js";
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "career-compass",
-    version: "0.1.0",
+    version: "2.0.0",
   });
 
   // Resources — Career KB + Pipeline
