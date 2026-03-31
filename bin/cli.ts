@@ -10,7 +10,7 @@ const args = process.argv.slice(2);
 
 // ─── Version ─────────────────────────────────────────────────────────────────
 const __cliDir = fileURLToPath(new URL(".", import.meta.url));
-const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "package.json"), "utf-8"));
+const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "..", "package.json"), "utf-8"));
 
 if (args.includes("--version") || args.includes("-v")) {
   console.log(`career-compass-mcp v${pkgJson.version}`);
