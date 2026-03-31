@@ -14,7 +14,7 @@ export function CompletenessRing({ score, size = 32 }: CompletenessRingProps) {
   return (
     <div className="relative flex items-center gap-2" title={`KB: ${score}% complete`}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#333333" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#3a3632" strokeWidth={strokeWidth} />
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#D97706" strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-500" />
       </svg>
       <span className="text-xs font-mono text-text-secondary">{score}%</span>

@@ -14,13 +14,14 @@ const NAV_ITEMS = [
 interface NavBarProps {
   completenessScore: number;
   dataPath: string;
+  version: string;
 }
 
-export function NavBar({ completenessScore, dataPath }: NavBarProps) {
+export function NavBar({ completenessScore, dataPath, version }: NavBarProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/95 backdrop-blur-sm">
+    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/90 backdrop-blur-md">
       <Link href="/" className="text-lg font-semibold tracking-tight text-text-primary">
         Career Compass
       </Link>
@@ -36,7 +37,7 @@ export function NavBar({ completenessScore, dataPath }: NavBarProps) {
       </div>
       <div className="flex items-center gap-3">
         <CompletenessRing score={completenessScore} />
-        <SettingsDropdown dataPath={dataPath} version="2.0.0" />
+        <SettingsDropdown dataPath={dataPath} version={version} />
       </div>
     </nav>
   );

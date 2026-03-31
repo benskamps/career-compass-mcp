@@ -9,6 +9,7 @@ interface StepSkillsProps { currentSkills: Skill[]; }
 
 export function StepSkills({ currentSkills }: StepSkillsProps) {
   const [skills, setSkills] = useState<Skill[]>(currentSkills);
+  const [error, setError] = useState<string | null>(null);
 
   const grouped = skills.reduce((acc, skill) => {
     const cat = skill.category || "Other";
@@ -17,10 +18,15 @@ export function StepSkills({ currentSkills }: StepSkillsProps) {
     return acc;
   }, {} as Record<string, Skill[]>);
 
-  const setProficiency = (name: string, proficiency: number) => {
+  const setProficiency = async (name: string, proficiency: number) => {
     const updated = skills.map((s) => s.name === name ? { ...s, proficiency } : s);
     setSkills(updated);
-    saveSkills(updated);
+    setError(null);
+    try {
+      await saveSkills(updated);
+    } catch {
+      setError("Failed to save. Please try again.");
+    }
   };
 
   return (
@@ -43,6 +49,7 @@ export function StepSkills({ currentSkills }: StepSkillsProps) {
             ))}
           </div>
         ))}
+        {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
       </CardContent>
     </Card>
   );

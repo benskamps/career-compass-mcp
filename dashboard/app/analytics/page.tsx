@@ -17,7 +17,7 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
-      <h1 className="text-2xl font-semibold">Analytics</h1>
+      <h1 className="text-2xl font-bold">Analytics</h1>
       <StatCardsRow data={data} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card><CardHeader><CardTitle className="text-base">Pipeline Funnel</CardTitle></CardHeader><CardContent><PipelineFunnel stages={data.funnelStages} /></CardContent></Card>

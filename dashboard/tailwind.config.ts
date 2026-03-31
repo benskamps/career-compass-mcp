@@ -10,15 +10,15 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          base: "#0d0d0d",
-          surface: "#1a1a1a",
-          elevated: "#242424",
+          base: "#110f0d",
+          surface: "#1c1a17",
+          elevated: "#272421",
         },
-        border: "#333333",
+        border: "#3a3632",
         text: {
           primary: "#E8E0D5",
-          secondary: "#999999",
-          muted: "#666666",
+          secondary: "#968f87",
+          muted: "#686260",
         },
         accent: {
           DEFAULT: "#D97706",
@@ -33,7 +33,7 @@ const config: Config = {
           offer: "#059669",
           negotiating: "#EAB308",
           accepted: "#22C55E",
-          rejected: "rgba(244, 63, 94, 0.7)",
+          rejected: "#D44460",
           withdrawn: "#6B7280",
           ghosted: "#4B5563",
         },
