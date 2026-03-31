@@ -14,9 +14,10 @@ const NAV_ITEMS = [
 interface NavBarProps {
   completenessScore: number;
   dataPath: string;
+  version: string;
 }
 
-export function NavBar({ completenessScore, dataPath }: NavBarProps) {
+export function NavBar({ completenessScore, dataPath, version }: NavBarProps) {
   const pathname = usePathname();
 
   return (
@@ -36,7 +37,7 @@ export function NavBar({ completenessScore, dataPath }: NavBarProps) {
       </div>
       <div className="flex items-center gap-3">
         <CompletenessRing score={completenessScore} />
-        <SettingsDropdown dataPath={dataPath} version="2.0.0" />
+        <SettingsDropdown dataPath={dataPath} version={version} />
       </div>
     </nav>
   );

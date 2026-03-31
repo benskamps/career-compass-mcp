@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { STATUS_COLORS } from "@/lib/theme";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export function ClosedSection({ applications }: ClosedSectionProps) {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
       >
-        <span className={`transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
+        <ChevronRight className={`w-4 h-4 transition-transform ${open ? "rotate-90" : ""}`} />
         Closed ({applications.length})
       </button>
       {open && (

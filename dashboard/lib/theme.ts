@@ -6,7 +6,7 @@ export const STATUS_COLORS: Record<string, string> = {
   offer: "#059669",
   negotiating: "#EAB308",
   accepted: "#22C55E",
-  rejected: "rgba(244, 63, 94, 0.7)",
+  rejected: "#D44460",
   withdrawn: "#6B7280",
   ghosted: "#4B5563",
 };

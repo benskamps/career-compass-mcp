@@ -36,8 +36,8 @@ export function ApplicationTimeline({ app }: { app: Application }) {
         <div key={i} className="flex gap-4">
           <div className="flex flex-col items-center">
             <div
-              className="w-3 h-3 rounded-full border-2"
-              style={{ borderColor: event.color }}
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: event.color }}
             />
             {i < events.length - 1 && <div className="w-px flex-1 bg-border" />}
           </div>

@@ -12,10 +12,18 @@ interface PhaseOneProps {
 export function PhaseOne({ onDataDetected }: PhaseOneProps) {
   const [detected, setDetected] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const PROMPT = 'Set up my Career KB. Here\'s my resume:';
 
   useEffect(() => {
+    let elapsed = 0;
     const interval = setInterval(async () => {
+      elapsed += 3;
+      if (elapsed >= 60) {
+        clearInterval(interval);
+        setTimedOut(true);
+        return;
+      }
       const exists = await checkForData();
       if (exists) {
         setDetected(true);
@@ -31,6 +39,27 @@ export function PhaseOne({ onDataDetected }: PhaseOneProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (timedOut) {
+    return (
+      <div className="max-w-lg mx-auto text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold">No data detected</h2>
+        <p className="text-text-secondary text-sm">
+          We waited 60 seconds but didn&apos;t find any career data. Make sure you&apos;ve pasted your resume in Claude
+          and the Career Compass MCP server is connected.
+        </p>
+        <Button variant="outline" onClick={() => { setTimedOut(false); window.location.reload(); }}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
 
   if (detected) {
     return (
@@ -68,7 +97,12 @@ export function PhaseOne({ onDataDetected }: PhaseOneProps) {
           </div>
         </CardContent>
       </Card>
-      <p className="text-center text-xs text-text-muted">Waiting for data at ~/.career-compass/ ...</p>
+      <div className="flex items-center justify-center gap-2 text-xs text-text-muted">
+        <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        </svg>
+        <span>Listening for data at ~/.career-compass/ ...</span>
+      </div>
     </div>
   );
 }

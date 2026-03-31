@@ -95,7 +95,7 @@ Create the `career-data` directory anywhere you like — Career Compass will ini
 career-compass-mcp dashboard
 ```
 
-This opens the dashboard in your browser at `http://localhost:3333` (or the next available port). Use it to finish onboarding and get a visual overview of your pipeline.
+This opens the dashboard in your browser at `http://localhost:3141` (or the next available port). Use it to finish onboarding and get a visual overview of your pipeline.
 
 ### 4. Onboard (first conversation)
 
@@ -117,7 +117,7 @@ That's it. From there, every tool has full context on who you are.
 ## Dashboard CLI
 
 ```bash
-career-compass-mcp dashboard                  # open dashboard (default port 3333)
+career-compass-mcp dashboard                  # open dashboard (default port 3141)
 career-compass-mcp dashboard --port 3000      # specify port
 career-compass-mcp dashboard --no-open        # start server without opening browser
 ```
@@ -209,7 +209,7 @@ npm run build
 
 `npm run build` compiles both the MCP server (TypeScript → `build/`) and the Next.js dashboard (`dashboard/.next/`). To work on just the MCP server, use `npm run build:mcp`. For dashboard development with hot reload, use `npm run dev:dashboard`.
 
-Then point your MCP config to `node /path/to/career-compass-mcp/build/index.js`.
+Then point your MCP config to `node /path/to/career-compass-mcp/build/src/index.js`.
 
 Use `npm run dev` during development — TypeScript watch mode recompiles on save.
 Use `npm run inspect` to open the MCP Inspector (web UI for testing tools interactively).

@@ -15,9 +15,15 @@ export function StepSalary({ currentMin, currentMax, currentCurrency, currentRem
   const [remote, setRemote] = useState(currentRemote);
   const [relocation, setRelocation] = useState(currentRelocation);
   const [notice, setNotice] = useState(currentNotice ?? "");
+  const [error, setError] = useState<string | null>(null);
 
-  const save = () => {
-    saveSalaryPrefs({ salaryMin: min || undefined, salaryMax: max || undefined, salaryCurrency: currency, openToRemote: remote, openToRelocation: relocation, noticePeriod: notice || undefined });
+  const save = async () => {
+    setError(null);
+    try {
+      await saveSalaryPrefs({ salaryMin: min || undefined, salaryMax: max || undefined, salaryCurrency: currency, openToRemote: remote, openToRelocation: relocation, noticePeriod: notice || undefined });
+    } catch {
+      setError("Failed to save. Please try again.");
+    }
   };
 
   return (
@@ -33,6 +39,7 @@ export function StepSalary({ currentMin, currentMax, currentCurrency, currentRem
           <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={relocation} onChange={(e) => { setRelocation(e.target.checked); save(); }} className="accent-accent" /><span>Open to relocation</span></label>
         </div>
         <div className="space-y-2"><Label>Notice period</Label><Input value={notice} onChange={(e) => setNotice(e.target.value)} onBlur={save} placeholder="2 weeks" /></div>
+        {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
       </CardContent>
     </Card>
   );

@@ -17,18 +17,24 @@ export function StepTargets({ currentRoles, currentIndustries, currentSizes }: S
   const [industries, setIndustries] = useState<string[]>(currentIndustries);
   const [sizes, setSizes] = useState<string[]>(currentSizes);
   const [customRole, setCustomRole] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (r: string[], i: string[], s: string[]) => {
+    setError(null);
+    try {
+      await saveTargets({ targetRoles: r, targetIndustries: i, targetCompanySize: s });
+    } catch {
+      setError("Failed to save. Please try again.");
+    }
+  };
 
   const addCustomRole = () => {
     if (customRole.trim() && !roles.includes(customRole.trim())) {
       const next = [...roles, customRole.trim()];
       setRoles(next);
       setCustomRole("");
-      saveTargets({ targetRoles: next, targetIndustries: industries, targetCompanySize: sizes });
+      save(next, industries, sizes);
     }
-  };
-
-  const save = async (r: string[], i: string[], s: string[]) => {
-    await saveTargets({ targetRoles: r, targetIndustries: i, targetCompanySize: s });
   };
 
   const toggleRole = (role: string) => { const next = roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role]; setRoles(next); save(next, industries, sizes); };
@@ -59,6 +65,7 @@ export function StepTargets({ currentRoles, currentIndustries, currentSizes }: S
             {COMPANY_SIZES.map((size) => (<Badge key={size} variant={sizes.includes(size) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleSize(size)}>{size}</Badge>))}
           </div>
         </div>
+        {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
       </CardContent>
     </Card>
   );

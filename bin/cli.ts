@@ -1,12 +1,42 @@
 #!/usr/bin/env node
 import { homedir } from "os";
 import { join } from "path";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { createServer as createNetServer } from "net";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 
 const args = process.argv.slice(2);
+
+// ─── Version ─────────────────────────────────────────────────────────────────
+const __cliDir = fileURLToPath(new URL(".", import.meta.url));
+const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "package.json"), "utf-8"));
+
+if (args.includes("--version") || args.includes("-v")) {
+  console.log(`career-compass-mcp v${pkgJson.version}`);
+  process.exit(0);
+}
+
+// ─── Help ────────────────────────────────────────────────────────────────────
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(`
+career-compass-mcp v${pkgJson.version}
+
+Usage:
+  career-compass-mcp                         Run MCP server (stdio)
+  career-compass-mcp dashboard               Open web dashboard
+  career-compass-mcp dashboard --port 3000   Specify port (default: 3141)
+  career-compass-mcp dashboard --no-open     Start without opening browser
+
+Options:
+  -h, --help       Show this help message
+  -v, --version    Show version number
+  --port <number>  Dashboard port (default: 3141)
+  --no-open        Don't auto-open browser
+`);
+  process.exit(0);
+}
+
 const isDashboard = args[0] === "dashboard";
 
 if (!isDashboard) {
@@ -15,7 +45,15 @@ if (!isDashboard) {
 } else {
   // Dashboard mode
   const portArg = args.indexOf("--port");
-  const requestedPort = portArg >= 0 ? parseInt(args[portArg + 1], 10) : 3141;
+  let requestedPort = 3141;
+  if (portArg >= 0) {
+    const portValue = parseInt(args[portArg + 1], 10);
+    if (isNaN(portValue) || portValue < 1 || portValue > 65535) {
+      console.error(`Error: Invalid port "${args[portArg + 1]}". Must be a number between 1 and 65535.`);
+      process.exit(1);
+    }
+    requestedPort = portValue;
+  }
   const noOpen = args.includes("--no-open");
 
   // Resolve data path
@@ -29,9 +67,8 @@ if (!isDashboard) {
   const port = await findPort(requestedPort);
 
   // Resolve standalone server path
-  const __dirname = fileURLToPath(new URL(".", import.meta.url));
-  // __dirname is build/bin/ at runtime; go up two levels to repo root
-  const standalonePath = join(__dirname, "..", "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
+  // __cliDir is build/bin/ at runtime; go up two levels to repo root
+  const standalonePath = join(__cliDir, "..", "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
 
   if (!existsSync(standalonePath)) {
     console.error("Dashboard not built. Run 'npm run build' first.");

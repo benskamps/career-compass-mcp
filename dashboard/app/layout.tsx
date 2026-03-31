@@ -4,6 +4,7 @@ import { NavBar } from "@/components/layout/nav-bar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { loadCareerData } from "@/lib/data";
 import { calculateCompleteness } from "@/lib/completeness";
+import pkg from "../../package.json";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -23,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-bg-base text-text-primary`}>
         <TooltipProvider>
-          <NavBar completenessScore={score} dataPath={dataPath} />
+          <NavBar completenessScore={score} dataPath={dataPath} version={pkg.version} />
           <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
         </TooltipProvider>
       </body>

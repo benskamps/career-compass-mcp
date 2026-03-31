@@ -19,9 +19,14 @@ function pipelineDir(): string { return join(getDataDir(), "pipeline"); }
 
 async function readYaml<T>(filePath: string, schema: z.ZodType<T>): Promise<T | null> {
   if (!existsSync(filePath)) return null;
-  const raw = await readFile(filePath, "utf-8");
-  const parsed = parseYaml(raw);
-  return schema.parse(parsed);
+  try {
+    const raw = await readFile(filePath, "utf-8");
+    const parsed = parseYaml(raw);
+    return schema.parse(parsed);
+  } catch (error) {
+    console.error(`Failed to parse ${filePath}:`, error);
+    return null;
+  }
 }
 
 async function writeYaml(filePath: string, data: unknown): Promise<void> {
@@ -45,19 +50,29 @@ export async function loadCareerData(): Promise<CareerData | null> {
   await Promise.all(sections.map(async (section) => {
     const path = join(dir, `${section}.yaml`);
     if (existsSync(path)) {
-      const content = await readFile(path, "utf-8");
-      const parsed = parseYaml(content);
-      if (section === "profile") {
-        raw.profile = parsed;
-      } else {
-        raw[section] = Array.isArray(parsed) ? parsed : (parsed?.[section] ?? []);
+      try {
+        const content = await readFile(path, "utf-8");
+        const parsed = parseYaml(content);
+        if (section === "profile") {
+          raw.profile = parsed;
+        } else {
+          raw[section] = Array.isArray(parsed) ? parsed : (parsed?.[section] ?? []);
+        }
+      } catch (error) {
+        console.error(`Failed to parse ${section}.yaml:`, error);
+        if (section !== "profile") raw[section] = [];
       }
     } else {
       if (section !== "profile") raw[section] = [];
     }
   }));
 
-  return CareerData.parse(raw);
+  try {
+    return CareerData.parse(raw);
+  } catch (error) {
+    console.error("Career data validation failed:", error);
+    return null;
+  }
 }
 
 export async function saveCareerSection(section: string, data: unknown): Promise<void> {
@@ -72,9 +87,14 @@ export async function loadPipeline(): Promise<Pipeline> {
   if (!existsSync(path)) {
     return { applications: [], lastUpdated: new Date().toISOString() };
   }
-  const raw = await readFile(path, "utf-8");
-  const parsed = parseYaml(raw);
-  return Pipeline.parse(parsed);
+  try {
+    const raw = await readFile(path, "utf-8");
+    const parsed = parseYaml(raw);
+    return Pipeline.parse(parsed);
+  } catch (error) {
+    console.error("Failed to parse pipeline:", error);
+    return { applications: [], lastUpdated: new Date().toISOString() };
+  }
 }
 
 export async function savePipeline(pipeline: Pipeline): Promise<void> {

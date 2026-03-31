@@ -5,7 +5,7 @@ interface KanbanColumnProps { label: string; applications: Application[]; color:
 
 export function KanbanColumn({ label, applications, color }: KanbanColumnProps) {
   return (
-    <div className="flex flex-col w-72 shrink-0">
+    <div className="flex flex-col min-w-[272px] w-full md:w-72 md:shrink-0">
       <div className="flex items-center gap-2 px-3 py-2 mb-3">
         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
         <h2 className="text-sm font-semibold">{label}</h2>
