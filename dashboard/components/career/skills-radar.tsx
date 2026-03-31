@@ -17,9 +17,9 @@ export function SkillsRadar({ skills }: SkillsRadarProps) {
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="#333333" />
-          <PolarAngleAxis dataKey="category" tick={{ fill: "#999999", fontSize: 12 }} />
-          <PolarRadiusAxis domain={[0, 5]} tick={{ fill: "#666666", fontSize: 10 }} />
+          <PolarGrid stroke="#3a3632" />
+          <PolarAngleAxis dataKey="category" tick={{ fill: "#968f87", fontSize: 12 }} />
+          <PolarRadiusAxis domain={[0, 5]} tick={{ fill: "#686260", fontSize: 10 }} />
           <Radar dataKey="proficiency" stroke="#D97706" fill="#D97706" fillOpacity={0.2} strokeWidth={2} />
         </RadarChart>
       </ResponsiveContainer>

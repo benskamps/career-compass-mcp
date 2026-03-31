@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PRIORITY_COLORS, daysSince } from "@/lib/theme";
+import { PRIORITY_COLORS, STATUS_COLORS, daysSince } from "@/lib/theme";
 import type { Application } from "@shared/schemas/career-schema";
 
 interface ApplicationCardProps { app: Application; }
@@ -12,7 +12,7 @@ export function ApplicationCard({ app }: ApplicationCardProps) {
 
   return (
     <Link href={`/pipeline/${app.id}`}>
-      <Card className="hover:bg-bg-elevated transition-colors duration-150 cursor-pointer">
+      <Card className="border-l-2 hover:bg-bg-elevated transition-all duration-200 cursor-pointer" style={{ borderLeftColor: STATUS_COLORS[app.status] ?? "#666" }}>
         <CardContent className="p-4 space-y-2">
           <div className="flex items-start justify-between">
             <div>

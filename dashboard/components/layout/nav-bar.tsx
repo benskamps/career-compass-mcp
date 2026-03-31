@@ -21,7 +21,7 @@ export function NavBar({ completenessScore, dataPath, version }: NavBarProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/95 backdrop-blur-sm">
+    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/90 backdrop-blur-md">
       <Link href="/" className="text-lg font-semibold tracking-tight text-text-primary">
         Career Compass
       </Link>
