@@ -35,8 +35,8 @@ export function StepSalary({ currentMin, currentMax, currentCurrency, currentRem
           <div className="space-y-2"><Label>Maximum ({currency})</Label><Input type="number" value={max || ""} onChange={(e) => setMax(Number(e.target.value))} onBlur={save} placeholder="180000" /></div>
         </div>
         <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={remote} onChange={(e) => { setRemote(e.target.checked); save(); }} className="accent-accent" /><span>Open to remote work</span></label>
-          <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={relocation} onChange={(e) => { setRelocation(e.target.checked); save(); }} className="accent-accent" /><span>Open to relocation</span></label>
+          <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={remote} onChange={(e) => { const val = e.target.checked; setRemote(val); setError(null); saveSalaryPrefs({ salaryMin: min || undefined, salaryMax: max || undefined, salaryCurrency: currency, openToRemote: val, openToRelocation: relocation, noticePeriod: notice || undefined }).catch(() => setError("Failed to save. Please try again.")); }} className="accent-accent" /><span>Open to remote work</span></label>
+          <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={relocation} onChange={(e) => { const val = e.target.checked; setRelocation(val); setError(null); saveSalaryPrefs({ salaryMin: min || undefined, salaryMax: max || undefined, salaryCurrency: currency, openToRemote: remote, openToRelocation: val, noticePeriod: notice || undefined }).catch(() => setError("Failed to save. Please try again.")); }} className="accent-accent" /><span>Open to relocation</span></label>
         </div>
         <div className="space-y-2"><Label>Notice period</Label><Input value={notice} onChange={(e) => setNotice(e.target.value)} onBlur={save} placeholder="2 weeks" /></div>
         {error && <p className="text-sm text-red-400 mt-2">{error}</p>}

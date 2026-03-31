@@ -10,17 +10,21 @@ const args = process.argv.slice(2);
 
 // ─── Version ─────────────────────────────────────────────────────────────────
 const __cliDir = fileURLToPath(new URL(".", import.meta.url));
-const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "..", "package.json"), "utf-8"));
+let pkgVersion = "unknown";
+try {
+  const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "..", "package.json"), "utf-8"));
+  pkgVersion = pkgVersion;
+} catch { /* package.json not found — version will show as "unknown" */ }
 
 if (args.includes("--version") || args.includes("-v")) {
-  console.log(`career-compass-mcp v${pkgJson.version}`);
+  console.log(`career-compass-mcp v${pkgVersion}`);
   process.exit(0);
 }
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 if (args.includes("--help") || args.includes("-h")) {
   console.log(`
-career-compass-mcp v${pkgJson.version}
+career-compass-mcp v${pkgVersion}
 
 Usage:
   career-compass-mcp                         Run MCP server (stdio)
