@@ -110,4 +110,203 @@ applications:
     coverLetterGenerated: true
     tags: [fintech, chief-of-staff, rejected, learnings]
 
+  - id: demo-004
+    company: Canopy Analytics
+    role: VP of Operations
+    industry: Data Analytics / SaaS
+    location: Denver, CO (Hybrid)
+    remote: hybrid
+    postingUrl: https://canopyanalytics.com/careers/vp-operations
+    status: discovered
+    dateDiscovered: "2026-03-25"
+    dateUpdated: "2026-03-25T10:30:00.000Z"
+    priority: medium
+    excitement: 6
+    source: LinkedIn
+    salaryRange:
+      min: 170000
+      max: 200000
+      currency: USD
+    contacts: []
+    interviewRounds: []
+    notes:
+      - "[2026-03-25] Found via LinkedIn job alert. Series C company, ~250 employees. JD emphasizes scaling ops infrastructure — strong match with current experience."
+      - "[2026-03-25] Research: CEO previously scaled ops at Tableau. COO role is new headcount, not backfill — likely greenfield build."
+    coverLetterGenerated: false
+    tags: [analytics, saas, vp-ops, discovered]
+
+  - id: demo-005
+    company: Stratos Cloud
+    role: Program Director
+    industry: Cloud Infrastructure
+    location: Remote
+    remote: remote
+    postingUrl: https://stratoscloud.io/jobs/program-director
+    status: screening
+    dateDiscovered: "2026-03-14"
+    dateApplied: "2026-03-16"
+    dateUpdated: "2026-03-26T11:00:00.000Z"
+    priority: medium
+    excitement: 7
+    source: Recruiter outreach
+    salaryRange:
+      min: 145000
+      max: 170000
+      currency: USD
+    contacts:
+      - name: Priya Nair
+        title: Technical Recruiter
+        email: p.nair@stratoscloud.io
+        relationship: Recruiter
+    interviewRounds:
+      - type: phone_screen
+        date: "2026-03-21"
+        interviewers: [Priya Nair]
+        outcome: Passed — scheduling hiring manager screen
+    notes:
+      - "[2026-03-14] Priya reached out on LinkedIn. Role aligns with cross-functional program delivery background."
+      - "[2026-03-16] Applied after reviewing JD in detail. Emphasized distributed team coordination and OKR alignment experience."
+      - "[2026-03-21] Good phone screen with Priya. 30 mins. She mentioned hiring manager is ex-AWS, values structured program rigor. Follow up if no response by Mar 28."
+    followUpDue: "2026-03-28"
+    coverLetterGenerated: true
+    tags: [cloud, infrastructure, program-director, screening]
+
+  - id: demo-006
+    company: Brightpath Health
+    role: Sr. Program Manager
+    industry: Healthcare Technology
+    location: Boston, MA (Hybrid)
+    remote: hybrid
+    postingUrl: https://brightpathhealth.com/careers/sr-program-manager
+    status: offer
+    dateDiscovered: "2026-02-20"
+    dateApplied: "2026-02-22"
+    dateUpdated: "2026-03-26T16:45:00.000Z"
+    priority: high
+    excitement: 8
+    source: Referral
+    referral: "Samantha Osei (former colleague, now Head of PMO at Brightpath)"
+    salaryRange:
+      min: 130000
+      max: 155000
+      currency: USD
+    contacts:
+      - name: Samantha Osei
+        title: Head of PMO
+        relationship: Internal referral contact
+      - name: Carlos Mendez
+        title: VP of Product & Engineering
+        relationship: Hiring Manager
+      - name: Diane Hartley
+        title: HR Business Partner
+        email: d.hartley@brightpathhealth.com
+        relationship: Recruiter
+    interviewRounds:
+      - type: phone_screen
+        date: "2026-03-01"
+        interviewers: [Diane Hartley]
+        outcome: Advanced
+      - type: behavioral
+        date: "2026-03-10"
+        interviewers: [Carlos Mendez, Samantha Osei]
+        outcome: Advanced
+      - type: panel
+        date: "2026-03-18"
+        interviewers: [Carlos Mendez, CTO, Head of Clinical Delivery]
+        outcome: Advanced to offer
+      - type: offer_call
+        date: "2026-03-25"
+        interviewers: [Diane Hartley, Carlos Mendez]
+        outcome: Verbal offer extended
+    offer:
+      baseSalary: 148000
+      currency: USD
+      bonus: 15000
+      equity: "0.05% RSUs over 4 years"
+      benefits:
+        - Full medical, dental, vision (100% employee premium covered)
+        - 401k with 4% company match
+        - $2,000 annual learning & development stipend
+        - Flexible PTO
+        - Home office stipend $1,500
+      startDate: "2026-05-01"
+      expiresDate: "2026-04-07"
+      notes: "Strong offer — slightly below target base but equity and benefits are solid. Need to decide before Apr 7."
+    notes:
+      - "[2026-02-20] Sam flagged this opening before it was even posted. Direct referral to Carlos."
+      - "[2026-03-10] Behavioral round felt strong. Sam prepped me on Carlos's communication style — direct, metrics-first."
+      - "[2026-03-18] Three-person panel, 2 hours. Good energy. CTO asked deep questions about cross-functional conflict resolution."
+      - "[2026-03-25] Offer received! Base $148K vs $155K ask. Need to negotiate or decide. Equity + benefits partially offset."
+      - "[2026-03-26] Reviewing total comp. Will counter on base — target $153K. Benefits package is excellent."
+    followUpDue: "2026-04-07"
+    coverLetterGenerated: true
+    tags: [healthcare, program-management, offer, negotiating-soon]
+
+  - id: demo-007
+    company: Apex Consulting Group
+    role: Engagement Manager
+    industry: Management Consulting
+    location: Washington, DC (Hybrid)
+    remote: hybrid
+    postingUrl: https://apexconsultinggroup.com/careers/engagement-manager
+    status: withdrawn
+    dateDiscovered: "2026-02-15"
+    dateApplied: "2026-02-18"
+    dateUpdated: "2026-03-22T13:00:00.000Z"
+    priority: low
+    excitement: 5
+    source: Company site
+    salaryRange:
+      min: 150000
+      max: 175000
+      currency: USD
+    contacts:
+      - name: Bradley Kowalski
+        title: Recruiting Manager
+        email: b.kowalski@apexconsulting.com
+        relationship: Recruiter
+    interviewRounds:
+      - type: behavioral
+        date: "2026-03-05"
+        interviewers: [Bradley Kowalski, Senior Partner]
+        outcome: Advanced — but role scope narrower than expected
+    notes:
+      - "[2026-02-18] Applied based on strong brand name. JD was broad — assumed more strategic scope."
+      - "[2026-03-05] Behavioral round clarified role is primarily client delivery/billable hours — less internal transformation focus than expected."
+      - "[2026-03-10] After reflection, this role is a step sideways rather than forward. Travel requirements (60%+) also not sustainable."
+      - "[2026-03-22] Withdrew candidacy. Sent courteous email to Bradley thanking the team and keeping door open for future opportunities."
+    coverLetterGenerated: true
+    tags: [consulting, engagement-manager, withdrawn, culture-fit-mismatch]
+
+  - id: demo-008
+    company: Lumen Digital
+    role: Head of Operations
+    industry: Digital Marketing / Agency
+    location: Austin, TX (Onsite)
+    remote: onsite
+    postingUrl: https://lumendigital.com/jobs/head-of-operations
+    status: applied
+    dateDiscovered: "2026-03-22"
+    dateApplied: "2026-03-24"
+    dateUpdated: "2026-03-24T17:30:00.000Z"
+    priority: medium
+    excitement: 7
+    source: LinkedIn
+    salaryRange:
+      min: 135000
+      max: 160000
+      currency: USD
+    contacts:
+      - name: Yvonne Park
+        title: Chief People Officer
+        relationship: Listed on JD as point of contact
+    interviewRounds: []
+    notes:
+      - "[2026-03-22] Noticed this role trending on LinkedIn. Fast-growing agency (~180 employees), recently acquired two boutique studios."
+      - "[2026-03-24] Applied with tailored resume emphasizing agency ops and vendor management. Highlighted team scaling from 40 to 120 in prior role."
+      - "[2026-03-24] Onsite requirement is a factor but Austin-based — manageable. Will wait for response before committing further."
+    followUpDue: "2026-03-31"
+    coverLetterGenerated: true
+    tags: [digital, agency, head-of-ops, applied]
+
 lastUpdated: "2026-03-27T00:00:00.000Z"
