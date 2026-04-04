@@ -28,6 +28,7 @@
     "start": "node build/src/index.js",
     "dashboard": "node build/bin/cli.js dashboard",
     "test": "cd dashboard && npx vitest run",
+    "storybook": "cd dashboard && npx storybook dev -p 6006",
     "test:mcp": "vitest run --config vitest.config.ts",
     "inspect": "mcp-inspector node build/src/index.js",
     "prepublishOnly": "npm run build"
