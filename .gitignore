@@ -23,3 +23,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Git worktrees
+.worktrees/
+
+# Superpowers brainstorm sessions
+.superpowers/
