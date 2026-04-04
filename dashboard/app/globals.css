@@ -5,28 +5,37 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ── Claude brand tokens (non-shadcn) ───────────────────────────────────── */
-@theme {
-  --color-bg-base: #110f0d;
-  --color-bg-surface: #1c1a17;
-  --color-bg-elevated: #272421;
-  --color-text-primary: #E8E0D5;
-  --color-text-secondary: #968f87;
-  --color-text-muted: #686260;
-  --color-accent: #D97706;
-  --color-accent-hover: #F59E0B;
-  --color-accent-muted: rgba(217, 119, 6, 0.15);
+/* @theme inline registers Tailwind utilities (bg-bg-base, text-text-primary, etc.)
+   without emitting duplicate CSS custom properties — values resolve at runtime
+   from the :root / .dark blocks below (single source of truth). */
+@theme inline {
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-muted: var(--color-accent-muted);
+  --color-brand-border: var(--color-brand-border);
 
   /* Status colours for pipeline board */
-  --color-status-discovered: #64748B;
-  --color-status-applied: #3B82F6;
-  --color-status-screening: #6366F1;
-  --color-status-interviewing: #D97706;
-  --color-status-offer: #059669;
-  --color-status-negotiating: #EAB308;
-  --color-status-accepted: #22C55E;
-  --color-status-rejected: #D44460;
-  --color-status-withdrawn: #6B7280;
-  --color-status-ghosted: #4B5563;
+  --color-status-discovered: var(--color-status-discovered);
+  --color-status-applied: var(--color-status-applied);
+  --color-status-screening: var(--color-status-screening);
+  --color-status-interviewing: var(--color-status-interviewing);
+  --color-status-offer: var(--color-status-offer);
+  --color-status-negotiating: var(--color-status-negotiating);
+  --color-status-accepted: var(--color-status-accepted);
+  --color-status-rejected: var(--color-status-rejected);
+  --color-status-withdrawn: var(--color-status-withdrawn);
+  --color-status-ghosted: var(--color-status-ghosted);
+
+  /* Priority colours */
+  --color-priority-high: var(--color-priority-high);
+  --color-priority-medium: var(--color-priority-medium);
+  --color-priority-low: var(--color-priority-low);
 }
 
 /* ── shadcn design tokens ────────────────────────────────────────────────── */
@@ -78,8 +87,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Light mode fallback (not used — app is dark-only) ───────────────────── */
+/* ── Light mode (shadcn tokens + brand tokens) ──────────────────────────── */
 :root {
+  /* shadcn design tokens (oklch) */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -112,11 +122,39 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Brand tokens — light mode (single source of truth) */
+  --color-bg-base: #FAFAF8;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-elevated: #F5F3F0;
+  --color-text-primary: #1a1816;
+  --color-text-secondary: #78716C;
+  --color-text-muted: #A8A29E;
+  --color-accent: #B45309;
+  --color-accent-hover: #D97706;
+  --color-accent-muted: rgba(180, 83, 9, 0.12);
+  --color-brand-border: #E5E2DD;
+
+  /* Status + priority colors: same in both themes — defined in :root only */
+  --color-status-discovered: #64748B;
+  --color-status-applied: #3B82F6;
+  --color-status-screening: #6366F1;
+  --color-status-interviewing: #D97706;
+  --color-status-offer: #059669;
+  --color-status-negotiating: #EAB308;
+  --color-status-accepted: #22C55E;
+  --color-status-rejected: #D44460;
+  --color-status-withdrawn: #6B7280;
+  --color-status-ghosted: #4B5563;
+
+  --color-priority-high: #E11D48;
+  --color-priority-medium: #D97706;
+  --color-priority-low: #6B7280;
 }
 
 /* ── Dark mode — Claude palette overrides ────────────────────────────────── */
 .dark {
-  /* oklch equivalents — warm-tinted to match Claude's UI:
+  /* shadcn oklch equivalents — warm-tinted to match Claude's UI:
      #110f0d → oklch(0.155 0.006 60)   #E8E0D5 → oklch(0.910 0.017 76.1)
      #1c1a17 → oklch(0.215 0.008 60)   #D97706 → oklch(0.666 0.157 58.3)
      #3a3632 → oklch(0.318 0.008 55)   #272421 → oklch(0.257 0.007 60)
@@ -153,6 +191,19 @@
   --sidebar-accent-foreground: oklch(0.910 0.017 76.1);
   --sidebar-border: oklch(0.318 0.008 55);
   --sidebar-ring: oklch(0.666 0.157 58.3);
+
+  /* Brand tokens — dark mode (single source of truth) */
+  --color-bg-base: #110f0d;
+  --color-bg-surface: #1c1a17;
+  --color-bg-elevated: #272421;
+  --color-text-primary: #E8E0D5;
+  --color-text-secondary: #968f87;
+  --color-text-muted: #686260;
+  --color-accent: #D97706;
+  --color-accent-hover: #F59E0B;
+  --color-accent-muted: rgba(217, 119, 6, 0.15);
+  --color-brand-border: #3a3632;
+
 }
 
 /* ── Base resets ─────────────────────────────────────────────────────────── */

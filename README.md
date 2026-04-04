@@ -40,9 +40,40 @@ Claude: 3 things:
 
 ---
 
+## Architecture
+
+```
+┌─────────────┐         ┌──────────────────────────────────────┐
+│             │  MCP     │         MCP Server (Node.js)         │
+│   Claude    │◄────────►│                                      │
+│             │  stdio   │  Tools ─── Resume, Pipeline, Interview│
+│             │         │  Resources ─ Career KB, Pipeline data │
+└─────────────┘         │  Prompts ── Power-user shortcuts      │
+                        │                                      │
+                        │         ┌──────────────┐             │
+                        │         │  File Store   │             │
+                        │         │  (YAML files) │             │
+                        │         └──────┬───────┘             │
+                        └────────────────┼─────────────────────┘
+                                         │ reads
+                        ┌────────────────┼─────────────────────┐
+                        │   Dashboard    │    (Next.js)         │
+                        │                ▼                      │
+                        │  Pipeline Kanban · Career KB Overview │
+                        │  Analytics · Onboarding Wizard        │
+                        └──────────────────────────────────────┘
+```
+
+---
+
 ## Dashboard
 
 v2.0 ships a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.
+
+![Pipeline Kanban](docs/screenshots/pipeline-kanban-dark.png)
+![Application Detail](docs/screenshots/application-detail-dark.png)
+![Career KB](docs/screenshots/career-kb-dark.png)
+![Analytics](docs/screenshots/analytics-dark.png)
 
 Four views:
 
@@ -111,6 +142,27 @@ Claude will:
 Then open the dashboard to complete the second phase: the onboarding wizard walks you through setting job targets, salary expectations, and confirming your skills inventory. Claude pulls the raw data from your resume; the wizard fills the gaps that a resume doesn't naturally contain.
 
 That's it. From there, every tool has full context on who you are.
+
+---
+
+## Data structure
+
+Career Compass stores all data as YAML files:
+
+```
+~/.career-compass/
+├── career/
+│   ├── profile.yaml        # Name, summary, targets, preferences
+│   ├── experience.yaml     # Work history with achievements
+│   ├── skills.yaml         # Skills with proficiency ratings
+│   ├── education.yaml      # Degrees and certifications
+│   ├── projects.yaml       # Portfolio projects
+│   └── testimonials.yaml   # Recommendations and quotes
+└── pipeline/
+    └── applications.yaml   # All job applications
+```
+
+Set `CAREER_DATA_PATH` to use a custom directory. Default: `~/.career-compass`
 
 ---
 
@@ -223,6 +275,36 @@ Job searching is one of the highest-stakes, most document-intensive activities m
 Career Compass treats it as a knowledge problem. Your career history is a corpus. Every application is a retrieval and synthesis task. Every interview is a pattern-matching problem against a known dataset (the posting) and a known corpus (your KB).
 
 The Career KB is your single source of truth — built once, enriched over time, and used by every tool. A tailored resume draws from it. Interview prep draws from it. Cover letters draw from it. The pipeline tracks against it. Nothing gets lost because it's never in a tab you'll close.
+
+---
+
+## Development
+
+```bash
+git clone https://github.com/benskamps/career-compass-mcp.git
+cd career-compass-mcp
+npm install
+cd dashboard && npm install && cd ..
+
+# MCP server (TypeScript watch)
+npm run dev
+
+# Dashboard (Next.js + Turbopack)
+npm run dev:dashboard
+
+# MCP Inspector (test tools interactively)
+npm run inspect
+
+# Tests
+npm run test:mcp        # MCP server tests
+npm run test            # Dashboard tests
+
+# Storybook (component library)
+npm run storybook
+
+# Use example data for development
+CAREER_DATA_PATH=data/example npm run dev:dashboard
+```
 
 ---
 

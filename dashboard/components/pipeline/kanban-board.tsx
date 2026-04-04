@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { KanbanColumn } from "./kanban-column";
 import { FilterBar } from "./filter-bar";
 import { ClosedSection } from "./closed-section";
-import { KANBAN_COLUMNS, CLOSED_STATUSES, STATUS_COLORS } from "@/lib/theme";
+import { KANBAN_COLUMNS, CLOSED_STATUSES, getStatusColor } from "@/lib/theme";
 import type { Application } from "@shared/schemas/career-schema";
 
 interface KanbanBoardProps { applications: Application[]; }
@@ -64,7 +64,7 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
             key={col.key}
             label={col.label}
             applications={getColumnApps(col.key)}
-            color={col.key === "offer_negotiating" ? STATUS_COLORS.offer : STATUS_COLORS[col.key] ?? "#666"}
+            color={col.key === "offer_negotiating" ? getStatusColor("offer") : getStatusColor(col.key)}
           />
         ))}
       </div>

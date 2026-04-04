@@ -12,7 +12,7 @@ export default async function AnalyticsPage() {
   const data = computeAnalytics(pipeline.applications);
 
   if (data.totalApplications < 3) {
-    return (<div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6"><h2 className="text-xl font-semibold mb-2">Not enough data yet</h2><p className="text-text-secondary max-w-md">Add more applications to unlock analytics. Your data tells a story — we need a few more chapters.</p></div>);
+    return (<div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6"><h2 className="text-xl font-semibold mb-2">Not enough data yet</h2><p className="text-muted-foreground max-w-md">Add 3+ applications via Claude to unlock analytics. Try: &ldquo;I found a job posting I&apos;m interested in&rdquo; — and Claude will add it to your pipeline.</p></div>);
   }
 
   return (

@@ -2,6 +2,7 @@
 
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import type { Skill } from "@shared/schemas/career-schema";
+import { getAccentColor } from "@/lib/theme";
 
 interface SkillsRadarProps { skills: Skill[]; }
 
@@ -13,14 +14,16 @@ export function SkillsRadar({ skills }: SkillsRadarProps) {
     return { category: cat, proficiency: Math.round(avg * 10) / 10 };
   });
 
+  const accentColor = getAccentColor();
+
   return (
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="#3a3632" />
-          <PolarAngleAxis dataKey="category" tick={{ fill: "#968f87", fontSize: 12 }} />
-          <PolarRadiusAxis domain={[0, 5]} tick={{ fill: "#686260", fontSize: 10 }} />
-          <Radar dataKey="proficiency" stroke="#D97706" fill="#D97706" fillOpacity={0.2} strokeWidth={2} />
+          <PolarGrid stroke="var(--color-brand-border, #3a3632)" />
+          <PolarAngleAxis dataKey="category" tick={{ fill: "var(--color-text-secondary, #968f87)", fontSize: 12 }} />
+          <PolarRadiusAxis domain={[0, 5]} tick={{ fill: "var(--color-text-muted, #686260)", fontSize: 10 }} />
+          <Radar dataKey="proficiency" stroke={accentColor} fill={accentColor} fillOpacity={0.2} strokeWidth={2} />
         </RadarChart>
       </ResponsiveContainer>
     </div>

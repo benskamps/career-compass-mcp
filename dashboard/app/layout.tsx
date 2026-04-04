@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NavBar } from "@/components/layout/nav-bar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/lib/theme-provider";
 import { loadCareerData } from "@/lib/data";
 import { calculateCompleteness } from "@/lib/completeness";
 import pkg from "../../package.json";
@@ -21,12 +22,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dataPath = process.env.CAREER_DATA_PATH ?? "~/.career-compass";
 
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-bg-base text-text-primary`}>
-        <TooltipProvider>
-          <NavBar completenessScore={score} dataPath={dataPath} version={pkg.version} />
-          <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
-        </TooltipProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(function(){var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}})()",
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <NavBar completenessScore={score} dataPath={dataPath} version={pkg.version} />
+            <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

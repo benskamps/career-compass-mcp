@@ -65,7 +65,7 @@ export function PhaseOne({ onDataDetected }: PhaseOneProps) {
     return (
       <div className="flex flex-col items-center gap-4 animate-pulse">
         <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent, #D97706)" strokeWidth="2">
             <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { STATUS_COLORS } from "@/lib/theme";
+import { getStatusColor } from "@/lib/theme";
 import Link from "next/link";
 import type { Application } from "@shared/schemas/career-schema";
 
@@ -34,7 +34,7 @@ export function ClosedSection({ applications }: ClosedSectionProps) {
                 <Badge
                   variant="outline"
                   className="text-[10px]"
-                  style={{ borderColor: STATUS_COLORS[app.status], color: STATUS_COLORS[app.status] }}
+                  style={{ borderColor: getStatusColor(app.status), color: getStatusColor(app.status) }}
                 >
                   {app.status}
                 </Badge>
