@@ -1,14 +1,14 @@
 "use client";
 
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { getStatusColor } from "@/lib/theme";
+import { getAccentColor } from "@/lib/theme";
 
 interface DataPoint { excitement: number; stageIndex: number; company: string; }
 
 export function ExcitementVsOutcome({ data }: { data: DataPoint[] }) {
   if (data.length < 2) return null;
 
-  const accentColor = getStatusColor("interviewing");
+  const accentColor = getAccentColor();
 
   return (
     <div className="h-64">

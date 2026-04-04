@@ -2,7 +2,7 @@
 
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import type { Skill } from "@shared/schemas/career-schema";
-import { getStatusColor } from "@/lib/theme";
+import { getAccentColor } from "@/lib/theme";
 
 interface SkillsRadarProps { skills: Skill[]; }
 
@@ -14,7 +14,7 @@ export function SkillsRadar({ skills }: SkillsRadarProps) {
     return { category: cat, proficiency: Math.round(avg * 10) / 10 };
   });
 
-  const accentColor = getStatusColor("interviewing"); // amber accent
+  const accentColor = getAccentColor();
 
   return (
     <div className="w-full h-72">

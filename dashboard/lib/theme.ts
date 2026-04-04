@@ -42,6 +42,10 @@ export function getPriorityColor(priority: string): string {
   return getCSSVar(`--color-priority-${priority}`, fallback);
 }
 
+export function getAccentColor(): string {
+  return getCSSVar("--color-accent", "#D97706");
+}
+
 /* ── Constants (unchanged) ──────────────────────────────────────────────── */
 
 export const ACTIVE_STATUSES = [

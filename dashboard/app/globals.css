@@ -135,7 +135,7 @@
   --color-accent-muted: rgba(180, 83, 9, 0.12);
   --color-brand-border: #E5E2DD;
 
-  /* Status colours (same in both themes for visual consistency) */
+  /* Status + priority colors: same in both themes — defined in :root only */
   --color-status-discovered: #64748B;
   --color-status-applied: #3B82F6;
   --color-status-screening: #6366F1;
@@ -147,7 +147,6 @@
   --color-status-withdrawn: #6B7280;
   --color-status-ghosted: #4B5563;
 
-  /* Priority colours */
   --color-priority-high: #E11D48;
   --color-priority-medium: #D97706;
   --color-priority-low: #6B7280;
@@ -205,22 +204,6 @@
   --color-accent-muted: rgba(217, 119, 6, 0.15);
   --color-brand-border: #3a3632;
 
-  /* Status colours — same as light (visual consistency) */
-  --color-status-discovered: #64748B;
-  --color-status-applied: #3B82F6;
-  --color-status-screening: #6366F1;
-  --color-status-interviewing: #D97706;
-  --color-status-offer: #059669;
-  --color-status-negotiating: #EAB308;
-  --color-status-accepted: #22C55E;
-  --color-status-rejected: #D44460;
-  --color-status-withdrawn: #6B7280;
-  --color-status-ghosted: #4B5563;
-
-  /* Priority colours */
-  --color-priority-high: #E11D48;
-  --color-priority-medium: #D97706;
-  --color-priority-low: #6B7280;
 }
 
 /* ── Base resets ─────────────────────────────────────────────────────────── */
