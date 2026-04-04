@@ -1,6 +1,8 @@
 "use client";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/lib/theme-provider";
+import { Sun, Moon, Monitor, Check } from "lucide-react";
 
 interface SettingsDropdownProps {
   dataPath: string;
@@ -8,6 +10,8 @@ interface SettingsDropdownProps {
 }
 
 export function SettingsDropdown({ dataPath, version }: SettingsDropdownProps) {
+  const { theme, setTheme } = useTheme();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="p-2 rounded-button text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors duration-150">
@@ -17,8 +21,24 @@ export function SettingsDropdown({ dataPath, version }: SettingsDropdownProps) {
         </svg>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Settings</DropdownMenuLabel>
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          <Sun className="size-4" />
+          <span className="flex-1">Light</span>
+          {theme === "light" && <Check className="size-4 text-accent" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          <Moon className="size-4" />
+          <span className="flex-1">Dark</span>
+          {theme === "dark" && <Check className="size-4 text-accent" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          <Monitor className="size-4" />
+          <span className="flex-1">System</span>
+          {theme === "system" && <Check className="size-4 text-accent" />}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuLabel>Info</DropdownMenuLabel>
         <DropdownMenuItem disabled>
           <span className="text-xs font-mono text-text-muted truncate">{dataPath}</span>
         </DropdownMenuItem>
