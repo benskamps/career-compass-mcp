@@ -21,13 +21,38 @@ export function CompletenessRing({ score, size = 32, missingFields }: Completene
 
   return (
     <Tooltip>
-      <TooltipTrigger>
-        <div className="relative flex items-center gap-2 cursor-default">
-          <svg width={size} height={size} className="-rotate-90">
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--color-brand-border, #3a3632)" strokeWidth={strokeWidth} />
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--color-accent, #D97706)" strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-500" />
+      <TooltipTrigger aria-label={tooltipLabel}>
+        <div className="relative flex items-center gap-2 cursor-default rounded-md">
+          <svg
+            width={size}
+            height={size}
+            className="-rotate-90"
+            role="img"
+            aria-label={`Career knowledge base ${score}% complete`}
+          >
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="var(--color-brand-border, #3a3632)"
+              strokeWidth={strokeWidth}
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="var(--color-accent, #D97706)"
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              className="ring-fill-in transition-[stroke-dashoffset] duration-500 ease-out"
+              style={{ ["--ring-circumference" as string]: circumference }}
+            />
           </svg>
-          <span className="text-xs font-mono text-text-secondary">{score}%</span>
+          <span className="text-xs font-mono text-text-secondary tabular-nums">{score}%</span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="bottom">

@@ -21,16 +21,25 @@ export function NavBar({ completenessScore, dataPath, version }: NavBarProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/90 backdrop-blur-md">
-      <Link href="/" className="text-lg font-semibold tracking-tight text-text-primary">
+    <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-border bg-bg-base/85 backdrop-blur-md supports-[backdrop-filter]:bg-bg-base/70">
+      <Link href="/" className="text-lg font-semibold tracking-tight text-text-primary rounded-sm">
         Career Compass
       </Link>
       <div className="flex items-center gap-1">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
-            <Link key={item.href} href={item.href} className={`px-4 py-2 text-sm font-medium rounded-button transition-colors duration-150 ${isActive ? "text-accent border-b-2 border-accent" : "text-text-secondary hover:text-text-primary"}`}>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`relative px-4 py-2 text-sm font-medium rounded-button transition-colors duration-150 ${isActive ? "text-accent" : "text-text-secondary hover:text-text-primary"}`}
+            >
               {item.label}
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute left-3 right-3 -bottom-px h-0.5 rounded-full bg-accent transition-all duration-200 ${isActive ? "opacity-100 scale-x-100" : "opacity-0 scale-x-50"}`}
+              />
             </Link>
           );
         })}

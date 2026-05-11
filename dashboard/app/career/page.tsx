@@ -18,19 +18,19 @@ export default async function CareerPage() {
   const completeness = calculateCompleteness(career);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="px-6 py-8 max-w-4xl mx-auto space-y-8">
       <ProfileHeader profile={career.profile} completeness={completeness} />
-      <section className="space-y-4"><h2 className="text-lg font-semibold">Skills</h2><SkillsRadar skills={career.skills} /><SkillsList skills={career.skills} /></section>
+      <section className="space-y-4"><h2 className="text-lg font-semibold tracking-tight">Skills</h2><SkillsRadar skills={career.skills} /><SkillsList skills={career.skills} /></section>
       <Separator />
-      <section className="space-y-4"><h2 className="text-lg font-semibold">Experience</h2><ExperienceTimeline experience={career.experience} /></section>
+      <section className="space-y-4"><h2 className="text-lg font-semibold tracking-tight">Experience</h2><ExperienceTimeline experience={career.experience} /></section>
       <Separator />
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Testimonials</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Testimonials</h2>
         {career.testimonials.length > 0 ? <Testimonials testimonials={career.testimonials} /> : <EmptyState icon={Quote} message="No testimonials yet. Ask Claude to ingest a recommendation." />}
       </section>
       <Separator />
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Education</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Education</h2>
         {career.education.length > 0 ? <EducationList education={career.education} /> : <EmptyState icon={GraduationCap} message="No education entries. Ask Claude to add degrees or certifications." />}
       </section>
     </div>

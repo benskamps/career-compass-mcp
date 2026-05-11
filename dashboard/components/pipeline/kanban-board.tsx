@@ -46,11 +46,24 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
 
   if (applications.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <h2 className="text-xl font-semibold mb-2">No applications yet</h2>
-        <p className="text-text-secondary max-w-md">
-          Open Claude and use <code className="font-mono text-accent">manage_pipeline</code> to add your first one, or paste a job posting and use <code className="font-mono text-accent">explore_opportunity</code>.
-        </p>
+      <div className="relative flex flex-col items-center justify-center py-24 text-center overflow-hidden rounded-2xl">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background:
+              "radial-gradient(50% 40% at 50% 20%, var(--color-accent-muted) 0%, transparent 70%)",
+          }}
+        />
+        <div className="relative max-w-md">
+          <h2 className="text-xl font-semibold mb-2 tracking-tight">Your pipeline starts here</h2>
+          <p className="text-text-secondary">
+            Open Claude and use{" "}
+            <code className="font-mono text-accent text-[0.85em] px-1 py-0.5 rounded bg-bg-elevated">manage_pipeline</code>{" "}
+            to add your first application, or paste a job posting and run{" "}
+            <code className="font-mono text-accent text-[0.85em] px-1 py-0.5 rounded bg-bg-elevated">explore_opportunity</code>.
+          </p>
+        </div>
       </div>
     );
   }

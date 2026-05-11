@@ -12,12 +12,34 @@ export default async function AnalyticsPage() {
   const data = computeAnalytics(pipeline.applications);
 
   if (data.totalApplications < 3) {
-    return (<div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6"><h2 className="text-xl font-semibold mb-2">Not enough data yet</h2><p className="text-muted-foreground max-w-md">Add 3+ applications via Claude to unlock analytics. Try: &ldquo;I found a job posting I&apos;m interested in&rdquo; — and Claude will add it to your pipeline.</p></div>);
+    return (
+      <div className="relative flex flex-col items-center justify-center min-h-[50vh] text-center p-6 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-50"
+          style={{
+            background:
+              "radial-gradient(45% 35% at 50% 30%, var(--color-accent-muted) 0%, transparent 70%)",
+          }}
+        />
+        <div className="relative max-w-md">
+          <h2 className="text-xl font-semibold mb-2 tracking-tight">Charts wake up at three</h2>
+          <p className="text-text-secondary">
+            Add 3+ applications via Claude to unlock analytics. Try: &ldquo;I found a job posting I&apos;m interested in&rdquo; — Claude adds it to your pipeline.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold">Analytics</h1>
+    <div className="px-6 py-8 max-w-5xl mx-auto space-y-8">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <p className="text-sm text-text-secondary mt-1 tabular-nums">
+          {data.totalApplications} applications · {data.statusCounts ? Object.keys(data.statusCounts).length : 0} stages active
+        </p>
+      </header>
       <StatCardsRow data={data} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card><CardHeader><CardTitle className="text-base">Pipeline Funnel</CardTitle></CardHeader><CardContent><PipelineFunnel stages={data.funnelStages} /></CardContent></Card>
