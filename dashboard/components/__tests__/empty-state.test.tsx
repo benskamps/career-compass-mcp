@@ -13,10 +13,12 @@ vi.mock("next/link", () => ({
 
 afterEach(cleanup);
 
-// Minimal stub icon that renders a recognizable element
-const TestIcon: LucideIcon = (props: any) => (
+// Minimal stub icon that renders a recognizable element.
+// Cast through unknown — LucideIcon is a ForwardRefExoticComponent and we
+// don't need the full ref machinery for these tests.
+const TestIcon = ((props: any) => (
   <svg data-testid="test-icon" {...props} />
-);
+)) as unknown as LucideIcon;
 
 describe("EmptyState", () => {
   it("renders message text", () => {
