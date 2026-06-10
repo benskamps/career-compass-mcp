@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { loadCareerData, loadPipeline } from "@shared/storage/file-store";
+import {
+  loadCareerData,
+  loadPipeline,
+  CorruptDataError,
+} from "@shared/storage/file-store";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -34,12 +38,11 @@ describe("file-store error handling", () => {
     expect(result).toBeNull();
   });
 
-  it("loadCareerData returns null for malformed YAML", async () => {
+  it("loadCareerData throws CorruptDataError for malformed profile YAML (fail closed)", async () => {
     const careerDir = path.join(tmpDir, "career");
     fs.mkdirSync(careerDir, { recursive: true });
     fs.writeFileSync(path.join(careerDir, "profile.yaml"), "{{{invalid yaml");
-    const result = await loadCareerData();
-    expect(result).toBeNull();
+    await expect(loadCareerData()).rejects.toBeInstanceOf(CorruptDataError);
   });
 
   it("loadCareerData handles malformed non-profile section gracefully", async () => {
@@ -65,7 +68,7 @@ describe("file-store error handling", () => {
     expect(result!.skills).toEqual([]);
   });
 
-  it("loadCareerData returns null for schema validation failure", async () => {
+  it("loadCareerData throws CorruptDataError for schema validation failure (fail closed)", async () => {
     const careerDir = path.join(tmpDir, "career");
     fs.mkdirSync(careerDir, { recursive: true });
 
@@ -75,8 +78,7 @@ describe("file-store error handling", () => {
       "foo: bar\nbaz: 123",
     );
 
-    const result = await loadCareerData();
-    expect(result).toBeNull();
+    await expect(loadCareerData()).rejects.toBeInstanceOf(CorruptDataError);
   });
 
   // ── loadPipeline ───────────────────────────────────────────────────────────
@@ -88,7 +90,7 @@ describe("file-store error handling", () => {
     expect(result.lastUpdated).toBeDefined();
   });
 
-  it("loadPipeline returns empty pipeline for malformed YAML", async () => {
+  it("loadPipeline throws CorruptDataError for malformed YAML (fail closed)", async () => {
     const pipelineDir = path.join(tmpDir, "pipeline");
     fs.mkdirSync(pipelineDir, { recursive: true });
     fs.writeFileSync(
@@ -96,8 +98,6 @@ describe("file-store error handling", () => {
       "{{{broken yaml",
     );
 
-    const result = await loadPipeline();
-    expect(result.applications).toEqual([]);
-    expect(result.lastUpdated).toBeDefined();
+    await expect(loadPipeline()).rejects.toBeInstanceOf(CorruptDataError);
   });
 });

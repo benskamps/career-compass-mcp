@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadPipeline, savePipeline } from "../storage/file-store.js";
+import { loadPipeline, savePipeline, isCorruptDataError } from "../storage/file-store.js";
 import { Application, ApplicationStatus, Pipeline } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
 import type {
@@ -214,7 +214,15 @@ export function registerPipelineTools(server: McpServer): void {
       },
     },
     async (args) => {
-      const pipeline = await loadPipeline();
+      let pipeline: Pipeline;
+      try {
+        pipeline = await loadPipeline();
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        }
+        throw error;
+      }
 
       switch (args.action) {
         case "add": {
@@ -260,7 +268,15 @@ export function registerPipelineTools(server: McpServer): void {
       },
     },
     async ({ emailContent, autoUpdatePipeline }) => {
-      const pipeline = await loadPipeline();
+      let pipeline: Pipeline;
+      try {
+        pipeline = await loadPipeline();
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        }
+        throw error;
+      }
       const companyList = [...new Set(pipeline.applications.map(a => a.company))].join(", ");
 
       return {

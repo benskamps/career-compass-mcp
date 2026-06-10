@@ -18,6 +18,8 @@ import type {
 vi.mock("../../storage/file-store.js", () => ({
   loadPipeline: vi.fn(),
   savePipeline: vi.fn(),
+  isCorruptDataError: (e: unknown) =>
+    e instanceof Error && e.name === "CorruptDataError",
 }));
 
 function makePipeline(apps: Pipeline["applications"] = []): Pipeline {
