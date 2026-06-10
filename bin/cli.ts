@@ -10,11 +10,23 @@ const args = process.argv.slice(2);
 
 // ─── Version ─────────────────────────────────────────────────────────────────
 const __cliDir = fileURLToPath(new URL(".", import.meta.url));
-let pkgVersion = "unknown";
-try {
-  const pkgJson = JSON.parse(readFileSync(join(__cliDir, "..", "..", "package.json"), "utf-8"));
-  pkgVersion = pkgVersion;
-} catch { /* package.json not found — version will show as "unknown" */ }
+
+/**
+ * Read the package version from package.json relative to the CLI directory.
+ * Factored out so it can be unit-tested directly (the previous inline code had
+ * a `pkgVersion = pkgVersion` self-assign that always left the version as
+ * "unknown"). Returns "unknown" only when package.json is missing/unreadable.
+ */
+export function readPkgVersion(cliDir: string): string {
+  try {
+    const pkgJson = JSON.parse(readFileSync(join(cliDir, "..", "..", "package.json"), "utf-8"));
+    return typeof pkgJson.version === "string" ? pkgJson.version : "unknown";
+  } catch {
+    return "unknown"; // package.json not found — version will show as "unknown"
+  }
+}
+
+const pkgVersion = readPkgVersion(__cliDir);
 
 if (args.includes("--version") || args.includes("-v")) {
   console.log(`career-compass-mcp v${pkgVersion}`);
