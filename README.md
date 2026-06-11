@@ -1,8 +1,20 @@
 # Career Compass MCP
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)](https://nodejs.org)
+[![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
+
 **Your AI-native career co-pilot, built for Claude.**
 
 Career Compass turns Claude into a full job-search partner — one that knows your entire career history, tailors every resume and cover letter, tracks every application, and preps you for every interview. Initiate via conversation, onboard, and track multiple applications in moments.
+
+---
+
+## Your data stays on your machine
+
+Career Compass is local-first. Your career history lives in plain YAML files on your own disk, under the directory you point `CAREER_DATA_PATH` at (default `~/.career-compass`). There is no account, no cloud sync, and no telemetry — nothing phones home.
+
+Your real data is never committed to git: the `.gitignore` excludes `data/career/` and `data/pipeline/`, so the only career data in this repo is the fictional sample under `data/example/` (meet Alex Rivera). Read it, edit it, delete it — it's all just files you own.
 
 ---
 
@@ -88,28 +100,46 @@ Four views:
 Open the dashboard:
 
 ```bash
-career-compass-mcp dashboard
+npm run dashboard
 ```
 
 ---
 
 ## Quick Start
 
-### 1. Install
+> **Status: install from source.** Career Compass is not published to npm yet, so there is no `npm install -g` path today. You build it from this repo with a couple of commands. When the package lands on npm, this section will switch to a one-line global install.
+
+### 1. Build from source
 
 ```bash
-npm install -g career-compass-mcp
+git clone https://github.com/benskamps/career-compass-mcp.git
+cd career-compass-mcp
+npm install
+npm run build
 ```
 
-### 2. Add to Claude
+`npm run build` compiles the MCP server (TypeScript → `build/`) and the Next.js dashboard. See [Building from Source](#building-from-source) for the partial-build options.
 
-Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config:
+### 2. Try it now (no setup, ~1 minute)
+
+Want to see the dashboard before wiring up Claude? Point it at the bundled sample data and open it:
+
+```bash
+CAREER_DATA_PATH=data/example npm run dev:dashboard
+```
+
+That loads the full dashboard — pipeline kanban, Career KB overview, analytics — populated with the fictional Alex Rivera sample, so you can click through every view in under a minute before adding any of your own data.
+
+### 3. Add to Claude
+
+Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config, pointing `command` at the built server:
 
 ```json
 {
   "mcpServers": {
     "career-compass": {
-      "command": "career-compass-mcp",
+      "command": "node",
+      "args": ["/path/to/career-compass-mcp/build/src/index.js"],
       "env": {
         "CAREER_DATA_PATH": "/Users/you/career-data"
       }
@@ -118,17 +148,17 @@ Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config:
 }
 ```
 
-Create the `career-data` directory anywhere you like — Career Compass will initialize it on first run.
+Point `CAREER_DATA_PATH` anywhere you like — Career Compass will initialize the directory on first run. Leave it unset to use the default, `~/.career-compass`.
 
-### 3. Open the dashboard
+### 4. Open the dashboard
 
 ```bash
-career-compass-mcp dashboard
+npm run dashboard
 ```
 
 This opens the dashboard in your browser at `http://localhost:3141` (or the next available port). Use it to finish onboarding and get a visual overview of your pipeline.
 
-### 4. Onboard (first conversation)
+### 5. Onboard (first conversation)
 
 Open Claude and say:
 
@@ -147,31 +177,35 @@ That's it. From there, every tool has full context on who you are.
 
 ## Data structure
 
-Career Compass stores all data as YAML files:
+Career Compass stores all data as YAML files under `CAREER_DATA_PATH` (default `~/.career-compass`):
 
 ```
 ~/.career-compass/
 ├── career/
-│   ├── profile.yaml        # Name, summary, targets, preferences
-│   ├── experience.yaml     # Work history with achievements
-│   ├── skills.yaml         # Skills with proficiency ratings
-│   ├── education.yaml      # Degrees and certifications
-│   ├── projects.yaml       # Portfolio projects
-│   └── testimonials.yaml   # Recommendations and quotes
+│   ├── profile.yaml        # who you are, what you're targeting
+│   ├── experience.yaml     # roles, achievements (metrics + context + impact)
+│   ├── skills.yaml         # skills with proficiency and recency
+│   ├── education.yaml      # degrees, certifications, coursework
+│   ├── projects.yaml       # portfolio projects
+│   └── testimonials.yaml   # quotes and recommendations
 └── pipeline/
-    └── applications.yaml   # All job applications
+    └── applications.yaml   # all job applications
 ```
 
-Set `CAREER_DATA_PATH` to use a custom directory. Default: `~/.career-compass`
+This is your single source of truth — built once, enriched over time, read by every tool. You never need to edit these files by hand: use `ingest_document` to add data by pasting documents, or just ask Claude to update specific sections.
+
+See [`data/example/`](data/example/) in this repo for a fully populated sample (the fictional Alex Rivera).
 
 ---
 
 ## Dashboard CLI
 
+Run via the npm script (or `node build/bin/cli.js dashboard` directly):
+
 ```bash
-career-compass-mcp dashboard                  # open dashboard (default port 3141)
-career-compass-mcp dashboard --port 3000      # specify port
-career-compass-mcp dashboard --no-open        # start server without opening browser
+npm run dashboard                                 # open dashboard (default port 3141)
+node build/bin/cli.js dashboard --port 3000       # specify port
+node build/bin/cli.js dashboard --no-open         # start server without opening browser
 ```
 
 ---
@@ -219,34 +253,11 @@ Power-user shortcuts (appear in Claude's prompt menu):
 
 ---
 
-## Your Career KB
-
-Your data lives in YAML files under `CAREER_DATA_PATH`:
-
-```
-career-data/
-├── career/
-│   ├── profile.yaml      ← who you are, what you're targeting
-│   ├── experience.yaml   ← roles, achievements (metrics + context + impact)
-│   ├── skills.yaml       ← skills with proficiency and recency
-│   ├── education.yaml    ← degrees, certs, coursework
-│   ├── projects.yaml     ← portfolio
-│   └── testimonials.yaml ← quotes and recommendations
-└── pipeline/
-    └── applications.yaml ← all job applications
-```
-
-You never need to edit these manually. Use `ingest_document` to add data by pasting documents, or ask Claude to update specific sections.
-
-See `data/example/` in this repo for a fully populated sample.
-
----
-
 ## Configuration
 
 | Env var | Default | Description |
 |---------|---------|-------------|
-| `CAREER_DATA_PATH` | `./data` | Where your YAML files are stored |
+| `CAREER_DATA_PATH` | `~/.career-compass` | Directory where your career and pipeline YAML files are stored |
 
 ---
 
@@ -317,3 +328,7 @@ Issues and PRs welcome. If you add a new tool, register it in `src/server.ts` an
 ## License
 
 MIT
+
+---
+
+*Part of the [Brokenbranch Lab](https://www.brokenbranch.dev/lab/) — Ben Schippers' workshop of AI-native tools and research.*
