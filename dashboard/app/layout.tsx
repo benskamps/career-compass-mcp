@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   description: "Your AI-native career co-pilot",
 };
 
+// Force dynamic rendering for the entire dashboard. Every route reads
+// user-owned YAML from CAREER_DATA_PATH at request time, so prerendering at
+// `next build` would bake the build environment's data (or empty state) into
+// the shipped standalone artifact and serve it to every user. A layout-level
+// route segment config propagates to all nested routes. See audit P0.
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const career = await loadCareerData();
   const score = career ? calculateCompleteness(career) : 0;

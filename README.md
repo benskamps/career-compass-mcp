@@ -78,6 +78,34 @@ Claude: 3 things:
 
 ---
 
+## Your data stays on your machine
+
+Career Compass is local-first by design. Your real career data — résumé history, the
+companies you're talking to, salary numbers, interview notes — lives in **plain YAML
+files on your own disk** and never leaves it.
+
+- **Where your data lives:** `~/.career-compass/` by default (override with the
+  `CAREER_DATA_PATH` environment variable). This directory is created and read on *your*
+  machine. It is **never** uploaded anywhere, and it is **not** part of this npm package.
+- **What ships in the package:** only the MCP server code and a small set of **fictional
+  example files** (`data/example/` — the "Alex Rivera" persona). There is no real career
+  data in the published package, and none can be — the package and your data live in
+  different places.
+- **The dashboard reads your data at request time, locally.** The Next.js routes are
+  `force-dynamic`, so the dashboard server reads your YAML *when you open a page*, from a
+  server running on your own `localhost`. Your data is **never baked into a build**, never
+  prerendered into static HTML, and never sent over the network. *(There's a regression
+  test, `standalone-dynamic.test.ts`, that guards exactly this.)*
+- **No telemetry.** Career Compass makes no analytics or phone-home calls. The only thing
+  that ever sees your career data is the Claude conversation *you* start, through the MCP
+  server *you* run.
+
+In short: this is a tool you run, on your machine, over your files. Treat
+`~/.career-compass/` like any private notebook — back it up, don't commit it to a public
+repo, and it stays yours.
+
+---
+
 ## Dashboard
 
 v2.0 ships a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.

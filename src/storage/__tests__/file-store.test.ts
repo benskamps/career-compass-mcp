@@ -5,6 +5,8 @@ vi.mock("fs/promises", () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
   mkdir: vi.fn(),
+  rename: vi.fn(),
+  copyFile: vi.fn(),
 }));
 
 vi.mock("fs", () => ({
@@ -16,15 +18,17 @@ vi.mock("yaml", () => ({
   stringify: vi.fn(() => "mocked-yaml-output"),
 }));
 
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile, writeFile, mkdir, rename, copyFile } from "fs/promises";
 import { existsSync } from "fs";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { loadPipeline, savePipeline, saveCareerSection, loadCareerData } from "../file-store.js";
+import { loadPipeline, savePipeline, saveCareerSection, loadCareerData, CorruptDataError } from "../file-store.js";
 
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFile = vi.mocked(readFile);
 const mockWriteFile = vi.mocked(writeFile);
 const mockMkdir = vi.mocked(mkdir);
+const mockRename = vi.mocked(rename);
+const mockCopyFile = vi.mocked(copyFile);
 const mockParseYaml = vi.mocked(parseYaml);
 const mockStringifyYaml = vi.mocked(stringifyYaml);
 
@@ -75,15 +79,15 @@ describe("loadPipeline", () => {
     expect(result.lastUpdated).toBeDefined();
   });
 
-  it("returns empty pipeline when YAML parse fails", async () => {
+  it("throws (fails closed) when YAML parse fails for an existing file", async () => {
     mockExistsSync.mockReturnValue(true);
     mockReadFile.mockResolvedValue("invalid yaml" as any);
     mockParseYaml.mockReturnValue(null); // will fail zod parse
 
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const result = await loadPipeline();
-
-    expect(result.applications).toEqual([]);
+    // Must NOT return an empty pipeline — that would let a later save overwrite
+    // the user's real (recoverable) applications.yaml.
+    await expect(loadPipeline()).rejects.toBeInstanceOf(CorruptDataError);
     consoleSpy.mockRestore();
   });
 });
@@ -95,7 +99,7 @@ describe("savePipeline", () => {
     vi.clearAllMocks();
   });
 
-  it("writes YAML to the correct path", async () => {
+  it("writes atomically (temp file + rename) to the correct path", async () => {
     const pipeline = {
       applications: [],
       lastUpdated: "2026-03-01T00:00:00.000Z",
@@ -103,6 +107,8 @@ describe("savePipeline", () => {
 
     mockMkdir.mockResolvedValue(undefined);
     mockWriteFile.mockResolvedValue(undefined);
+    mockRename.mockResolvedValue(undefined);
+    mockExistsSync.mockReturnValue(false); // no existing file → no backup
 
     await savePipeline(pipeline);
 
@@ -110,10 +116,36 @@ describe("savePipeline", () => {
       expect.stringContaining("pipeline"),
       { recursive: true }
     );
+    // Writes to a temp file, never directly to the destination.
     expect(mockWriteFile).toHaveBeenCalledWith(
-      expect.stringContaining("applications.yaml"),
+      expect.stringContaining(".tmp"),
       "mocked-yaml-output",
       "utf-8"
+    );
+    // Then atomically renames temp → applications.yaml.
+    expect(mockRename).toHaveBeenCalledWith(
+      expect.stringContaining(".tmp"),
+      expect.stringContaining("applications.yaml")
+    );
+  });
+
+  it("creates a timestamped .bak backup before overwriting an existing file", async () => {
+    const pipeline = {
+      applications: [],
+      lastUpdated: "2026-03-01T00:00:00.000Z",
+    };
+
+    mockMkdir.mockResolvedValue(undefined);
+    mockWriteFile.mockResolvedValue(undefined);
+    mockRename.mockResolvedValue(undefined);
+    mockCopyFile.mockResolvedValue(undefined);
+    mockExistsSync.mockReturnValue(true); // existing file present → back it up
+
+    await savePipeline(pipeline);
+
+    expect(mockCopyFile).toHaveBeenCalledWith(
+      expect.stringContaining("applications.yaml"),
+      expect.stringContaining(".bak")
     );
   });
 });
@@ -125,9 +157,11 @@ describe("saveCareerSection", () => {
     vi.clearAllMocks();
   });
 
-  it("writes YAML to the correct path for a section", async () => {
+  it("writes YAML atomically to the correct path for a section", async () => {
     mockMkdir.mockResolvedValue(undefined);
     mockWriteFile.mockResolvedValue(undefined);
+    mockRename.mockResolvedValue(undefined);
+    mockExistsSync.mockReturnValue(false);
 
     await saveCareerSection("skills", [{ name: "TypeScript", category: "Technical" }]);
 
@@ -136,9 +170,13 @@ describe("saveCareerSection", () => {
       { recursive: true }
     );
     expect(mockWriteFile).toHaveBeenCalledWith(
-      expect.stringContaining("skills.yaml"),
+      expect.stringContaining(".tmp"),
       "mocked-yaml-output",
       "utf-8"
+    );
+    expect(mockRename).toHaveBeenCalledWith(
+      expect.stringContaining(".tmp"),
+      expect.stringContaining("skills.yaml")
     );
   });
 });
