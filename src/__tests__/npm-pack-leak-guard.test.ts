@@ -28,6 +28,11 @@ import { fileURLToPath } from "url";
  *   3. No packed file *content* contains a real-career sentinel string
  *      (catches prerendered dashboard JSON/HTML that baked in real values).
  *   4. The intended example fixtures DO still ship (positive lock).
+ *   5. No compiled test files ship (they are bloat AND a self-poison vector:
+ *      this very test file mentions the real-data sentinels as regex literals,
+ *      so a published `build/**\/*.test.js` would trip the content check #3
+ *      against itself — see the `!build/**\/*.test.*` negation in the
+ *      package.json `files` allowlist).
  *
  * It is intentionally provider-agnostic and reads the published file set from
  * npm itself rather than re-deriving the allowlist, so it stays correct if the
@@ -97,6 +102,19 @@ describe("npm publish data-exposure guard", () => {
     ).toEqual([]);
   });
 
+  it("never ships compiled test files (bloat + self-poison vector)", () => {
+    // Test files have no business in the published package, and this file in
+    // particular embeds the real-data sentinels as regex literals — shipping
+    // its compiled `.test.js` would make the content guard below flag itself.
+    const testFiles = files.filter(
+      (p) => /(^|\/)__tests__\//.test(p) || /\.test\.[cm]?[jt]s(\.map)?$/.test(p),
+    );
+    expect(
+      testFiles,
+      `compiled test files in the npm tarball: ${testFiles.join(", ")}`,
+    ).toEqual([]);
+  });
+
   it("ships YAML only from data/example/", () => {
     const strayYaml = files.filter(
       (p) =>
@@ -112,6 +130,13 @@ describe("npm publish data-exposure guard", () => {
   it("never ships a file whose contents contain a real-career sentinel", () => {
     const offenders: string[] = [];
     for (const rel of files) {
+      // Test files legitimately contain the sentinel strings as regex literals.
+      // They are asserted out of the tarball by the dedicated test above; here
+      // we skip them so this content check measures only real payload files and
+      // can never false-positive on a guard's own source.
+      if (/(^|\/)__tests__\//.test(rel) || /\.test\.[cm]?[jt]s/.test(rel)) {
+        continue;
+      }
       const abs = path.join(repoRoot, rel);
       if (!existsSync(abs)) continue; // some allowlisted dirs may be absent locally
       let text: string;

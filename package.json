@@ -9,6 +9,8 @@
   },
   "files": [
     "build/",
+    "!build/**/__tests__/**",
+    "!build/**/*.test.*",
     "dashboard/.next/standalone/",
     "dashboard/.next/static/",
     "dashboard/public/",
@@ -32,7 +34,8 @@
     "test:mcp": "vitest run --config vitest.config.ts",
     "screenshots": "npx tsx scripts/capture-screenshots.ts",
     "inspect": "mcp-inspector node build/src/index.js",
-    "prepublishOnly": "npm run build"
+    "pack:guard": "vitest run --config vitest.config.ts src/__tests__/npm-pack-leak-guard.test.ts",
+    "prepublishOnly": "npm run build && npm run pack:guard"
   },
   "keywords": [
     "mcp",
