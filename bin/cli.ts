@@ -87,7 +87,19 @@ if (!isDashboard) {
   const standalonePath = join(__cliDir, "..", "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
 
   if (!existsSync(standalonePath)) {
-    console.error("Dashboard not built. Run 'npm run build' first.");
+    console.error(
+      [
+        "The dashboard isn't available in this install.",
+        "It currently ships in the source build, not the npm package (a packaged dashboard is coming in a follow-up release).",
+        "",
+        "To run it from source:",
+        "  git clone https://github.com/benskamps/career-compass-mcp",
+        "  cd career-compass-mcp && npm install && npm run build",
+        "  CAREER_DATA_PATH=data/example npm run dashboard",
+        "",
+        "The MCP server (all 11 tools) works in this install — just point Claude at it.",
+      ].join("\n"),
+    );
     process.exit(1);
   }
 

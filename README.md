@@ -1,6 +1,7 @@
 # Career Compass MCP
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
 
@@ -14,7 +15,7 @@ Career Compass turns Claude into a full job-search partner — one that knows yo
 
 Career Compass is local-first. Your career history lives in plain YAML files on your own disk, under the directory you point `CAREER_DATA_PATH` at (default `~/.career-compass`). There is no account, no cloud sync, and no telemetry — nothing phones home.
 
-Your real data is never committed to git: the `.gitignore` excludes `data/career/` and `data/pipeline/`, so the only career data in this repo is the fictional sample under `data/example/` (meet Alex Rivera). Read it, edit it, delete it — it's all just files you own.
+Your real data is never committed to git: the `.gitignore` excludes `data/career/` and `data/pipeline/`, so the only career data in this repo is the fictional sample under `data/example/` (meet Alex Rivera). Read it, edit it, delete it — it's all just files you own. And nothing real ever ships in the npm package — a publish-time guard (`npm-pack-leak-guard`) scans the exact tarball and fails the publish if any real-career marker appears.
 
 ---
 
@@ -90,7 +91,7 @@ files on your own disk** and never leaves it.
 - **What ships in the package:** only the MCP server code and a small set of **fictional
   example files** (`data/example/` — the "Alex Rivera" persona). There is no real career
   data in the published package, and none can be — the package and your data live in
-  different places.
+  different places, and the publish-time leak guard enforces it.
 - **The dashboard reads your data at request time, locally.** The Next.js routes are
   `force-dynamic`, so the dashboard server reads your YAML *when you open a page*, from a
   server running on your own `localhost`. Your data is **never baked into a build**, never
@@ -106,68 +107,20 @@ repo, and it stays yours.
 
 ---
 
-## Dashboard
-
-v2.0 ships a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.
-
-![Pipeline Kanban](docs/screenshots/pipeline-kanban-dark.png)
-![Application Detail](docs/screenshots/application-detail-dark.png)
-![Career KB](docs/screenshots/career-kb-dark.png)
-![Analytics](docs/screenshots/analytics-dark.png)
-
-Four views:
-
-**Pipeline kanban board** — All your applications laid out by stage (Exploring → Applied → Screening → Interviewing → Offer → Closed). Drag to advance stages. See stale applications at a glance. Click any card to drill in.
-
-**Application detail view** — Full timeline for a single application: every status change, contacts associated with the role, notes from conversations, and next action. Everything Claude knows about that opportunity in one place.
-
-**Career KB overview** — Visual summary of your career data: skills radar (proficiency × recency), experience timeline, testimonials, and a completeness indicator showing what Claude has to work with. Useful for spotting gaps before you onboard a new role.
-
-**Analytics** — Funnel conversion rates, response rates by source, time-in-stage averages, and source effectiveness. See which channels are actually working.
-
-Open the dashboard:
-
-```bash
-npm run dashboard
-```
-
----
-
 ## Quick Start
 
-> **Status: install from source.** Career Compass is not published to npm yet, so there is no `npm install -g` path today. You build it from this repo with a couple of commands. When the package lands on npm, this section will switch to a one-line global install.
+Career Compass is on npm — point Claude straight at it, no clone or build required.
 
-### 1. Build from source
+### 1. Add to Claude
 
-```bash
-git clone https://github.com/benskamps/career-compass-mcp.git
-cd career-compass-mcp
-npm install
-npm run build
-```
-
-`npm run build` compiles the MCP server (TypeScript → `build/`) and the Next.js dashboard. See [Building from Source](#building-from-source) for the partial-build options.
-
-### 2. Try it now (no setup, ~1 minute)
-
-Want to see the dashboard before wiring up Claude? Point it at the bundled sample data and open it:
-
-```bash
-CAREER_DATA_PATH=data/example npm run dev:dashboard
-```
-
-That loads the full dashboard — pipeline kanban, Career KB overview, analytics — populated with the fictional Alex Rivera sample, so you can click through every view in under a minute before adding any of your own data.
-
-### 3. Add to Claude
-
-Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config, pointing `command` at the built server:
+Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config:
 
 ```json
 {
   "mcpServers": {
     "career-compass": {
-      "command": "node",
-      "args": ["/path/to/career-compass-mcp/build/src/index.js"],
+      "command": "npx",
+      "args": ["-y", "career-compass-mcp"],
       "env": {
         "CAREER_DATA_PATH": "/Users/you/career-data"
       }
@@ -176,17 +129,14 @@ Add this to your `~/.claude.json` (Claude Code) or equivalent MCP config, pointi
 }
 ```
 
-Point `CAREER_DATA_PATH` anywhere you like — Career Compass will initialize the directory on first run. Leave it unset to use the default, `~/.career-compass`.
+`npx -y career-compass-mcp` fetches and runs the latest server on demand. Point
+`CAREER_DATA_PATH` anywhere you like — Career Compass initializes the directory on first
+run. Leave it unset to use the default, `~/.career-compass`.
 
-### 4. Open the dashboard
+Prefer a global install? Run `npm install -g career-compass-mcp`, then set
+`"command": "career-compass-mcp"` with no args.
 
-```bash
-npm run dashboard
-```
-
-This opens the dashboard in your browser at `http://localhost:3141` (or the next available port). Use it to finish onboarding and get a visual overview of your pipeline.
-
-### 5. Onboard (first conversation)
+### 2. Onboard (first conversation)
 
 Open Claude and say:
 
@@ -196,8 +146,6 @@ Claude will:
 - Extract your work history, achievements, and skills into structured YAML
 - Ask clarifying questions about gaps or unclear metrics
 - Save everything to your `CAREER_DATA_PATH`
-
-Then open the dashboard to complete the second phase: the onboarding wizard walks you through setting job targets, salary expectations, and confirming your skills inventory. Claude pulls the raw data from your resume; the wizard fills the gaps that a resume doesn't naturally contain.
 
 That's it. From there, every tool has full context on who you are.
 
@@ -226,15 +174,45 @@ See [`data/example/`](data/example/) in this repo for a fully populated sample (
 
 ---
 
-## Dashboard CLI
+## Dashboard
 
-Run via the npm script (or `node build/bin/cli.js dashboard` directly):
+v2.0 includes a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.
+
+![Pipeline Kanban](docs/screenshots/pipeline-kanban-dark.png)
+![Application Detail](docs/screenshots/application-detail-dark.png)
+![Career KB](docs/screenshots/career-kb-dark.png)
+![Analytics](docs/screenshots/analytics-dark.png)
+
+Four views:
+
+**Pipeline kanban board** — All your applications laid out by stage (Exploring → Applied → Screening → Interviewing → Offer → Closed). Drag to advance stages. See stale applications at a glance. Click any card to drill in.
+
+**Application detail view** — Full timeline for a single application: every status change, contacts associated with the role, notes from conversations, and next action. Everything Claude knows about that opportunity in one place.
+
+**Career KB overview** — Visual summary of your career data: skills radar (proficiency × recency), experience timeline, testimonials, and a completeness indicator showing what Claude has to work with. Useful for spotting gaps before you onboard a new role.
+
+**Analytics** — Funnel conversion rates, response rates by source, time-in-stage averages, and source effectiveness. See which channels are actually working.
+
+### Running the dashboard
+
+> **The dashboard runs from a source build today.** It's a Next.js standalone server, so it
+> isn't part of the npm package yet — a packaged-for-npm dashboard is coming in a follow-up
+> release. For now, build it from source:
 
 ```bash
-npm run dashboard                                 # open dashboard (default port 3141)
-node build/bin/cli.js dashboard --port 3000       # specify port
-node build/bin/cli.js dashboard --no-open         # start server without opening browser
+git clone https://github.com/benskamps/career-compass-mcp.git
+cd career-compass-mcp
+npm install
+npm run build
+
+# Try it with the bundled Alex Rivera sample (no setup, ~1 minute):
+CAREER_DATA_PATH=data/example npm run dashboard
 ```
+
+This opens the dashboard at `http://localhost:3141` (or the next available port). Point
+`CAREER_DATA_PATH` at your own data directory to use it for real. The onboarding wizard
+walks you through job targets, salary expectations, and confirming your skills inventory —
+the gaps a resume doesn't naturally contain.
 
 ---
 
@@ -300,7 +278,7 @@ npm run build
 
 `npm run build` compiles both the MCP server (TypeScript → `build/`) and the Next.js dashboard (`dashboard/.next/`). To work on just the MCP server, use `npm run build:mcp`. For dashboard development with hot reload, use `npm run dev:dashboard`.
 
-Then point your MCP config to `node /path/to/career-compass-mcp/build/src/index.js`.
+Then point your MCP config to `node /path/to/career-compass-mcp/build/src/index.js` (or just use the published package via `npx -y career-compass-mcp`).
 
 Use `npm run dev` during development — TypeScript watch mode recompiles on save.
 Use `npm run inspect` to open the MCP Inspector (web UI for testing tools interactively).
