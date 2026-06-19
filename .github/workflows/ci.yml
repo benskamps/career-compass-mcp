@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  mcp:
+    name: MCP build + leak guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # tsc compile of the MCP server. The heavy Next dashboard build is
+      # intentionally skipped here — the leak guard + MCP tests are what
+      # protect a publish, and pack:guard's `npm pack --dry-run` does not
+      # need the dashboard built.
+      - name: Build MCP (tsc)
+        run: npm run build:mcp
+
+      - name: Run MCP tests
+        run: npm run test:mcp
+
+      - name: Run npm-pack leak guard
+        run: npm run pack:guard
