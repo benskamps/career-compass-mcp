@@ -40,13 +40,15 @@ career-compass-mcp v${pkgVersion}
 
 Usage:
   career-compass-mcp                         Run MCP server (stdio)
-  career-compass-mcp dashboard               Open web dashboard
+  career-compass-mcp dashboard               Open web dashboard (full if built, else lite)
+  career-compass-mcp dashboard --lite        Force the zero-build lite dashboard
   career-compass-mcp dashboard --port 3000   Specify port (default: 3141)
   career-compass-mcp dashboard --no-open     Start without opening browser
 
 Options:
   -h, --help       Show this help message
   -v, --version    Show version number
+  --lite           Use the built-in zero-build dashboard (no Next.js build needed)
   --port <number>  Dashboard port (default: 3141)
   --no-open        Don't auto-open browser
 `);
@@ -71,6 +73,7 @@ if (!isDashboard) {
     requestedPort = portValue;
   }
   const noOpen = args.includes("--no-open");
+  const forceLite = args.includes("--lite");
 
   // Resolve data path
   const dataPath = process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
@@ -86,47 +89,54 @@ if (!isDashboard) {
   // __cliDir is build/bin/ at runtime; go up two levels to repo root
   const standalonePath = join(__cliDir, "..", "..", "dashboard", ".next", "standalone", "dashboard", "server.js");
 
-  if (!existsSync(standalonePath)) {
-    console.error(
-      [
-        "The dashboard isn't available in this install.",
-        "It currently ships in the source build, not the npm package (a packaged dashboard is coming in a follow-up release).",
-        "",
-        "To run it from source:",
-        "  git clone https://github.com/benskamps/career-compass-mcp",
-        "  cd career-compass-mcp && npm install && npm run build",
-        "  CAREER_DATA_PATH=data/example npm run dashboard",
-        "",
-        "The MCP server (all 11 tools) works in this install — just point Claude at it.",
-      ].join("\n"),
-    );
-    process.exit(1);
-  }
+  // Decide which dashboard to serve:
+  //   --lite always uses the built-in zero-build dashboard.
+  //   Otherwise prefer the full Next.js dashboard when it has been built.
+  //   If the full build is absent (e.g. the npm install), fall back to lite
+  //   instead of erroring — the dashboard now always works.
+  const useLite = forceLite || !existsSync(standalonePath);
 
-  // Start Next.js standalone server
-  const child = spawn("node", [standalonePath], {
-    env: {
-      ...process.env,
-      PORT: String(port),
-      HOSTNAME: "localhost",
-      CAREER_DATA_PATH: dataPath,
-    },
-    stdio: ["pipe", "pipe", "inherit"],
-  });
-
-  child.stdout?.on("data", (data: Buffer) => {
-    const output = data.toString();
-    if (output.includes("Ready") || output.includes("started")) {
-      console.error(`Dashboard running at http://localhost:${port}`);
-      if (!noOpen) {
-        openBrowser(`http://localhost:${port}`);
-      }
+  if (useLite) {
+    process.env.CAREER_DATA_PATH = dataPath; // loadPipeline() reads this
+    const { startLiteDashboard } = await import("../src/dashboard-lite/server.js");
+    if (!forceLite) {
+      console.error("Full dashboard isn't built in this install — starting the built-in lite dashboard.");
+      console.error("(Run `npm run build` from source for the full Next.js dashboard with kanban drag, analytics, and Career KB views.)");
     }
-  });
+    const server = await startLiteDashboard(port);
+    console.error(`Lite dashboard running at http://localhost:${port}`);
+    if (!noOpen) openBrowser(`http://localhost:${port}`);
+    const shutdownLite = () => { server.close(); process.exit(0); };
+    process.on("SIGINT", shutdownLite);
+    process.on("SIGTERM", shutdownLite);
+    // Keep the process alive on the listening server.
+    await new Promise(() => {});
+  } else {
+    // Start Next.js standalone server
+    const child = spawn("node", [standalonePath], {
+      env: {
+        ...process.env,
+        PORT: String(port),
+        HOSTNAME: "localhost",
+        CAREER_DATA_PATH: dataPath,
+      },
+      stdio: ["pipe", "pipe", "inherit"],
+    });
 
-  const shutdown = () => { child.kill("SIGTERM"); process.exit(0); };
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+    child.stdout?.on("data", (data: Buffer) => {
+      const output = data.toString();
+      if (output.includes("Ready") || output.includes("started")) {
+        console.error(`Dashboard running at http://localhost:${port}`);
+        if (!noOpen) {
+          openBrowser(`http://localhost:${port}`);
+        }
+      }
+    });
+
+    const shutdown = () => { child.kill("SIGTERM"); process.exit(0); };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+  }
 }
 
 function findPort(preferred: number): Promise<number> {
