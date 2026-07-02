@@ -37,9 +37,12 @@ const EXPECTED_TOOLS = [
   "generate_rejection_response",
 ] as const;
 
-/** Concatenate the text parts of a tool result's content array. */
-function textOf(result: { content: unknown }): string {
-  const parts = result.content as Array<{ type: string; text?: string }>;
+/** Concatenate the text parts of a tool result's content array.
+ *  Takes `unknown` because newer SDK releases type callTool() as a union
+ *  including a compatibility variant with no content key at all. */
+function textOf(result: unknown): string {
+  const content = (result as { content?: unknown }).content;
+  const parts = (content ?? []) as Array<{ type: string; text?: string }>;
   return parts.map((p) => p.text ?? "").join("\n");
 }
 
