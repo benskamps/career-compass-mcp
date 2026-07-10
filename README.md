@@ -195,9 +195,10 @@ Four views:
 
 ### Running the dashboard
 
-> **The dashboard runs from a source build today.** It's a Next.js standalone server, so it
-> isn't part of the npm package yet — a packaged-for-npm dashboard is coming in a follow-up
-> release. For now, build it from source:
+>**Two dashboards ship now.** A built-in **lite dashboard** (zero-build, pure HTML) is bundled
+> in the npm package and starts automatically when the full dashboard isn't built - so
+> `career-compass-mcp dashboard` always works. The **full dashboard** (Next.js: kanban drag,
+> analytics, Career KB views, onboarding wizard) still runs from a source build:
 
 ```bash
 git clone https://github.com/benskamps/career-compass-mcp.git
@@ -213,6 +214,28 @@ This opens the dashboard at `http://localhost:3141` (or the next available port)
 `CAREER_DATA_PATH` at your own data directory to use it for real. The onboarding wizard
 walks you through job targets, salary expectations, and confirming your skills inventory —
 the gaps a resume doesn't naturally contain.
+
+
+### Lite dashboard (zero-build)
+
+Don't want to build the Next.js app? The **lite dashboard** ships inside the npm package and
+needs no build step. It's a single self-contained HTML page - pipeline KPIs, a kanban board by
+stage, a next-actions panel (overdue follow-ups, upcoming interviews, expiring offers), and a
+stage-distribution chart - served by a dependency-free Node server that **re-reads your YAML on
+every request**, so a browser refresh always reflects the current state of `~/.career-compass`.
+
+```bash
+# Ships in the package - no clone, no build:
+npx -y career-compass-mcp dashboard --lite
+
+# Or try it against the bundled Alex Rivera sample:
+CAREER_DATA_PATH=data/example npx -y career-compass-mcp dashboard --lite
+```
+
+Plain `career-compass-mcp dashboard` uses the full dashboard when it's been built and falls back
+to the lite one otherwise. Data never leaves your machine - the page has no external assets and
+makes no network calls. Clicking a card copies a ready-to-paste prompt for Claude (in Cowork, the
+same board is available as a live artifact that dispatches the prompt straight into chat).
 
 ---
 
