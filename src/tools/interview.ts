@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData, loadPipeline } from "../storage/file-store.js";
+import { formatSignalDigest } from "./signal-digest.js";
 
 export function registerInterviewTools(server: McpServer): void {
 
@@ -74,6 +75,7 @@ ${achievements.map(a => `- **${a.role} @ ${a.company}**: ${a.metric} — ${a.con
 ## Full Career KB
 ${JSON.stringify(career, null, 2)}
 
+${formatSignalDigest(career.journal)}
 ${postingText ? `## Job Posting\n${postingText}` : ""}
 
 ---

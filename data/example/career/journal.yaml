@@ -1,0 +1,56 @@
+# Career journal — append-only signals captured from real interactions.
+# (Example data for the fictional Alex Rivera. Your real journal lives under
+#  CAREER_DATA_PATH and is never committed or published.)
+- id: a1b2c3d4
+  date: 2026-05-12T15:30:00.000Z
+  type: skill_evidence
+  summary: Cited in a performance review for cross-functional stakeholder alignment across 4 departments.
+  company: Northwind Logistics
+  role: Senior Operations Manager
+  signals:
+    - stakeholder-management
+    - data-storytelling
+  sentiment: positive
+  source: ingest_document
+- id: b2c3d4e5
+  date: 2026-06-02T18:00:00.000Z
+  type: win
+  summary: Renegotiated a core vendor contract, cutting spend 18% without cutting scope.
+  company: Northwind Logistics
+  role: Senior Operations Manager
+  signals:
+    - negotiation
+  sentiment: positive
+  source: manual
+- id: c3d4e5f6
+  date: 2026-06-20T14:00:00.000Z
+  type: rejection_pattern
+  summary: Reached the final round but lost to a candidate with direct healthcare-operations experience.
+  company: Meridian Systems
+  role: Director of Operations
+  signals:
+    - healthcare-domain
+  sentiment: hard
+  source: rejection
+- id: d4e5f6a7
+  date: 2026-07-01T16:45:00.000Z
+  type: fit_signal
+  summary: Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth.
+  company: Veridian Health
+  role: Director of Operations
+  signals:
+    - ops-scale
+    - healthcare-domain
+  sentiment: neutral
+  source: explore_opportunity
+- id: e5f6a7b8
+  date: 2026-07-09T17:15:00.000Z
+  type: interview_insight
+  summary: Capacity-optimization story landed well; stumbled on a regulatory/compliance question.
+  company: Veridian Health
+  role: Director of Operations
+  signals:
+    - stakeholder-management
+    - healthcare-domain
+  sentiment: neutral
+  source: prepare_interview

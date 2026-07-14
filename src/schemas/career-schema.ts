@@ -91,15 +91,6 @@ export const Profile = z.object({
   noticePeriod: z.string().optional().describe("e.g. '2 weeks', 'immediately'"),
 });
 
-export const CareerData = z.object({
-  profile: Profile,
-  experience: z.array(Experience).default([]),
-  skills: z.array(Skill).default([]),
-  education: z.array(Education).default([]),
-  projects: z.array(Project).default([]),
-  testimonials: z.array(Testimonial).default([]),
-});
-
 // ─── Career Journal ─────────────────────────────────────────────────────────────
 
 /**
@@ -143,6 +134,18 @@ export const JournalEntry = z.object({
 
 /** The on-disk shape of `data/career/journal.yaml`: a flat, append-ordered list. */
 export const JournalSection = z.array(JournalEntry);
+
+// ─── Career Data (SSOT) ─────────────────────────────────────────────────────────
+
+export const CareerData = z.object({
+  profile: Profile,
+  experience: z.array(Experience).default([]),
+  skills: z.array(Skill).default([]),
+  education: z.array(Education).default([]),
+  projects: z.array(Project).default([]),
+  testimonials: z.array(Testimonial).default([]),
+  journal: z.array(JournalEntry).default([]),
+});
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
 

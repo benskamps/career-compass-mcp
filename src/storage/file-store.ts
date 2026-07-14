@@ -104,7 +104,7 @@ export async function loadCareerData(): Promise<CareerData | null> {
   // Load each section and merge
   const raw: Record<string, unknown> = {};
 
-  const sections = ["profile", "experience", "skills", "education", "projects", "testimonials"];
+  const sections = ["profile", "experience", "skills", "education", "projects", "testimonials", "journal"];
   await Promise.all(sections.map(async (section) => {
     const path = join(dir, `${section}.yaml`);
     if (!existsSync(path)) {
