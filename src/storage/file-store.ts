@@ -4,7 +4,8 @@ import { join, dirname, basename } from "path";
 import { homedir } from "os";
 import { randomUUID } from "crypto";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { CareerData, Pipeline } from "../schemas/career-schema.js";
+import { CareerData, Pipeline, JournalSection } from "../schemas/career-schema.js";
+import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
 
 // ─── Typed errors ─────────────────────────────────────────────────────────────
@@ -144,6 +145,39 @@ export async function loadCareerData(): Promise<CareerData | null> {
 export async function saveCareerSection(section: string, data: unknown): Promise<void> {
   const path = join(careerDir(), `${section}.yaml`);
   await atomicWriteYaml(path, data);
+}
+
+// ─── Career journal (append-only signals) ──────────────────────────────────────
+
+function journalPath(): string { return join(careerDir(), "journal.yaml"); }
+
+/**
+ * Load the career journal.
+ *
+ * - Missing file       → [] (normal empty state; the journal is optional).
+ * - Exists but invalid → throws CorruptDataError (fail closed).
+ *
+ * The fail-closed behavior is load-bearing for {@link appendJournalEntry}: an
+ * append must never silently start from [] on top of an unreadable file, or it
+ * would overwrite recoverable history with a single new entry.
+ */
+export async function loadJournal(): Promise<JournalEntry[]> {
+  const parsed = await readYaml(journalPath(), JournalSection);
+  return parsed ?? [];
+}
+
+/**
+ * Append one entry to the journal and persist it (atomic write + .bak backup,
+ * via {@link atomicWriteYaml}). Returns the full updated list.
+ *
+ * Reads fail-closed first: if journal.yaml exists but is corrupt, this throws
+ * CorruptDataError rather than clobbering it.
+ */
+export async function appendJournalEntry(entry: JournalEntry): Promise<JournalEntry[]> {
+  const existing = await loadJournal();
+  const next = [...existing, entry];
+  await atomicWriteYaml(journalPath(), next);
+  return next;
 }
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────

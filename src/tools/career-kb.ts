@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadCareerData, saveCareerSection, loadPipeline, savePipeline } from "../storage/file-store.js";
+import { loadCareerData, saveCareerSection, loadPipeline, savePipeline, appendJournalEntry, isCorruptDataError } from "../storage/file-store.js";
+import type { JournalEntry } from "../schemas/career-schema.js";
 
 export function registerCareerKBTools(server: McpServer): void {
 
@@ -153,6 +155,97 @@ ${responseGoal === "express_continued_interest" ? "Mention the company is still 
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
 
 ${applicationId ? `\n**Note:** Application ${applicationId} status has been automatically updated to 'rejected'.` : ""}`,
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "capture_insight",
+    {
+      title: "Capture Career Insight",
+      description:
+        "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
+      inputSchema: {
+        type: z.enum([
+          "fit_signal",
+          "interview_insight",
+          "offer_reflection",
+          "rejection_pattern",
+          "skill_evidence",
+          "win",
+          "note",
+        ]).describe("What kind of signal this is"),
+        summary: z.string().describe("One-line durable takeaway — the thing worth keeping"),
+        detail: z.string().optional().describe("Longer context, if useful"),
+        applicationId: z.string().optional().describe("Pipeline application ID this relates to"),
+        company: z.string().optional(),
+        role: z.string().optional(),
+        signals: z.array(z.string()).default([]).describe("Recurring strengths, gaps, or keywords to track over time"),
+        sentiment: z.enum(["positive", "neutral", "hard"]).optional().describe("Honest emotional read — 'hard' is valid and worth recording"),
+        source: z.enum([
+          "explore_opportunity",
+          "prepare_interview",
+          "evaluate_offer",
+          "rejection",
+          "ingest_document",
+          "manual",
+        ]).default("manual").describe("Which surface produced this insight"),
+      },
+    },
+    async ({ type, summary, detail, applicationId, company, role, signals, sentiment, source }) => {
+      const entry: JournalEntry = {
+        id: randomUUID().slice(0, 8),
+        date: new Date().toISOString(),
+        type,
+        summary,
+        detail,
+        applicationId,
+        company,
+        role,
+        signals,
+        sentiment,
+        source,
+      };
+
+      let total: number;
+      try {
+        const all = await appendJournalEntry(entry);
+        total = all.length;
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return {
+            content: [{
+              type: "text",
+              text:
+                `⚠️ Couldn't save the insight: your journal file exists but is unreadable, ` +
+                `so I stopped rather than risk overwriting it.\n\n` +
+                `Fix or restore \`journal.yaml\` (a timestamped \`.bak\` sits beside it), then try again.\n\n` +
+                `Nothing was written; the insight below is unsaved:\n> ${summary}`,
+            }],
+          };
+        }
+        throw error;
+      }
+
+      const meta = [
+        company && `**${company}**`,
+        role,
+        applicationId && `\`${applicationId}\``,
+        sentiment && `sentiment: ${sentiment}`,
+      ].filter(Boolean).join(" · ");
+
+      return {
+        content: [{
+          type: "text",
+          text:
+            `📓 Captured to your career journal (**${type}**).\n\n` +
+            `> ${summary}\n` +
+            (detail ? `\n${detail}\n` : "") +
+            (meta ? `\n${meta}\n` : "") +
+            (signals.length ? `\nSignals: ${signals.map((s) => `\`${s}\``).join(", ")}\n` : "") +
+            `\nThat's **${total}** ${total === 1 ? "entry" : "entries"} on the record now. ` +
+            `These accrue — the more you capture, the sharper future resume, interview, and fit work gets.`,
         }],
       };
     }
