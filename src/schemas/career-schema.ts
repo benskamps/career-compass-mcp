@@ -100,6 +100,50 @@ export const CareerData = z.object({
   testimonials: z.array(Testimonial).default([]),
 });
 
+// ─── Career Journal ─────────────────────────────────────────────────────────────
+
+/**
+ * An append-only career signal captured from a real interaction — an interview
+ * that surfaced a recurring gap, an offer you weighed, a rejection and the
+ * pattern behind it. The journal is what lets the KB *accrue*: individually a
+ * line, collectively the shape of a career.
+ *
+ * Stored as its own section (`data/career/journal.yaml`) so it never disturbs
+ * the load-bearing profile/experience files and can be loaded fail-closed on
+ * the write path (see file-store `appendJournalEntry`).
+ */
+export const JournalEntry = z.object({
+  id: z.string(),
+  date: z.string().describe("ISO timestamp of when the signal was captured"),
+  type: z.enum([
+    "fit_signal",         // how well a role/company fit — what matched, what gapped
+    "interview_insight",  // what a round surfaced: questions, what landed, what to sharpen
+    "offer_reflection",   // what mattered when weighing an offer; the tradeoffs
+    "rejection_pattern",  // stage reached, stated reason, the pattern behind it
+    "skill_evidence",     // fresh proof of a skill (review, shipped project, praise)
+    "win",                // something that went well and is worth remembering
+    "note",               // freeform
+  ]),
+  applicationId: z.string().optional().describe("Links to a pipeline Application.id"),
+  company: z.string().optional(),
+  role: z.string().optional(),
+  summary: z.string().describe("One-line durable takeaway — the thing worth keeping"),
+  detail: z.string().optional().describe("Longer context, if useful"),
+  signals: z.array(z.string()).default([]).describe("Recurring strengths, gaps, or keywords to track over time"),
+  sentiment: z.enum(["positive", "neutral", "hard"]).optional().describe("Honest emotional read — 'hard' is a first-class, valid value"),
+  source: z.enum([
+    "explore_opportunity",
+    "prepare_interview",
+    "evaluate_offer",
+    "rejection",
+    "ingest_document",
+    "manual",
+  ]).default("manual").describe("Which surface produced this entry"),
+});
+
+/** The on-disk shape of `data/career/journal.yaml`: a flat, append-ordered list. */
+export const JournalSection = z.array(JournalEntry);
+
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
 
 export const Contact = z.object({
@@ -172,6 +216,7 @@ export type Project = z.infer<typeof Project>;
 export type Testimonial = z.infer<typeof Testimonial>;
 export type Achievement = z.infer<typeof Achievement>;
 export type CareerData = z.infer<typeof CareerData>;
+export type JournalEntry = z.infer<typeof JournalEntry>;
 export type Application = z.infer<typeof Application>;
 export type Pipeline = z.infer<typeof Pipeline>;
 export type Contact = z.infer<typeof Contact>;
