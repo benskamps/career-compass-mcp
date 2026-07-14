@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
+import { formatSignalDigest } from "./signal-digest.js";
 
 export function registerResumeTools(server: McpServer): void {
 
@@ -33,6 +34,7 @@ export function registerResumeTools(server: McpServer): void {
 ## Full Career KB
 ${JSON.stringify(career, null, 2)}
 
+${formatSignalDigest(career.journal)}
 ## Job Posting
 ${posting}
 
