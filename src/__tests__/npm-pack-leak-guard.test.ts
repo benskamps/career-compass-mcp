@@ -14,12 +14,15 @@ import { fileURLToPath } from "url";
  * sample under `data/example/`.
  *
  * The npm tarball is governed solely by the `files` allowlist in
- * package.json (there is no .npmignore). That allowlist intentionally
- * includes the prerendered dashboard output (`dashboard/.next/standalone/`,
- * `dashboard/.next/static/`). A stale *local* dashboard build produced with a
- * real `CAREER_DATA_PATH` could bake real career values into those static
- * files — and because `.next/` is git-ignored, that leak would be invisible
- * to code review and slip straight into the published package.
+ * package.json (there is no .npmignore). That allowlist used to include the
+ * prerendered dashboard output (`dashboard/.next/standalone/`,
+ * `dashboard/.next/static/`) on the theory that a stale *local* dashboard build
+ * produced with a real `CAREER_DATA_PATH` could bake real career values into
+ * those static files. Those entries have since been removed — `.gitignore`
+ * excluded `dashboard/.next/` all along, so npm silently packed none of it and
+ * the promise was never real (see files-allowlist-truth.test.ts). The content
+ * scan below is kept anyway: it costs nothing, and it is the check that would
+ * catch a future re-introduction of prerendered output before it ships.
  *
  * This test runs `npm pack --dry-run --json` (the exact set of files npm
  * would publish) and asserts:
