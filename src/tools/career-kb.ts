@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadCareerData, saveCareerSection, loadPipeline, savePipeline, appendJournalEntry, isCorruptDataError } from "../storage/file-store.js";
+import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError } from "../storage/file-store.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 
 export function registerCareerKBTools(server: McpServer): void {
@@ -104,16 +104,18 @@ ${autoSave ? `
     },
     async ({ applicationId, company, role, rejectionContent, responseGoal, contactName, hadGoodRapport }) => {
       if (applicationId) {
-        const pipeline = await loadPipeline();
-        const app = pipeline.applications.find(a => a.id === applicationId);
-        if (app) {
+        // Same critical section as manage_pipeline: this is a read-modify-write
+        // on the shared pipeline file, so it must not straddle the lock.
+        await mutatePipeline((pipeline) => {
+          const app = pipeline.applications.find(a => a.id === applicationId);
+          // No match: return without mutating; mutatePipeline skips the write.
+          if (!app) return;
           company = company ?? app.company;
           role = role ?? app.role;
           // Auto-update status to rejected
           app.status = "rejected";
           app.dateUpdated = new Date().toISOString();
-          await savePipeline(pipeline);
-        }
+        });
       }
 
       return {
