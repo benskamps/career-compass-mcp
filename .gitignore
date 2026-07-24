@@ -34,3 +34,7 @@ Thumbs.db
 .superpowers/
 
 *.tsbuildinfo
+
+# MCPB bundle build artifacts
+.mcpb-build/
+*.mcpb

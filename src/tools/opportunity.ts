@@ -10,6 +10,13 @@ export function registerOpportunityTools(server: McpServer): void {
     "explore_opportunity",
     {
       title: "Explore Opportunity",
+      // Reads the Career KB and returns an analysis. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Analyze a job posting against your Career KB. Returns fit score, matched strengths, gaps, talking points, and a 'day in the life' brief.",
       inputSchema: {
         posting: z.string().describe("Full job posting text, or paste the raw text from a job board"),
@@ -78,6 +85,13 @@ Should I pursue this? What's the strategic case for or against?`,
     "research_company",
     {
       title: "Research Company",
+      // Reads the pipeline for context and returns a brief. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals.",
       inputSchema: {
         company: z.string().describe("Company name"),

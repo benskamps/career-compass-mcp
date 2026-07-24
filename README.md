@@ -240,6 +240,27 @@ same board is available as a live artifact that dispatches the prompt straight i
 
 ---
 
+## Privacy Policy
+
+Career Compass runs entirely on your own computer. There is no account, no cloud sync, and
+no telemetry — the software makes no outbound network requests of its own.
+
+- **What it handles:** the career history, job pipeline, and pasted documents you give it.
+- **Where it's stored:** plain YAML in the directory you set via `CAREER_DATA_PATH`
+  (default `~/.career-compass/`), plus timestamped `.bak` copies of previous versions.
+- **Who else sees it:** only the MCP client you connect (e.g. Claude Desktop), and through
+  it your model provider, under *their* policy — and only for the requests you make.
+  Career Compass sends nothing anywhere on its own.
+- **Third-party sharing:** none. We never receive your data, so there is nothing to share.
+- **Retention:** your files stay until you delete them. Remove the `CAREER_DATA_PATH`
+  directory to erase everything.
+- **Contact:** https://github.com/benskamps/career-compass-mcp/issues
+
+Full policy: **[PRIVACY.md](PRIVACY.md)** ·
+published at https://benskamps.github.io/career-compass-mcp/privacy
+
+---
+
 ## Tools
 
 | Tool | What it does |

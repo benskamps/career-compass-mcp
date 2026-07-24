@@ -10,6 +10,13 @@ export function registerResumeTools(server: McpServer): void {
     "tailor_resume",
     {
       title: "Tailor Resume",
+      // Reads the Career KB and returns resume content. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Generate a tailored, ATS-optimized resume matched to a specific job posting using your Career KB.",
       inputSchema: {
         posting: z.string().describe("Full job posting text"),
@@ -87,6 +94,13 @@ Output the full resume text, then a "Keyword Match Report" showing which posting
     "generate_cover_letter",
     {
       title: "Generate Cover Letter",
+      // Reads the Career KB and returns letter content. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Write a compelling, personalized cover letter for a specific job posting using your Career KB.",
       inputSchema: {
         posting: z.string().describe("Full job posting text"),
@@ -153,6 +167,13 @@ Keep it under 400 words. Make it feel human, not templated.`,
     "format_for_ats",
     {
       title: "Format for ATS",
+      // Pure reformatting of text passed in. Touches no stored data.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others.",
       inputSchema: {
         resumeContent: z.string().describe("The resume text to format"),

@@ -10,6 +10,13 @@ export function registerInterviewTools(server: McpServer): void {
     "prepare_interview",
     {
       title: "Prepare Interview",
+      // Reads the Career KB and pipeline and returns prep material. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics — tailored to interview type.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
@@ -125,6 +132,13 @@ Likely concerns they'll have about my background, and how to address them proact
     "evaluate_offer",
     {
       title: "Evaluate Offer",
+      // Reads the Career KB and returns an offer analysis. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),

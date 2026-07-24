@@ -182,6 +182,13 @@ export function registerPipelineTools(server: McpServer): void {
     "manage_pipeline",
     {
       title: "Manage Application Pipeline",
+      // action=add appends; action=update overwrites fields on an existing application, which is a destructive update. Reads are non-destructive but the tool as a whole can write.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
       description: "Add, update, list, and analyze job applications. Track status from discovered through offer/rejection.",
       inputSchema: {
         action: z.enum(["add", "update", "list", "stats", "next_actions", "get"]).describe("Operation to perform"),
@@ -273,10 +280,17 @@ export function registerPipelineTools(server: McpServer): void {
     "classify_email",
     {
       title: "Classify Email",
+      // Reads pipeline company names for context and returns a classification. Any pipeline change happens through a separate manage_pipeline call.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Classify a job-search-related email and extract structured data: type, company, role, contact, next action, and urgency.",
       inputSchema: {
         emailContent: z.string().describe("Full email content — paste subject line and body"),
-        autoUpdatePipeline: z.boolean().default(false).describe("If true, automatically update the pipeline based on classification"),
+        autoUpdatePipeline: z.boolean().default(false).describe("If true, ask Claude to follow up with a manage_pipeline update based on the classification. This tool only classifies — it never writes on its own."),
       },
     },
     async ({ emailContent, autoUpdatePipeline }) => {
