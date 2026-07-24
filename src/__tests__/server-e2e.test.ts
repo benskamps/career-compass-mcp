@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../server.js";
+import { PKG_VERSION } from "../version.js";
 
 /**
  * End-to-end smoke test for the MCP server wiring.
@@ -78,7 +79,7 @@ describe("MCP server E2E (in-memory transport)", () => {
   it("completes the initialize handshake with server identity", () => {
     expect(client.getServerVersion()).toMatchObject({
       name: "career-compass",
-      version: "2.0.0",
+      version: PKG_VERSION,
     });
   });
 

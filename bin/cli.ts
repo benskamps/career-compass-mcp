@@ -12,19 +12,12 @@ const args = process.argv.slice(2);
 const __cliDir = fileURLToPath(new URL(".", import.meta.url));
 
 /**
- * Read the package version from package.json relative to the CLI directory.
- * Factored out so it can be unit-tested directly (the previous inline code had
- * a `pkgVersion = pkgVersion` self-assign that always left the version as
- * "unknown"). Returns "unknown" only when package.json is missing/unreadable.
+ * Re-exported from src/version.ts so the CLI and the MCP server resolve the
+ * version through exactly one code path. Kept as a named export here because
+ * cli-version.test.ts exercises it directly.
  */
-export function readPkgVersion(cliDir: string): string {
-  try {
-    const pkgJson = JSON.parse(readFileSync(join(cliDir, "..", "..", "package.json"), "utf-8"));
-    return typeof pkgJson.version === "string" ? pkgJson.version : "unknown";
-  } catch {
-    return "unknown"; // package.json not found — version will show as "unknown"
-  }
-}
+import { readPkgVersion } from "../src/version.js";
+export { readPkgVersion };
 
 const pkgVersion = readPkgVersion(__cliDir);
 
