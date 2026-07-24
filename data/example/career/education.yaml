@@ -1,0 +1,20 @@
+- degree: B.S. Industrial Engineering
+  institution: University of Texas at Austin
+  date: "2015"
+  honors: cum laude
+  relevantCoursework:
+    - Operations Research
+    - Supply Chain Systems
+    - Statistical Quality Control
+    - Engineering Economics
+  certifications:
+    - Lean Six Sigma Green Belt (ASQ, 2019)
+    - Certified Scrum Product Owner (Scrum Alliance, 2021)
+
+- degree: Certificate in Healthcare Operations Management
+  institution: Texas McCombs Executive Education
+  date: "2022-06"
+  relevantCoursework:
+    - Clinical Workflow Design
+    - Healthcare Regulatory Compliance
+  certifications: []

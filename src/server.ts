@@ -6,11 +6,14 @@ import { registerPipelineTools } from "./tools/pipeline.js";
 import { registerInterviewTools } from "./tools/interview.js";
 import { registerCareerKBTools } from "./tools/career-kb.js";
 import { registerPrompts } from "./prompts/index.js";
+import { PKG_VERSION } from "./version.js";
 
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "career-compass",
-    version: "2.0.0",
+    // Resolved from package.json — never hardcode. A literal here drifts the
+    // moment the package is bumped, and the client has no way to notice.
+    version: PKG_VERSION,
   });
 
   // Resources — Career KB + Pipeline

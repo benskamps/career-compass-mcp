@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
+import { embedUntrusted } from "../untrusted.js";
 
 export function registerOpportunityTools(server: McpServer): void {
 
@@ -39,9 +40,9 @@ ${careerSummary}
 
 ${formatSignalDigest(career.journal)}
 ## Job Posting
-${posting}
+${embedUntrusted("job posting", posting)}
 ${company ? `\n**Company:** ${company}` : ""}
-${notes ? `\n**Notes:** ${notes}` : ""}
+${notes ? `\n**Notes:** ${embedUntrusted("user notes", notes)}` : ""}
 
 ---
 

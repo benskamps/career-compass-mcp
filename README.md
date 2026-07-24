@@ -11,13 +11,6 @@ Career Compass turns Claude into a full job-search partner — one that knows yo
 
 ---
 
-## Your data stays on your machine
-
-Career Compass is local-first. Your career history lives in plain YAML files on your own disk, under the directory you point `CAREER_DATA_PATH` at (default `~/.career-compass`). There is no account, no cloud sync, and no telemetry — nothing phones home.
-
-Your real data is never committed to git: the `.gitignore` excludes `data/career/` and `data/pipeline/`, so the only career data in this repo is the fictional sample under `data/example/` (meet Alex Rivera). Read it, edit it, delete it — it's all just files you own. And nothing real ever ships in the npm package — a publish-time guard (`npm-pack-leak-guard`) scans the exact tarball and fails the publish if any real-career marker appears.
-
----
 
 ## What it feels like
 
@@ -88,6 +81,10 @@ files on your own disk** and never leaves it.
 - **Where your data lives:** `~/.career-compass/` by default (override with the
   `CAREER_DATA_PATH` environment variable). This directory is created and read on *your*
   machine. It is **never** uploaded anywhere, and it is **not** part of this npm package.
+- **Never committed to git:** `.gitignore` excludes `data/career/` and `data/pipeline/`, so
+  the only career data in this repo is the fictional sample under `data/example/` (meet Alex
+  Rivera). Read it, edit it, delete it — it's all just files you own.
+- **No account, no cloud sync, no telemetry.** Nothing phones home.
 - **What ships in the package:** only the MCP server code and a small set of **fictional
   example files** (`data/example/` — the "Alex Rivera" persona). There is no real career
   data in the published package, and none can be — the package and your data live in
@@ -203,7 +200,8 @@ Four views:
 ```bash
 git clone https://github.com/benskamps/career-compass-mcp.git
 cd career-compass-mcp
-npm install
+npm install                       # MCP server deps
+cd dashboard && npm install && cd ..   # dashboard deps (its own package.json)
 npm run build
 
 # Try it with the bundled Alex Rivera sample (no setup, ~1 minute):
@@ -223,6 +221,9 @@ needs no build step. It's a single self-contained HTML page - pipeline KPIs, a k
 stage, a next-actions panel (overdue follow-ups, upcoming interviews, expiring offers), and a
 stage-distribution chart - served by a dependency-free Node server that **re-reads your YAML on
 every request**, so a browser refresh always reflects the current state of `~/.career-compass`.
+
+> Requires **v2.1.0 or newer**. On 2.0.0 the flag does not exist and plain
+> `dashboard` reports that no dashboard is available.
 
 ```bash
 # Ships in the package - no clone, no build:
@@ -254,6 +255,7 @@ same board is available as a live artifact that dispatches the prompt straight i
 | `evaluate_offer` | Breaks down total comp, compares to market, builds negotiation strategy, drafts counter scripts |
 | `ingest_document` | Extracts achievements from any document: performance review, award email, LinkedIn recommendation, project summary |
 | `generate_rejection_response` | Drafts a graceful response that keeps the door open and maintains the relationship |
+| `capture_insight` | Appends a dated signal to your career journal — fit signals, interview insights, offer reflections, rejection patterns, skill evidence, wins — which later resume, interview, and fit prompts read back |
 
 ## Resources
 
@@ -295,9 +297,12 @@ Power-user shortcuts (appear in Claude's prompt menu):
 ```bash
 git clone https://github.com/benskamps/career-compass-mcp
 cd career-compass-mcp
-npm install
+npm install                       # MCP server deps
+cd dashboard && npm install && cd ..   # dashboard deps (its own package.json)
 npm run build
 ```
+
+The dashboard is a separate package with its own `package.json` and lockfile, so it needs its own `npm install` — the root install deliberately does not carry Next.js or React (that kept 166 MB out of every `npm i career-compass-mcp`).
 
 `npm run build` compiles both the MCP server (TypeScript → `build/`) and the Next.js dashboard (`dashboard/.next/`). To work on just the MCP server, use `npm run build:mcp`. For dashboard development with hot reload, use `npm run dev:dashboard`.
 

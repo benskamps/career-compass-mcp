@@ -1,8 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadPipeline, savePipeline, isCorruptDataError } from "../storage/file-store.js";
+import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
 import { Application, ApplicationStatus, Pipeline } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
+import { embedUntrusted } from "../untrusted.js";
 import type {
   PipelineAddArgs,
   PipelineUpdateArgs,
@@ -37,7 +38,6 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
     remote: "unknown",
   };
   pipeline.applications.push(newApp);
-  await savePipeline(pipeline);
   return {
     content: [{ type: "text", text: `✅ Added application: **${args.role}** at **${args.company}**\nID: \`${id}\`\nStatus: applied` }],
   };
@@ -45,6 +45,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
 
 export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline): Promise<ToolResponse> {
   const idx = pipeline.applications.findIndex(a => a.id === args.id);
+  // Returns normally: mutatePipeline skips the write because nothing changed.
   if (idx === -1) return { content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
 
   const app = pipeline.applications[idx];
@@ -60,7 +61,6 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   }
   app.dateUpdated = new Date().toISOString();
   pipeline.applications[idx] = app;
-  await savePipeline(pipeline);
   return {
     content: [{ type: "text", text: `✅ Updated **${app.role}** at **${app.company}** (${app.id})\nStatus: ${app.status}` }],
   };
@@ -214,6 +214,30 @@ export function registerPipelineTools(server: McpServer): void {
       },
     },
     async (args) => {
+      // Writes run inside mutatePipeline so the load and the save are one
+      // critical section — a second call cannot slip between them and have its
+      // write overwritten. Reads deliberately stay outside the lock: the write
+      // path renames atomically, so a reader always sees a complete file, and
+      // holding the lock for reads would serialize the whole tool for nothing.
+      try {
+        if (args.action === "add") {
+          if (!args.company || !args.role) {
+            return { content: [{ type: "text", text: "❌ company and role are required for add action." }] };
+          }
+          return await mutatePipeline((pipeline) => handleAdd(args as PipelineAddArgs, pipeline));
+        }
+
+        if (args.action === "update") {
+          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for update action." }] };
+          return await mutatePipeline((pipeline) => handleUpdate(args as PipelineUpdateArgs, pipeline));
+        }
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        }
+        throw error;
+      }
+
       let pipeline: Pipeline;
       try {
         pipeline = await loadPipeline();
@@ -225,18 +249,6 @@ export function registerPipelineTools(server: McpServer): void {
       }
 
       switch (args.action) {
-        case "add": {
-          if (!args.company || !args.role) {
-            return { content: [{ type: "text", text: "❌ company and role are required for add action." }] };
-          }
-          return handleAdd(args as PipelineAddArgs, pipeline);
-        }
-
-        case "update": {
-          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for update action." }] };
-          return handleUpdate(args as PipelineUpdateArgs, pipeline);
-        }
-
         case "get": {
           if (!args.id) return { content: [{ type: "text", text: "❌ id is required for get action." }] };
           return handleGet(args as PipelineGetArgs, pipeline);
@@ -285,7 +297,7 @@ export function registerPipelineTools(server: McpServer): void {
           text: `# Email Classification Request
 
 ## Email Content
-${emailContent}
+${embedUntrusted("email", emailContent)}
 
 ## Known Companies in Pipeline
 ${companyList || "None yet"}
