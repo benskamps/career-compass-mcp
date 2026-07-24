@@ -1,0 +1,47 @@
+- name: Regional WMS Rollout
+  role: Program Lead
+  description: >
+    Led the replacement of a paper-based inventory process with a warehouse
+    management system across six distribution sites, coordinating clinical staff,
+    IT, and three external vendors through a phased cutover with no service
+    interruption.
+  technologies:
+    - Manhattan WMS
+    - Snowflake
+    - Tableau
+  metrics:
+    - 6 sites live in 14 weeks, 3 weeks ahead of plan
+    - Inventory carrying cost down 18% year over year
+    - Stockouts on critical supplies down from 34/quarter to 4/quarter
+  outcomes:
+    - Became the reference implementation for the remaining eight sites
+    - Cutover runbook adopted as the standard template for site launches
+
+- name: Vendor Consolidation Initiative
+  role: Operations Lead
+  description: >
+    Consolidated 41 medical-supply vendors to 12 preferred partners, renegotiating
+    contracts and building the scorecard used to review them quarterly.
+  technologies:
+    - Coupa
+    - Excel
+  metrics:
+    - $2.4M annualized savings
+    - Average PO cycle time down from 9 days to 3
+  outcomes:
+    - Quarterly vendor scorecard still in use three years later
+    - Two underperforming vendors exited without service disruption
+
+- name: Onboarding Redesign
+  role: Chief of Staff (interim)
+  description: >
+    Rebuilt operations onboarding after exit interviews traced early attrition to
+    an unstructured first month.
+  technologies:
+    - Notion
+    - Lattice
+  metrics:
+    - 90-day new-hire attrition down from 22% to 7%
+    - Time to first independent shift down from 6 weeks to 3
+  outcomes:
+    - Rolled out to two adjacent departments the following year

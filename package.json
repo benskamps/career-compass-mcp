@@ -1,6 +1,6 @@
 {
   "name": "career-compass-mcp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "AI-native career co-pilot for Claude \u2014 Career KB, resume tailoring, job pipeline, interview prep, and offer evaluation via MCP",
   "type": "module",
   "main": "build/src/index.js",
@@ -32,7 +32,7 @@
     "screenshots": "npx tsx scripts/capture-screenshots.ts",
     "inspect": "mcp-inspector node build/src/index.js",
     "pack:guard": "vitest run --config vitest.config.ts src/__tests__/npm-pack-leak-guard.test.ts",
-    "prepublishOnly": "npm run build && npm run pack:guard"
+    "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard"
   },
   "keywords": [
     "mcp",
