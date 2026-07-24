@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
 import { Application, ApplicationStatus, Pipeline } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
+import { embedUntrusted } from "../untrusted.js";
 import type {
   PipelineAddArgs,
   PipelineUpdateArgs,
@@ -296,7 +297,7 @@ export function registerPipelineTools(server: McpServer): void {
           text: `# Email Classification Request
 
 ## Email Content
-${emailContent}
+${embedUntrusted("email", emailContent)}
 
 ## Known Companies in Pipeline
 ${companyList || "None yet"}

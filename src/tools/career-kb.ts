@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError } from "../storage/file-store.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
+import { embedUntrusted } from "../untrusted.js";
 
 export function registerCareerKBTools(server: McpServer): void {
 
@@ -33,7 +34,7 @@ ${associatedCompany ? `**Company:** ${associatedCompany}` : ""}
 ${datePeriod ? `**Period:** ${datePeriod}` : ""}
 
 **Content:**
-${content}
+${embedUntrusted("uploaded document", content)}
 
 ---
 
@@ -131,7 +132,7 @@ ${contactName ? `**From:** ${contactName}` : ""}
 **Prior rapport:** ${hadGoodRapport ? "Yes — positive relationship built" : "Limited"}
 
 **Rejection message:**
-${rejectionContent}
+${embedUntrusted("rejection message", rejectionContent)}
 
 ---
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
+import { embedUntrusted } from "../untrusted.js";
 
 export function registerResumeTools(server: McpServer): void {
 
@@ -36,7 +37,7 @@ ${JSON.stringify(career, null, 2)}
 
 ${formatSignalDigest(career.journal)}
 ## Job Posting
-${posting}
+${embedUntrusted("job posting", posting)}
 
 ## Output Requirements
 - **Format:** ${format}
@@ -115,7 +116,7 @@ Output the full resume text, then a "Keyword Match Report" showing which posting
 ${career.experience.flatMap(e => e.achievements.slice(0, 2).map(a => `- ${a.metric}: ${a.impact}`)).slice(0, 8).join("\n")}
 
 ## Job Posting
-${posting}
+${embedUntrusted("job posting", posting)}
 
 ## Parameters
 - **Company:** ${company}
@@ -227,7 +228,7 @@ Keep it under 400 words. Make it feel human, not templated.`,
 ${systemGuides[targetSystem]}
 
 ## Resume Content to Format
-${resumeContent}
+${embedUntrusted("resume content", resumeContent)}
 
 ${postingUrl ? `**Posting reference:** ${postingUrl}` : ""}
 
