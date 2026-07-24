@@ -142,8 +142,8 @@ Likely concerns they'll have about my background, and how to address them proact
       description: "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
-        company: z.string().optional(),
-        role: z.string().optional(),
+        company: z.string().optional().describe("Company making the offer. Used to pull the matching application for context."),
+        role: z.string().optional().describe("Role being offered."),
         offerDetails: z.string().describe("Full offer: base salary, bonus, equity, benefits, start date, title"),
         location: z.string().optional().describe("Work location (affects cost of living calc)"),
         currentComp: z.string().optional().describe("Your current total comp for comparison"),

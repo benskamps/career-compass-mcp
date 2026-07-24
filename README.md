@@ -270,7 +270,9 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `tailor_resume` | Generates an ATS-optimized, tailored resume from your KB — standard, federal, academic, or functional formats |
 | `generate_cover_letter` | Writes a personalized cover letter with your actual achievements woven in |
 | `format_for_ats` | Reformats resume content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo |
-| `manage_pipeline` | Tracks applications from discovery through offer — add, update, list, stats, next actions |
+| `pipeline_view` | Reads the pipeline — list, funnel stats, what needs attention, or one application by id. Read-only, so it runs without a permission prompt |
+| `pipeline_add` | Adds one job application to the pipeline |
+| `pipeline_update` | Updates one application — status, notes, follow-up date, a contact, or an interview round |
 | `classify_email` | Classifies a job-search email and extracts contacts, dates, and suggested pipeline updates |
 | `prepare_interview` | Full interview prep: opening pitch, STAR stories, likely questions, company alignment, questions to ask |
 | `evaluate_offer` | Breaks down total comp, compares to market, builds negotiation strategy, drafts counter scripts |

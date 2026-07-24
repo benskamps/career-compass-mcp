@@ -55,8 +55,16 @@
       "description": "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others."
     },
     {
-      "name": "manage_pipeline",
-      "description": "Add, update, list, and analyze job applications. Track status from discovered through offer/rejection."
+      "name": "pipeline_view",
+      "description": "Read the job application pipeline: list applications, summarize stats, surface what needs attention, or fetch one application by id. Read-only \u2014 never modifies anything."
+    },
+    {
+      "name": "pipeline_add",
+      "description": "Add one job application to the pipeline. Creates a new record; never modifies an existing one. Use pipeline_update to change an application already being tracked."
+    },
+    {
+      "name": "pipeline_update",
+      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched."
     },
     {
       "name": "classify_email",

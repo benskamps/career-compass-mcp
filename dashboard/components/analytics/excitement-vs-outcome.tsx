@@ -11,7 +11,7 @@ export function ExcitementVsOutcome({ data }: { data: DataPoint[] }) {
   const accentColor = getAccentColor();
 
   return (
-    <div className="h-64">
+    <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart>
           <XAxis dataKey="excitement" name="Excitement" domain={[0, 10]} tick={{ fill: "var(--color-text-muted, #686260)", fontSize: 10 }} />

@@ -33,7 +33,7 @@ export default async function AnalyticsPage() {
   }
 
   return (
-    <div className="px-6 py-8 max-w-5xl mx-auto space-y-8">
+    <div className="px-6 py-6 max-w-5xl mx-auto space-y-5">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="text-sm text-text-secondary mt-1 tabular-nums">
@@ -41,7 +41,7 @@ export default async function AnalyticsPage() {
         </p>
       </header>
       <StatCardsRow data={data} />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         <Card><CardHeader><CardTitle className="text-base">Pipeline Funnel</CardTitle></CardHeader><CardContent><PipelineFunnel stages={data.funnelStages} /></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">Status Breakdown</CardTitle></CardHeader><CardContent><StatusBreakdown statusCounts={data.statusCounts} /></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">Source Effectiveness</CardTitle></CardHeader><CardContent><SourceEffectiveness sources={data.sourceStats} /></CardContent></Card>

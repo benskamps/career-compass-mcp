@@ -25,7 +25,7 @@ import { createServer } from "../server.js";
  * against a real populated data directory and fingerprints the whole tree before
  * and after. If anything on disk moved, the claim was false.
  *
- * The three tools that genuinely write (`manage_pipeline`, `capture_insight`,
+ * The four tools that genuinely write (`pipeline_add`, `pipeline_update`, `capture_insight`,
  * `generate_rejection_response`) are asserted as writers rather than skipped, so
  * this cannot pass by everything quietly becoming read-only.
  */
@@ -61,12 +61,14 @@ const ARGS: Record<string, Record<string, unknown>> = {
   ingest_document: { content: "2025 review: exceeded on all objectives.", documentType: "performance_review" },
   // Deliberately exercise the write-flavoured flags on the two read-only tools
   // whose parameters used to advertise a write they never performed.
-  manage_pipeline: { action: "add", company: "Acme Health", role: "Director" },
+  pipeline_view: { action: "list" },
+  pipeline_add: { company: "Acme Health", role: "Director" },
+  pipeline_update: { id: "does-not-exist", status: "interviewing" },
   capture_insight: { type: "win", summary: "Panel liked the WMS story." },
   generate_rejection_response: { rejectionContent: "We went with another candidate." },
 };
 
-const KNOWN_WRITERS = ["manage_pipeline", "capture_insight", "generate_rejection_response"];
+const KNOWN_WRITERS = ["pipeline_add", "pipeline_update", "capture_insight", "generate_rejection_response"];
 
 async function connect() {
   const server = createServer();
@@ -166,9 +168,9 @@ describe("tool annotations", () => {
     const client = await connect();
     try {
       const before = fingerprint(dataDir);
-      await client.callTool({ name: "manage_pipeline", arguments: ARGS.manage_pipeline });
+      await client.callTool({ name: "pipeline_add", arguments: ARGS.pipeline_add });
       const after = fingerprint(dataDir);
-      expect(after, "manage_pipeline add should change the data directory").not.toBe(before);
+      expect(after, "pipeline_add should change the data directory").not.toBe(before);
     } finally {
       await client.close();
     }

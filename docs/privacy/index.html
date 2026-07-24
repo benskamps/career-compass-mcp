@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Career Compass MCP</title>
+<meta name="description" content="Career Compass runs entirely on your own computer. No account, no cloud sync, no telemetry.">
+<link rel="icon" href="icon-256.png">
+<style>
+  :root{
+    --bark:#1c1917; --bark-2:#26221f; --bone:#ede8e1; --bone-dim:#b9b0a6;
+    --ember:#d67a3c; --rule:#3a3430;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bark:#faf8f5; --bark-2:#f2ede6; --bone:#26221f; --bone-dim:#5f574f;
+           --ember:#b25c22; --rule:#ded6cc; }
+  }
+  :root[data-theme="dark"]{ --bark:#1c1917; --bark-2:#26221f; --bone:#ede8e1;
+    --bone-dim:#b9b0a6; --ember:#d67a3c; --rule:#3a3430; }
+  :root[data-theme="light"]{ --bark:#faf8f5; --bark-2:#f2ede6; --bone:#26221f;
+    --bone-dim:#5f574f; --ember:#b25c22; --rule:#ded6cc; }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bark); color:var(--bone);
+    font:16px/1.7 ui-serif, Georgia, "Iowan Old Style", serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto; padding:4rem 1.5rem 6rem}
+  header{border-bottom:1px solid var(--rule); padding-bottom:1.75rem; margin-bottom:2.5rem}
+  .eyebrow{
+    font:600 .72rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--ember); margin:0 0 .9rem;
+  }
+  h1{font-size:clamp(1.9rem,5vw,2.6rem); line-height:1.15; margin:0 0 .6rem; font-weight:600}
+  .meta{font:.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--bone-dim); margin:0}
+  h2{font-size:1.22rem; margin:2.75rem 0 .75rem; font-weight:600}
+  p{margin:0 0 1.1rem}
+  ul{margin:0 0 1.1rem; padding-left:1.2rem}
+  li{margin:.45rem 0}
+  a{color:var(--ember)}
+  code{
+    font:.88em ui-monospace, SFMono-Regular, Menlo, monospace;
+    background:var(--bark-2); padding:.12em .38em; border-radius:3px;
+  }
+  .lede{
+    background:var(--bark-2); border-left:3px solid var(--ember);
+    padding:1.25rem 1.4rem; margin:0 0 2rem; border-radius:0 4px 4px 0;
+  }
+  .lede p:last-child{margin-bottom:0}
+  footer{
+    margin-top:4rem; padding-top:1.5rem; border-top:1px solid var(--rule);
+    font:.82rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--bone-dim);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">Career Compass MCP</p>
+  <h1>Privacy Policy</h1>
+  <p class="meta">Last updated 2026-07-24 · applies to all versions of the MCP server and its bundled local dashboard</p>
+</header>
+
+<div class="lede">
+  <p>Career Compass runs entirely on your own computer. It has no server, no account, and
+  no network calls of its own. Your career history and job pipeline are plain YAML files in
+  a directory you choose. Nothing is uploaded, and there is nothing for us to collect,
+  store, sell, or hand over — because your data never reaches us in the first place.</p>
+</div>
+
+<h2>What data the software handles</h2>
+<p>Career Compass reads and writes the career information <em>you</em> give it:</p>
+<ul>
+  <li><strong>Career knowledge base</strong> — name, contact details, work history, skills,
+    education, projects, testimonials, and a dated journal of your own notes.</li>
+  <li><strong>Job pipeline</strong> — the roles you're tracking, their status, salary ranges
+    you record, recruiter and hiring-manager contact details you enter, interview dates,
+    and your notes.</li>
+  <li><strong>Text you paste in</strong> — job postings, emails, offer letters, performance
+    reviews, and similar documents you hand to a tool.</li>
+</ul>
+
+<h2>Where it is stored</h2>
+<p>In a single directory on your machine, set by the <code>CAREER_DATA_PATH</code>
+environment variable. The default is <code>~/.career-compass/</code>. Files are ordinary
+YAML you can open, edit, back up, or delete with any text editor. Each write also leaves a
+timestamped <code>.bak</code> copy of the previous version in the same directory.</p>
+<p><strong>We never receive this data.</strong> There is no Career Compass account, no cloud
+sync, no backup service, and no telemetry or analytics of any kind. The software makes no
+outbound network requests.</p>
+
+<h2>Who else sees it</h2>
+<p>Career Compass is an MCP server, so it answers a client you connect it to — normally
+Claude Desktop or Claude Code. When you ask Claude to tailor a resume or prep an interview,
+the relevant parts of your career data are passed to that client, and from there to the
+model provider under <strong>their</strong> privacy policy, not this one:</p>
+<ul>
+  <li>Anthropic's privacy policy: <a href="https://www.anthropic.com/legal/privacy">anthropic.com/legal/privacy</a></li>
+</ul>
+<p>That is the only path by which your data leaves your machine, it happens because you
+asked for it, and it is governed by the terms of whichever client and model provider you
+chose. Career Compass itself sends nothing anywhere.</p>
+<p>The bundled local dashboard serves pages from <code>127.0.0.1</code> on your own machine,
+renders them with no external assets, and makes no network calls.</p>
+
+<h2>Untrusted text</h2>
+<p>Job postings, emails, and documents you paste in are third-party content. Career Compass
+wraps them in a clearly-marked, nonce-delimited block before they reach the model, so text
+inside them is presented as quoted evidence rather than as instructions. This reduces the
+risk that a malicious posting can direct the model to act against you, but no such measure
+is absolute. Treat pasted content from unknown sources with the same care you would apply
+anywhere else.</p>
+
+<h2>Data retention</h2>
+<p>Your files stay on your disk until you delete them. There is no retention period on our
+side because we hold nothing. To remove everything, delete your
+<code>CAREER_DATA_PATH</code> directory (including the <code>.bak</code> files) and
+uninstall the package.</p>
+
+<h2>Third-party sharing</h2>
+<p>None. We do not share, sell, rent, or disclose your data, because we never receive it.
+There are no advertisers, analytics providers, data brokers, or subprocessors involved.</p>
+
+<h2>Children</h2>
+<p>Career Compass is a job-search tool intended for adults in the workforce and is not
+directed at children under 13.</p>
+
+<h2>Changes to this policy</h2>
+<p>Changes are published in the public repository with the date above updated. The full
+version history is visible in git.</p>
+
+<h2>Contact</h2>
+<ul>
+  <li><strong>Issues and questions:</strong>
+    <a href="https://github.com/benskamps/career-compass-mcp/issues">github.com/benskamps/career-compass-mcp/issues</a></li>
+  <li><strong>Maintainer:</strong> Ben Schippers —
+    <a href="https://github.com/benskamps">github.com/benskamps</a></li>
+</ul>
+
+<footer>
+  career-compass-mcp · MIT ·
+  <a href="https://github.com/benskamps/career-compass-mcp">source</a> ·
+  <a href="https://www.npmjs.com/package/career-compass-mcp">npm</a>
+</footer>
+</div>
+</body>
+</html>

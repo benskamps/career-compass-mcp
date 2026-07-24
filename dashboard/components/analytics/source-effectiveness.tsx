@@ -9,10 +9,19 @@ export function SourceEffectiveness({ sources }: { sources: SourceStat[] }) {
   const blueAccent = getStatusColor("applied");
 
   return (
-    <div className="h-64">
+    <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={sources}>
-          <XAxis dataKey="source" tick={{ fill: "var(--color-text-secondary, #968f87)", fontSize: 12 }} />
+        <BarChart data={sources} margin={{ top: 4, right: 8, left: -12, bottom: 24 }}>
+          {/* interval={0} forces every source to render; without the angle they
+              collide ("Company site" ran into "Recruiter outreach"). */}
+          <XAxis
+            dataKey="source"
+            interval={0}
+            angle={-20}
+            textAnchor="end"
+            height={52}
+            tick={{ fill: "var(--color-text-secondary, #968f87)", fontSize: 11 }}
+          />
           <YAxis tick={{ fill: "var(--color-text-muted, #686260)", fontSize: 10 }} />
           <Tooltip
             contentStyle={{

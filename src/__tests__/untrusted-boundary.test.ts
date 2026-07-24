@@ -120,7 +120,7 @@ describe("every tool that takes outside text fences it", () => {
   }
 
   it("fences the cached posting replayed from the pipeline, not just fresh input", async () => {
-    // postingText is persisted by manage_pipeline and replayed by
+    // postingText is persisted by pipeline_add and replayed by
     // prepare_interview on every later call — a one-shot injection otherwise
     // becomes a standing one.
     const out = textOf(

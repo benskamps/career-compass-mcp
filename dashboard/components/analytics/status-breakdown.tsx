@@ -9,7 +9,12 @@ export function StatusBreakdown({ statusCounts }: { statusCounts: Record<string,
     .map(([status, count]) => ({ name: status, value: count, fill: getStatusColor(status) }));
 
   return (
-    <div className="h-64">
+    // The chart gets its own fixed box; the legend is a SIBLING of that box, not
+    // a child. Previously both lived inside one `h-64`, and since
+    // ResponsiveContainer is height="100%" it claimed the full 256px on its own —
+    // leaving the legend to overflow the card and render sliced in half.
+    <div>
+      <div className="h-44">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={50}>
@@ -27,10 +32,11 @@ export function StatusBreakdown({ statusCounts }: { statusCounts: Record<string,
           />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex flex-wrap gap-3 justify-center mt-2">
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 justify-center mt-3">
         {data.map((d) => (
-          <div key={d.name} className="flex items-center gap-1.5 text-xs">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
+          <div key={d.name} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.fill }} />
             <span className="text-text-secondary capitalize">{d.name}</span>
             <span className="font-mono text-text-muted">{d.value}</span>
           </div>

@@ -106,7 +106,7 @@ Output the full resume text, then a "Keyword Match Report" showing which posting
         posting: z.string().describe("Full job posting text"),
         company: z.string().describe("Company name"),
         hiringManager: z.string().optional().describe("Hiring manager name if known"),
-        tone: z.enum(["professional", "conversational", "enthusiastic", "concise"]).default("professional"),
+        tone: z.enum(["professional", "conversational", "enthusiastic", "concise"]).default("professional").describe("Voice of the letter. Match it to the company: professional for traditional or regulated employers, conversational for startups, enthusiastic when you genuinely want this one, concise when the posting asks for brevity."),
         angle: z.string().optional().describe("The key story or angle to lead with"),
       },
     },
