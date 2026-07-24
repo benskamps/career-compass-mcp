@@ -30,7 +30,9 @@ const EXPECTED_TOOLS = [
   "tailor_resume",
   "generate_cover_letter",
   "format_for_ats",
-  "manage_pipeline",
+  "pipeline_view",
+  "pipeline_add",
+  "pipeline_update",
   "classify_email",
   "prepare_interview",
   "evaluate_offer",
@@ -83,14 +85,14 @@ describe("MCP server E2E (in-memory transport)", () => {
     });
   });
 
-  it("registers all 12 tools, including the three tool families", async () => {
+  it("registers all 14 tools, including the three tool families", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
 
-    expect(tools).toHaveLength(12);
+    expect(tools).toHaveLength(14);
     expect(names).toEqual([...EXPECTED_TOOLS].sort());
     expect(names).toContain("tailor_resume");
-    expect(names).toContain("manage_pipeline");
+    expect(names).toContain("pipeline_view");
     expect(names).toContain("prepare_interview");
   });
 
@@ -127,9 +129,9 @@ describe("MCP server E2E (in-memory transport)", () => {
     expect(text).toContain("Director of Operations");
   });
 
-  it("manage_pipeline(stats) reports the 8 example applications", async () => {
+  it("pipeline_view(stats) reports the 8 example applications", async () => {
     const result = await client.callTool({
-      name: "manage_pipeline",
+      name: "pipeline_view",
       arguments: { action: "stats" },
     });
     const text = textOf(result);

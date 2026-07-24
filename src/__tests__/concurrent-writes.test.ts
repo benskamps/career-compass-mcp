@@ -23,7 +23,7 @@ import { createServer } from "../server.js";
  * resolves, and Claude routinely does exactly that when a user says "add both
  * of these jobs" or "log those two insights" — the SDK's stdio transport drains
  * every framed message in a chunk synchronously and dispatches each without
- * awaiting the previous. Two `manage_pipeline add` calls in one turn both
+ * awaiting the previous. Two `pipeline_add` calls in one turn both
  * returned "✅ Added", and one application was simply gone. There is no server
  * copy, no audit log, and no undo — for a tool whose whole job is being the
  * durable record of a job search, that is the worst possible failure mode: the
@@ -80,8 +80,8 @@ describe("concurrent writes must not lose data", () => {
     const { client, close } = await connectedClient();
     try {
       const results = await Promise.all([
-        client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Acme", role: "Director of Operations" } }),
-        client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Globex", role: "VP Supply Chain" } }),
+        client.callTool({ name: "pipeline_add", arguments: { company: "Acme", role: "Director of Operations" } }),
+        client.callTool({ name: "pipeline_add", arguments: { company: "Globex", role: "VP Supply Chain" } }),
       ]);
 
       // Both calls reported success to the user...
@@ -98,11 +98,11 @@ describe("concurrent writes must not lose data", () => {
   it("keeps an existing application when a concurrent `add` lands", async () => {
     const { client, close } = await connectedClient();
     try {
-      await client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Initech", role: "Engineer" } });
+      await client.callTool({ name: "pipeline_add", arguments: { company: "Initech", role: "Engineer" } });
 
       await Promise.all([
-        client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Acme", role: "Director" } }),
-        client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Globex", role: "VP" } }),
+        client.callTool({ name: "pipeline_add", arguments: { company: "Acme", role: "Director" } }),
+        client.callTool({ name: "pipeline_add", arguments: { company: "Globex", role: "VP" } }),
       ]);
 
       expect(applicationsOnDisk(dataDir).map((a) => a.company).sort()).toEqual(["Acme", "Globex", "Initech"]);
@@ -116,15 +116,15 @@ describe("concurrent writes must not lose data", () => {
     // user off — the tool says "✅ Updated" and the status change is gone.
     const { client, close } = await connectedClient();
     try {
-      const added = await client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Initech", role: "Engineer" } });
+      const added = await client.callTool({ name: "pipeline_add", arguments: { company: "Initech", role: "Engineer" } });
       const id = /ID: `([^`]+)`/.exec(
         ((added as { content?: Array<{ text?: string }> }).content ?? []).map((c) => c.text ?? "").join(""),
       )?.[1];
       expect(id, "add should report the new application id").toBeTruthy();
 
       await Promise.all([
-        client.callTool({ name: "manage_pipeline", arguments: { action: "update", id, status: "interviewing" } }),
-        client.callTool({ name: "manage_pipeline", arguments: { action: "add", company: "Acme", role: "Director" } }),
+        client.callTool({ name: "pipeline_update", arguments: { id, status: "interviewing" } }),
+        client.callTool({ name: "pipeline_add", arguments: { company: "Acme", role: "Director" } }),
       ]);
 
       const apps = applicationsOnDisk(dataDir);
@@ -157,7 +157,7 @@ describe("concurrent writes must not lose data", () => {
       const companies = Array.from({ length: 8 }, (_, i) => `Company${i}`);
       await Promise.all(
         companies.map((company) =>
-          client.callTool({ name: "manage_pipeline", arguments: { action: "add", company, role: "Role" } }),
+          client.callTool({ name: "pipeline_add", arguments: { company, role: "Role" } }),
         ),
       );
       expect(applicationsOnDisk(dataDir).map((a) => a.company).sort()).toEqual([...companies].sort());

@@ -22,7 +22,7 @@ import { randomUUID } from "crypto";
  * recruiter contact in the pipeline. The injected text does not have to
  * exfiltrate anything itself; it only has to convince the model to.
  *
- * `postingText` makes it durable rather than one-shot: `manage_pipeline` caches
+ * `postingText` makes it durable rather than one-shot: `pipeline_add` caches
  * it in applications.yaml, and `prepare_interview` replays it on every future
  * call for that application. A single poisoned posting keeps firing.
  *

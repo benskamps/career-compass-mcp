@@ -25,7 +25,7 @@ export function registerCareerKBTools(server: McpServer): void {
         associatedRole: z.string().optional().describe("Job role this document relates to"),
         associatedCompany: z.string().optional().describe("Company this document relates to"),
         datePeriod: z.string().optional().describe("Time period this covers, e.g. '2023 Q1' or '2022-2023'"),
-        autoSave: z.boolean().default(false).describe("If true, ask Claude to follow up by writing the extracted data to your Career KB. This tool only extracts and returns — it never writes on its own."),
+        autoSave: z.boolean().default(false).describe("If true, the output names the exact Career KB file each extracted item belongs in, so you can review before anything is written. This tool only extracts — it never writes."),
       },
     },
     async ({ content, documentType, associatedRole, associatedCompany, datePeriod, autoSave }) => {
@@ -86,7 +86,7 @@ skills:
 Top 10 ATS-friendly keywords from this document.
 
 ${autoSave ? `
-**Auto-save requested:** After extraction, call the update tools to append this data to the Career KB files.
+**Save requested:** present the extracted YAML and the exact file it belongs in, for the user to confirm before anything is written.
 ` : `
 **To save:** Review the YAML above and use your file editor to append to the relevant data/career/ files, or set autoSave=true to let Claude do it automatically.
 `}`,
@@ -109,17 +109,17 @@ ${autoSave ? `
       description: "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
-        company: z.string().optional(),
-        role: z.string().optional(),
+        company: z.string().optional().describe("Company that sent the rejection. Filled in automatically when applicationId is given."),
+        role: z.string().optional().describe("Role you were rejected for. Filled in automatically when applicationId is given."),
         rejectionContent: z.string().describe("The rejection email or message content"),
-        responseGoal: z.enum(["keep_door_open", "request_feedback", "decline_gracefully", "express_continued_interest"]).default("keep_door_open"),
+        responseGoal: z.enum(["keep_door_open", "request_feedback", "decline_gracefully", "express_continued_interest"]).default("keep_door_open").describe("What you want the reply to achieve: stay on good terms for future roles, ask why you were passed over, decline politely, or signal you would still take another opening there."),
         contactName: z.string().optional().describe("Person who sent the rejection"),
         hadGoodRapport: z.boolean().default(false).describe("Did you have positive interactions during the process?"),
       },
     },
     async ({ applicationId, company, role, rejectionContent, responseGoal, contactName, hadGoodRapport }) => {
       if (applicationId) {
-        // Same critical section as manage_pipeline: this is a read-modify-write
+        // Same critical section as pipeline_update: this is a read-modify-write
         // on the shared pipeline file, so it must not straddle the lock.
         await mutatePipeline((pipeline) => {
           const app = pipeline.applications.find(a => a.id === applicationId);
@@ -203,8 +203,8 @@ ${applicationId ? `\n**Note:** Application ${applicationId} status has been auto
         summary: z.string().describe("One-line durable takeaway — the thing worth keeping"),
         detail: z.string().optional().describe("Longer context, if useful"),
         applicationId: z.string().optional().describe("Pipeline application ID this relates to"),
-        company: z.string().optional(),
-        role: z.string().optional(),
+        company: z.string().optional().describe("Company this insight relates to, if any. Lets later prompts surface it when you work on that company again."),
+        role: z.string().optional().describe("Role this insight relates to, if any."),
         signals: z.array(z.string()).default([]).describe("Recurring strengths, gaps, or keywords to track over time"),
         sentiment: z.enum(["positive", "neutral", "hard"]).optional().describe("Honest emotional read — 'hard' is valid and worth recording"),
         source: z.enum([

@@ -179,72 +179,33 @@ export function handleNextActions(pipeline: Pipeline): ToolResponse {
 export function registerPipelineTools(server: McpServer): void {
 
   server.registerTool(
-    "manage_pipeline",
+    "pipeline_view",
     {
-      title: "Manage Application Pipeline",
-      // action=add appends; action=update overwrites fields on an existing application, which is a destructive update. Reads are non-destructive but the tool as a whole can write.
+      title: "View Application Pipeline",
+      // Every action here reads. Nothing on this tool can reach a write path, so
+      // a host may run it without asking — which is the point: checking your own
+      // pipeline should not cost a permission prompt.
       annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: false,
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Add, update, list, and analyze job applications. Track status from discovered through offer/rejection.",
+      description: "Read the job application pipeline: list applications, summarize stats, surface what needs attention, or fetch one application by id. Read-only — never modifies anything.",
       inputSchema: {
-        action: z.enum(["add", "update", "list", "stats", "next_actions", "get"]).describe("Operation to perform"),
-        // For add
-        company: z.string().optional(),
-        role: z.string().optional(),
-        postingUrl: z.string().optional(),
-        postingText: z.string().optional().describe("Full posting text to cache"),
-        source: z.string().optional().describe("Where you found it: LinkedIn, Referral, Company site, etc."),
-        referral: z.string().optional(),
-        priority: z.enum(["high", "medium", "low"]).optional(),
-        excitement: z.number().min(1).max(10).optional(),
-        salaryMin: z.number().optional(),
-        salaryMax: z.number().optional(),
-        // For update
-        id: z.string().optional().describe("Application ID (required for update/get)"),
-        status: ApplicationStatus.optional(),
-        notes: z.string().optional().describe("Note to add to this application"),
-        followUpDue: z.string().optional().describe("ISO date for follow-up reminder"),
-        contactName: z.string().optional(),
-        contactTitle: z.string().optional(),
-        contactEmail: z.string().optional(),
-        interviewType: z.enum(["phone_screen", "behavioral", "technical", "panel", "final", "offer_call", "other"]).optional(),
-        interviewDate: z.string().optional(),
-        // For list
-        filterStatus: ApplicationStatus.optional().describe("Filter by status"),
-        filterPriority: z.enum(["high", "medium", "low"]).optional(),
-        sortBy: z.enum(["date", "status", "priority", "company", "excitement"]).optional().default("date"),
-        limit: z.number().optional().default(20),
+        action: z.enum(["list", "stats", "next_actions", "get"])
+          .describe("list = all applications (filterable); stats = funnel and response-rate summary; next_actions = what is overdue or due now; get = one application by id"),
+        id: z.string().optional().describe("Application id. Required when action=get."),
+        filterStatus: ApplicationStatus.optional().describe("action=list only: show only applications in this status"),
+        filterPriority: z.enum(["high", "medium", "low"]).optional().describe("action=list only: show only applications at this priority"),
+        sortBy: z.enum(["date", "status", "priority", "company", "excitement"]).optional().default("date").describe("action=list only: ordering. Defaults to most recently applied first."),
+        limit: z.number().int().min(1).max(500).optional().default(20).describe("action=list only: maximum applications to return (1-500)"),
       },
     },
     async (args) => {
-      // Writes run inside mutatePipeline so the load and the save are one
-      // critical section — a second call cannot slip between them and have its
-      // write overwritten. Reads deliberately stay outside the lock: the write
-      // path renames atomically, so a reader always sees a complete file, and
-      // holding the lock for reads would serialize the whole tool for nothing.
-      try {
-        if (args.action === "add") {
-          if (!args.company || !args.role) {
-            return { content: [{ type: "text", text: "❌ company and role are required for add action." }] };
-          }
-          return await mutatePipeline((pipeline) => handleAdd(args as PipelineAddArgs, pipeline));
-        }
-
-        if (args.action === "update") {
-          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for update action." }] };
-          return await mutatePipeline((pipeline) => handleUpdate(args as PipelineUpdateArgs, pipeline));
-        }
-      } catch (error) {
-        if (isCorruptDataError(error)) {
-          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
-        }
-        throw error;
-      }
-
+      // Reads deliberately take no lock: the write path renames atomically, so a
+      // reader always sees a complete file, and locking reads would serialize the
+      // whole tool for nothing.
       let pipeline: Pipeline;
       try {
         pipeline = await loadPipeline();
@@ -257,21 +218,95 @@ export function registerPipelineTools(server: McpServer): void {
 
       switch (args.action) {
         case "get": {
-          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for get action." }] };
+          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for action=get." }] };
           return handleGet(args as PipelineGetArgs, pipeline);
         }
-
         case "list":
           return handleList(args as PipelineListArgs, pipeline);
-
         case "stats":
           return handleStats(pipeline);
-
         case "next_actions":
           return handleNextActions(pipeline);
-
         default:
           return { content: [{ type: "text", text: `❌ Unknown action: ${args.action}` }] };
+      }
+    }
+  );
+
+  server.registerTool(
+    "pipeline_add",
+    {
+      title: "Add Application to Pipeline",
+      // Appends a new application. Additive only: never rewrites or removes an
+      // existing one, so destructiveHint is false even though this writes.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      description: "Add one job application to the pipeline. Creates a new record; never modifies an existing one. Use pipeline_update to change an application already being tracked.",
+      inputSchema: {
+        company: z.string().describe("Company name"),
+        role: z.string().describe("Role title as posted"),
+        postingUrl: z.string().optional().describe("Link to the job posting"),
+        postingText: z.string().optional().describe("Full posting text to cache, so later interview prep can reference it without the link"),
+        source: z.string().optional().describe("Where you found it: LinkedIn, Referral, Company site, etc."),
+        referral: z.string().optional().describe("Name of the person who referred you, if any"),
+        priority: z.enum(["high", "medium", "low"]).optional().describe("How hard you intend to push on this one. Defaults to medium."),
+        excitement: z.number().min(1).max(10).optional().describe("How excited you are about the role, 1-10. Used later to compare excitement against outcomes."),
+        salaryMin: z.number().optional().describe("Bottom of the posted or expected salary range, in whole currency units"),
+        salaryMax: z.number().optional().describe("Top of the posted or expected salary range, in whole currency units"),
+      },
+    },
+    async (args) => {
+      try {
+        // Load + mutate + save as one critical section, so two adds dispatched in
+        // the same turn cannot overwrite each other.
+        return await mutatePipeline((pipeline) => handleAdd({ ...args, action: "add" } as PipelineAddArgs, pipeline));
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        }
+        throw error;
+      }
+    }
+  );
+
+  server.registerTool(
+    "pipeline_update",
+    {
+      title: "Update Application in Pipeline",
+      // Overwrites fields on an existing application — a destructive update, so
+      // a host will always confirm before running it.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
+      inputSchema: {
+        id: z.string().describe("Application id, as returned by pipeline_add or pipeline_view"),
+        status: ApplicationStatus.optional().describe("New status in the funnel"),
+        priority: z.enum(["high", "medium", "low"]).optional().describe("New priority"),
+        notes: z.string().optional().describe("A note to append. Existing notes are kept; this is added with today's date."),
+        followUpDue: z.string().optional().describe("ISO date (YYYY-MM-DD) to be reminded to follow up"),
+        contactName: z.string().optional().describe("Name of a person met in this process, appended to the application's contacts"),
+        contactTitle: z.string().optional().describe("That person's title"),
+        contactEmail: z.string().optional().describe("That person's email"),
+        interviewType: z.enum(["phone_screen", "behavioral", "technical", "panel", "final", "offer_call", "other"]).optional().describe("Type of an interview round to append"),
+        interviewDate: z.string().optional().describe("ISO date of that interview round"),
+      },
+    },
+    async (args) => {
+      try {
+        return await mutatePipeline((pipeline) => handleUpdate({ ...args, action: "update" } as PipelineUpdateArgs, pipeline));
+      } catch (error) {
+        if (isCorruptDataError(error)) {
+          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        }
+        throw error;
       }
     }
   );
@@ -280,7 +315,7 @@ export function registerPipelineTools(server: McpServer): void {
     "classify_email",
     {
       title: "Classify Email",
-      // Reads pipeline company names for context and returns a classification. Any pipeline change happens through a separate manage_pipeline call.
+      // Reads pipeline company names for context and returns a classification. Any pipeline change happens through a separate pipeline_update call the user approves.
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -290,7 +325,7 @@ export function registerPipelineTools(server: McpServer): void {
       description: "Classify a job-search-related email and extract structured data: type, company, role, contact, next action, and urgency.",
       inputSchema: {
         emailContent: z.string().describe("Full email content — paste subject line and body"),
-        autoUpdatePipeline: z.boolean().default(false).describe("If true, ask Claude to follow up with a manage_pipeline update based on the classification. This tool only classifies — it never writes on its own."),
+        autoUpdatePipeline: z.boolean().default(false).describe("If true, the classification includes the specific pipeline field changes it implies, so you can review them before anything is written. This tool only classifies — it never writes."),
       },
     },
     async ({ emailContent, autoUpdatePipeline }) => {
