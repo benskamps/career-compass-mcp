@@ -11,6 +11,13 @@ export function registerCareerKBTools(server: McpServer): void {
     "ingest_document",
     {
       title: "Ingest Career Document",
+      // Extracts structured data and returns it for review. Persisting it is a separate, explicit step.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description: "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements to add to your Career KB.",
       inputSchema: {
         content: z.string().describe("Full document text to ingest"),
@@ -18,7 +25,7 @@ export function registerCareerKBTools(server: McpServer): void {
         associatedRole: z.string().optional().describe("Job role this document relates to"),
         associatedCompany: z.string().optional().describe("Company this document relates to"),
         datePeriod: z.string().optional().describe("Time period this covers, e.g. '2023 Q1' or '2022-2023'"),
-        autoSave: z.boolean().default(false).describe("If true, automatically append extracted data to Career KB"),
+        autoSave: z.boolean().default(false).describe("If true, ask Claude to follow up by writing the extracted data to your Career KB. This tool only extracts and returns — it never writes on its own."),
       },
     },
     async ({ content, documentType, associatedRole, associatedCompany, datePeriod, autoSave }) => {
@@ -92,6 +99,13 @@ ${autoSave ? `
     "generate_rejection_response",
     {
       title: "Generate Rejection Response",
+      // Drafts the response AND, when applicationId is given, sets that application's status to rejected — an overwrite of existing state.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
       description: "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
@@ -167,6 +181,13 @@ ${applicationId ? `\n**Note:** Application ${applicationId} status has been auto
     "capture_insight",
     {
       title: "Capture Career Insight",
+      // Appends one entry to the career journal. Additive only: never rewrites or removes an existing entry.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
       description:
         "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
       inputSchema: {

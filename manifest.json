@@ -1,0 +1,120 @@
+{
+  "manifest_version": "0.3",
+  "name": "career-compass-mcp",
+  "display_name": "Career Compass",
+  "version": "2.1.0",
+  "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
+  "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, score your fit, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry \u2014 the server makes no outbound network requests of its own. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (kanban pipeline, per-application detail, stage-distribution chart) that re-reads your YAML on every request.",
+  "author": {
+    "name": "Ben Schippers",
+    "url": "https://github.com/benskamps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/benskamps/career-compass-mcp.git"
+  },
+  "homepage": "https://github.com/benskamps/career-compass-mcp",
+  "documentation": "https://github.com/benskamps/career-compass-mcp#readme",
+  "support": "https://github.com/benskamps/career-compass-mcp/issues",
+  "icon": "icon.png",
+  "privacy_policies": [
+    "https://benskamps.github.io/career-compass-mcp/privacy"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "build/src/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/build/src/index.js"
+      ],
+      "env": {
+        "CAREER_DATA_PATH": "${user_config.career_data_path}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "explore_opportunity",
+      "description": "Analyze a job posting against your Career KB. Returns fit score, matched strengths, gaps, talking points, and a 'day in the life' brief."
+    },
+    {
+      "name": "research_company",
+      "description": "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals."
+    },
+    {
+      "name": "tailor_resume",
+      "description": "Generate a tailored, ATS-optimized resume matched to a specific job posting using your Career KB."
+    },
+    {
+      "name": "generate_cover_letter",
+      "description": "Write a compelling, personalized cover letter for a specific job posting using your Career KB."
+    },
+    {
+      "name": "format_for_ats",
+      "description": "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others."
+    },
+    {
+      "name": "manage_pipeline",
+      "description": "Add, update, list, and analyze job applications. Track status from discovered through offer/rejection."
+    },
+    {
+      "name": "classify_email",
+      "description": "Classify a job-search-related email and extract structured data: type, company, role, contact, next action, and urgency."
+    },
+    {
+      "name": "prepare_interview",
+      "description": "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics \u2014 tailored to interview type."
+    },
+    {
+      "name": "evaluate_offer",
+      "description": "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts."
+    },
+    {
+      "name": "ingest_document",
+      "description": "Paste any career document \u2014 performance review, award email, project summary, LinkedIn recommendation \u2014 and extract structured achievements to add to your Career KB."
+    },
+    {
+      "name": "generate_rejection_response",
+      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities."
+    },
+    {
+      "name": "capture_insight",
+      "description": "Record a durable career signal to your journal \u2014 what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work."
+    }
+  ],
+  "tools_generated": false,
+  "prompts_generated": true,
+  "user_config": {
+    "career_data_path": {
+      "type": "directory",
+      "title": "Career data folder",
+      "description": "Where your career history and job pipeline are stored, as plain YAML. Nothing is uploaded \u2014 this folder never leaves your machine. Leave the default unless you want it somewhere specific, such as inside a folder you already back up.",
+      "default": "${HOME}/.career-compass",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "career",
+    "job-search",
+    "resume",
+    "interview-prep",
+    "application-tracking",
+    "claude",
+    "anthropic",
+    "ai"
+  ],
+  "license": "MIT"
+}
