@@ -1,9 +1,23 @@
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError } from "../storage/file-store.js";
+import { join } from "path";
+import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS } from "../storage/file-store.js";
+import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
+
+/** Per-section schema, so a write is validated with the same rules the loader
+ *  enforces on read. Writing first and validating later would let one bad write
+ *  make the entire KB unloadable. */
+const CAREER_SECTION_SCHEMA = {
+  profile: Profile,
+  experience: z.array(Experience),
+  skills: z.array(Skill),
+  education: z.array(Education),
+  projects: z.array(Project),
+  testimonials: z.array(Testimonial),
+} as const;
 
 export function registerCareerKBTools(server: McpServer): void {
 
@@ -118,6 +132,11 @@ ${autoSave ? `
       },
     },
     async ({ applicationId, company, role, rejectionContent, responseGoal, contactName, hadGoodRapport }) => {
+      // Track whether the status was ACTUALLY changed. Reporting the update on
+      // `applicationId` being present meant a bad id produced "status has been
+      // automatically updated to 'rejected'" while nothing was written — the
+      // tool claiming a state change it never made.
+      let statusUpdated = false;
       if (applicationId) {
         // Same critical section as pipeline_update: this is a read-modify-write
         // on the shared pipeline file, so it must not straddle the lock.
@@ -130,6 +149,7 @@ ${autoSave ? `
           // Auto-update status to rejected
           app.status = "rejected";
           app.dateUpdated = new Date().toISOString();
+          statusUpdated = true;
         });
       }
 
@@ -171,7 +191,13 @@ ${responseGoal === "express_continued_interest" ? "Mention the company is still 
 2. **Alternative version** (different angle)
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
 
-${applicationId ? `\n**Note:** Application ${applicationId} status has been automatically updated to 'rejected'.` : ""}`,
+${statusUpdated
+  ? `
+**Note:** ${applicationId} is now marked 'rejected' in your pipeline.`
+  : applicationId
+    ? `
+**Note:** No application matching \`${applicationId}\` is in your pipeline, so nothing was changed. The draft above still stands.`
+    : ""}`,
         }],
       };
     }
@@ -270,6 +296,78 @@ ${applicationId ? `\n**Note:** Application ${applicationId} status has been auto
             (signals.length ? `\nSignals: ${signals.map((s) => `\`${s}\``).join(", ")}\n` : "") +
             `\nThat's **${total}** ${total === 1 ? "entry" : "entries"} on the record now. ` +
             `These accrue — the more you capture, the sharper future resume, interview, and fit work gets.`,
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "save_career_section",
+    {
+      title: "Save Career KB Section",
+      // Overwrites one section file wholesale — a destructive update, so a host
+      // always confirms. The previous contents are kept as a timestamped .bak.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      description:
+        "Write one section of the Career KB to disk. This is how the Career KB gets populated — " +
+        "ingest_document and the resume tools only read and extract. Replaces the whole section, " +
+        "so send the complete list you want stored, not just new entries. The previous version is " +
+        "kept as a timestamped .bak next to it.",
+      inputSchema: {
+        section: z.enum(CAREER_SECTIONS).describe(
+          "Which part of the Career KB to write. 'profile' is a single object; every other section is a list.",
+        ),
+        data: z.unknown().describe(
+          "The complete contents for this section. An object for 'profile'; an array for the others.",
+        ),
+      },
+    },
+    async ({ section, data }) => {
+      // Validate against the same schema the loader enforces, BEFORE touching
+      // disk. Writing first and validating on read would let one bad write make
+      // the whole KB unloadable — loadCareerData fails closed on a corrupt
+      // section, so an invalid profile.yaml takes every KB-backed tool down.
+      const schema = CAREER_SECTION_SCHEMA[section];
+      const parsed = schema.safeParse(data);
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .slice(0, 6)
+          .map((i) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`)
+          .join("\n");
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text:
+              `❌ That doesn't match the shape of \`${section}\`, so nothing was written ` +
+              `(your existing ${section}.yaml is untouched).\n\n${issues}` +
+              (parsed.error.issues.length > 6 ? `\n  …and ${parsed.error.issues.length - 6} more` : ""),
+          }],
+        };
+      }
+
+      try {
+        await saveCareerSection(section, parsed.data);
+      } catch (error) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: `❌ Could not write ${section}: ${(error as Error).message}` }],
+        };
+      }
+
+      const count = Array.isArray(parsed.data) ? parsed.data.length : 1;
+      return {
+        content: [{
+          type: "text",
+          text:
+            `✅ Saved **${section}** (${count} ${count === 1 ? "entry" : "entries"}) to ` +
+            `\`${join(getDataDir(), "career", `${section}.yaml`)}\`.\n\n` +
+            `It's plain YAML — open it, edit it, or delete it any time. Nothing left your machine.`,
         }],
       };
     }

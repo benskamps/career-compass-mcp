@@ -279,6 +279,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `ingest_document` | Extracts achievements from any document: performance review, award email, LinkedIn recommendation, project summary |
 | `generate_rejection_response` | Drafts a graceful response that keeps the door open and maintains the relationship |
 | `capture_insight` | Appends a dated signal to your career journal — fit signals, interview insights, offer reflections, rejection patterns, skill evidence, wins — which later resume, interview, and fit prompts read back |
+| `save_career_section` | Writes one section of your Career KB to disk as plain YAML — this is how the KB gets populated. Replaces the whole section; the previous version is kept as a `.bak` |
 
 ## Resources
 

@@ -102,10 +102,10 @@ describe("explore_opportunity", () => {
     expect(text).toContain("Program Manager"); // a target role
   });
 
-  it("returns the 'No career data found' early-return when the KB is absent", async () => {
+  it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "explore_opportunity", { posting: "x" });
-    expect(text).toContain("No career data found");
+    expect(text).toContain("No career data yet");
   });
 });
 
@@ -149,10 +149,10 @@ describe("tailor_resume", () => {
     expect(text).toContain("MedFlow Health Systems");
   });
 
-  it("returns the 'No career data found' early-return when the KB is absent", async () => {
+  it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "tailor_resume", { posting: "x" });
-    expect(text).toContain("No career data found");
+    expect(text).toContain("No career data yet");
   });
 });
 
@@ -172,13 +172,13 @@ describe("generate_cover_letter", () => {
     expect(text).not.toContain("Rebuilt vendor evaluation framework");
   });
 
-  it("returns the 'No career data found' early-return when the KB is absent", async () => {
+  it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "generate_cover_letter", {
       posting: "x",
       company: "Acme",
     });
-    expect(text).toContain("No career data found");
+    expect(text).toContain("No career data yet");
   });
 });
 
@@ -216,10 +216,10 @@ describe("prepare_interview", () => {
     expect(text).toContain("Alex Rivera");
   });
 
-  it("returns the 'No career data found' early-return when the KB is absent", async () => {
+  it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "prepare_interview", { interviewType: "behavioral" });
-    expect(text).toContain("No career data found");
+    expect(text).toContain("No career data yet");
   });
 });
 
@@ -276,7 +276,7 @@ describe("generate_rejection_response", () => {
       });
       // Company/role hydrated from the pipeline and status write acknowledged.
       expect(text).toContain("Veridian Health");
-      expect(text).toContain("status has been automatically updated to 'rejected'");
+      expect(text).toContain("is now marked");
     } finally {
       await rm(writableDir, { recursive: true, force: true });
     }

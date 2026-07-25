@@ -378,7 +378,7 @@ Classify this email and extract structured data:
 ### Suggested Response Draft
 Write a brief, professional reply (3-5 sentences) appropriate for this email type.
 
-${autoUpdatePipeline ? "\n**Auto-update:** After classifying, call manage_pipeline with action='update' to update the matching application." : ""}`,
+${autoUpdatePipeline ? "\n**Suggested pipeline changes:** After classifying, list the exact fields this email implies should change, and the application id, for the user to confirm before anything is written." : ""}`,
         }],
       };
     }

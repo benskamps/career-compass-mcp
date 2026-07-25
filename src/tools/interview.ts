@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData, loadPipeline } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
+import { noCareerDataMessage } from "../empty-state.js";
 
 export function registerInterviewTools(server: McpServer): void {
 
@@ -51,7 +52,7 @@ export function registerInterviewTools(server: McpServer): void {
 
       if (!career) {
         return {
-          content: [{ type: "text", text: "⚠️ No career data found. Please populate your Career KB first." }],
+          content: [{ type: "text", text: noCareerDataMessage() }],
         };
       }
 

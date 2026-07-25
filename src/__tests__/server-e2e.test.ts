@@ -39,6 +39,7 @@ const EXPECTED_TOOLS = [
   "ingest_document",
   "generate_rejection_response",
   "capture_insight",
+  "save_career_section",
 ] as const;
 
 /** Concatenate the text parts of a tool result's content array.
@@ -85,11 +86,11 @@ describe("MCP server E2E (in-memory transport)", () => {
     });
   });
 
-  it("registers all 14 tools, including the three tool families", async () => {
+  it("registers all 15 tools, including the three tool families", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
 
-    expect(tools).toHaveLength(14);
+    expect(tools).toHaveLength(15);
     expect(names).toEqual([...EXPECTED_TOOLS].sort());
     expect(names).toContain("tailor_resume");
     expect(names).toContain("pipeline_view");

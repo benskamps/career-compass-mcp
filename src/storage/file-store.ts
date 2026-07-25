@@ -84,7 +84,10 @@ export function withDataLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
 
 // ─── Path resolution ──────────────────────────────────────────────────────────
 
-function getDataDir(): string {
+/** Absolute path of the directory the Career KB is read from and written to.
+ *  Exported so empty-state messages can name the user's real folder instead of
+ *  a repo-relative path that exists nowhere on their machine. */
+export function getDataDir(): string {
   return process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
 }
 
@@ -209,10 +212,31 @@ export async function loadCareerData(): Promise<CareerData | null> {
   }
 }
 
+/** The only section names that may become a filename. */
+export const CAREER_SECTIONS = [
+  "profile", "experience", "skills", "education", "projects", "testimonials",
+] as const;
+export type CareerSection = (typeof CAREER_SECTIONS)[number];
+
+/**
+ * Write one section of the Career KB.
+ *
+ * `section` becomes a path segment, so it is checked against an allowlist rather
+ * than trusted. Before this was reachable from a tool it was only ever called
+ * with literals; now that a model can supply the value, `../../.ssh/id_rsa` has
+ * to be impossible rather than merely unlikely.
+ */
 export async function saveCareerSection(section: string, data: unknown): Promise<void> {
+  if (!(CAREER_SECTIONS as readonly string[]).includes(section)) {
+    throw new Error(
+      `Unknown career section "${section}". Expected one of: ${CAREER_SECTIONS.join(", ")}.`,
+    );
+  }
   const path = join(careerDir(), `${section}.yaml`);
   await withDataLock(path, () => atomicWriteYaml(path, data));
 }
+
+
 
 // ─── Career journal (append-only signals) ──────────────────────────────────────
 

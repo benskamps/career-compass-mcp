@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
+import { noCareerDataMessage } from "../empty-state.js";
 
 export function registerResumeTools(server: McpServer): void {
 
@@ -30,7 +31,7 @@ export function registerResumeTools(server: McpServer): void {
       const career = await loadCareerData();
       if (!career) {
         return {
-          content: [{ type: "text", text: "⚠️ No career data found. Please populate your Career KB first." }],
+          content: [{ type: "text", text: noCareerDataMessage() }],
         };
       }
 
@@ -114,7 +115,7 @@ Output the full resume text, then a "Keyword Match Report" showing which posting
       const career = await loadCareerData();
       if (!career) {
         return {
-          content: [{ type: "text", text: "⚠️ No career data found." }],
+          content: [{ type: "text", text: noCareerDataMessage() }],
         };
       }
 

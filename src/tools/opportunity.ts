@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
+import { noCareerDataMessage } from "../empty-state.js";
 
 export function registerOpportunityTools(server: McpServer): void {
 
@@ -30,7 +31,7 @@ export function registerOpportunityTools(server: McpServer): void {
         return {
           content: [{
             type: "text",
-            text: "⚠️ No career data found. Please populate your Career KB first by running `ingest_document` or adding YAML files to data/career/.",
+            text: noCareerDataMessage(),
           }],
         };
       }
