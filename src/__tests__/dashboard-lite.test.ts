@@ -92,9 +92,18 @@ describe("renderLiteDashboard", () => {
     const html = renderLiteDashboard(pipeline);
     expect(html.startsWith("<!doctype html>")).toBe(true);
     expect(html).toContain("Veridian");
-    // fully inlined — no external network assets
+    // Fully inlined — the page must never fetch anything. The claim being
+    // tested is "no network request", not "no <link> tag": a data: URI is
+    // carried in the document itself, so the inline favicon is exactly as
+    // self-contained as the inline <style>. Anything with a real href is not.
     expect(html).not.toMatch(/<script[^>]+src=/i);
-    expect(html).not.toMatch(/<link[^>]+href=/i);
+    const externalHrefs = [...html.matchAll(/<link[^>]+href="([^"]*)"/gi)]
+      .map((m) => m[1])
+      .filter((href) => !href.startsWith("data:"));
+    expect(
+      externalHrefs,
+      `these <link> hrefs would hit the network: ${externalHrefs.join(", ")}`,
+    ).toEqual([]);
   });
 
   it("shows the empty state when there are no applications", () => {

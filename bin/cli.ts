@@ -6,6 +6,11 @@ import { createServer as createNetServer } from "net";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 
+/** The dashboard binds loopback and nothing else. Declared here because this
+ *  file executes top-level: findPort() runs during module evaluation, so a
+ *  const declared further down is still in its temporal dead zone. */
+const LOOPBACK = "127.0.0.1";
+
 const args = process.argv.slice(2);
 
 // ─── Version ─────────────────────────────────────────────────────────────────
@@ -132,13 +137,22 @@ if (!isDashboard) {
   }
 }
 
+/**
+ * Find a free port, probing the exact address the dashboard will bind.
+ *
+ * `listen(port)` with no host binds every interface, which is the wrong test in
+ * two ways: it can call a port free when something already holds it on
+ * 127.0.0.1, and for the moment it is open it accepts connections from the
+ * network — on a tool whose entire promise is that nothing leaves the machine.
+ * Probe loopback, bind loopback.
+ */
 function findPort(preferred: number): Promise<number> {
   return new Promise((resolve) => {
     const server = createNetServer();
-    server.listen(preferred, () => { server.close(() => resolve(preferred)); });
+    server.listen(preferred, LOOPBACK, () => { server.close(() => resolve(preferred)); });
     server.on("error", () => {
       const fallback = createNetServer();
-      fallback.listen(0, () => {
+      fallback.listen(0, LOOPBACK, () => {
         const addr = fallback.address();
         const port = typeof addr === "object" && addr ? addr.port : 0;
         fallback.close(() => resolve(port));

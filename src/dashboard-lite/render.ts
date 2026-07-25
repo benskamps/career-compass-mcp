@@ -38,8 +38,18 @@ interface NextAction { app: Application; label: string; urgency: "overdue" | "so
 /** Derive next actions from follow-up dates, upcoming interviews, and expiring offers. */
 export function deriveNextActions(apps: Application[], today = new Date()): NextAction[] {
   const out: NextAction[] = [];
-  const t0 = today.getTime();
-  const days = (iso?: string) => (iso ? Math.round((new Date(iso).getTime() - t0) / 86400000) : NaN);
+  // Compare CALENDAR DAYS in the user's own timezone, not timestamps.
+  // `new Date("2026-07-24")` is parsed as UTC midnight, while `Date.now()` is
+  // local — so west of UTC a follow-up due today came out negative and rendered
+  // as "overdue by 1d", and east of UTC tomorrow's reminder fired a day early.
+  // A date-only field has no time in it; treating it as one is the bug.
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const days = (iso?: string) => {
+    if (!iso) return NaN;
+    const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+    if (!y || !m || !d) return NaN;
+    return Math.round((new Date(y, m - 1, d).getTime() - midnight) / 86400000);
+  };
   for (const app of apps) {
     if (["accepted", "rejected", "withdrawn", "ghosted"].includes(app.status)) continue;
     const fu = days(app.followUpDue);
@@ -113,7 +123,14 @@ export function renderLiteDashboard(pipeline: Pipeline): string {
     kpi(`${s.ghostRate}%`, "Ghost rate"),
   ].join("");
 
-  const presentStages = STAGE_ORDER.filter((st) => apps.some((a) => a.status === st) || ACTIVE.includes(st));
+  // Only show a stage that has something in it, plus the handful of early
+  // stages that read as "nothing here yet" rather than as clutter. Rendering
+  // every active stage regardless meant a small pipeline still produced six
+  // columns, several of them just "0 —".
+  const ALWAYS_SHOW: ApplicationStatus[] = ["applied", "screening", "interviewing"];
+  const presentStages = STAGE_ORDER.filter(
+    (st) => apps.some((a) => a.status === st) || ALWAYS_SHOW.includes(st),
+  );
   const board = presentStages.map((st) => {
     const items = apps.filter((a) => a.status === st);
     return `<div class="col">
@@ -144,8 +161,13 @@ export function renderLiteDashboard(pipeline: Pipeline): string {
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Career Compass — Pipeline</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f1e1d'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c2603c'/%3E%3Cpath d='M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z' fill='%231f1e1d'/%3E%3C/svg%3E">
 <style>
-:root{color-scheme:light;--bg:#f7f8fa;--card:#fff;--ink:#14161c;--muted:#6b7280;--line:#e6e8ee;--accent:#4f46e5;--accent-soft:#eef0fe;--shadow:0 1px 2px rgba(20,22,28,.06),0 4px 14px rgba(20,22,28,.05)}
+/* Warm neutrals + clay accent, so the page sits inside Claude rather than
+   next to it, and follows the host's light/dark preference instead of
+   blinding anyone running Claude Desktop in dark mode. */
+:root{color-scheme:light dark;--bg:#faf9f5;--card:#fff;--ink:#1f1e1d;--muted:#6b675f;--line:#e8e5dd;--accent:#c2603c;--accent-soft:#f6ece7;--sunk:#f5f3ed;--shadow:0 1px 2px rgba(31,30,29,.05),0 4px 14px rgba(31,30,29,.04)}
+@media(prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#262624;--ink:#f2efe8;--muted:#a5a096;--line:#37352f;--accent:#e08560;--accent-soft:#33241d;--sunk:#221f1d;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.22)}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 20px 64px}
 header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
@@ -154,34 +176,37 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
 .kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em}.kpi .l{color:var(--muted);font-size:12px;margin-top:2px}.kpi .foot{font-size:11.5px;margin-top:6px;color:var(--muted)}
-.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;align-items:start}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
 .panel .body{padding:14px 16px}.chart-box{position:relative;height:230px;display:flex;align-items:flex-end;gap:10px}
 .bar-row{display:flex;flex-direction:column;gap:9px;width:100%}
 .bar{display:flex;align-items:center;gap:10px}.bar .lab{width:96px;font-size:12px;color:var(--muted);text-align:right;flex:0 0 auto}
-.bar .track{flex:1;background:#f0f1f5;border-radius:6px;height:22px;overflow:hidden}.bar .fill{height:100%;border-radius:6px}
+.bar .track{flex:1;background:var(--sunk);border-radius:6px;height:22px;overflow:hidden}
+/* display:block is load-bearing. These are <span>s, and width has no effect on
+   an inline box — so every bar in this chart rendered as an empty track. */
+.bar .fill{display:block;height:100%;border-radius:6px;min-width:3px;transition:width .3s ease}
 .bar .val{font-size:12px;font-weight:600;width:22px}
 .action{display:flex;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}.action:last-child{border-bottom:0}
 .action .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;background:var(--accent)}
 .action.overdue .dot{background:#ef4444}.action.soon .dot{background:#f59e0b}
 .action .t{flex:1}.action .t b{display:block;font-size:13.5px}.action .t span{color:var(--muted);font-size:12px}
-.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
-.col{background:#fbfbfd;border:1px solid var(--line);border-radius:12px;min-height:80px}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;align-items:start}
+.col{background:var(--sunk);border:1px solid var(--line);border-radius:12px;min-height:80px}
 .col .h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-weight:600;font-size:12.5px;text-transform:capitalize}
-.col .h .sw{width:9px;height:9px;border-radius:50%}.col .h .count{margin-left:auto;background:#eef0f4;color:var(--muted);border-radius:999px;font-size:11px;padding:1px 8px}
+.col .h .sw{width:9px;height:9px;border-radius:50%}.col .h .count{margin-left:auto;background:var(--sunk);color:var(--muted);border:1px solid var(--line);border-radius:999px;font-size:11px;padding:1px 8px}
 .col .stack{padding:10px;display:flex;flex-direction:column;gap:9px}.none{color:var(--muted);font-size:11.5px;padding:4px 2px}.none-lg{color:var(--muted);font-size:13px}
 .jc{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--stage,#ccc);border-radius:10px;padding:10px 11px;cursor:pointer;transition:.12s}
 .jc:hover{box-shadow:var(--shadow);transform:translateY(-1px)}.jc .co{font-weight:650;font-size:13px}.jc .ro{color:var(--muted);font-size:12px;margin-top:1px}
 .jc .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
-.pill{font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:600}.p-high{background:#fee2e2;color:#b91c1c}.p-medium{background:#fef3c7;color:#92400e}.p-low{background:#e5e7eb;color:#4b5563}
+.pill{font-size:10.5px;padding:2px 7px;border-radius:999px;font-weight:600}.p-high{background:color-mix(in srgb,#ef4444 16%,transparent);color:#c04a3a}.p-medium{background:color-mix(in srgb,#f59e0b 18%,transparent);color:#a06a1b}.p-low{background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
 .exc{font-size:11px;color:var(--muted);margin-left:auto}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.12s}
-.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:#4338ca}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{filter:brightness(.93)}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .state{text-align:center;padding:48px 20px;color:var(--muted)}.state h3{color:var(--ink);font-size:16px;margin:0 0 6px}.state .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 .foot-note{color:var(--muted);font-size:11.5px;margin-top:22px;text-align:center}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hidden{display:none!important}
 </style></head>
@@ -197,15 +222,13 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 </div>
 <div class="kpis">${kpis}</div>
 ${apps.length === 0 ? emptyState : `
+<div class="panel" style="margin-bottom:16px">
+  <h2>Pipeline by stage</h2>
+  <div class="body"><div class="board">${board}</div></div>
+</div>
 <div class="grid2">
-  <div class="panel">
-    <h2>Pipeline by stage</h2>
-    <div class="body"><div class="board">${board}</div></div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:16px">
-    <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
-    <div class="panel"><h2>Stage distribution</h2><div class="body"><div id="chart" class="chart-box"></div></div></div>
-  </div>
+  <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
+  <div class="panel"><h2>Stage distribution</h2><div class="body"><div id="chart" class="chart-box"></div></div></div>
 </div>`}
 <div class="foot-note">Data stays local (<code>~/.career-compass</code>). Click any card to copy a prompt for Claude — that's where the work happens. Refresh the page to re-read from disk.</div>
 </div>

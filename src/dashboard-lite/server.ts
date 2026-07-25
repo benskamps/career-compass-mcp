@@ -40,11 +40,38 @@ export function createLiteDashboardServer(): Server {
   });
 }
 
-/** Start the lite dashboard on `port`, resolving once it's listening. */
-export function startLiteDashboard(port: number, hostname = "localhost"): Promise<Server> {
+/**
+ * Start the lite dashboard on `port`, resolving once it's listening.
+ *
+ * Binds the literal IPv4 loopback rather than the name "localhost". Passing a
+ * name lets Node resolve it, and on Windows that returns `::1` first — so the
+ * server bound IPv6-only, and every client that tried `127.0.0.1` got
+ * ECONNREFUSED while the CLI cheerfully printed a `http://localhost` URL that
+ * happened to work on the author's machine. Which of the two a given browser
+ * picks is not something we get to decide, so binding the name is a coin flip
+ * on someone else's computer.
+ *
+ * `127.0.0.1` is the address every client tries, so it is the one that must
+ * work. A second listener on `::1` is attempted for hosts where `localhost`
+ * resolves IPv6-first; failure there is ignored, because IPv4 alone is a
+ * working dashboard and a machine with no IPv6 loopback is not an error.
+ *
+ * Both are loopback: the dashboard is never reachable from the network.
+ */
+export function startLiteDashboard(port: number, hostname = "127.0.0.1"): Promise<Server> {
   const server = createLiteDashboardServer();
   return new Promise((resolve, reject) => {
     server.once("error", reject);
-    server.listen(port, hostname, () => resolve(server));
+    server.listen(port, hostname, () => {
+      if (hostname !== "127.0.0.1") return resolve(server);
+      // Best-effort dual-stack. Its lifetime is tied to the primary server so
+      // `close()` on the returned handle tears down both.
+      const v6 = createLiteDashboardServer();
+      v6.once("error", () => resolve(server)); // no IPv6 loopback: IPv4 is enough
+      v6.listen(port, "::1", () => {
+        server.once("close", () => v6.close());
+        resolve(server);
+      });
+    });
   });
 }
