@@ -22,10 +22,33 @@ const STAGE_ORDER: ApplicationStatus[] = [
 const ACTIVE: ApplicationStatus[] = [
   "discovered", "applied", "screening", "interviewing", "offer", "negotiating",
 ];
+/**
+ * Stage colours as a temperature ramp, not a rainbow.
+ *
+ * These were the stock Tailwind hues — slate, sky, violet, amber, emerald, red.
+ * Six fully-saturated colours from three different families, dropped into a page
+ * built on warm neutrals and one clay accent: the board and the chart read as a
+ * different product than the frame around them, and in dark mode the violet and
+ * sky went neon.
+ *
+ * The replacement encodes the funnel instead of decorating it. Cool ash at the
+ * top where nothing has happened yet, warming through brass and clay as a
+ * conversation heats up, resolving to green when it lands. Everything is
+ * desaturated enough to sit inside a warm neutral system and to hold contrast
+ * on both the cream and the bark background. Terminal states are muted on
+ * purpose — a rejection should not be the brightest thing on the page.
+ */
 const STAGE_COLOR: Record<ApplicationStatus, string> = {
-  discovered: "#64748b", applied: "#0ea5e9", screening: "#8b5cf6",
-  interviewing: "#f59e0b", offer: "#10b981", negotiating: "#14b8a6",
-  accepted: "#059669", rejected: "#ef4444", withdrawn: "#9ca3af", ghosted: "#a1a1aa",
+  discovered: "#8e887d",   // ash — noticed, not acted on
+  applied: "#7c8fa1",      // cool steel — sent, waiting
+  screening: "#a2894f",    // brass — someone replied
+  interviewing: "#c2603c", // clay — the product's accent, the hottest live stage
+  offer: "#4f8a6d",        // sage — it landed
+  negotiating: "#3f7f74",  // deep teal — landed, still moving
+  accepted: "#3d7a52",     // forest — done, good
+  rejected: "#a85a4a",     // muted brick — done, not good. Deliberately not red.
+  withdrawn: "#8a8278",    // faded ash — done, your call
+  ghosted: "#6f6a63",      // dim — done, no answer
 };
 
 function esc(s: unknown): string {
@@ -127,17 +150,38 @@ export function renderLiteDashboard(pipeline: Pipeline): string {
   // stages that read as "nothing here yet" rather than as clutter. Rendering
   // every active stage regardless meant a small pipeline still produced six
   // columns, several of them just "0 —".
+  // The live funnel is the thing you scan every day; closed applications are
+  // reference. Giving them equal column weight pushed the board onto a second
+  // ragged row and made "Rejected" as loud as "Interviewing". Terminal stages
+  // now collapse behind one disclosure.
+  const CLOSED: ApplicationStatus[] = ["accepted", "rejected", "withdrawn", "ghosted"];
   const ALWAYS_SHOW: ApplicationStatus[] = ["applied", "screening", "interviewing"];
-  const presentStages = STAGE_ORDER.filter(
-    (st) => apps.some((a) => a.status === st) || ALWAYS_SHOW.includes(st),
-  );
-  const board = presentStages.map((st) => {
+
+  const stageCol = (st: ApplicationStatus) => {
     const items = apps.filter((a) => a.status === st);
     return `<div class="col">
       <div class="h"><span class="sw" style="background:${STAGE_COLOR[st]}"></span> ${st} <span class="count">${items.length}</span></div>
-      <div class="stack">${items.map(jobCard).join("") || '<div class="none">—</div>'}</div>
+      <div class="stack">${items.map(jobCard).join("") || '<div class="none">Nothing here yet</div>'}</div>
     </div>`;
-  }).join("");
+  };
+
+  const liveStages = STAGE_ORDER.filter(
+    (st) => !CLOSED.includes(st) && (apps.some((a) => a.status === st) || ALWAYS_SHOW.includes(st)),
+  );
+  const closedStages = STAGE_ORDER.filter((st) => CLOSED.includes(st) && apps.some((a) => a.status === st));
+  const closedCount = apps.filter((a) => CLOSED.includes(a.status)).length;
+
+  const board = liveStages.map(stageCol).join("");
+  const closedBoard = closedCount
+    ? `<details class="closed">
+        <summary>Closed <span class="count">${closedCount}</span>
+          <span class="dots">${closedStages
+            .map((st) => `<span class="sw" style="background:${STAGE_COLOR[st]}" title="${st}"></span>`)
+            .join("")}</span>
+        </summary>
+        <div class="board">${closedStages.map(stageCol).join("")}</div>
+      </details>`
+    : "";
 
   const actionsHtml = actions.length
     ? actions.map((x) => `<div class="action ${x.urgency}"><span class="dot"></span><div class="t"><b>${esc(x.label)}</b><span>${esc(x.app.role)}</span></div></div>`).join("")
@@ -179,7 +223,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
-.panel .body{padding:14px 16px}.chart-box{position:relative;height:230px;display:flex;align-items:flex-end;gap:10px}
+.panel .body{padding:14px 16px}.chart-box{position:relative;display:flex;gap:10px}
 .bar-row{display:flex;flex-direction:column;gap:9px;width:100%}
 .bar{display:flex;align-items:center;gap:10px}.bar .lab{width:96px;font-size:12px;color:var(--muted);text-align:right;flex:0 0 auto}
 .bar .track{flex:1;background:var(--sunk);border-radius:6px;height:22px;overflow:hidden}
@@ -208,6 +252,15 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .foot-note{color:var(--muted);font-size:11.5px;margin-top:22px;text-align:center}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.closed{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.closed summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--muted);padding:4px 2px;border-radius:8px}
+.closed summary::-webkit-details-marker{display:none}
+.closed summary::before{content:"▸";display:inline-block;transition:transform .15s;color:var(--muted);font-size:11px}
+.closed[open] summary::before{transform:rotate(90deg)}
+.closed summary:hover{color:var(--ink)}
+.closed .dots{display:inline-flex;gap:4px;margin-left:2px}
+.closed .dots .sw{width:8px;height:8px;border-radius:50%}
+.closed .board{margin-top:10px}
 .hidden{display:none!important}
 </style></head>
 <body><div class="wrap">
@@ -224,7 +277,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 ${apps.length === 0 ? emptyState : `
 <div class="panel" style="margin-bottom:16px">
   <h2>Pipeline by stage</h2>
-  <div class="body"><div class="board">${board}</div></div>
+  <div class="body"><div class="board">${board}</div>${closedBoard}</div>
 </div>
 <div class="grid2">
   <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
