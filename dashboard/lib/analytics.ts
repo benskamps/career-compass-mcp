@@ -17,13 +17,39 @@ function stageIndex(status: ApplicationStatus): number {
   return idx >= 0 ? idx : 0;
 }
 
+/**
+ * The two halves of "response rate", defined once.
+ *
+ * This page and the lite dashboard (src/dashboard-lite/render.ts) both show a
+ * "Response rate" and used to disagree — 63% here against 71% there, on the
+ * same eight-application sample — because each half was measured wrong.
+ *
+ * `discovered` is a job you bookmarked and never applied to. Putting it in the
+ * denominator charges you for silence you never invited, so the number gets
+ * *worse* the more thorough your research is. That is backwards.
+ *
+ * `ghosted` is an application that never got a reply. Counting it as a response
+ * calls silence an answer — the one thing this stat exists to detect.
+ *
+ * So: of the applications actually sent, how many came back. Both call sites
+ * below go through these, so the per-source figure cannot drift from the
+ * headline one again.
+ */
+const wasSent = (a: Application): boolean => a.status !== "discovered";
+const gotResponse = (a: Application): boolean =>
+  a.status !== "discovered" && a.status !== "applied" && a.status !== "ghosted";
+
+function responseRateOf(applications: Application[]): number {
+  const sent = applications.filter(wasSent).length;
+  return sent > 0 ? Math.round((applications.filter(gotResponse).length / sent) * 100) : 0;
+}
+
 export function computeAnalytics(applications: Application[]): AnalyticsResult {
   const total = applications.length;
   const statusCounts: Record<string, number> = {};
   for (const app of applications) { statusCounts[app.status] = (statusCounts[app.status] ?? 0) + 1; }
 
-  const responded = applications.filter((a) => a.status !== "applied" && a.status !== "discovered").length;
-  const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
+  const responseRate = responseRateOf(applications);
   const activeCount = applications.filter((a) => !TERMINAL_STATUSES.includes(a.status)).length;
 
   const withResponse = applications.filter((a) => a.dateApplied && a.status !== "applied" && a.status !== "ghosted");
@@ -51,9 +77,8 @@ export function computeAnalytics(applications: Application[]): AnalyticsResult {
     sourceMap.get(src)!.push(app);
   }
   const sourceStats: SourceStat[] = [...sourceMap.entries()].map(([source, apps]) => {
-    const resp = apps.filter((a) => a.status !== "applied" && a.status !== "discovered").length;
     const furthest = apps.reduce((max, a) => Math.max(max, stageIndex(a.status)), 0);
-    return { source, count: apps.length, responseRate: apps.length > 0 ? Math.round((resp / apps.length) * 100) : 0, furthestStage: STAGE_ORDER[furthest] ?? "discovered" };
+    return { source, count: apps.length, responseRate: responseRateOf(apps), furthestStage: STAGE_ORDER[furthest] ?? "discovered" };
   });
 
   const priorityCounts: Record<string, number> = { high: 0, medium: 0, low: 0 };

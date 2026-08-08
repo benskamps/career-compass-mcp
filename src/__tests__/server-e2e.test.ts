@@ -41,6 +41,7 @@ const EXPECTED_TOOLS = [
   "generate_rejection_response",
   "capture_insight",
   "save_career_section",
+  "check_setup",
 ] as const;
 
 /** Concatenate the text parts of a tool result's content array.

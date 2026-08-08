@@ -69,6 +69,11 @@ const ARGS: Record<string, Record<string, unknown>> = {
   pipeline_update: { id: "does-not-exist", status: "interviewing" },
   capture_insight: { type: "win", summary: "Panel liked the WMS story." },
   generate_rejection_response: { rejectionContent: "We went with another candidate." },
+  // `checkForUpdates: false` because this suite must not reach the npm registry;
+  // the update check is exercised with an injected stub in upgrade-scenarios.
+  // The dashboard probe stays on, aimed at a port nothing should be serving, so
+  // the read-only claim is tested against the path a real user runs.
+  check_setup: { checkForUpdates: false, dashboardPort: 59999 },
 };
 
 const KNOWN_WRITERS = ["pipeline_add", "pipeline_update", "capture_insight", "generate_rejection_response"];
