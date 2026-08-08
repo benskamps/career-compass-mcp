@@ -32,17 +32,24 @@ export function registerCareerKBTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements to add to your Career KB.",
+      description:
+        "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements for your Career KB. " +
+        "Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section.",
       inputSchema: {
         content: z.string().describe("Full document text to ingest"),
         documentType: z.enum(["performance_review", "award", "project_summary", "recommendation", "email", "self_review", "other"]).describe("Type of document"),
         associatedRole: z.string().optional().describe("Job role this document relates to"),
         associatedCompany: z.string().optional().describe("Company this document relates to"),
         datePeriod: z.string().optional().describe("Time period this covers, e.g. '2023 Q1' or '2022-2023'"),
-        autoSave: z.boolean().default(false).describe("If true, the output names the exact Career KB file each extracted item belongs in, so you can review before anything is written. This tool only extracts — it never writes."),
       },
     },
-    async ({ content, documentType, associatedRole, associatedCompany, datePeriod, autoSave }) => {
+    // There used to be an `autoSave` flag here. This tool is readOnlyHint:true
+    // and has no write path, so the flag never saved anything — it only chose
+    // which closing paragraph to print, one of which told the caller to set it
+    // "to let Claude do it automatically." Removing it is the honest fix; a
+    // caller that still sends it is ignored rather than failed, and the output
+    // now names the one tool that actually writes the Career KB.
+    async ({ content, documentType, associatedRole, associatedCompany, datePeriod }) => {
       return {
         content: [{
           type: "text",
@@ -99,11 +106,14 @@ skills:
 ### 4. Keywords Extracted
 Top 10 ATS-friendly keywords from this document.
 
-${autoSave ? `
-**Save requested:** present the extracted YAML and the exact file it belongs in, for the user to confirm before anything is written.
-` : `
-**To save:** Review the YAML above and use your file editor to append to the relevant data/career/ files, or set autoSave=true to let Claude do it automatically.
-`}`,
+---
+
+**Nothing has been written.** This tool only extracts.
+
+**To save:** show the user the YAML above, then call \`save_career_section\` with the
+section it belongs in (\`experience\`, \`skills\`, \`testimonials\`, …). That tool replaces the
+whole section, so send the existing entries plus the new ones — read the section first if
+you don't already have it. The previous version is kept as a timestamped \`.bak\`.`,
         }],
       };
     }
