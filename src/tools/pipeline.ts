@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
-import { Application, ApplicationStatus, Pipeline } from "../schemas/career-schema.js";
+import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
 import type {
@@ -12,17 +12,93 @@ import type {
   ToolResponse,
 } from "../types/tool-args.js";
 
+// ─── Status validation ────────────────────────────────────────────────────────
+
+/**
+ * Statuses a search is still live in — everything before `accepted`.
+ *
+ * Used for the one transition that is refused. Derived from the funnel order so
+ * inserting a stage keeps this correct.
+ */
+const LIVE_STATUSES = STATUS_ORDER.slice(0, statusRank("accepted"));
+
+const STATUS_LIST = STATUS_ORDER.join(", ");
+
+type StatusCheck =
+  | { ok: true; status: ApplicationStatus }
+  | { ok: false; message: string };
+
+/**
+ * Turn caller-supplied text into a real status, or explain why it isn't one.
+ *
+ * The tool takes a string rather than an enum on purpose. The schema layer does
+ * reject an off-list value, but it does so with a raw dump of the zod issue —
+ * and it cannot tell a caller who wrote "interview" that the stage is called
+ * "interviewing". A tool result that names the near miss is a correction the
+ * model can act on in one turn; a validation error is a dead end. The full list
+ * lives in the parameter description, so nothing is hidden by taking a string.
+ *
+ * Case and stray whitespace are normalised rather than refused: "Screening"
+ * means screening, and failing it would teach nothing.
+ */
+export function parseStatus(raw: string): StatusCheck {
+  const cleaned = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const exact = STATUS_ORDER.find((s) => s === cleaned);
+  if (exact) return { ok: true, status: exact };
+
+  const near = STATUS_ORDER.find((s) => s.startsWith(cleaned) || cleaned.startsWith(s));
+  return {
+    ok: false,
+    message:
+      `❌ "${raw}" isn't a pipeline status, so nothing was changed.` +
+      (near ? ` Did you mean \`${near}\`?` : "") +
+      `\n\nValid statuses, in funnel order: ${STATUS_LIST}.`,
+  };
+}
+
+/**
+ * Refuse the one move that cannot describe anything real.
+ *
+ * Deliberately not a state machine. Real searches skip stages and double back:
+ * applied straight to rejected, ghosted for two months then an interview. A
+ * tracker that argues with the search is worse than one that records it. The
+ * single exception is leaving `accepted` for a live stage — you took the job;
+ * there is no screening call after that. If the offer collapsed, `rejected` or
+ * `withdrawn` says so; if the company is back with something new, that is a new
+ * application, not a rewind of this one.
+ */
+function transitionRefusal(from: ApplicationStatus, to: ApplicationStatus): string | null {
+  if (from === "accepted" && LIVE_STATUSES.includes(to)) {
+    return (
+      `❌ This application is already \`accepted\` — you took the job — so it can't go back to \`${to}\`.\n\n` +
+      `If the offer fell through, set \`rejected\` or \`withdrawn\`. If you're talking to them about something new, add that as its own application.`
+    );
+  }
+  return null;
+}
+
 // ─── Extracted Handler Functions ──────────────────────────────────────────────
 
 export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Promise<ToolResponse> {
+  // Before this, `status` was ignored and every new record was "applied" — so a
+  // job you had only found could not be tracked as `discovered`, which is the
+  // stage's entire purpose.
+  const checked = args.status ? parseStatus(args.status) : ({ ok: true, status: "applied" } as const);
+  if (!checked.ok) return { content: [{ type: "text", text: checked.message }] };
+  const status = checked.status;
+
   const id = randomUUID().slice(0, 8);
   const now = new Date().toISOString();
+  const today = now.slice(0, 10);
   const newApp: Application = {
     id,
     company: args.company,
     role: args.role,
-    status: "applied",
-    dateApplied: now.slice(0, 10),
+    status,
+    // A discovered role has not been applied to. Stamping dateApplied anyway
+    // would make it show up as an application awaiting a reply.
+    dateDiscovered: status === "discovered" ? today : undefined,
+    dateApplied: status === "discovered" ? undefined : today,
     dateUpdated: now,
     postingUrl: args.postingUrl,
     postingText: args.postingText,
@@ -39,7 +115,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
   };
   pipeline.applications.push(newApp);
   return {
-    content: [{ type: "text", text: `✅ Added application: **${args.role}** at **${args.company}**\nID: \`${id}\`\nStatus: applied` }],
+    content: [{ type: "text", text: `✅ Added application: **${args.role}** at **${args.company}**\nID: \`${id}\`\nStatus: ${status}` }],
   };
 }
 
@@ -49,7 +125,17 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   if (idx === -1) return { content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
 
   const app = pipeline.applications[idx];
-  if (args.status) app.status = args.status;
+
+  // Validate before applying anything. A rejected status must not leave a
+  // half-applied update behind — the note would land, the status would not, and
+  // the caller would be told only about the status.
+  if (args.status) {
+    const checked = parseStatus(args.status);
+    if (!checked.ok) return { content: [{ type: "text", text: checked.message }] };
+    const refusal = transitionRefusal(app.status, checked.status);
+    if (refusal) return { content: [{ type: "text", text: refusal }] };
+    app.status = checked.status;
+  }
   if (args.followUpDue) app.followUpDue = args.followUpDue;
   if (args.priority) app.priority = args.priority;
   if (args.notes) app.notes = [...app.notes, `[${new Date().toISOString().slice(0, 10)}] ${args.notes}`];
@@ -249,6 +335,11 @@ export function registerPipelineTools(server: McpServer): void {
       inputSchema: {
         company: z.string().describe("Company name"),
         role: z.string().describe("Role title as posted"),
+        status: z.string().optional().describe(
+          `Where this one already stands, if not at the start. One of: ${STATUS_ORDER.join(", ")}. ` +
+            `Defaults to applied. Use 'discovered' for a role you have found but not applied to — ` +
+            `it is dated as discovered rather than applied, so it will not show up as awaiting a reply.`,
+        ),
         postingUrl: z.string().optional().describe("Link to the job posting"),
         postingText: z.string().optional().describe("Full posting text to cache, so later interview prep can reference it without the link"),
         source: z.string().optional().describe("Where you found it: LinkedIn, Referral, Company site, etc."),
@@ -288,7 +379,12 @@ export function registerPipelineTools(server: McpServer): void {
       description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
       inputSchema: {
         id: z.string().describe("Application id, as returned by pipeline_add or pipeline_view"),
-        status: ApplicationStatus.optional().describe("New status in the funnel"),
+        status: z.string().optional().describe(
+          `New status in the funnel. One of: ${STATUS_ORDER.join(", ")}. ` +
+            `Any forward or backward move is allowed — searches really do go from applied straight to ` +
+            `rejected, or from ghosted back to interviewing. The one exception is an application already ` +
+            `marked accepted, which cannot return to a live stage.`,
+        ),
         priority: z.enum(["high", "medium", "low"]).optional().describe("New priority"),
         notes: z.string().optional().describe("A note to append. Existing notes are kept; this is added with today's date."),
         followUpDue: z.string().optional().describe("ISO date (YYYY-MM-DD) to be reminded to follow up"),
