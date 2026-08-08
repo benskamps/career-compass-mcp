@@ -85,6 +85,31 @@ describe("deriveNextActions", () => {
     expect(labels.some((l) => l.includes("Interview"))).toBe(true);
     expect(labels.some((l) => l.includes("Offer expires"))).toBe(true);
   });
+
+  it("does not announce an interview on an application that reached offer", () => {
+    // Rounds were filtered by date alone, so a future-dated round left on the
+    // record kept producing "Interview in 2d" next to an offer under review.
+    // The process moved past that round; it is a leftover, not a plan.
+    const rounds = [{ type: "panel", date: "2026-03-27", interviewers: [], notes: "" }] as any;
+    const offered = app({
+      company: "Offer Co", status: "offer", interviewRounds: rounds,
+      offer: { baseSalary: 100000, currency: "USD", expiresDate: "2026-03-28" } as any,
+    });
+
+    const labels = deriveNextActions([offered], FIXED_TODAY).map((a) => a.label);
+    expect(labels.some((l) => l.includes("Interview"))).toBe(false);
+    // The offer line still has to come through — this narrows one signal, it
+    // does not silence the application.
+    expect(labels.some((l) => l.includes("Offer expires"))).toBe(true);
+  });
+
+  it("negative control: the same round on the same day does show while interviewing", () => {
+    const rounds = [{ type: "panel", date: "2026-03-27", interviewers: [], notes: "" }] as any;
+    const live = app({ company: "Offer Co", status: "interviewing", interviewRounds: rounds });
+    expect(
+      deriveNextActions([live], FIXED_TODAY).some((a) => a.label.includes("Interview")),
+    ).toBe(true);
+  });
 });
 
 describe("renderLiteDashboard", () => {
@@ -155,6 +180,35 @@ describe("renderLiteDashboard", () => {
       // min-width:0 stops the *box* from growing; without this the glyphs
       // still spill past the card edge.
       expect(html).toMatch(/\.jc\s+\.co[^{]*\{[^}]*overflow-wrap\s*:\s*anywhere/);
+    });
+  });
+
+  describe("the footer names the folder actually being served", () => {
+    const pipeline: Pipeline = {
+      applications: [app({ company: "Veridian" })],
+      lastUpdated: "2026-03-25T00:00:00.000Z",
+    };
+
+    it("prints the data directory it was given", () => {
+      // It printed `~/.career-compass` unconditionally, so anyone running with
+      // CAREER_DATA_PATH set was told their data lived somewhere it did not —
+      // on the one line of the page that is about where the data lives.
+      const html = renderLiteDashboard(pipeline, "D:\\work\\career-data");
+      expect(html).toContain("D:\\work\\career-data");
+      expect(html).not.toContain("~/.career-compass");
+    });
+
+    it("negative control: names no folder when it was not told one", () => {
+      // Guessing the default here is what produced the false statement.
+      const html = renderLiteDashboard(pipeline);
+      expect(html).toContain("Data stays local");
+      expect(html).not.toContain("~/.career-compass");
+    });
+
+    it("escapes the path like any other untrusted string", () => {
+      const html = renderLiteDashboard(pipeline, "/tmp/<script>alert(1)</script>");
+      expect(html).not.toContain("<script>alert(1)</script>");
+      expect(html).toContain("&lt;script&gt;");
     });
   });
 
