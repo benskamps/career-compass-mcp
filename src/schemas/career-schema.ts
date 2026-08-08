@@ -101,8 +101,29 @@ export const Profile = z.object({
   salaryMin: z.number().optional(),
   salaryMax: z.number().optional(),
   salaryCurrency: z.string().default("USD"),
-  openToRemote: z.boolean().default(true),
-  openToRelocation: z.boolean().default(false),
+  // `.optional()` rather than `.default(true)`/`.default(false)`.
+  //
+  // A zod default is applied at parse time, so once the profile is loaded a
+  // stated answer and an unanswered field are indistinguishable. That is
+  // harmless for a field nobody asserts anything about, and wrong for these two:
+  // the fit analysis prints them under "the hard constraints this fit must be
+  // checked against" and then treats a location mismatch as a blocker. A
+  // first-run profile is name + summary only — exactly what the documented
+  // resume-paste onboarding produces — so the defaults had the tool assert
+  // "Open to relocation: no" on the user's behalf and rule roles out on a
+  // preference they never expressed. Inventing a preference is the specific
+  // dishonesty this product exists to prevent.
+  //
+  // It also stopped absence being recoverable: `save_career_section` validates
+  // with this schema and writes `parsed.data`, so the baked default was
+  // persisted into profile.yaml on the first save and became indistinguishable
+  // from a real answer from then on.
+  //
+  // Consumers that need a plain boolean apply the old default at their own use
+  // site (`?? true` / `?? false`), so behavior for the absent case is unchanged
+  // everywhere except where the stated/unstated distinction is the point.
+  openToRemote: z.boolean().optional(),
+  openToRelocation: z.boolean().optional(),
   noticePeriod: z.string().optional().describe("e.g. '2 weeks', 'immediately'"),
 });
 

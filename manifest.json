@@ -95,8 +95,13 @@
       "description": "Write one section of the Career KB to disk \u2014 this is how the Career KB gets populated; ingest_document and the resume tools only read and extract. Replaces the whole section, keeping the previous version as a timestamped backup."
     },
     {
+<<<<<<< HEAD
       "name": "check_setup",
       "description": "Health-check this Career Compass install and report everything at once: version freshness, data-directory health, Career KB population, pipeline integrity, leftover temp files, and dashboard reachability \u2014 every finding with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
+=======
+      "name": "interview_arc",
+      "description": "Reconstruct the interview arc for one application \u2014 every round and journal signal in date order \u2014 then project the likely next round: ground already covered, threads the last interview left open, gaps nobody has tested yet, and ranked likely questions."
+>>>>>>> origin/night/lane4-fit-interview
     }
   ],
   "tools_generated": false,

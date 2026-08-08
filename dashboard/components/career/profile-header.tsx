@@ -20,7 +20,11 @@ export function ProfileHeader({ profile, completeness }: { profile: Profile; com
       </div>
       <div className="flex items-center gap-4 text-sm text-text-muted">
         {profile.salaryMin && profile.salaryMax && (<span className="font-mono">${profile.salaryMin.toLocaleString()}–${profile.salaryMax.toLocaleString()} {profile.salaryCurrency}</span>)}
-        {profile.openToRemote && <Badge variant="secondary">Remote</Badge>}
+        {/* `?? true` keeps the badge showing for a profile that never answered,
+            which is what the schema default used to do before it became
+            optional. openToRelocation needs no fallback: its old default was
+            false, and undefined is falsy the same way. */}
+        {(profile.openToRemote ?? true) && <Badge variant="secondary">Remote</Badge>}
         {profile.openToRelocation && <Badge variant="secondary">Open to relocation</Badge>}
       </div>
     </div>

@@ -29,7 +29,7 @@ export function OnboardingClient({ hasData, career, completenessScore }: Onboard
   const steps = [
     { id: "profile", label: "Confirm Profile", component: <StepProfile profile={profile} />, hasGap: true },
     { id: "targets", label: "Target Roles & Industries", component: <StepTargets currentRoles={profile.targetRoles} currentIndustries={profile.targetIndustries} currentSizes={profile.targetCompanySize} />, hasGap: profile.targetRoles.length === 0 },
-    { id: "salary", label: "Salary & Preferences", component: <StepSalary currentMin={profile.salaryMin} currentMax={profile.salaryMax} currentCurrency={profile.salaryCurrency} currentRemote={profile.openToRemote} currentRelocation={profile.openToRelocation} currentNotice={profile.noticePeriod} />, hasGap: profile.salaryMin === undefined || profile.salaryMax === undefined },
+    { id: "salary", label: "Salary & Preferences", component: <StepSalary currentMin={profile.salaryMin} currentMax={profile.salaryMax} currentCurrency={profile.salaryCurrency} currentRemote={profile.openToRemote ?? true} currentRelocation={profile.openToRelocation ?? false} currentNotice={profile.noticePeriod} />, hasGap: profile.salaryMin === undefined || profile.salaryMax === undefined },
     { id: "skills", label: "Review Skills", component: <StepSkills currentSkills={skills} />, hasGap: skills.filter((s) => s.proficiency !== undefined).length < 3 },
     { id: "completion", label: "Setup Complete", component: <StepCompletion score={completenessScore} />, hasGap: true },
   ];
