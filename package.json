@@ -32,6 +32,8 @@
     "screenshots": "npx tsx scripts/capture-screenshots.ts",
     "inspect": "mcp-inspector node build/src/index.js",
     "pack:guard": "vitest run --config vitest.config.ts src/__tests__/npm-pack-leak-guard.test.ts",
+    "pack:mcpb": "npm run build:mcp && node scripts/pack-mcpb.mjs",
+    "pack:mcpb:guard": "node scripts/mcpb-guard.mjs",
     "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard"
   },
   "keywords": [
