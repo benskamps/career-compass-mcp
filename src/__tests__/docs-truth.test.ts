@@ -70,6 +70,28 @@ describe("docs truth: the README describes the real surface", () => {
     expect(undocumented, `prompts absent from README.md: ${undocumented.join(", ")}`).toEqual([]);
   });
 
+  it("points every embedded image at a file that exists", () => {
+    // The bundle now stages exactly the images the README references (see
+    // readmeImages() in scripts/pack-mcpb.mjs) — it used to ship none of them,
+    // so the first page a reviewer opened had four broken images. A reference
+    // to a file that is not in the repo fails the pack; catching it here names
+    // the broken link instead of failing a release build.
+    const referenced = [...README.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)]
+      .map((m) => m[1])
+      .filter((r) => !/^[a-z]+:/i.test(r));
+    expect(
+      referenced.length,
+      "the README should embed at least the dashboard screenshots",
+    ).toBeGreaterThan(0);
+
+    const missing = referenced.filter((r) => !existsSync(path.join(repoRoot, r)));
+    expect(
+      missing,
+      `README.md embeds images that are not in the repo: ${missing.join(", ")}. ` +
+        `They render as broken on GitHub and would fail the mcpb pack.`,
+    ).toEqual([]);
+  });
+
   it("has no duplicate H2 heading", () => {
     const headings = [...README.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
     const seen = new Set<string>();
