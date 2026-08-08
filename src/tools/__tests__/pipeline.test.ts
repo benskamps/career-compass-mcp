@@ -380,7 +380,10 @@ describe("handleStats", () => {
   });
 
   it("calculates response rate correctly", () => {
-    // 4 total, 1 still "applied" => response rate = (4-1)/4 * 100 = 75%
+    // 4 sent, 3 of them answered => 75%. This fixture has no `discovered` row,
+    // so the old (total − applied) / total formula lands on the same number —
+    // which is why the response-rate bug survived this test. The discriminating
+    // case is in pipeline-stats-parity.test.ts.
     const apps = [
       makeApp({ id: "rr-001", status: "applied" }),
       makeApp({ id: "rr-002", status: "screening" }),

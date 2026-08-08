@@ -1,5 +1,6 @@
 import { STATUS_ORDER } from "../schemas/career-schema.js";
 import type { Pipeline, Application, ApplicationStatus } from "../schemas/career-schema.js";
+import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 
 /**
  * Zero-build "lite" dashboard.
@@ -20,9 +21,9 @@ import type { Pipeline, Application, ApplicationStatus } from "../schemas/career
 // with `pipeline_view sortBy=status` so the two surfaces cannot disagree about
 // which stage comes first.
 const STAGE_ORDER: readonly ApplicationStatus[] = STATUS_ORDER;
-const ACTIVE: ApplicationStatus[] = [
-  "discovered", "applied", "screening", "interviewing", "offer", "negotiating",
-];
+// The same live-stage list the stats use, so the chart cannot show a stage the
+// "Active" KPI is not counting.
+const ACTIVE = ACTIVE_STATUSES;
 /**
  * Stage colours as a temperature ramp, not a rainbow.
  *
@@ -96,24 +97,6 @@ export function deriveNextActions(apps: Application[], today = new Date()): Next
   return out.sort((a, b) => rank[a.urgency] - rank[b.urgency]);
 }
 
-export interface PipelineStats {
-  total: number; active: number; inConversation: number; offers: number;
-  responseRate: number; ghostRate: number;
-}
-export function computeStats(apps: Application[]): PipelineStats {
-  const total = apps.length;
-  const active = apps.filter((a) => ACTIVE.includes(a.status)).length;
-  const inConversation = apps.filter((a) => ["screening", "interviewing"].includes(a.status)).length;
-  const offers = apps.filter((a) => ["offer", "negotiating", "accepted"].includes(a.status)).length;
-  const applied = apps.filter((a) => a.status !== "discovered").length;
-  const responded = apps.filter((a) => !["discovered", "applied", "ghosted"].includes(a.status)).length;
-  const ghosted = apps.filter((a) => a.status === "ghosted").length;
-  return {
-    total, active, inConversation, offers,
-    responseRate: applied ? Math.round((responded / applied) * 100) : 0,
-    ghostRate: applied ? Math.round((ghosted / applied) * 100) : 0,
-  };
-}
 
 function kpi(n: string | number, label: string, foot = ""): string {
   return `<div class="kpi"><div class="n">${esc(n)}</div><div class="l">${esc(label)}</div>${foot ? `<div class="foot">${esc(foot)}</div>` : ""}</div>`;

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { renderLiteDashboard, computeStats, deriveNextActions } from "../dashboard-lite/render.js";
+import { renderLiteDashboard, deriveNextActions } from "../dashboard-lite/render.js";
+import { computeStats } from "../pipeline-stats.js";
 import type { Application, Pipeline } from "../schemas/career-schema.js";
 
 /**
