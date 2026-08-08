@@ -167,6 +167,14 @@ export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResp
   apps.sort((a, b) => {
     if (sortBy === "date") return b.dateUpdated.localeCompare(a.dateUpdated);
     if (sortBy === "company") return a.company.localeCompare(b.company);
+    if (sortBy === "status") {
+      // Funnel order, the same order the dashboard board reads — sorting a
+      // pipeline alphabetically ("accepted, applied, discovered…") would be
+      // sorted but not useful. This branch did not exist: the comparator fell
+      // through to 0, so the advertised ordering silently returned date order.
+      const stage = statusRank(a.status) - statusRank(b.status);
+      return stage !== 0 ? stage : b.dateUpdated.localeCompare(a.dateUpdated);
+    }
     if (sortBy === "excitement") return (b.excitement ?? 0) - (a.excitement ?? 0);
     if (sortBy === "priority") {
       const p = { high: 0, medium: 1, low: 2 };
@@ -284,7 +292,11 @@ export function registerPipelineTools(server: McpServer): void {
         id: z.string().optional().describe("Application id. Required when action=get."),
         filterStatus: ApplicationStatus.optional().describe("action=list only: show only applications in this status"),
         filterPriority: z.enum(["high", "medium", "low"]).optional().describe("action=list only: show only applications at this priority"),
-        sortBy: z.enum(["date", "status", "priority", "company", "excitement"]).optional().default("date").describe("action=list only: ordering. Defaults to most recently applied first."),
+        sortBy: z.enum(["date", "status", "priority", "company", "excitement"]).optional().default("date").describe(
+          "action=list only: ordering. date = most recently updated first (the default); " +
+            "status = funnel order, discovered through ghosted, ties broken by most recent; " +
+            "priority = high to low; company = A-Z; excitement = highest first.",
+        ),
         limit: z.number().int().min(1).max(500).optional().default(20).describe("action=list only: maximum applications to return (1-500)"),
       },
     },
