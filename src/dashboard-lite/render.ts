@@ -220,7 +220,18 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
 .kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em}.kpi .l{color:var(--muted);font-size:12px;margin-top:2px}.kpi .foot{font-size:11.5px;margin-top:6px;color:var(--muted)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+/* minmax(0,…) is load-bearing, not decoration. A grid item's default
+   min-width is auto — its min-content — so a bare 1fr track is a *floor*,
+   not a cap: one long unbreakable token in a company name or a follow-up
+   label grows its own rail past its share, and the sibling rail is squeezed
+   to whatever is left. Measured on the sample pipeline at 1512px, the rails
+   went 1263px / 175px, the chart track collapsed to 3px, and the page ran
+   135px off the right edge. minmax(0,1fr) lets the item shrink; the
+   overflow-wrap below is what keeps the token itself inside the card once
+   the box stops growing to fit it. */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}@media(max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.grid2>*,.board>*{min-width:0}
+.action .t b,.jc .co,.jc .ro{overflow-wrap:anywhere}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
 .panel .body{padding:14px 16px}.chart-box{position:relative;display:flex;gap:10px}

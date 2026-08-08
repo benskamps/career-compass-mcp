@@ -111,6 +111,52 @@ describe("renderLiteDashboard", () => {
     expect(html).toContain("Your pipeline is empty");
   });
 
+  /**
+   * The page has no build step and no browser in CI, so its layout is only ever
+   * as safe as the CSS it emits. These assert the two declarations that stop a
+   * long unbreakable company name from blowing the page off the right edge —
+   * the failure the pre-submission audit caught at 1512px, where the rails went
+   * 1263px/175px and the chart track collapsed to 3px.
+   */
+  describe("the two-column grid cannot be blown out by long content", () => {
+    const html = renderLiteDashboard({
+      applications: [app({ company: "Veridian" })],
+      lastUpdated: "2026-03-25T00:00:00.000Z",
+    });
+
+    it("sizes every .grid2 track with minmax(0,1fr), never a bare 1fr", () => {
+      // A grid item's default min-width is auto — its min-content — so a bare
+      // `1fr` is a floor, not a cap. The item grows past its share and the
+      // sibling rail gets whatever is left.
+      const blocks = [...html.matchAll(/\.grid2\s*\{([^}]*)\}/g)].map((m) => m[1]);
+      expect(blocks.length, "no .grid2 rule found in the emitted CSS").toBeGreaterThan(0);
+
+      const templates = blocks
+        .map((b) => /grid-template-columns\s*:\s*([^;}]+)/.exec(b)?.[1])
+        .filter((t): t is string => t != null);
+      expect(templates.length, "no .grid2 grid-template-columns found").toBeGreaterThan(0);
+
+      for (const cols of templates) {
+        expect(cols).toMatch(/minmax\(\s*0\s*,\s*1fr\s*\)/);
+        // Any `1fr` left once the minmax() groups are removed is a bare track.
+        const bare = cols.replace(/minmax\([^)]*\)/g, "");
+        expect(bare, `bare 1fr track in "${cols}" — use minmax(0,1fr)`).not.toMatch(/1fr/);
+      }
+    });
+
+    it("lets grid children shrink below their own content", () => {
+      expect(html, ".grid2/.board children need min-width:0 to be shrinkable")
+        .toMatch(/\.grid2\s*>\s*\*[^{]*\{[^}]*min-width\s*:\s*0/);
+      expect(html).toMatch(/\.board\s*>\s*\*[^{]*\{[^}]*min-width\s*:\s*0/);
+    });
+
+    it("wraps unbreakable tokens instead of letting them escape their card", () => {
+      // min-width:0 stops the *box* from growing; without this the glyphs
+      // still spill past the card edge.
+      expect(html).toMatch(/\.jc\s+\.co[^{]*\{[^}]*overflow-wrap\s*:\s*anywhere/);
+    });
+  });
+
   it("escapes user-controlled fields to prevent HTML injection", () => {
     const pipeline: Pipeline = {
       applications: [app({ company: "<img src=x onerror=alert(1)>", role: "Dev" })],
