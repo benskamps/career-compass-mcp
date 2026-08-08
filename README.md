@@ -280,6 +280,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `generate_rejection_response` | Drafts a graceful response that keeps the door open and maintains the relationship |
 | `capture_insight` | Appends a dated signal to your career journal — fit signals, interview insights, offer reflections, rejection patterns, skill evidence, wins — which later resume, interview, and fit prompts read back |
 | `save_career_section` | Writes one section of your Career KB to disk as plain YAML — this is how the KB gets populated. Replaces the whole section; the previous version is kept as a `.bak` |
+| `check_setup` | Health-checks the install in one pass — version vs. the current npm release, data directory, which Career KB sections are filled, whether the pipeline parses, leftover temp files, dashboard status — each finding with the one command that fixes it. Read-only. Run it first when anything seems off |
 
 ## Resources
 
@@ -313,6 +314,69 @@ Power-user shortcuts (appear in Claude's prompt menu):
 | Env var | Default | Description |
 |---------|---------|-------------|
 | `CAREER_DATA_PATH` | `~/.career-compass` | Directory where your career and pipeline YAML files are stored |
+
+---
+
+## Upgrading
+
+**If something is behaving strangely, start here:**
+
+> **"Run the Career Compass setup check."**
+
+That calls `check_setup`, which reports your installed version against the current npm
+release, whether your data directory exists and is writable, which Career KB sections are
+filled in, whether your pipeline file parses, any leftover temp files, and whether the
+dashboard is running — each with the one command that fixes it. It is read-only and usually
+answers the question before you have to debug anything.
+
+It is also the fastest way to find out you are simply on an old version, which is the most
+common cause of "this feels rough around the edges."
+
+Your career data is never touched by an upgrade. It lives in `CAREER_DATA_PATH`, not in the
+package, and older data directories keep working — sections added by later releases are
+created when you first write them.
+
+### Claude Desktop (`.mcpb` bundle)
+
+The bundle does not self-update. Download the current `.mcpb` from the
+[Releases page](https://github.com/benskamps/career-compass-mcp/releases), then in Claude
+Desktop go to **Settings → Extensions**, remove the installed Career Compass extension, and
+install the new file. Restart Claude Desktop.
+
+Your settings — including `CAREER_DATA_PATH` — are re-entered on install, so note the path
+before you remove the old one. `check_setup` prints it.
+
+### npx (the config in Quick Start)
+
+`npx -y career-compass-mcp` resolves the latest published version, but npx caches, so a
+stale copy can persist. To force the current one:
+
+```bash
+npx -y career-compass-mcp@latest --version
+```
+
+Then restart your MCP client. If the version still lags, clear the npx cache with
+`npm cache clean --force` and try again.
+
+### Global npm install
+
+```bash
+npm install -g career-compass-mcp@latest
+career-compass-mcp --version
+```
+
+Restart your MCP client afterward — it keeps the old server process alive until it does.
+
+### From source
+
+```bash
+git pull
+npm install
+npm run build:mcp     # or `npm run build` for the full Next.js dashboard too
+```
+
+Restart your MCP client. A source checkout will normally report itself as *ahead* of npm in
+`check_setup`; that is expected, not drift.
 
 ---
 
