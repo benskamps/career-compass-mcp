@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { access, readdir, readFile } from "fs/promises";
 import { constants as FS } from "fs";
-import { join } from "path";
+import { homedir } from "os";
+import { join, resolve } from "path";
 import { parse as parseYaml } from "yaml";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDataDir, loadPipeline, isCorruptDataError, CAREER_SECTIONS } from "../storage/file-store.js";
@@ -370,7 +371,7 @@ function careerKbFindings(states: SectionState[]): Finding[] {
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
 
-async function pipelineFinding(): Promise<Finding> {
+async function pipelineFinding(dataDir: string, port: number): Promise<Finding> {
   try {
     const pipeline = await loadPipeline();
     const total = pipeline.applications.length;
@@ -379,7 +380,9 @@ async function pipelineFinding(): Promise<Finding> {
         label: "Pipeline",
         status: "warn",
         detail: "No applications tracked yet.",
-        fix: "Add the first one with `pipeline_add`, then run `career-compass-mcp dashboard` to watch it move.",
+        fix:
+          "Add the first one with `pipeline_add`, then watch it move:\n" +
+          dashboardCommand(dataDir, port),
       };
     }
     const active = pipeline.applications.filter(
@@ -476,13 +479,38 @@ export async function probeLocalDashboard(port: number, timeoutMs = 1500): Promi
   }
 }
 
-function dashboardFinding(port: number, result: DashboardProbeResult): Finding {
+/**
+ * The command to open the dashboard on *this* install's data folder.
+ *
+ * The dashboard reads `CAREER_DATA_PATH`, and there is no `--data` flag — so a
+ * bare `npx career-compass-mcp dashboard` serves whatever that variable says in
+ * the shell the user happens to be typing in, which is not the one the MCP
+ * server was launched with. This tool has just printed the real folder two
+ * lines above; recommending a command that ignores it sent anyone with a custom
+ * folder to an empty board and a freshly created `~/.career-compass`.
+ *
+ * Both shells, because the manifest declares win32 alongside darwin and linux
+ * and a `VAR=value command` prefix is a syntax error in PowerShell. The prefix
+ * is omitted entirely when the folder is the default one, where it would be
+ * noise that obscures the actual command.
+ */
+export function dashboardCommand(dataDir: string, port: number): string {
+  const flags = port === DEFAULT_DASHBOARD_PORT ? "" : ` --port ${port}`;
+  const command = `npx career-compass-mcp dashboard${flags}`;
+  if (resolve(dataDir) === resolve(join(homedir(), ".career-compass"))) return command;
+  return (
+    `PowerShell:  $env:CAREER_DATA_PATH="${dataDir}"; ${command}\n` +
+    `bash/zsh:    CAREER_DATA_PATH="${dataDir}" ${command}`
+  );
+}
+
+function dashboardFinding(dataDir: string, port: number, result: DashboardProbeResult): Finding {
   if (!result.reachable) {
     return {
       label: "Dashboard",
       status: "ok",
       detail: `Not running on port ${port} (${result.reason}). That's normal — it only runs while you have it open.`,
-      fix: `Run \`npx career-compass-mcp dashboard\` to open it${port === DEFAULT_DASHBOARD_PORT ? "" : ` on port ${port}`}.`,
+      fix: `Open it on the folder above:\n${dashboardCommand(dataDir, port)}`,
     };
   }
   if (!result.isCareerCompass) {
@@ -490,7 +518,7 @@ function dashboardFinding(port: number, result: DashboardProbeResult): Finding {
       label: "Dashboard",
       status: "warn",
       detail: `Something is listening on port ${port}, but it isn't the Career Compass dashboard.`,
-      fix: `Start the dashboard on a free port: \`npx career-compass-mcp dashboard --port ${port + 1}\`.`,
+      fix: `Start the dashboard on a free port:\n${dashboardCommand(dataDir, port + 1)}`,
     };
   }
   return {
@@ -510,7 +538,14 @@ export function renderReport(findings: Finding[], freshInstall: boolean): string
 
   for (const f of findings) {
     lines.push(`${GLYPH[f.status]} **${f.label}** — ${f.detail}`);
-    if (f.fix) lines.push(`   → ${f.fix}`);
+    if (f.fix) {
+      // A fix may run to several lines when it spells out a command per shell.
+      // Continuation lines are indented under the arrow rather than falling
+      // back to column zero, where they read as a new finding.
+      const [first, ...rest] = f.fix.split("\n");
+      lines.push(`   → ${first}`);
+      for (const line of rest) lines.push(`     ${line}`);
+    }
   }
 
   const problems = findings.filter((f) => f.status === "problem").length;
@@ -603,7 +638,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
             }))
           : Promise.resolve(null),
         readSectionStates(careerDir),
-        pipelineFinding(),
+        pipelineFinding(dataDir, dashboardPort),
         orphanFinding(dataDir),
         probeDashboard(dashboardPort).catch(
           (): DashboardProbeResult => ({ reachable: false, reason: "the check could not run" }),
@@ -616,7 +651,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
         ...careerKbFindings(sections),
         pipeline,
         orphans,
-        dashboardFinding(dashboardPort, dashboard),
+        dashboardFinding(dataDir, dashboardPort, dashboard),
       ];
 
       // "Fresh" means nothing has ever been saved — not merely that the profile
