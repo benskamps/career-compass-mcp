@@ -142,7 +142,14 @@ Open Claude and say:
 Claude will:
 - Extract your work history, achievements, and skills into structured YAML
 - Ask clarifying questions about gaps or unclear metrics
-- Save everything to your `CAREER_DATA_PATH`
+- Call `save_career_section` once per section to write it to your `CAREER_DATA_PATH`
+
+`save_career_section` is the step where your data actually lands on disk — it is
+the only tool that writes the Career KB. It saves one section at a time
+(`profile`, `experience`, `skills`, `education`, `projects`, `testimonials`),
+validates against the schema before touching the file, and keeps the previous
+version as a timestamped `.bak`. Because it replaces a section wholesale, your
+host will ask you to confirm each write; approving them is what fills the KB.
 
 That's it. From there, every tool has full context on who you are.
 
@@ -165,7 +172,7 @@ Career Compass stores all data as YAML files under `CAREER_DATA_PATH` (default `
     └── applications.yaml   # all job applications
 ```
 
-This is your single source of truth — built once, enriched over time, read by every tool. You never need to edit these files by hand: use `ingest_document` to add data by pasting documents, or just ask Claude to update specific sections.
+This is your single source of truth — built once, enriched over time, read by every tool. You never need to edit these files by hand: paste a document and ask Claude to save it, and it will extract the structure and write it with `save_career_section`. (`ingest_document` reads a document and pulls achievements out of it, but never writes — `save_career_section` is what puts them on disk.)
 
 See [`data/example/`](data/example/) in this repo for a fully populated sample (the fictional Alex Rivera).
 
