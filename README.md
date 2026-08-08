@@ -265,7 +265,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 
 | Tool | What it does |
 |------|-------------|
-| `explore_opportunity` | Analyzes a job posting against your Career KB — fit score, matched strengths, gaps, talking points, day-in-the-life, red flags |
+| `explore_opportunity` | Analyzes a job posting against your Career KB **and your stated preferences** — salary band, remote, relocation, notice period. Returns a fit score, an explicit compensation and location check, matched strengths, gaps, talking points, day-in-the-life, red flags. Pass `sourceFitLabel` ("LinkedIn: strong match") and it will explicitly agree or disagree with the job board, in both directions |
 | `research_company` | Builds an intelligence brief: product, culture, funding, interview process, strategic fit |
 | `tailor_resume` | Generates an ATS-optimized, tailored resume from your KB — standard, federal, academic, or functional formats |
 | `generate_cover_letter` | Writes a personalized cover letter with your actual achievements woven in |
@@ -275,6 +275,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `pipeline_update` | Updates one application — status, notes, follow-up date, a contact, or an interview round |
 | `classify_email` | Classifies a job-search email and extracts contacts, dates, and suggested pipeline updates |
 | `prepare_interview` | Full interview prep: opening pitch, STAR stories, likely questions, company alignment, questions to ask |
+| `interview_arc` | Mid-process projection: reconstructs the arc so far from your recorded rounds and journal signals, then projects what the **next** round will probe — ground already covered, threads the last interview left open, gaps nobody has tested yet, and ranked likely questions |
 | `evaluate_offer` | Breaks down total comp, compares to market, builds negotiation strategy, drafts counter scripts |
 | `ingest_document` | Extracts achievements from any document: performance review, award email, LinkedIn recommendation, project summary |
 | `generate_rejection_response` | Drafts a graceful response that keeps the door open and maintains the relationship |
