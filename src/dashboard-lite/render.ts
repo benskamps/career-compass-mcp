@@ -1,3 +1,4 @@
+import { STATUS_ORDER } from "../schemas/career-schema.js";
 import type { Pipeline, Application, ApplicationStatus } from "../schemas/career-schema.js";
 
 /**
@@ -15,10 +16,10 @@ import type { Pipeline, Application, ApplicationStatus } from "../schemas/career
  * sendPrompt() instead.
  */
 
-const STAGE_ORDER: ApplicationStatus[] = [
-  "discovered", "applied", "screening", "interviewing",
-  "offer", "negotiating", "accepted", "rejected", "withdrawn", "ghosted",
-];
+// The board's column order is the funnel order declared on the schema, shared
+// with `pipeline_view sortBy=status` so the two surfaces cannot disagree about
+// which stage comes first.
+const STAGE_ORDER: readonly ApplicationStatus[] = STATUS_ORDER;
 const ACTIVE: ApplicationStatus[] = [
   "discovered", "applied", "screening", "interviewing", "offer", "negotiating",
 ];

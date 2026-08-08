@@ -16,6 +16,21 @@ export const ApplicationStatus = z.enum([
 ]);
 export type ApplicationStatus = z.infer<typeof ApplicationStatus>;
 
+/**
+ * Every status, in funnel order — the order the stages are declared above.
+ *
+ * This is the canonical ordering for anything that needs to rank stages: the
+ * dashboard board, `pipeline_view sortBy=status`, and the transition check in
+ * pipeline.ts. Derived from the enum rather than retyped so a new stage cannot
+ * be added in one place and forgotten in the other.
+ */
+export const STATUS_ORDER: readonly ApplicationStatus[] = ApplicationStatus.options;
+
+/** Position of a status in the funnel. Lower is earlier. */
+export function statusRank(status: ApplicationStatus): number {
+  return STATUS_ORDER.indexOf(status);
+}
+
 // ─── Career Data ───────────────────────────────────────────────────────────────
 
 export const Achievement = z.object({
