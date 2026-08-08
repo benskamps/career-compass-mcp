@@ -5,10 +5,24 @@ import { registerResumeTools } from "./tools/resume.js";
 import { registerPipelineTools } from "./tools/pipeline.js";
 import { registerInterviewTools } from "./tools/interview.js";
 import { registerCareerKBTools } from "./tools/career-kb.js";
+import { registerDoctorTools, type DoctorDeps } from "./tools/doctor.js";
 import { registerPrompts } from "./prompts/index.js";
 import { PKG_VERSION } from "./version.js";
 
-export function createServer(): McpServer {
+export interface ServerOptions {
+  /**
+   * Overrides for the two outside-world calls `check_setup` makes: the npm
+   * registry lookup and the loopback dashboard probe.
+   *
+   * They are injectable because a test suite that reaches the network is a test
+   * suite that fails on a plane, and because "what does this report when npm is
+   * three versions ahead" is otherwise unassertable. Production passes nothing
+   * and gets the real implementations.
+   */
+  doctor?: DoctorDeps;
+}
+
+export function createServer(options: ServerOptions = {}): McpServer {
   const server = new McpServer({
     name: "career-compass",
     // Resolved from package.json — never hardcode. A literal here drifts the
@@ -33,6 +47,9 @@ export function createServer(): McpServer {
 
   // Tools — Career KB Management
   registerCareerKBTools(server);
+
+  // Tools — Install health
+  registerDoctorTools(server, options.doctor);
 
   // Prompts — Power user shortcuts
   registerPrompts(server);

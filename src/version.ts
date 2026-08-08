@@ -19,6 +19,16 @@ import { fileURLToPath } from "url";
  * Returns "unknown" only when package.json is genuinely missing or unreadable,
  * which in a published install would mean a corrupt tarball.
  */
+/**
+ * The published package name.
+ *
+ * It was already a literal here — the identity guard in {@link findPkgVersion}
+ * that keeps the upward walk from stopping at a nested package.json that isn't
+ * ours. Exported so the update check asks the registry about the same name this
+ * install resolves its version from, rather than carrying a second literal.
+ */
+export const PKG_NAME = "career-compass-mcp";
+
 export function readPkgVersion(fromDir: string): string {
   try {
     const pkg = JSON.parse(
@@ -51,7 +61,7 @@ function findPkgVersion(startDir: string): string {
           version?: unknown;
         };
         // Guard against stopping at a nested package.json that isn't ours.
-        if (pkg.name === "career-compass-mcp" && typeof pkg.version === "string") {
+        if (pkg.name === PKG_NAME && typeof pkg.version === "string") {
           return pkg.version;
         }
       } catch {
