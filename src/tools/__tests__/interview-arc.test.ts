@@ -110,13 +110,18 @@ describe("arc assembly from the pipeline and the journal", () => {
       expect(i, `missing from the timeline: ${needle}`).toBeGreaterThan(-1);
       return i;
     };
-    const phoneScreen = at("**Round — phone screen**");   // 2026-06-06
-    const panel = at("**Round — panel**");                 // 2026-06-17
-    const fitSignal = at("**Signal — fit_signal**");        // 2026-07-01
-    const insight = at("**Signal — interview_insight**");   // 2026-07-09
-    expect(phoneScreen).toBeLessThan(panel);
-    expect(panel).toBeLessThan(fitSignal);
-    expect(fitSignal).toBeLessThan(insight);
+    // The fixture's journal used to be dated a month past the pipeline it
+    // describes — a prepare_interview insight on 2026-07-09 about a panel that
+    // had not happened yet on 2026-06-17. Re-dated to the process it belongs
+    // to, so the arc now reads the way a search actually runs: look at the
+    // role, screen, write down what the screen surfaced, then face the panel.
+    const fitSignal = at("**Signal — fit_signal**");        // 2026-05-30, at discovery
+    const phoneScreen = at("**Round — phone screen**");     // 2026-06-06
+    const insight = at("**Signal — interview_insight**");   // 2026-06-06, same day
+    const panel = at("**Round — panel**");                  // 2026-06-17, still ahead
+    expect(fitSignal).toBeLessThan(phoneScreen);
+    expect(phoneScreen).toBeLessThan(insight);
+    expect(insight).toBeLessThan(panel);
   });
 
   it("does not borrow another application's journal entries into the arc", async () => {
