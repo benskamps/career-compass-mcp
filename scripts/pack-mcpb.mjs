@@ -96,6 +96,11 @@ function resolveVersion() {
 }
 
 function stage() {
+  // Staging is rebuilt from nothing on every pack, never updated in place.
+  // That is what makes a stale tree impossible by construction rather than by
+  // vigilance: whatever a previous pack — or the old hand-staging — left behind
+  // is gone before the first file is copied, so the bundle can only contain
+  // what BUNDLE_CONTENTS names from the current working tree.
   rmSync(stagingDir, { recursive: true, force: true });
   mkdirSync(stagingDir, { recursive: true });
 
