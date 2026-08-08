@@ -89,6 +89,10 @@
     {
       "name": "capture_insight",
       "description": "Record a durable career signal to your journal \u2014 what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work."
+    },
+    {
+      "name": "save_career_section",
+      "description": "Write one section of the Career KB to disk \u2014 this is how the Career KB gets populated; ingest_document and the resume tools only read and extract. Replaces the whole section, keeping the previous version as a timestamped backup."
     }
   ],
   "tools_generated": false,
