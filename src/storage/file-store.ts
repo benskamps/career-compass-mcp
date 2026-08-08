@@ -1,10 +1,11 @@
-import { readFile, writeFile, mkdir, rename, copyFile } from "fs/promises";
+import { readFile, writeFile, mkdir, rename, copyFile, readdir, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname, basename } from "path";
 import { homedir } from "os";
 import { randomUUID } from "crypto";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { CareerData, Pipeline, JournalSection } from "../schemas/career-schema.js";
+import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
 
@@ -94,6 +95,18 @@ export function getDataDir(): string {
 function careerDir(): string { return join(getDataDir(), "career"); }
 function pipelineDir(): string { return join(getDataDir(), "pipeline"); }
 
+/**
+ * Is the store currently pointed at the demo that ships inside this package?
+ *
+ * Only true for `data/example/` in our own install — never for a user's data
+ * dir, even one they populated by copying the sample. It gates two things: the
+ * read-time date shift that keeps the demo from curdling, and the refusal to
+ * write into a directory that belongs to the package rather than the user.
+ */
+function servingBundledSample(): boolean {
+  return isBundledSampleDir(getDataDir());
+}
+
 // ─── YAML helpers ─────────────────────────────────────────────────────────────
 
 /**
@@ -115,15 +128,67 @@ async function readYaml<T>(filePath: string, schema: z.ZodType<T>): Promise<T | 
 }
 
 /**
+ * How many timestamped `.bak` files to keep per data file.
+ *
+ * Backups exist so a bad write is recoverable, and recovery in practice means
+ * "the version from a few writes ago" — nobody restores the 180th. Keeping
+ * every one of them turned a normal search session into 224 files and 23.7 MB
+ * of dead weight in the user's data directory, on a tool whose pitch is that
+ * the data is plain files you can read.
+ */
+export const BACKUP_RETENTION = 5;
+
+/** Matches only the backups {@link atomicWriteYaml} writes: `<file>.<ISO>.bak`. */
+function backupPattern(base: string): RegExp {
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^${escaped}\\.\\d{4}-\\d{2}-\\d{2}T[\\d-]+Z\\.bak$`);
+}
+
+/**
+ * Delete all but the newest {@link BACKUP_RETENTION} backups of one file.
+ *
+ * Names carry an ISO timestamp with `:` and `.` swapped for `-`, so they are
+ * fixed-width and sort lexicographically in chronological order — no stat() per
+ * candidate. Only names matching that exact shape are considered: a `.bak` a
+ * user made by hand before editing is theirs, not ours to garbage-collect.
+ *
+ * Best-effort by design. A backup we cannot delete (locked by a scanner on
+ * Windows, say) is not a reason to fail the write that already succeeded.
+ */
+async function pruneBackups(dir: string, base: string): Promise<void> {
+  try {
+    const pattern = backupPattern(base);
+    const ours = (await readdir(dir)).filter((n) => pattern.test(n)).sort();
+    const stale = ours.slice(0, Math.max(0, ours.length - BACKUP_RETENTION));
+    await Promise.all(
+      stale.map((n) => rm(join(dir, n), { force: true }).catch(() => {})),
+    );
+  } catch {
+    // Housekeeping only — never surfaced to the caller.
+  }
+}
+
+/**
  * Back up (if the target exists) then write atomically.
  *
  * 1. If the destination already exists, copy it to a timestamped `.bak` so a
- *    bad write is always recoverable.
+ *    bad write is always recoverable, then prune older backups to
+ *    {@link BACKUP_RETENTION}.
  * 2. Write to a unique temp file in the same directory, then rename it over the
  *    destination. rename() is atomic on the same filesystem, so a reader never
  *    observes a half-written file.
  */
 async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
+  // The bundled sample lives inside the installed package and is read at a
+  // shifted date (see sample-data.ts). Writing to it would bake one session's
+  // shifted dates into the demo everyone else sees, and in a global install it
+  // means editing node_modules. It is a demo, not a store.
+  if (servingBundledSample()) {
+    throw new Error(
+      `${filePath} is inside the bundled sample data, which is a read-only demo. ` +
+        `Point CAREER_DATA_PATH at your own directory (or unset it to use ~/.career-compass) before saving.`,
+    );
+  }
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
 
@@ -131,6 +196,7 @@ async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const backupPath = join(dir, `${basename(filePath)}.${stamp}.bak`);
     await copyFile(filePath, backupPath);
+    await pruneBackups(dir, basename(filePath));
   }
 
   const tmpPath = join(dir, `.${basename(filePath)}.${randomUUID()}.tmp`);
@@ -203,7 +269,10 @@ export async function loadCareerData(): Promise<CareerData | null> {
   }));
 
   try {
-    return CareerData.parse(raw);
+    const parsed = CareerData.parse(raw);
+    // Only full YYYY-MM-DD dates move, which in the KB means journal entries.
+    // Employment history is YYYY-MM and stays exactly where Alex left it.
+    return servingBundledSample() ? freshenSampleDates(parsed) : parsed;
   } catch (error) {
     console.error("Career data validation failed:", error);
     // Files exist (profile is present) but the merged document is schema-invalid.
@@ -254,7 +323,8 @@ function journalPath(): string { return join(careerDir(), "journal.yaml"); }
  */
 export async function loadJournal(): Promise<JournalEntry[]> {
   const parsed = await readYaml(journalPath(), JournalSection);
-  return parsed ?? [];
+  if (!parsed) return [];
+  return servingBundledSample() ? freshenSampleDates(parsed) : parsed;
 }
 
 /**
@@ -287,7 +357,10 @@ export async function loadPipeline(): Promise<Pipeline> {
   try {
     const raw = await readFile(path, "utf-8");
     const parsed = parseYaml(raw);
-    return Pipeline.parse(parsed);
+    const pipeline = Pipeline.parse(parsed);
+    // The bundled demo is dated relative to today so its interviews are still
+    // upcoming and its follow-ups are not months overdue. Nothing on disk moves.
+    return servingBundledSample() ? freshenSampleDates(pipeline) : pipeline;
   } catch (error) {
     console.error("Failed to parse pipeline:", error);
     // The file exists but is unreadable/invalid. Fail closed: returning an

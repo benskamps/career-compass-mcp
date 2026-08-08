@@ -6,6 +6,8 @@ export type PipelineAddArgs = {
   action: "add";
   company: string;
   role: string;
+  /** Raw caller input — `parseStatus` in pipeline.ts is the gate, not the type. */
+  status?: string;
   postingUrl?: string;
   postingText?: string;
   source?: string;
@@ -19,7 +21,8 @@ export type PipelineAddArgs = {
 export type PipelineUpdateArgs = {
   action: "update";
   id: string;
-  status?: ApplicationStatus;
+  /** Raw caller input — `parseStatus` in pipeline.ts is the gate, not the type. */
+  status?: string;
   notes?: string;
   followUpDue?: string;
   priority?: "high" | "medium" | "low";

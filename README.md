@@ -240,6 +240,11 @@ npx -y career-compass-mcp dashboard --lite
 CAREER_DATA_PATH=data/example npx -y career-compass-mcp dashboard --lite
 ```
 
+The sample is a **read-only demo**: its dates are shifted to sit around today each time it
+is read, so the pipeline always looks like a live search, and Career Compass refuses to
+write into it. Point `CAREER_DATA_PATH` at your own folder (or leave it unset for
+`~/.career-compass`) before saving anything.
+
 Plain `career-compass-mcp dashboard` uses the full dashboard when it's been built and falls back
 to the lite one otherwise. Data never leaves your machine - the page has no external assets and
 makes no network calls. Clicking a card copies a ready-to-paste prompt for Claude (in Cowork, the
@@ -254,7 +259,9 @@ no telemetry — the software makes no outbound network requests of its own.
 
 - **What it handles:** the career history, job pipeline, and pasted documents you give it.
 - **Where it's stored:** plain YAML in the directory you set via `CAREER_DATA_PATH`
-  (default `~/.career-compass/`), plus timestamped `.bak` copies of previous versions.
+  (default `~/.career-compass/`), plus timestamped `.bak` copies of previous versions
+  (the five most recent per file are kept; older ones are pruned on the next write —
+  backups you make by hand are never touched).
 - **Who else sees it:** only the MCP client you connect (e.g. Claude Desktop), and through
   it your model provider, under *their* policy — and only for the requests you make.
   Career Compass sends nothing anywhere on its own.
@@ -278,7 +285,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `generate_cover_letter` | Writes a personalized cover letter with your actual achievements woven in |
 | `format_for_ats` | Reformats resume content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo |
 | `pipeline_view` | Reads the pipeline — list, funnel stats, what needs attention, or one application by id. Read-only, so it runs without a permission prompt |
-| `pipeline_add` | Adds one job application to the pipeline |
+| `pipeline_add` | Adds one job application to the pipeline. Takes an optional starting `status` (defaults to `applied`); unknown statuses are rejected with a did-you-mean suggestion |
 | `pipeline_update` | Updates one application — status, notes, follow-up date, a contact, or an interview round |
 | `classify_email` | Classifies a job-search email and extracts contacts, dates, and suggested pipeline updates |
 | `prepare_interview` | Full interview prep: opening pitch, STAR stories, likely questions, company alignment, questions to ask |
