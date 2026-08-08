@@ -10,6 +10,7 @@ import {
   compareVersions,
   checkNpmForUpdate,
   probeLocalDashboard,
+  REGISTRY_URL,
   type UpdateCheckResult,
   type DashboardProbeResult,
 } from "../tools/doctor.js";
@@ -59,6 +60,64 @@ const textOf = (r: unknown) =>
   (((r as { content?: Array<{ text?: string }> }).content) ?? [])
     .map((p) => p.text ?? "")
     .join("\n");
+
+// ─── Network guard ────────────────────────────────────────────────────────────
+
+/**
+ * No test in this file may reach the internet.
+ *
+ * `test:mcp` runs under `prepublishOnly`, so a test that talks to
+ * registry.npmjs.org puts a publish at the mercy of registry weather — and it
+ * fails on a plane for reasons that have nothing to do with the code. An
+ * earlier version of this suite called the real `checkNpmForUpdate`, which fired
+ * DNS, TCP and TLS to npm on every single run.
+ *
+ * So `fetch` is replaced for the whole file: loopback passes through (the
+ * dashboard probe is genuinely local and worth exercising for real), and
+ * anything else throws loudly rather than silently succeeding. Tests that need
+ * registry behavior stub `fetch` with a canned response, which exercises more of
+ * `checkNpmForUpdate` than the network ever did — HTTP 503 and a malformed body
+ * are not states npm will produce on demand.
+ *
+ * Set `CAREER_COMPASS_LIVE_REGISTRY_TEST=1` to let the opt-in smoke test at the
+ * bottom of this file talk to the real registry.
+ */
+const realFetch = globalThis.fetch;
+const LIVE_REGISTRY = Boolean(process.env.CAREER_COMPASS_LIVE_REGISTRY_TEST);
+
+function urlOf(input: RequestInfo | URL): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return (input as Request).url;
+}
+
+const isLoopback = (url: string) =>
+  /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?(\/|$)/.test(url);
+
+/** Swap in a canned registry response for one test. Undone by the afterEach. */
+function stubFetch(impl: (url: string, init?: RequestInit) => Promise<Response>): void {
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+    impl(urlOf(input), init)) as typeof globalThis.fetch;
+}
+
+beforeEach(() => {
+  // `async` deliberately: real fetch signals failure by rejecting, never by
+  // throwing synchronously, and a guard that behaves differently from the thing
+  // it stands in for tests a code path production does not have.
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = urlOf(input);
+    if (isLoopback(url) || LIVE_REGISTRY) return realFetch(input as RequestInfo, init);
+    throw new Error(
+      `the test suite tried to reach ${url}. Tests must not make real network calls — ` +
+        `test:mcp runs under prepublishOnly, so registry flake would block a publish. ` +
+        `Stub fetch instead, or set CAREER_COMPASS_LIVE_REGISTRY_TEST=1 for the live smoke test.`,
+    );
+  }) as typeof globalThis.fetch;
+});
+
+afterEach(() => {
+  globalThis.fetch = realFetch;
+});
 
 /** Bump the last segment of a version so "newer than installed" needs no literal. */
 function bumpPatch(version: string): string {
@@ -301,19 +360,124 @@ describe("check_setup stays useful offline", () => {
     }
   });
 
-  it("the real checker resolves rather than throws when the network is gone", async () => {
-    // Exercises checkNpmForUpdate itself, not a stub — with a 1ms budget, so it
-    // times out instead of reaching the registry. This is the guard that would
-    // go red if someone removed the try/catch and let fetch reject.
-    const result = await checkNpmForUpdate(1);
-    expect(result.ok).toBe(false);
-    expect((result as { reason: string }).reason).toBeTruthy();
-  });
-
   it("the real dashboard probe resolves rather than throws on a closed port", async () => {
+    // Genuinely local, so this one runs for real through the loopback allowance.
     const result = await probeLocalDashboard(59998, 500);
     expect(result.reachable).toBe(false);
   });
+});
+
+// ─── The real update checker, without a real network ──────────────────────────
+
+/**
+ * `checkNpmForUpdate` itself, driven through a stubbed `fetch`.
+ *
+ * These exercise the actual function — its try/catch, its status handling, its
+ * response parsing — rather than a stand-in for it, while staying offline. The
+ * first case is the negative control for the graceful-offline guard: deleting
+ * the try/catch from `checkNpmForUpdate` turns it red, verified by doing exactly
+ * that and watching it fail.
+ */
+describe("checkNpmForUpdate", () => {
+  it("asks for the package name and sends nothing else", async () => {
+    let seenUrl = "";
+    let seenInit: RequestInit | undefined;
+    stubFetch(async (url, init) => {
+      seenUrl = url;
+      seenInit = init;
+      return new Response(JSON.stringify({ version: "9.9.9" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    await checkNpmForUpdate();
+
+    expect(seenUrl).toBe(REGISTRY_URL);
+    expect(seenUrl).toContain("career-compass-mcp");
+    // PRIVACY.md promises an unauthenticated GET carrying nothing about the
+    // user. If that ever stops being true, it stops being true here first.
+    expect(seenInit?.body ?? null).toBeNull();
+    expect(seenInit?.method ?? "GET").toBe("GET");
+    expect(seenInit?.credentials ?? "same-origin").not.toBe("include");
+    const headerNames = Object.keys(
+      (seenInit?.headers ?? {}) as Record<string, string>,
+    ).map((h) => h.toLowerCase());
+    expect(headerNames).not.toContain("authorization");
+    expect(headerNames).not.toContain("cookie");
+  });
+
+  it("resolves rather than throws when the network is gone", async () => {
+    // NEGATIVE CONTROL: remove the try/catch in checkNpmForUpdate and this fails.
+    stubFetch(async () => {
+      throw new TypeError("fetch failed");
+    });
+    const result = await checkNpmForUpdate();
+    expect(result.ok).toBe(false);
+    expect((result as { reason: string }).reason).toMatch(/could not reach/i);
+  });
+
+  it("reports a timeout in its own words", async () => {
+    stubFetch(async () => {
+      const error = new Error("The operation was aborted due to timeout");
+      error.name = "TimeoutError";
+      throw error;
+    });
+    const result = await checkNpmForUpdate(1234);
+    expect(result.ok).toBe(false);
+    expect((result as { reason: string }).reason).toContain("1234ms");
+  });
+
+  it("does not mistake an error page for a version", async () => {
+    // A captive portal or corporate proxy answers 200-with-HTML as readily as
+    // npm answers 503, and neither is a version number.
+    stubFetch(async () => new Response("<html>Service Unavailable</html>", { status: 503 }));
+    const result = await checkNpmForUpdate();
+    expect(result.ok).toBe(false);
+    expect((result as { reason: string }).reason).toContain("503");
+  });
+
+  it("refuses a well-formed response with no version in it", async () => {
+    stubFetch(async () =>
+      new Response(JSON.stringify({ name: "career-compass-mcp" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const result = await checkNpmForUpdate();
+    expect(result.ok).toBe(false);
+  });
+
+  it("returns the published version on a normal answer", async () => {
+    stubFetch(async () =>
+      new Response(JSON.stringify({ version: "9.9.9" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(await checkNpmForUpdate()).toEqual({ ok: true, latest: "9.9.9" });
+  });
+});
+
+describe("the suite's own network guard", () => {
+  it("refuses a non-loopback request", async () => {
+    // Negative control for the guard itself: if this ever stops throwing, every
+    // other "no network" claim in this file is unenforced.
+    await expect(fetch("https://registry.npmjs.org/career-compass-mcp/latest")).rejects.toThrow(
+      /must not make real network calls/i,
+    );
+  });
+
+  it.skipIf(!LIVE_REGISTRY)(
+    "[live] reaches the real npm registry and gets a version back",
+    async () => {
+      // Opt-in only: CAREER_COMPASS_LIVE_REGISTRY_TEST=1. Never runs in CI or
+      // under prepublishOnly, so registry weather cannot block a publish.
+      const result = await checkNpmForUpdate(8000);
+      expect(result.ok).toBe(true);
+      expect((result as { latest: string }).latest).toMatch(/^\d+\.\d+\.\d+/);
+    },
+  );
 });
 
 // ─── An aging data directory ──────────────────────────────────────────────────
@@ -407,6 +571,82 @@ describe("a data directory written by an older version still works", () => {
       // reporting — "which file is broken" is the question being asked.
       expect(out).toMatch(/Pipeline/);
       expect(out).toMatch(/Dashboard/);
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+// ─── A partially-populated KB ─────────────────────────────────────────────────
+
+/**
+ * The half-finished KB: sections saved, profile not.
+ *
+ * This is a real state — `save_career_section` writes one section at a time, so
+ * anyone who saves their experience before their profile lands here, as does
+ * anyone whose profile.yaml gets moved or corrupted after the fact. The report
+ * used to short-circuit on profile alone and tell them there was "just no career
+ * data in it yet", which is the tool failing to see work they had already done —
+ * the exact self-blame it exists to prevent.
+ */
+describe("a Career KB with sections saved but no profile", () => {
+  let dataDir: string;
+  let original: string | undefined;
+
+  beforeEach(() => {
+    original = process.env.CAREER_DATA_PATH;
+    dataDir = mkdtempSync(path.join(tmpdir(), "cc-partial-"));
+    writeLegacyDataDir(dataDir);
+    // Same fixture, minus the one file every KB-backed tool loads first.
+    rmSync(path.join(dataDir, "career", "profile.yaml"), { force: true });
+    writeFileSync(
+      path.join(dataDir, "career", "skills.yaml"),
+      "- name: Forecasting\n  category: Technical\n  proficiency: 4\n",
+      "utf-8",
+    );
+    process.env.CAREER_DATA_PATH = dataDir;
+  });
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.CAREER_DATA_PATH;
+    else process.env.CAREER_DATA_PATH = original;
+    rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it("names what IS saved instead of claiming the directory is empty", async () => {
+    const client = await connect();
+    try {
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+
+      expect(out, "the report did not mention the saved experience section").toContain("experience");
+      expect(out, "the report did not mention the saved skills section").toContain("skills");
+      expect(
+        out,
+        "told a user with saved sections that there is no career data here",
+      ).not.toMatch(/nothing saved yet/i);
+      expect(out).not.toMatch(/Getting started/i);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("flags the missing profile as the one thing blocking the KB-backed tools", async () => {
+    const client = await connect();
+    try {
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      expect(out).toMatch(/profile\.yaml is missing/i);
+      expect(out).toMatch(/save_career_section.*'profile'/s);
+      expect(out).toContain("tailor_resume");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("closes with a fixable summary, not getting-started guidance", async () => {
+    const client = await connect();
+    try {
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      expect(out).toMatch(/Nothing is broken/i);
     } finally {
       await client.close();
     }
