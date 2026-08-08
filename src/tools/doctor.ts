@@ -305,24 +305,50 @@ function careerKbFindings(states: SectionState[]): Finding[] {
 
   const profile = states.find((s) => s.section === "profile");
   const populated = states.filter((s) => !s.unreadable && s.count > 0);
+  // The journal is written by `capture_insight` as you go, not something a user
+  // sits down and fills in, so its emptiness is never a gap worth nagging about.
   const emptyOrMissing = states.filter(
     (s) => !s.unreadable && s.count === 0 && s.section !== "journal",
   );
 
-  if (!profile?.present || profile.count === 0) {
+  const inventory = populated
+    .map((s) => `${s.section} (${s.count})`)
+    .join(", ");
+
+  // Nothing saved anywhere: a genuinely new install, and the only case that
+  // should be told there is no career data here.
+  if (populated.length === 0) {
     findings.push({
       label: "Career KB",
       status: "warn",
       detail:
-        "No profile yet, so `tailor_resume`, `generate_cover_letter`, `explore_opportunity`, and `prepare_interview` have nothing to work from. This is the normal state of a fresh install.",
+        "Nothing saved yet, so `tailor_resume`, `generate_cover_letter`, `explore_opportunity`, and `prepare_interview` have nothing to work from. This is the normal state of a fresh install.",
       fix: 'Paste in your resume and say "save this to my Career KB" — Claude extracts the structure and writes it with `save_career_section`.',
     });
     return findings;
   }
 
-  const inventory = populated
-    .map((s) => `${s.section} (${s.count})`)
-    .join(", ");
+  // Profile missing but other sections written. This used to return the
+  // fresh-install message above, which told someone who had already saved their
+  // experience and skills that there was "no career data" here — the exact
+  // self-blame this tool exists to prevent, aimed at a user who had done the
+  // work. The profile is genuinely load-bearing (every KB-backed tool loads it
+  // first and bails without it), so it still leads — but it is reported as the
+  // one missing piece, next to what is already there.
+  if (!profile?.present || profile.unreadable || profile.count === 0) {
+    findings.push({
+      label: "Career KB",
+      status: "warn",
+      detail:
+        `Saved: ${inventory}. But profile.yaml is ${profile?.unreadable ? "unreadable" : "missing"}, and ` +
+        "`tailor_resume`, `generate_cover_letter`, `explore_opportunity`, and `prepare_interview` all load " +
+        "the profile before anything else — so they report no career data even though the rest of your KB is here.",
+      fix: profile?.unreadable
+        ? "Fix profile.yaml, or restore the timestamped .bak beside it — that alone unblocks every tool above."
+        : "Run `save_career_section` with section 'profile' — that alone unblocks every tool above.",
+    });
+    return findings;
+  }
 
   if (emptyOrMissing.length > 0) {
     findings.push({
@@ -593,10 +619,13 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
         dashboardFinding(dashboardPort, dashboard),
       ];
 
-      const profile = sections.find((s) => s.section === "profile");
+      // "Fresh" means nothing has ever been saved — not merely that the profile
+      // is absent. Keying this off the profile alone closed the report with
+      // getting-started guidance for someone who had already written their
+      // experience and skills, which reads as the tool not seeing their work.
+      const hasAnyCareerData = sections.some((s) => s.count > 0);
       const freshInstall =
-        (!profile?.present || profile.count === 0) &&
-        !findings.some((f) => f.status === "problem");
+        !hasAnyCareerData && !findings.some((f) => f.status === "problem");
 
       return { content: [{ type: "text", text: renderReport(findings, freshInstall) }] };
     },
