@@ -142,31 +142,29 @@ export function inspect(target) {
 }
 
 /**
- * With no explicit target, prefer the packed bundle over the staging tree —
- * the bundle is the artifact that actually gets uploaded, and it is the one
- * whose version is not knowable from a static npm script string.
+ * With no explicit target, inspect everything inspectable at the repo root:
+ * every packed `.mcpb` plus the staging tree. Auto-discovery exists so the npm
+ * script needs no version literal, and it has to be exhaustive — a guard that
+ * checks one of two artifacts and reports PASS is worse than one that refuses.
+ *
+ * @returns {string[]} every discoverable target; empty when there is nothing.
  */
 function discoverTarget() {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const bundles = readdirSync(repoRoot)
+  const targets = readdirSync(repoRoot)
     .filter((f) => f.endsWith(".mcpb"))
-    .sort();
-  if (bundles.length > 0) return path.join(repoRoot, bundles[bundles.length - 1]);
+    .sort()
+    .map((f) => path.join(repoRoot, f));
+  // Every discoverable target, not the first one found. Stopping at the bundle
+  // would let a clean `.mcpb` sitting beside a dirty staging tree report PASS,
+  // which is precisely the state a failed pack leaves behind.
   const staging = path.join(repoRoot, ".mcpb-build");
-  if (existsSync(staging)) return staging;
-  return null;
+  if (existsSync(staging)) targets.push(staging);
+  return targets;
 }
 
-function main() {
-  const target = process.argv[2] ?? discoverTarget();
-  if (!target) {
-    console.error(
-      "mcpb-guard: nothing to inspect — no *.mcpb and no .mcpb-build/ at the " +
-        "repo root. Run `npm run pack:mcpb` first, or pass an explicit path.",
-    );
-    process.exit(2);
-  }
-
+/** Inspect one target. @returns true if clean. */
+function guardOne(target) {
   let result;
   try {
     result = inspect(target);
@@ -182,19 +180,36 @@ function main() {
       `(${ours.length} first-party, ${entries.length - ours.length} in node_modules)`,
   );
 
-  if (offenders.length > 0) {
+  if (offenders.length === 0) return true;
+
+  console.error(
+    `\nmcpb-guard: FAIL — ${offenders.length} compiled test artifact(s) in ${target}:`,
+  );
+  for (const o of offenders.slice(0, 40)) console.error(`  ${o}`);
+  if (offenders.length > 40) console.error(`  ... and ${offenders.length - 40} more`);
+  console.error(
+    "\nThe MCPB staging step copies build/ as a tree, so the package.json " +
+      "`files` allowlist does not apply. Fix the staging filter in " +
+      "scripts/pack-mcpb.mjs — do not loosen this guard.",
+  );
+  return false;
+}
+
+function main() {
+  const explicit = process.argv[2];
+  const targets = explicit ? [explicit] : discoverTarget();
+
+  if (targets.length === 0) {
     console.error(
-      `\nmcpb-guard: FAIL — ${offenders.length} compiled test artifact(s) in the bundle:`,
+      "mcpb-guard: nothing to inspect — no *.mcpb and no .mcpb-build/ at the " +
+        "repo root. Run `npm run pack:mcpb` first, or pass an explicit path.",
     );
-    for (const o of offenders.slice(0, 40)) console.error(`  ${o}`);
-    if (offenders.length > 40) console.error(`  ... and ${offenders.length - 40} more`);
-    console.error(
-      "\nThe MCPB staging step copies build/ as a tree, so the package.json " +
-        "`files` allowlist does not apply. Fix the staging filter in " +
-        "scripts/pack-mcpb.mjs — do not loosen this guard.",
-    );
-    process.exit(1);
+    process.exit(2);
   }
+
+  // Check them all before deciding, so one dirty target does not hide another.
+  const clean = targets.map(guardOne).every(Boolean);
+  if (!clean) process.exit(1);
 
   console.log("mcpb-guard: PASS — 0 compiled test artifacts");
   process.exit(0);
