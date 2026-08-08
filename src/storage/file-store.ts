@@ -5,6 +5,7 @@ import { homedir } from "os";
 import { randomUUID } from "crypto";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { CareerData, Pipeline, JournalSection } from "../schemas/career-schema.js";
+import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
 
@@ -94,6 +95,18 @@ export function getDataDir(): string {
 function careerDir(): string { return join(getDataDir(), "career"); }
 function pipelineDir(): string { return join(getDataDir(), "pipeline"); }
 
+/**
+ * Is the store currently pointed at the demo that ships inside this package?
+ *
+ * Only true for `data/example/` in our own install — never for a user's data
+ * dir, even one they populated by copying the sample. It gates two things: the
+ * read-time date shift that keeps the demo from curdling, and the refusal to
+ * write into a directory that belongs to the package rather than the user.
+ */
+function servingBundledSample(): boolean {
+  return isBundledSampleDir(getDataDir());
+}
+
 // ─── YAML helpers ─────────────────────────────────────────────────────────────
 
 /**
@@ -166,6 +179,16 @@ async function pruneBackups(dir: string, base: string): Promise<void> {
  *    observes a half-written file.
  */
 async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
+  // The bundled sample lives inside the installed package and is read at a
+  // shifted date (see sample-data.ts). Writing to it would bake one session's
+  // shifted dates into the demo everyone else sees, and in a global install it
+  // means editing node_modules. It is a demo, not a store.
+  if (servingBundledSample()) {
+    throw new Error(
+      `${filePath} is inside the bundled sample data, which is a read-only demo. ` +
+        `Point CAREER_DATA_PATH at your own directory (or unset it to use ~/.career-compass) before saving.`,
+    );
+  }
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
 
@@ -246,7 +269,10 @@ export async function loadCareerData(): Promise<CareerData | null> {
   }));
 
   try {
-    return CareerData.parse(raw);
+    const parsed = CareerData.parse(raw);
+    // Only full YYYY-MM-DD dates move, which in the KB means journal entries.
+    // Employment history is YYYY-MM and stays exactly where Alex left it.
+    return servingBundledSample() ? freshenSampleDates(parsed) : parsed;
   } catch (error) {
     console.error("Career data validation failed:", error);
     // Files exist (profile is present) but the merged document is schema-invalid.
@@ -297,7 +323,8 @@ function journalPath(): string { return join(careerDir(), "journal.yaml"); }
  */
 export async function loadJournal(): Promise<JournalEntry[]> {
   const parsed = await readYaml(journalPath(), JournalSection);
-  return parsed ?? [];
+  if (!parsed) return [];
+  return servingBundledSample() ? freshenSampleDates(parsed) : parsed;
 }
 
 /**
@@ -330,7 +357,10 @@ export async function loadPipeline(): Promise<Pipeline> {
   try {
     const raw = await readFile(path, "utf-8");
     const parsed = parseYaml(raw);
-    return Pipeline.parse(parsed);
+    const pipeline = Pipeline.parse(parsed);
+    // The bundled demo is dated relative to today so its interviews are still
+    // upcoming and its follow-ups are not months overdue. Nothing on disk moves.
+    return servingBundledSample() ? freshenSampleDates(pipeline) : pipeline;
   } catch (error) {
     console.error("Failed to parse pipeline:", error);
     // The file exists but is unreadable/invalid. Fail closed: returning an
