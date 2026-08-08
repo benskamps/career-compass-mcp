@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { mkdtemp, cp, rm, mkdir, writeFile } from "fs/promises";
+import { mkdtemp, cp, rm, mkdir, writeFile, readFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { fileURLToPath } from "url";
@@ -7,6 +7,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { registerOpportunityTools } from "../opportunity.js";
+import { registerCareerKBTools } from "../career-kb.js";
 
 /**
  * Fit honesty: `explore_opportunity` must check the posting against the user's
@@ -46,6 +47,9 @@ async function connect(dataDir: string): Promise<Client> {
   process.env.CAREER_DATA_PATH = dataDir;
   const server = new McpServer({ name: "fit-honesty-test", version: "0.0.0" });
   registerOpportunityTools(server);
+  // save_career_section too: one test checks that an unanswered profile stays
+  // unanswered on disk, which is the write half of the same bug.
+  registerCareerKBTools(server);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const c = new Client({ name: "fit-honesty-client", version: "0.0.0" });
   await Promise.all([c.connect(ct), server.connect(st)]);
@@ -191,27 +195,26 @@ describe("explore_opportunity vs. the job board's own label", () => {
   });
 });
 
-describe("a profile with no stated constraints says so rather than going quiet", () => {
+/** Write a career dir containing only the profile keys given. */
+async function writeProfile(prefix: string, lines: string[]): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), prefix));
+  await mkdir(join(dir, "career"), { recursive: true });
+  await writeFile(join(dir, "career", "profile.yaml"), lines.join("\n"), "utf-8");
+  return dir;
+}
+
+describe("a profile that stated the constraints explicitly", () => {
   let dataDir: string;
 
   beforeAll(async () => {
-    // Minimum viable profile: no salary band, no notice period, no target sizes.
-    // The absent values must read as "unknown", not as "unconstrained".
-    dataDir = await mkdtemp(join(tmpdir(), "cc-fit-bare-"));
-    await mkdir(join(dataDir, "career"), { recursive: true });
-    await writeFile(
-      join(dataDir, "career", "profile.yaml"),
-      [
-        "name: Jordan Fields",
-        "summary: Operations generalist.",
-        "targetRoles: []",
-        "targetIndustries: []",
-        "targetCompanySize: []",
-        "openToRemote: false",
-        "openToRelocation: true",
-      ].join("\n"),
-      "utf-8",
-    );
+    // Half of the distinction: an explicit `false` is a real answer and must
+    // still read as a real constraint, not get folded into "not set".
+    dataDir = await writeProfile("cc-fit-stated-", [
+      "name: Jordan Fields",
+      "summary: Operations generalist.",
+      "openToRemote: false",
+      "openToRelocation: true",
+    ]);
     client = await connect(dataDir);
   });
 
@@ -228,15 +231,96 @@ describe("a profile with no stated constraints says so rather than going quiet",
     expect(text).toContain("**Target company size:** not set");
   });
 
-  it("still states the booleans, and states them correctly when they are the non-default", async () => {
+  it("prints a stated boolean as yes/no, not as 'not set'", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
     expect(text).toContain("**Open to remote:** no");
     expect(text).toContain("**Open to relocation:** yes");
+    expect(text).not.toContain("**Open to remote:** not set");
+    expect(text).not.toContain("**Open to relocation:** not set");
+  });
+
+  it("keeps the blocker rule available for preferences that were actually stated", async () => {
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("stated** they will not relocate to → that is a blocker");
   });
 
   it("tells the model the comp verdict is unverifiable rather than letting it guess", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
     expect(text).toContain('If the band above reads "not set"');
     expect(text).toContain("unverifiable until it is filled in");
+  });
+});
+
+describe("a first-run profile that has stated nothing", () => {
+  let dataDir: string;
+
+  beforeAll(async () => {
+    // Name and summary only — literally what the documented resume-paste
+    // onboarding produces on a first save. No salary, no notice period, no
+    // sizes, and crucially no openToRemote / openToRelocation keys at all.
+    dataDir = await writeProfile("cc-fit-bare-", [
+      "name: Jordan Fields",
+      "summary: Operations generalist.",
+    ]);
+    client = await connect(dataDir);
+  });
+
+  afterAll(async () => {
+    await client?.close();
+    restoreEnv();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("does NOT invent an answer for the two booleans", async () => {
+    // `z.boolean().default(true/false)` applied the default at parse time, so an
+    // unanswered profile printed "Open to remote: yes" / "Open to relocation: no"
+    // — indistinguishable from a stated answer, under a heading calling them the
+    // hard constraints this fit must be checked against. Section 3 then treated
+    // the fabricated "no" as a relocation blocker, so the tool ruled roles out on
+    // a preference the user had never given. That is the exact dishonesty this
+    // feature exists to prevent, and it fired on every brand-new profile.
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("**Open to remote:** not set");
+    expect(text).toContain("**Open to relocation:** not set");
+    // Word-boundary matched: "not set" starts with "no", so a plain substring
+    // check for "**Open to relocation:** no" passes against "not set" and would
+    // make this test unable to fail.
+    expect(text).not.toMatch(/\*\*Open to remote:\*\* yes\b/);
+    expect(text).not.toMatch(/\*\*Open to relocation:\*\* no\b/);
+  });
+
+  it("tells the model an unanswered question is not a constraint", async () => {
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain('"not set" means the user has not told us, and an');
+    expect(text).toContain("unanswered question is never a constraint");
+    // And again at the location check specifically, which is where the
+    // fabricated "Open to relocation: no" turned into a blocker.
+    expect(text).toContain('If either reads "not set", the user has never answered it.');
+    expect(text).toContain('an unanswered question is not a "no"');
+  });
+
+  it("still prints the rest of the contract as not set", async () => {
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("**Salary band:** not set");
+    expect(text).toContain("**Notice period:** not set");
+    expect(text).toContain("**Target company size:** not set");
+  });
+
+  it("does not persist a fabricated answer on the next save", async () => {
+    // The root of it. `save_career_section` validates with the Profile schema
+    // and writes `parsed.data`, so a parse-time default was written *to disk*
+    // on the first save — after which absence was gone for good and no later
+    // fix could recover it. Saving an unanswered profile must leave the keys
+    // out of the YAML.
+    const res = await client.callTool({
+      name: "save_career_section",
+      arguments: { section: "profile", data: { name: "Jordan Fields", summary: "Operations generalist." } },
+    });
+    expect(res.isError).toBeFalsy();
+
+    const written = await readFile(join(dataDir, "career", "profile.yaml"), "utf-8");
+    expect(written).toContain("name: Jordan Fields");
+    expect(written).not.toMatch(/^openToRemote:/m);
+    expect(written).not.toMatch(/^openToRelocation:/m);
   });
 });

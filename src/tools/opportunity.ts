@@ -65,6 +65,12 @@ bury a role that actually fits. So check the posting against the whole preferenc
 above (salary band, remote, relocation, notice period, target company size), not just the
 role titles and skills.
 
+One rule governs the whole contract: **"not set" means the user has not told us, and an
+unanswered question is never a constraint.** Do not fill it in with a sensible-sounding
+default, do not reason as if the answer were "no", and do not let it move the fit score in
+either direction. Name what is missing and ask for it. Inventing a preference and then
+ruling a job out on it is the exact failure this tool exists to prevent.
+
 ### 1. Fit Score (X/10)
 Overall match with a one-line rationale. Score against the *whole* contract: a role that
 matches on skills but misses the salary floor or the location constraint is not an 8.
@@ -77,8 +83,9 @@ Compare the posting's compensation to the salary band above, explicitly:
 
 ### 3. Location & Remote Check
 Compare the posting's location and onsite expectation to **Open to remote** and **Open to relocation** above:
-- Onsite or hybrid in a place they will not relocate to → that is a blocker, name it as one, not as a footnote.
-- Remote role and they are open to remote → say it is clear, and check whether the posting hides a geographic or timezone restriction.
+- **If either reads "not set", the user has never answered it.** Do not treat it as a constraint, do not assume a default, and do not rule the role in or out on it. Say which answer is missing and ask for it — an unanswered question is not a "no".
+- Onsite or hybrid in a place they have **stated** they will not relocate to → that is a blocker, name it as one, not as a footnote.
+- Remote role and they have stated they are open to remote → say it is clear, and check whether the posting hides a geographic or timezone restriction.
 - Posting vague or silent on location → say so and put it at the top of the questions to ask.
 
 ### 4. Skills Match
@@ -144,7 +151,7 @@ ${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
 **My target criteria (from Career KB):**
 ${profile ? `- Target roles: ${profile.targetRoles.join(", ") || "Not specified"}
 - Target industries: ${profile.targetIndustries.join(", ") || "Not specified"}
-- Remote preference: ${profile.openToRemote ? "Open to remote" : "Prefers onsite"}` : "Career KB not loaded"}
+- Remote preference: ${(profile.openToRemote ?? true) ? "Open to remote" : "Prefers onsite"}` : "Career KB not loaded"}
 
 ---
 
@@ -202,6 +209,15 @@ function money(amount: number): string {
  * Absent values are printed as "not set" rather than omitted. A missing line
  * reads as "no constraint" to a model; "not set" reads as "unknown", which is
  * the truth, and lets the instructions ask for the gap to be named.
+ *
+ * The two booleans need that distinction more than anything else here, and used
+ * to lose it. They were `z.boolean().default(…)`, so an unanswered profile
+ * parsed to `openToRemote: true, openToRelocation: false` and this function
+ * printed "yes"/"no" — indistinguishable from a stated answer, under a heading
+ * calling them hard constraints, with section 3 downstream instructed to treat a
+ * location mismatch as a blocker. A first-run profile is name + summary only, so
+ * the tool ruled roles out on a preference the user had never given. They are
+ * `.optional()` now and `undefined` prints as "not set" like everything else.
  */
 function buildPreferenceContract(profile: CareerData["profile"]): string {
   const currency = profile.salaryCurrency || "USD";
@@ -212,9 +228,12 @@ function buildPreferenceContract(profile: CareerData["profile"]): string {
     : max !== undefined ? `up to ${currency} ${money(max)} (no floor set)`
     : "not set";
 
+  const stated = (value: boolean | undefined) =>
+    value === undefined ? "not set" : value ? "yes" : "no";
+
   return `**Salary band:** ${band}
-**Open to remote:** ${profile.openToRemote ? "yes" : "no"}
-**Open to relocation:** ${profile.openToRelocation ? "yes" : "no"}
+**Open to remote:** ${stated(profile.openToRemote)}
+**Open to relocation:** ${stated(profile.openToRelocation)}
 **Notice period:** ${profile.noticePeriod || "not set"}
 **Target company size:** ${profile.targetCompanySize.join(", ") || "not set"}`;
 }
