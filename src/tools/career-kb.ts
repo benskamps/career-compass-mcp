@@ -19,6 +19,50 @@ const CAREER_SECTION_SCHEMA = {
   testimonials: z.array(Testimonial),
 } as const;
 
+/**
+ * What each section's `data` has to look like, in the parameter description and
+ * in the error when it doesn't.
+ *
+ * `data` is `z.unknown()` because its shape depends on `section`, so the
+ * generated input schema tells a caller nothing at all — and the first thing
+ * anyone writes for an experience entry is `achievements: ["led the migration"]`,
+ * which is a list of strings where the schema wants objects. The write is
+ * correctly refused, but a first write that fails is a first impression, and
+ * the caller had no way to know the shape before trying.
+ *
+ * Written out rather than derived from zod at runtime: a generated summary of a
+ * nested schema is either unreadable or lossy, and the guard test asserts every
+ * required field of every section appears here, so it cannot drift.
+ */
+const SECTION_SHAPES: Record<keyof typeof CAREER_SECTION_SCHEMA, string> = {
+  profile:
+    "one object: { name, summary, email?, phone?, location?, linkedIn?, portfolio?, " +
+    "targetRoles?: [string], targetIndustries?: [string], salaryMin?: number, salaryMax?: number }",
+  experience:
+    "array of { role, company, startDate: 'YYYY-MM', endDate: 'YYYY-MM' | 'present', " +
+    "summary?, industry?, location?, tags?: [string], " +
+    "achievements: [{ metric, context, impact, keywords?: [string] }] } " +
+    "— achievements are OBJECTS, not strings: metric is the quantified outcome " +
+    "('cut onboarding from 6 weeks to 9 days'), context is the situation, impact is why it mattered",
+  skills:
+    "array of { name, category ('Technical' | 'Leadership' | 'Domain' | …), " +
+    "proficiency?: 1-5, yearsUsed?: number, lastUsed?: 'YYYY' | 'current' }",
+  education:
+    "array of { degree, institution, date: 'YYYY' | 'YYYY-MM', honors?, " +
+    "relevantCoursework?: [string], certifications?: [string] }",
+  projects:
+    "array of { name, role, description, technologies?: [string], metrics?: [string], " +
+    "outcomes?: [string], url? }",
+  testimonials:
+    "array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), " +
+    "quote, date?, context? }",
+};
+
+/** The shapes as one block, for the `data` parameter description. */
+export const SECTION_SHAPE_HELP = Object.entries(SECTION_SHAPES)
+  .map(([section, shape]) => `${section}: ${shape}`)
+  .join("\n");
+
 export function registerCareerKBTools(server: McpServer): void {
 
   server.registerTool(
@@ -130,9 +174,19 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
         idempotentHint: false,
         openWorldHint: false,
       },
-      description: "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities.",
+      // The annotations have always been honest — destructiveHint is true — but
+      // the sentence a user reads in the confirmation dialog described a
+      // drafting tool. Passing applicationId also writes the pipeline, and the
+      // description is where that has to be said.
+      description:
+        "Craft a graceful rejection response that keeps the door open, maintains relationships, and " +
+        "positions you for future opportunities. If you pass applicationId, this also sets that " +
+        "application's status to `rejected` in your pipeline — it does not only write a draft.",
       inputSchema: {
-        applicationId: z.string().optional().describe("Pipeline application ID"),
+        applicationId: z.string().optional().describe(
+          "Pipeline application ID. Supplying it fills in the company and role from the pipeline AND " +
+            "marks that application `rejected`. Leave it out to draft a reply and change nothing.",
+        ),
         company: z.string().optional().describe("Company that sent the rejection. Filled in automatically when applicationId is given."),
         role: z.string().optional().describe("Role you were rejected for. Filled in automatically when applicationId is given."),
         rejectionContent: z.string().describe("The rejection email or message content"),
@@ -333,7 +387,9 @@ ${statusUpdated
           "Which part of the Career KB to write. 'profile' is a single object; every other section is a list.",
         ),
         data: z.unknown().describe(
-          "The complete contents for this section. An object for 'profile'; an array for the others.",
+          "The complete contents for this section — an object for 'profile', an array for every " +
+            "other section. Shapes (? marks optional):\n\n" +
+            SECTION_SHAPE_HELP,
         ),
       },
     },
@@ -356,7 +412,11 @@ ${statusUpdated
             text:
               `❌ That doesn't match the shape of \`${section}\`, so nothing was written ` +
               `(your existing ${section}.yaml is untouched).\n\n${issues}` +
-              (parsed.error.issues.length > 6 ? `\n  …and ${parsed.error.issues.length - 6} more` : ""),
+              (parsed.error.issues.length > 6 ? `\n  …and ${parsed.error.issues.length - 6} more` : "") +
+              // The issue list says which field is wrong; it does not say what
+              // right looks like. Repeating the shape here is what makes the
+              // retry a correction rather than a guess.
+              `\n\nExpected \`${section}\`: ${SECTION_SHAPES[section]}`,
           }],
         };
       }

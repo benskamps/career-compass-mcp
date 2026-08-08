@@ -88,7 +88,7 @@
     },
     {
       "name": "generate_rejection_response",
-      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities."
+      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities. If you pass applicationId, this also sets that application's status to `rejected` in your pipeline \u2014 it does not only write a draft."
     },
     {
       "name": "capture_insight",
