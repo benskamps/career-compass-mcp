@@ -112,4 +112,42 @@ describe("lite dashboard Host allowlist", () => {
     // A non-loopback address that would reach us on a multi-homed host.
     expect(isAllowedHost("192.168.1.20:3141")).toBe(false);
   });
+
+  it("refuses a loopback name with something other than a port after it", () => {
+    // The first parse split on ":" and kept the left half without ever looking
+    // at the right half, so anything could ride along behind a colon and still
+    // read as "localhost". No browser can put these bytes on the wire — Host is
+    // built from the URL authority — so this was never a live rebinding hole.
+    // It was still a parser answering a question it had not been asked: only
+    // `:<digits>` is a port, and everything else is a malformed header.
+    for (const hostile of [
+      "localhost:evil.com",
+      "localhost:80@evil.com",
+      "localhost:3141x",
+      "127.0.0.1:evil.com",
+      "127.0.0.1:80:evil.com",
+      "[::1]evil.com",
+      "[::1]:3141/../evil",
+      "::1:evil.com",
+      "localhost:",
+      "localhost evil.com",
+    ]) {
+      expect(isAllowedHost(hostile), `${hostile} must not pass as loopback`).toBe(false);
+    }
+  });
+
+  it("still accepts the well-formed shapes around them", () => {
+    // Strictness must not cost the real ones.
+    for (const good of ["localhost", "localhost:3141", "127.0.0.1:80", "[::1]", "[::1]:65535", "::1"]) {
+      expect(isAllowedHost(good), `${good} must pass as loopback`).toBe(true);
+    }
+  });
+
+  it("403s a loopback name carrying a foreign authority, over the wire", async () => {
+    for (const hostile of ["localhost:evil.com", "localhost:80@evil.com", "[::1]evil.com"]) {
+      const res = await get(hostile);
+      expect(res.status, `${hostile} was served`).toBe(403);
+      expect(res.body).not.toContain("<!doctype html>");
+    }
+  });
 });

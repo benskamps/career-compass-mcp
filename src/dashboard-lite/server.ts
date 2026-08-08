@@ -28,22 +28,40 @@ import { renderLiteDashboard } from "./render.js";
 const ALLOWED_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
 
 /**
- * Split the hostname out of a `Host` header value, keeping IPv6 brackets.
+ * Split the hostname out of a `Host` header value, or reject the value.
  *
- * `Host` is `name[:port]`, but a bracketed IPv6 literal (`[::1]:3141`) and a
+ * `Host` is `name[":" port]`, but a bracketed IPv6 literal (`[::1]:3141`) and a
  * bare one (`::1`, which some clients send) both contain colons, so a naive
  * split on ":" turns `[::1]` into `[`.
+ *
+ * Everything after the name is checked rather than discarded. Taking the left
+ * half of the first colon and asking no questions about the right half let
+ * `localhost:evil.com` and `[::1]evil.com` read as loopback. Nothing can put
+ * those bytes on the wire from a browser — `Host` is built from the URL
+ * authority, so a rebound page still sends its own name — but a parser that
+ * answers a question it was not asked is one refactor away from mattering.
+ * Only `:<digits>` is a port; anything else makes the header malformed, and
+ * malformed is not loopback.
  */
-function hostnameOf(host: string): string {
+function hostnameOf(host: string): string | null {
   const h = host.trim().toLowerCase();
+  if (!h) return null;
+
+  // Bracketed IPv6 literal: nothing may follow the closing bracket but a port.
   if (h.startsWith("[")) {
-    const end = h.indexOf("]");
-    return end === -1 ? h : h.slice(0, end + 1);
+    const bracketed = /^(\[[0-9a-f:.]+\])(?::\d+)?$/.exec(h);
+    return bracketed ? bracketed[1] : null;
   }
+
   // More than one colon and no brackets: a bare IPv6 literal, which cannot
-  // carry a port — the whole value is the hostname.
-  if (h.split(":").length - 1 > 1) return h;
-  return h.split(":")[0];
+  // carry a port — the whole value is the hostname, so every character of it
+  // has to be one an address can contain.
+  if (h.split(":").length - 1 > 1) {
+    return /^[0-9a-f:.]+$/.test(h) ? h : null;
+  }
+
+  const named = /^([^:]+)(?::\d+)?$/.exec(h);
+  return named ? named[1] : null;
 }
 
 /**
@@ -55,7 +73,8 @@ function hostnameOf(host: string): string {
  */
 export function isAllowedHost(host: string | undefined): boolean {
   if (!host) return false;
-  return ALLOWED_HOSTNAMES.has(hostnameOf(host));
+  const hostname = hostnameOf(host);
+  return hostname !== null && ALLOWED_HOSTNAMES.has(hostname);
 }
 
 export function createLiteDashboardServer(): Server {
