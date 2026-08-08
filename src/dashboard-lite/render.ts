@@ -1,5 +1,6 @@
-import { STATUS_ORDER } from "../schemas/career-schema.js";
+import { STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
 import type { Pipeline, Application, ApplicationStatus } from "../schemas/career-schema.js";
+import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 
 /**
  * Zero-build "lite" dashboard.
@@ -20,9 +21,9 @@ import type { Pipeline, Application, ApplicationStatus } from "../schemas/career
 // with `pipeline_view sortBy=status` so the two surfaces cannot disagree about
 // which stage comes first.
 const STAGE_ORDER: readonly ApplicationStatus[] = STATUS_ORDER;
-const ACTIVE: ApplicationStatus[] = [
-  "discovered", "applied", "screening", "interviewing", "offer", "negotiating",
-];
+// The same live-stage list the stats use, so the chart cannot show a stage the
+// "Active" KPI is not counting.
+const ACTIVE = ACTIVE_STATUSES;
 /**
  * Stage colours as a temperature ramp, not a rainbow.
  *
@@ -81,7 +82,13 @@ export function deriveNextActions(apps: Application[], today = new Date()): Next
       if (fu < 0) out.push({ app, label: `Follow-up overdue by ${Math.abs(fu)}d — ${app.company}`, urgency: "overdue" });
       else if (fu <= 2) out.push({ app, label: `Follow-up due ${fu === 0 ? "today" : `in ${fu}d`} — ${app.company}`, urgency: "soon" });
     }
-    const nextInterview = (app.interviewRounds ?? [])
+    // A future-dated round on an application that has already reached offer or
+    // negotiating is a leftover, not a plan — the process moved past it.
+    // Filtering rounds by date alone put "Interview in 2d" beside an offer
+    // under review, in the demo, on the panel that is supposed to say what to
+    // do next.
+    const stillInterviewing = statusRank(app.status) <= statusRank("interviewing");
+    const nextInterview = !stillInterviewing ? undefined : (app.interviewRounds ?? [])
       .map((r) => days(r.date)).filter((d) => !Number.isNaN(d) && d >= 0).sort((a, b) => a - b)[0];
     if (nextInterview != null && nextInterview <= 7) {
       out.push({ app, label: `Interview ${nextInterview === 0 ? "today" : `in ${nextInterview}d`} — ${app.company}`, urgency: nextInterview <= 2 ? "soon" : "info" });
@@ -96,24 +103,6 @@ export function deriveNextActions(apps: Application[], today = new Date()): Next
   return out.sort((a, b) => rank[a.urgency] - rank[b.urgency]);
 }
 
-export interface PipelineStats {
-  total: number; active: number; inConversation: number; offers: number;
-  responseRate: number; ghostRate: number;
-}
-export function computeStats(apps: Application[]): PipelineStats {
-  const total = apps.length;
-  const active = apps.filter((a) => ACTIVE.includes(a.status)).length;
-  const inConversation = apps.filter((a) => ["screening", "interviewing"].includes(a.status)).length;
-  const offers = apps.filter((a) => ["offer", "negotiating", "accepted"].includes(a.status)).length;
-  const applied = apps.filter((a) => a.status !== "discovered").length;
-  const responded = apps.filter((a) => !["discovered", "applied", "ghosted"].includes(a.status)).length;
-  const ghosted = apps.filter((a) => a.status === "ghosted").length;
-  return {
-    total, active, inConversation, offers,
-    responseRate: applied ? Math.round((responded / applied) * 100) : 0,
-    ghostRate: applied ? Math.round((ghosted / applied) * 100) : 0,
-  };
-}
 
 function kpi(n: string | number, label: string, foot = ""): string {
   return `<div class="kpi"><div class="n">${esc(n)}</div><div class="l">${esc(label)}</div>${foot ? `<div class="foot">${esc(foot)}</div>` : ""}</div>`;
@@ -131,8 +120,17 @@ function jobCard(a: Application): string {
   </div>`;
 }
 
-/** Render the full self-contained HTML document. */
-export function renderLiteDashboard(pipeline: Pipeline): string {
+/**
+ * Render the full self-contained HTML document.
+ *
+ * `dataDir` is passed in rather than read here so this module stays free of the
+ * store (and of node-only APIs — the Next dashboard imports from this tree).
+ * When it is absent the footer simply does not name a folder, which is the one
+ * honest thing to say without knowing it: the footer used to print
+ * `~/.career-compass` unconditionally, so anyone running with CAREER_DATA_PATH
+ * set was told their data was somewhere it wasn't.
+ */
+export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string): string {
   const apps = [...(pipeline.applications ?? [])].sort((a, b) => (b.dateUpdated ?? "").localeCompare(a.dateUpdated ?? ""));
   const s = computeStats(apps);
   const actions = deriveNextActions(apps);
@@ -295,7 +293,7 @@ ${apps.length === 0 ? emptyState : `
   <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
   <div class="panel"><h2>Stage distribution</h2><div class="body"><div id="chart" class="chart-box"></div></div></div>
 </div>`}
-<div class="foot-note">Data stays local (<code>~/.career-compass</code>). Click any card to copy a prompt for Claude — that's where the work happens. Refresh the page to re-read from disk.</div>
+<div class="foot-note">${dataDir ? `Data stays local (<code>${esc(dataDir)}</code>).` : "Data stays local on this machine."} Click any card to copy a prompt for Claude — that's where the work happens. Refresh the page to re-read from disk.</div>
 </div>
 <div id="toast"></div>
 <script>

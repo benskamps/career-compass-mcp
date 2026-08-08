@@ -84,7 +84,9 @@ files on your own disk** and never leaves it.
 - **Never committed to git:** `.gitignore` excludes `data/career/` and `data/pipeline/`, so
   the only career data in this repo is the fictional sample under `data/example/` (meet Alex
   Rivera). Read it, edit it, delete it — it's all just files you own.
-- **No account, no cloud sync, no telemetry.** Nothing phones home.
+- **No account, no cloud sync, no telemetry.** The one request the package ever makes is
+  `check_setup`'s optional version check against the public npm registry, which carries
+  nothing about you or your data — see [Privacy Policy](#privacy-policy).
 - **What ships in the package:** only the MCP server code and a small set of **fictional
   example files** (`data/example/` — the "Alex Rivera" persona). There is no real career
   data in the published package, and none can be — the package and your data live in
@@ -212,7 +214,7 @@ cd dashboard && npm install && cd ..   # dashboard deps (its own package.json)
 npm run build
 
 # Try it with the bundled Alex Rivera sample (no setup, ~1 minute):
-CAREER_DATA_PATH=data/example npm run dashboard
+npm run dashboard -- --sample
 ```
 
 This opens the dashboard at `http://localhost:3141` (or the next available port). Point
@@ -233,17 +235,19 @@ every request**, so a browser refresh always reflects the current state of `~/.c
 > `dashboard` reports that no dashboard is available.
 
 ```bash
-# Ships in the package - no clone, no build:
-npx -y career-compass-mcp dashboard --lite
+# Try it with the bundled Alex Rivera sample - no clone, no build, no setup:
+npx -y career-compass-mcp dashboard --lite --sample
 
-# Or try it against the bundled Alex Rivera sample:
-CAREER_DATA_PATH=data/example npx -y career-compass-mcp dashboard --lite
+# Or against your own data (CAREER_DATA_PATH, or ~/.career-compass if unset):
+npx -y career-compass-mcp dashboard --lite
 ```
 
-The sample is a **read-only demo**: its dates are shifted to sit around today each time it
-is read, so the pipeline always looks like a live search, and Career Compass refuses to
-write into it. Point `CAREER_DATA_PATH` at your own folder (or leave it unset for
-`~/.career-compass`) before saving anything.
+`--sample` (alias `--demo`) resolves the demo *inside the installed package*, wherever npx
+put it, so it works from any directory and on any shell. The sample is a **read-only
+demo**: its dates are shifted to sit around today each time it is read, so the pipeline
+always looks like a live search, and Career Compass refuses to write into it. Drop the flag
+— and point `CAREER_DATA_PATH` at your own folder, or leave it unset for
+`~/.career-compass` — before saving anything.
 
 Plain `career-compass-mcp dashboard` uses the full dashboard when it's been built and falls back
 to the lite one otherwise. Data never leaves your machine - the page has no external assets and
@@ -255,7 +259,10 @@ same board is available as a live artifact that dispatches the prompt straight i
 ## Privacy Policy
 
 Career Compass runs entirely on your own computer. There is no account, no cloud sync, and
-no telemetry — the software makes no outbound network requests of its own.
+no telemetry. The whole package makes exactly one outbound network request: `check_setup`
+asks the public npm registry whether a newer version has been released. It is an
+unauthenticated GET for the package name — nothing about you or your data goes with it —
+and calling `check_setup` with `checkForUpdates: false` never constructs the request at all.
 
 - **What it handles:** the career history, job pipeline, and pasted documents you give it.
 - **Where it's stored:** plain YAML in the directory you set via `CAREER_DATA_PATH`

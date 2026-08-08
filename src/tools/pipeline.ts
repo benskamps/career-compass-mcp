@@ -4,6 +4,7 @@ import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/fil
 import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
+import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 import type {
   PipelineAddArgs,
   PipelineUpdateArgs,
@@ -199,10 +200,12 @@ export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResp
 export function handleStats(pipeline: Pipeline): ToolResponse {
   const apps = pipeline.applications;
   const byStatus = apps.reduce((acc, a) => { acc[a.status] = (acc[a.status] ?? 0) + 1; return acc; }, {} as Record<string, number>);
-  const total = apps.length;
-  const active = apps.filter(a => !["rejected", "withdrawn", "accepted", "ghosted"].includes(a.status)).length;
-  const ghosted = apps.filter(a => a.status === "ghosted").length;
-  const responseRate = total > 0 ? Math.round(((total - apps.filter(a => a.status === "applied").length) / total) * 100) : 0;
+  // Shared with the dashboard rather than recomputed here. This used to read
+  // (total − applied) / total, which counts a role you have only *discovered* —
+  // and sent nothing to — as an employer response, and divides by a denominator
+  // that includes it. On the bundled sample it reported 75% while the dashboard
+  // reported 71%, for the same eight applications.
+  const stats = computeStats(apps);
 
   const statsText = Object.entries(byStatus)
     .sort((a, b) => b[1] - a[1])
@@ -214,16 +217,16 @@ export function handleStats(pipeline: Pipeline): ToolResponse {
       type: "text",
       text: `# Pipeline Statistics
 
-**Total applications:** ${total}
-**Active:** ${active}
-**Response rate:** ${responseRate}%
-**Ghost rate:** ${total > 0 ? Math.round((ghosted / total) * 100) : 0}%
+**Total applications:** ${stats.total}${stats.sent < stats.total ? ` (${stats.sent} sent, ${stats.total - stats.sent} discovered but not applied to)` : ""}
+**Active:** ${stats.active}
+**Response rate:** ${stats.responseRate}%${stats.sent > 0 ? ` — ${stats.sent} sent` : ""}
+**Ghost rate:** ${stats.ghostRate}%
 
 ## By Status
 ${statsText}
 
 ## High Priority Active
-${apps.filter(a => a.priority === "high" && !["rejected", "withdrawn", "accepted", "ghosted"].includes(a.status)).map(a => `- ${a.company} / ${a.role} (${a.status})`).join("\n") || "None"}`,
+${apps.filter(a => a.priority === "high" && ACTIVE_STATUSES.includes(a.status)).map(a => `- ${a.company} / ${a.role} (${a.status})`).join("\n") || "None"}`,
     }],
   };
 }

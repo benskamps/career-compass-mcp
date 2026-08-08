@@ -1,5 +1,5 @@
 import { createServer, type Server } from "http";
-import { loadPipeline, isCorruptDataError } from "../storage/file-store.js";
+import { getDataDir, loadPipeline, isCorruptDataError } from "../storage/file-store.js";
 import { renderLiteDashboard } from "./render.js";
 
 /**
@@ -99,7 +99,9 @@ export function createLiteDashboardServer(): Server {
     }
     try {
       const pipeline = await loadPipeline();
-      const html = renderLiteDashboard(pipeline);
+      // Read per request, like the pipeline itself: the footer names the folder
+      // this page is actually serving, not the default one.
+      const html = renderLiteDashboard(pipeline, getDataDir());
       res.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         // Never cache: the whole point is a live read of local data.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeAnalytics } from "./analytics";
-import { computeStats } from "@shared/dashboard-lite/render";
+import { computeStats } from "@shared/pipeline-stats";
 import type { Application } from "@shared/schemas/career-schema";
 
 const makeApp = (overrides: Partial<Application>): Application => ({

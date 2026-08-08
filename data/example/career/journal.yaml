@@ -23,17 +23,17 @@
   sentiment: positive
   source: manual
 - id: c3d4e5f6
-  date: 2026-06-20T14:00:00.000Z
+  date: 2026-06-08T16:30:00.000Z
   type: rejection_pattern
   summary: Reached the final round but lost to a candidate with direct healthcare-operations experience.
-  company: Meridian Systems
+  company: Cascade Health Partners
   role: Director of Operations
   signals:
     - healthcare-domain
   sentiment: hard
   source: rejection
 - id: d4e5f6a7
-  date: 2026-07-01T16:45:00.000Z
+  date: 2026-05-30T18:20:00.000Z
   type: fit_signal
   summary: Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth.
   company: Veridian Health
@@ -44,7 +44,7 @@
   sentiment: neutral
   source: explore_opportunity
 - id: e5f6a7b8
-  date: 2026-07-09T17:15:00.000Z
+  date: 2026-06-06T15:40:00.000Z
   type: interview_insight
   summary: Capacity-optimization story landed well; stumbled on a regulatory/compliance question.
   company: Veridian Health
