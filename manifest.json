@@ -36,7 +36,7 @@
   "tools": [
     {
       "name": "explore_opportunity",
-      "description": "Analyze a job posting against your Career KB. Returns fit score, matched strengths, gaps, talking points, and a 'day in the life' brief."
+      "description": "Analyze a job posting against your Career KB and your stated preferences \u2014 salary band, remote/relocation, notice period. Returns an honest fit verdict (checked against the job board's own label, if you supply it), matched strengths, gaps, talking points, and a 'day in the life' brief."
     },
     {
       "name": "research_company",
@@ -75,12 +75,16 @@
       "description": "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics \u2014 tailored to interview type."
     },
     {
+      "name": "interview_arc",
+      "description": "Mid-process projection: reconstructs the interview arc so far \u2014 rounds completed, what each surfaced, threads left open \u2014 then projects what the NEXT round will probe, without repeating ground already covered."
+    },
+    {
       "name": "evaluate_offer",
       "description": "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts."
     },
     {
       "name": "ingest_document",
-      "description": "Paste any career document \u2014 performance review, award email, project summary, LinkedIn recommendation \u2014 and extract structured achievements to add to your Career KB."
+      "description": "Paste any career document \u2014 performance review, award email, project summary, LinkedIn recommendation \u2014 and extract structured achievements for your Career KB. Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section."
     },
     {
       "name": "generate_rejection_response",
@@ -92,15 +96,11 @@
     },
     {
       "name": "save_career_section",
-      "description": "Write one section of the Career KB to disk \u2014 this is how the Career KB gets populated; ingest_document and the resume tools only read and extract. Replaces the whole section, keeping the previous version as a timestamped backup."
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it."
     },
     {
       "name": "check_setup",
-      "description": "Health-check this Career Compass install and report everything at once: version freshness, data-directory health, Career KB population, pipeline integrity, leftover temp files, and dashboard reachability \u2014 every finding with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
-    },
-    {
-      "name": "interview_arc",
-      "description": "Reconstruct the interview arc for one application \u2014 every round and journal signal in date order \u2014 then project the likely next round: ground already covered, threads the last interview left open, gaps nobody has tested yet, and ranked likely questions."
+      "description": "Health-check this Career Compass install and report everything at once: whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding comes with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
     }
   ],
   "tools_generated": false,

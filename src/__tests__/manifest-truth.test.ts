@@ -48,18 +48,41 @@ const pkgVersion = (
   }
 ).version;
 
-/** The tool names the server actually serves, over a real client connection. */
-async function servedToolNames(): Promise<string[]> {
+interface ToolEntry { name: string; description?: string }
+
+/** The tools the server actually serves, over a real client connection. */
+async function servedTools(): Promise<ToolEntry[]> {
   const server = createServer();
   const client = new Client({ name: "manifest-truth-test", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
   try {
     const { tools } = await client.listTools();
-    return tools.map((t) => t.name).sort();
+    return tools.map((t) => ({ name: t.name, description: t.description }));
   } finally {
     await client.close();
   }
+}
+
+async function servedToolNames(): Promise<string[]> {
+  return (await servedTools()).map((t) => t.name).sort();
+}
+
+/**
+ * Tools whose manifest copy no longer says what the server says.
+ *
+ * Extracted so the guard can be pointed at a doctored manifest and shown to
+ * fail: a comparison that has only ever seen matching inputs is not evidence
+ * that it compares anything.
+ */
+export function descriptionMismatches(
+  listed: ToolEntry[],
+  served: ToolEntry[],
+): { name: string; listed: string; served: string }[] {
+  const byName = new Map(served.map((t) => [t.name, t.description ?? ""]));
+  return listed
+    .filter((t) => byName.has(t.name) && byName.get(t.name) !== (t.description ?? ""))
+    .map((t) => ({ name: t.name, listed: t.description ?? "", served: byName.get(t.name)! }));
 }
 
 const manifestToolNames = manifest.tools.map((t) => t.name).sort();
@@ -109,6 +132,31 @@ describe("manifest truth: manifest.json describes the live server surface", () =
       undescribed,
       `manifest.json tools with no description: ${undescribed.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("describes each tool the way the server describes it", async () => {
+    // Names alone were not enough. Five of seventeen descriptions were a
+    // generation stale in 2.3.0 — worst, ingest_document still offered to "add
+    // to your Career KB" months after it was made extraction-only, so the
+    // extension listing advertised a write the tool refuses to do. The manifest
+    // copy is the only copy a stranger reads before installing.
+    const drifted = descriptionMismatches(manifest.tools, await servedTools());
+    expect(
+      drifted.map((d) => d.name),
+      drifted
+        .map((d) => `${d.name}\n  manifest: ${d.listed}\n  server:   ${d.served}`)
+        .join("\n\n") + "\n\nRun `npm run gen:manifest` to regenerate manifest.json from the server.",
+    ).toEqual([]);
+  });
+
+  it("negative control: a doctored description is caught", async () => {
+    const served = await servedTools();
+    const doctored = manifest.tools.map((t, i) =>
+      i === 0 ? { ...t, description: "something the server never said" } : t,
+    );
+    expect(descriptionMismatches(doctored, served).map((d) => d.name)).toEqual([
+      manifest.tools[0].name,
+    ]);
   });
 
   it("carries the same version as package.json", () => {

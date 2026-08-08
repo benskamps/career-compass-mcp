@@ -36,6 +36,7 @@ import { isCompiledTestArtifact } from "./mcpb-guard.mjs";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const stagingDir = path.join(repoRoot, ".mcpb-build");
 const guardScript = path.join(repoRoot, "scripts", "mcpb-guard.mjs");
+const manifestToolsScript = path.join(repoRoot, "scripts", "gen-manifest-tools.mjs");
 
 /**
  * Everything the bundle ships, and nothing else.
@@ -156,7 +157,24 @@ function guard(target, label) {
   }
 }
 
+/**
+ * Bring manifest.json's tool descriptions back in line with the server.
+ *
+ * Those descriptions are the only copy a stranger reads before installing, and
+ * being hand-maintained they drifted: five of seventeen were a generation
+ * behind by 2.3.0. Deriving them here means the bundle cannot ship a
+ * description the code has moved past. The rewrite lands in the working tree,
+ * not just in staging, so what ships and what is committed are the same file —
+ * manifest-truth.test.ts then fails on any difference, which is what makes this
+ * a check rather than a silent repair at pack time.
+ */
+function generateManifestTools() {
+  console.log("\npack-mcpb: syncing manifest tool descriptions with the server...");
+  process.stdout.write(run("node", [manifestToolsScript]));
+}
+
 function main() {
+  generateManifestTools();
   const { version, name } = resolveVersion();
   const outputPath = path.join(repoRoot, `career-compass-${version}.mcpb`);
 
