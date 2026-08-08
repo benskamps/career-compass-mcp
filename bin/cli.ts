@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { homedir } from "os";
-import { join } from "path";
+import { join, resolve } from "path";
 import { existsSync, mkdirSync, readFileSync } from "fs";
 import { createServer as createNetServer } from "net";
 import { spawn } from "child_process";
@@ -22,6 +22,7 @@ const __cliDir = fileURLToPath(new URL(".", import.meta.url));
  * cli-version.test.ts exercises it directly.
  */
 import { readPkgVersion } from "../src/version.js";
+import { bundledSampleDir } from "../src/sample-data.js";
 export { readPkgVersion };
 
 const pkgVersion = readPkgVersion(__cliDir);
@@ -39,6 +40,7 @@ career-compass-mcp v${pkgVersion}
 Usage:
   career-compass-mcp                         Run MCP server (stdio)
   career-compass-mcp dashboard               Open web dashboard (full if built, else lite)
+  career-compass-mcp dashboard --sample      Open the bundled Alex Rivera demo
   career-compass-mcp dashboard --lite        Force the zero-build lite dashboard
   career-compass-mcp dashboard --port 3000   Specify port (default: 3141)
   career-compass-mcp dashboard --no-open     Start without opening browser
@@ -46,9 +48,13 @@ Usage:
 Options:
   -h, --help       Show this help message
   -v, --version    Show version number
+  --sample         Serve the bundled read-only demo (alias: --demo).
+                   Ignores CAREER_DATA_PATH; writes nothing.
   --lite           Use the built-in zero-build dashboard (no Next.js build needed)
   --port <number>  Dashboard port (default: 3141)
   --no-open        Don't auto-open browser
+
+Your data folder is CAREER_DATA_PATH, or ~/.career-compass when that is unset.
 `);
   process.exit(0);
 }
@@ -72,13 +78,9 @@ if (!isDashboard) {
   }
   const noOpen = args.includes("--no-open");
   const forceLite = args.includes("--lite");
+  const useSample = args.includes("--sample") || args.includes("--demo");
 
-  // Resolve data path
-  const dataPath = process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
-  if (!existsSync(dataPath)) {
-    mkdirSync(join(dataPath, "career"), { recursive: true });
-    mkdirSync(join(dataPath, "pipeline"), { recursive: true });
-  }
+  const dataPath = resolveDataPath(useSample);
 
   // Find available port
   const port = await findPort(requestedPort);
@@ -159,6 +161,71 @@ function findPort(preferred: number): Promise<number> {
       });
     });
   });
+}
+
+function ensureDataDirs(dir: string): void {
+  mkdirSync(join(dir, "career"), { recursive: true });
+  mkdirSync(join(dir, "pipeline"), { recursive: true });
+}
+
+/**
+ * Decide which folder the dashboard serves, and refuse the one case that used
+ * to fail silently.
+ *
+ * The README's own demo line was `CAREER_DATA_PATH=data/example npx -y
+ * career-compass-mcp dashboard --lite`. That path is relative, and npx runs it
+ * from wherever the user happens to be standing — so unless they were inside a
+ * clone of this repo it resolved to a folder that did not exist, which this
+ * function's predecessor then created. The result was an empty dashboard, a
+ * stray `./data/example/` left in their working directory, and no indication
+ * that either had happened. `--sample` is the flag that command actually
+ * wanted: it resolves the demo inside the installed package, wherever npx put
+ * it.
+ *
+ * A missing CAREER_DATA_PATH is now refused rather than conjured. Creating a
+ * directory the user did not ask for is the more surprising of the two
+ * behaviours — the default `~/.career-compass` is still created without
+ * ceremony, because that one *is* what they asked for by not choosing.
+ */
+function resolveDataPath(useSample: boolean): string {
+  if (useSample) {
+    const sample = bundledSampleDir();
+    if (!sample) {
+      console.error("Error: --sample serves the bundled demo (data/example/), which is missing from this install.");
+      console.error("Reinstall the package, or drop --sample and point CAREER_DATA_PATH at your own folder.");
+      process.exit(1);
+    }
+    console.error(`Serving the bundled Alex Rivera demo — read-only, nothing is written:\n  ${sample}`);
+    return sample;
+  }
+
+  const configured = process.env.CAREER_DATA_PATH;
+  if (!configured) {
+    const fallback = join(homedir(), ".career-compass");
+    ensureDataDirs(fallback);
+    return fallback;
+  }
+
+  const abs = resolve(configured);
+  if (!existsSync(abs)) {
+    console.error(`Error: CAREER_DATA_PATH points at a folder that does not exist:\n  ${abs}`);
+    if (abs !== configured) {
+      console.error(`  (resolved from "${configured}" against ${process.cwd()})`);
+    }
+    console.error("");
+    console.error("Nothing was created: an empty folder here would open an empty dashboard and");
+    console.error("leave a stray directory behind. One of these is probably what you meant:");
+    console.error("");
+    console.error("  To see the bundled demo:");
+    console.error("      career-compass-mcp dashboard --sample");
+    console.error("  To use your own data in the default folder (~/.career-compass):");
+    console.error("      clear CAREER_DATA_PATH from your environment");
+    console.error("  To really use this folder:");
+    console.error(`      mkdir "${abs}"`);
+    process.exit(1);
+  }
+  ensureDataDirs(abs);
+  return abs;
 }
 
 function openBrowser(url: string): void {

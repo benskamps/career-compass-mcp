@@ -94,6 +94,14 @@ function shippedImports(): Set<string> {
       for (const m of src.matchAll(re)) {
         const spec = m[1];
         if (spec.startsWith(".") || spec.startsWith("/")) continue;
+        // A specifier holding a template interpolation is not an import: it is
+        // prose inside a template literal that happens to contain `from "…"`.
+        // The CLI's `(resolved from "${configured}" against …)` message is one,
+        // and this read it as a package named "${configured}". A real static
+        // specifier can never contain `${`, so nothing is hidden — the
+        // unused-dependency test below still proves the scanner sees zod, yaml
+        // and the SDK.
+        if (spec.includes("${")) continue;
         if (BUILTINS.has(spec)) continue;
         found.add(packageNameOf(spec));
       }
