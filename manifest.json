@@ -4,7 +4,7 @@
   "display_name": "Career Compass",
   "version": "2.3.0",
   "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
-  "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, score your fit, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry \u2014 the server makes no outbound network requests of its own. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (kanban pipeline, per-application detail, stage-distribution chart) that re-reads your YAML on every request.",
+  "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, score your fit, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The whole package makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and is skipped entirely when you call it with checkForUpdates: false. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (kanban pipeline, per-application detail, stage-distribution chart) that re-reads your YAML on every request.",
   "author": {
     "name": "Ben Schippers",
     "url": "https://github.com/benskamps"
@@ -36,7 +36,7 @@
   "tools": [
     {
       "name": "explore_opportunity",
-      "description": "Analyze a job posting against your Career KB. Returns fit score, matched strengths, gaps, talking points, and a 'day in the life' brief."
+      "description": "Analyze a job posting against your Career KB and your stated preferences \u2014 salary band, remote/relocation, notice period. Returns an honest fit verdict (checked against the job board's own label, if you supply it), matched strengths, gaps, talking points, and a 'day in the life' brief."
     },
     {
       "name": "research_company",
@@ -75,16 +75,20 @@
       "description": "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics \u2014 tailored to interview type."
     },
     {
+      "name": "interview_arc",
+      "description": "Mid-process projection: reconstructs the interview arc so far \u2014 rounds completed, what each surfaced, threads left open \u2014 then projects what the NEXT round will probe, without repeating ground already covered."
+    },
+    {
       "name": "evaluate_offer",
       "description": "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts."
     },
     {
       "name": "ingest_document",
-      "description": "Paste any career document \u2014 performance review, award email, project summary, LinkedIn recommendation \u2014 and extract structured achievements to add to your Career KB."
+      "description": "Paste any career document \u2014 performance review, award email, project summary, LinkedIn recommendation \u2014 and extract structured achievements for your Career KB. Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section."
     },
     {
       "name": "generate_rejection_response",
-      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities."
+      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities. If you pass applicationId, this also sets that application's status to `rejected` in your pipeline \u2014 it does not only write a draft."
     },
     {
       "name": "capture_insight",
@@ -92,11 +96,11 @@
     },
     {
       "name": "save_career_section",
-      "description": "Write one section of the Career KB to disk \u2014 this is how the Career KB gets populated; ingest_document and the resume tools only read and extract. Replaces the whole section, keeping the previous version as a timestamped backup."
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it."
     },
     {
       "name": "check_setup",
-      "description": "Health-check this Career Compass install and report everything at once: version freshness, data-directory health, Career KB population, pipeline integrity, leftover temp files, and dashboard reachability \u2014 every finding with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
+      "description": "Health-check this Career Compass install and report everything at once: whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding comes with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
     }
   ],
   "tools_generated": false,
