@@ -4,6 +4,7 @@ import { loadCareerData, loadPipeline } from "../storage/file-store.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
+import type { CareerData, InterviewRound, JournalEntry } from "../schemas/career-schema.js";
 
 export function registerInterviewTools(server: McpServer): void {
 
@@ -130,6 +131,143 @@ Likely concerns they'll have about my background, and how to address them proact
   );
 
   server.registerTool(
+    "interview_arc",
+    {
+      title: "Project Interview Arc",
+      // Reads the Career KB and pipeline and returns a projection. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      description: "Mid-process projection: reconstructs the interview arc so far — rounds completed, what each surfaced, threads left open — then projects what the NEXT round will probe, without repeating ground already covered.",
+      inputSchema: {
+        applicationId: z.string().optional().describe("Pipeline application ID — pulls the rounds, posting, and linked journal entries for this process"),
+        company: z.string().optional().describe("Company name (if no application ID, or to match journal entries)"),
+        role: z.string().optional().describe("Role title (if no application ID, or to match journal entries)"),
+        interviewSoFarNotes: z.string().optional().describe("Freeform notes on what has happened so far — questions they asked, what you answered, where the last interview stopped"),
+        nextRoundType: z.enum(["phone_screen", "behavioral", "technical", "panel", "final", "offer_call", "other"]).optional().describe("Type of the upcoming round, if you know it. Omit and the projection will infer the likely next stage."),
+      },
+    },
+    async ({ applicationId, company, role, interviewSoFarNotes, nextRoundType }) => {
+      let rounds: InterviewRound[] = [];
+      let postingText: string | undefined;
+      let appContext = "";
+
+      if (applicationId) {
+        const pipeline = await loadPipeline();
+        const app = pipeline.applications.find(a => a.id === applicationId);
+        if (!app) {
+          return {
+            isError: true,
+            content: [{
+              type: "text",
+              text:
+                `❌ No application with id \`${applicationId}\` in your pipeline. ` +
+                `Run \`pipeline_view\` with action "list" to see the ids you have, or call this ` +
+                `tool with \`company\` and \`role\` instead.`,
+            }],
+          };
+        }
+        company = company ?? app.company;
+        role = role ?? app.role;
+        rounds = app.interviewRounds;
+        postingText = app.postingText;
+        appContext = `- Status: ${app.status}
+- Applied: ${app.dateApplied ?? "Unknown"}
+- Known contacts: ${app.contacts.map(c => `${c.name}${c.title ? ` (${c.title})` : ""}`).join(", ") || "None recorded"}
+- Running notes: ${app.notes.join(" · ") || "None"}`;
+      }
+
+      if (!applicationId && !company && !interviewSoFarNotes) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text:
+              `❌ Nothing to reconstruct an arc from. Give me one of: an \`applicationId\` ` +
+              `from your pipeline, a \`company\` (with \`role\` if you have it), or ` +
+              `\`interviewSoFarNotes\` describing where the process stopped.`,
+          }],
+        };
+      }
+
+      const career = await loadCareerData();
+      if (!career) {
+        return { content: [{ type: "text", text: noCareerDataMessage() }] };
+      }
+
+      const journal = matchingJournal(career.journal, applicationId, company, role);
+      const timeline = buildTimeline(rounds, journal);
+
+      return {
+        content: [{
+          type: "text",
+          text: `# Interview Arc: ${role ?? "Role"} at ${company ?? "Company"}
+
+**Rounds recorded:** ${rounds.length}
+**Journal entries linked to this process:** ${journal.length}
+**Next round:** ${nextRoundType ? nextRoundType.replace(/_/g, " ") : "not specified — infer it"}
+${appContext ? `\n**Application context:**\n${appContext}` : ""}
+
+## The Arc So Far
+${timeline || "_Nothing recorded yet — no interview rounds in the pipeline and no journal entries matched this company and role._"}
+
+## Career Context
+${buildArcCareerContext(career)}
+
+${formatSignalDigest(career.journal)}${interviewSoFarNotes ? `## Notes On What Has Happened So Far\n${embedUntrusted("interview notes", interviewSoFarNotes)}\n` : ""}${postingText ? `\n## Job Posting (cached from the pipeline)\n${embedUntrusted("cached job posting", postingText)}\n` : ""}
+---
+
+**Instructions for Claude:**
+Project the **next** interview round from where the last one stopped. This is not general
+prep — the value here is continuity: what they have already covered, what they opened and
+did not close, and what they have not tested yet.
+
+### 1. Where the Process Actually Stands
+Reconstruct the arc from the timeline above in your own words: rounds completed, who was in
+each, what each one appeared to be testing. Be explicit about what is *recorded* versus what
+you are inferring — if the notes are thin, say the arc is partly guesswork rather than
+inventing detail.
+
+### 2. Ground Already Covered — Do Not Repeat
+List the questions and themes that have already been asked and answered across the rounds
+above. Anything on this list should NOT appear in section 4. Interviewers compare notes;
+re-running a story they already have reads as having nothing else.
+
+### 3. Open Threads
+Things the last round opened and did not close: a question that got a partial answer, a
+follow-up that was promised, a topic an interviewer circled twice, a stumble that was noted
+but not resolved. For each, say who owns it and what closing it would look like. These are
+the highest-probability next questions, because the interviewer already flagged them.
+
+### 4. Untested Gaps
+Cross the posting's requirements${postingText ? " (cached above)" : " (as you understand the role)"} against what the rounds have actually
+probed. What has nobody asked about yet? Rank these by how likely the next round is to reach
+for them${nextRoundType ? `, given that the next round is a ${nextRoundType.replace(/_/g, " ")}` : ", and say which stage would typically reach for each"}.
+
+### 5. Likely Next-Round Questions (ranked)
+8-12 concrete questions the next interviewer is most likely to ask, ordered by probability.
+For each: one line on why *this* process points at it (an open thread, an untested gap, a
+recurring signal from the journal), and the specific piece of the career history to answer
+with. Draw on sections 3 and 4 — do not produce a generic question bank.
+
+### 6. What To Prepare Tonight
+The three things worth the preparation time, given the projection above, and the one thing
+that would most change their read of you if it landed.
+
+---
+
+After the round happens, capture what they actually asked with \`capture_insight\`
+(\`type: "interview_insight"\`${applicationId ? `, \`applicationId: "${applicationId}"\`` : ""}) — including where this projection was wrong. That is
+what makes the next projection in this process, and the next process, sharper.`,
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
     "evaluate_offer",
     {
       title: "Evaluate Offer",
@@ -222,4 +360,96 @@ Overall recommendation: Accept / Negotiate / Decline?`,
       };
     }
   );
+}
+
+// ─── Interview arc helpers ─────────────────────────────────────────────────────
+
+/**
+ * The journal entries that belong to one hiring process.
+ *
+ * `applicationId` is the precise link, but almost nothing sets it today:
+ * `capture_insight` only carries it when the caller passes it, so a real
+ * journal is mostly entries tagged with company and role. Matching on the id
+ * alone would therefore reconstruct an empty arc for most users. So: prefer the
+ * id when it actually matches something, and otherwise fall back to a
+ * case-insensitive company (+ role, when known) match.
+ */
+function matchingJournal(
+  journal: JournalEntry[],
+  applicationId: string | undefined,
+  company: string | undefined,
+  role: string | undefined,
+): JournalEntry[] {
+  if (applicationId) {
+    const byId = journal.filter(e => e.applicationId === applicationId);
+    if (byId.length > 0) return byId;
+  }
+  if (!company) return [];
+  const eq = (a: string | undefined, b: string) => a?.trim().toLowerCase() === b.trim().toLowerCase();
+  return journal.filter(e => eq(e.company, company) && (!role || eq(e.role, role)));
+}
+
+/** Sort key that keeps undated items last without reordering them among themselves. */
+function dateKey(date: string | undefined): string {
+  return date && date.trim() ? date : "￿";
+}
+
+/**
+ * One chronological list interleaving recorded rounds with journal signals.
+ *
+ * The two halves are the whole point: `interviewRounds` says a panel happened
+ * and who was in it; the journal says the capacity-optimization story landed and
+ * the compliance question did not. Neither alone tells you what the next
+ * interviewer will reach for.
+ */
+function buildTimeline(rounds: InterviewRound[], journal: JournalEntry[]): string {
+  const items: Array<{ key: string; line: string }> = [];
+
+  for (const r of rounds) {
+    const parts = [
+      `**Round — ${r.type.replace(/_/g, " ")}** (${r.date || "date not recorded"})`,
+      r.interviewers.length ? `interviewers: ${r.interviewers.join(", ")}` : "interviewers: not recorded",
+      r.outcome ? `outcome: ${r.outcome}` : "outcome: not recorded",
+    ];
+    if (r.notes) parts.push(`notes: ${r.notes}`);
+    items.push({ key: dateKey(r.date), line: `- ${parts.join(" · ")}` });
+  }
+
+  for (const e of journal) {
+    const day = (e.date ?? "").slice(0, 10);
+    const tags = e.signals.length ? ` _[${e.signals.join(", ")}]_` : "";
+    const mood = e.sentiment ? ` (${e.sentiment})` : "";
+    const detail = e.detail ? ` — ${e.detail}` : "";
+    items.push({
+      key: dateKey(day),
+      line: `- **Signal — ${e.type}** (${day || "date not recorded"}) — ${e.summary}${detail}${tags}${mood}`,
+    });
+  }
+
+  return items
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => (a.item.key < b.item.key ? -1 : a.item.key > b.item.key ? 1 : a.i - b.i))
+    .map(({ item }) => item.line)
+    .join("\n");
+}
+
+/**
+ * Compact career context for the arc projection.
+ *
+ * Deliberately not the `JSON.stringify(career)` dump `prepare_interview` uses:
+ * projecting the next round needs the evidence (achievements, skills, targets),
+ * not the legal name, phone number and salary floor. Less to leak, and a
+ * shorter, better-attended prompt.
+ */
+function buildArcCareerContext(career: CareerData): string {
+  const achievements = career.experience
+    .flatMap(e => e.achievements.map(a => `- **${e.role} @ ${e.company}**: ${a.metric} — ${a.context} → ${a.impact}`))
+    .slice(0, 15);
+  const skills = career.skills.slice(0, 15).map(s => s.name).join(", ");
+
+  return `**Target roles:** ${career.profile.targetRoles.join(", ") || "Not specified"}
+**Key skills:** ${skills || "None listed"}
+
+**Evidence available for answers:**
+${achievements.join("\n") || "- None recorded yet"}`;
 }

@@ -35,6 +35,7 @@ const EXPECTED_TOOLS = [
   "pipeline_update",
   "classify_email",
   "prepare_interview",
+  "interview_arc",
   "evaluate_offer",
   "ingest_document",
   "generate_rejection_response",
@@ -86,11 +87,11 @@ describe("MCP server E2E (in-memory transport)", () => {
     });
   });
 
-  it("registers all 15 tools, including the three tool families", async () => {
+  it("registers all 16 tools, including the three tool families", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
 
-    expect(tools).toHaveLength(15);
+    expect(tools).toHaveLength(EXPECTED_TOOLS.length);
     expect(names).toEqual([...EXPECTED_TOOLS].sort());
     expect(names).toContain("tailor_resume");
     expect(names).toContain("pipeline_view");

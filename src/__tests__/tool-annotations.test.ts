@@ -57,6 +57,9 @@ const ARGS: Record<string, Record<string, unknown>> = {
   format_for_ats: { resumeContent: "Alex Rivera\n• Cut supply cost 18%", targetSystem: "greenhouse" },
   classify_email: { emailContent: "Thanks for applying. Can you do Thursday at 2pm?" },
   prepare_interview: { interviewType: "panel", company: "Acme Health", role: "Director" },
+  // demo-001 in data/example is mid-process: two recorded rounds plus journal
+  // entries that match on company/role, so this exercises the real arc path.
+  interview_arc: { applicationId: "demo-001", nextRoundType: "final", interviewSoFarNotes: "Panel asked about capacity planning; compliance question stalled." },
   evaluate_offer: { offerDetails: "Base $198,000, 20% bonus, hybrid Austin." },
   ingest_document: { content: "2025 review: exceeded on all objectives.", documentType: "performance_review" },
   // Deliberately exercise the write-flavoured flags on the two read-only tools
