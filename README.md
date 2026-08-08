@@ -84,7 +84,9 @@ files on your own disk** and never leaves it.
 - **Never committed to git:** `.gitignore` excludes `data/career/` and `data/pipeline/`, so
   the only career data in this repo is the fictional sample under `data/example/` (meet Alex
   Rivera). Read it, edit it, delete it — it's all just files you own.
-- **No account, no cloud sync, no telemetry.** Nothing phones home.
+- **No account, no cloud sync, no telemetry.** The one request the package ever makes is
+  `check_setup`'s optional version check against the public npm registry, which carries
+  nothing about you or your data — see [Privacy Policy](#privacy-policy).
 - **What ships in the package:** only the MCP server code and a small set of **fictional
   example files** (`data/example/` — the "Alex Rivera" persona). There is no real career
   data in the published package, and none can be — the package and your data live in
@@ -255,7 +257,10 @@ same board is available as a live artifact that dispatches the prompt straight i
 ## Privacy Policy
 
 Career Compass runs entirely on your own computer. There is no account, no cloud sync, and
-no telemetry — the software makes no outbound network requests of its own.
+no telemetry. The whole package makes exactly one outbound network request: `check_setup`
+asks the public npm registry whether a newer version has been released. It is an
+unauthenticated GET for the package name — nothing about you or your data goes with it —
+and calling `check_setup` with `checkForUpdates: false` never constructs the request at all.
 
 - **What it handles:** the career history, job pipeline, and pasted documents you give it.
 - **Where it's stored:** plain YAML in the directory you set via `CAREER_DATA_PATH`
