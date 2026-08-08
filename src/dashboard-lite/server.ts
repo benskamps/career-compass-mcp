@@ -11,8 +11,66 @@ import { renderLiteDashboard } from "./render.js";
  * of ~/.career-compass, mirroring the force-dynamic guarantee of the Next.js
  * dashboard. Ships in the npm package (pure JS, no framework, no build).
  */
+/**
+ * Host names this server will answer to. Everything else is refused.
+ *
+ * Binding loopback stops the *network* from reaching the dashboard; it does not
+ * stop a web page. Any site the user visits can point a hostname it controls at
+ * 127.0.0.1 and have the browser issue same-origin requests to this server —
+ * DNS rebinding. The one thing that distinguishes those requests from a real
+ * one is the `Host` header, which carries the attacker's name rather than a
+ * loopback name, so checking it is the whole defense.
+ *
+ * The dashboard serves a user's entire job search — companies, salaries,
+ * contacts, interview notes — from a machine-local origin with no auth, which
+ * is exactly the shape of target rebinding exists to reach.
+ */
+const ALLOWED_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+
+/**
+ * Split the hostname out of a `Host` header value, keeping IPv6 brackets.
+ *
+ * `Host` is `name[:port]`, but a bracketed IPv6 literal (`[::1]:3141`) and a
+ * bare one (`::1`, which some clients send) both contain colons, so a naive
+ * split on ":" turns `[::1]` into `[`.
+ */
+function hostnameOf(host: string): string {
+  const h = host.trim().toLowerCase();
+  if (h.startsWith("[")) {
+    const end = h.indexOf("]");
+    return end === -1 ? h : h.slice(0, end + 1);
+  }
+  // More than one colon and no brackets: a bare IPv6 literal, which cannot
+  // carry a port — the whole value is the hostname.
+  if (h.split(":").length - 1 > 1) return h;
+  return h.split(":")[0];
+}
+
+/**
+ * Is this `Host` header one of ours?
+ *
+ * A missing header is refused too. HTTP/1.1 requires it and every browser sends
+ * it, so its absence is either a hand-written request or an attempt to skip the
+ * check — neither is a case worth serving a career history to.
+ */
+export function isAllowedHost(host: string | undefined): boolean {
+  if (!host) return false;
+  return ALLOWED_HOSTNAMES.has(hostnameOf(host));
+}
+
 export function createLiteDashboardServer(): Server {
   return createServer(async (req, res) => {
+    // Checked before anything else, including the path: a rejected origin must
+    // not learn which paths exist or how the server responds to them.
+    if (!isAllowedHost(req.headers.host)) {
+      res.writeHead(403, { "content-type": "text/plain; charset=utf-8" });
+      res.end(
+        `Refused: this dashboard only answers to ${[...ALLOWED_HOSTNAMES].join(", ")}.\n` +
+          `The request arrived with Host: ${req.headers.host ?? "(none)"}.\n\n` +
+          `It binds loopback and is meant to be opened at http://localhost:<port> on this machine.`,
+      );
+      return;
+    }
     // Only serve the dashboard at "/"; everything else 404s (favicon, etc.).
     const path = (req.url ?? "/").split("?")[0];
     if (path !== "/" && path !== "/index.html") {
