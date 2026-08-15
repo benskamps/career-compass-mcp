@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../server.js";
+import { escapeNonAscii, renderManifest } from "../manifest-format.js";
 
 /**
  * Manifest-truth guard: the extension manifest must describe the live server.
@@ -157,6 +158,57 @@ describe("manifest truth: manifest.json describes the live server surface", () =
     expect(descriptionMismatches(doctored, served).map((d) => d.name)).toEqual([
       manifest.tools[0].name,
     ]);
+  });
+
+  it("is checked in exactly as the generator writes it", async () => {
+    // The description comparison above parses both sides, so it is blind to how
+    // the file is encoded. That blind spot shipped: v2.4.0 (18ec920) checked the
+    // manifest back in with literal em dashes instead of the `\uXXXX` escapes
+    // every prior revision used. Every test stayed green, while
+    // `gen-manifest-tools.mjs --check` began failing on clean main with
+    // "manifest.json disagrees with the server" for copy that was correct, and
+    // `npm run gen:manifest` churned ten untouched lines on every run.
+    //
+    // Comparing the bytes closes that gap — and because it is the same renderer
+    // the generator uses, a green run here means `--check` is green too.
+    const onDisk = readFileSync(path.join(repoRoot, "manifest.json"), "utf-8");
+    const served = await servedTools();
+    const rendered = renderManifest(
+      JSON.parse(onDisk) as Record<string, unknown>,
+      served.map((t) => ({ name: t.name, description: t.description ?? "" })),
+    );
+    // Normalized: `core.autocrlf=true` checks this file out with CRLF on
+    // Windows while the committed blob is LF. Encoding is the invariant here,
+    // not line endings.
+    const eol = (s: string) => s.replace(/\r\n/g, "\n");
+    expect(
+      eol(onDisk),
+      "manifest.json is not byte-identical to what `npm run gen:manifest` " +
+        "would write. Run it and commit the result.",
+    ).toBe(eol(rendered));
+  });
+
+  it("is checked in with no literal non-ASCII characters", () => {
+    // States the invariant directly, so a failure says *what* is wrong rather
+    // than only that two large strings differ.
+    const onDisk = readFileSync(path.join(repoRoot, "manifest.json"), "utf-8");
+    const literals = [...onDisk].filter((ch) => ch.codePointAt(0)! > 127);
+    expect(
+      [...new Set(literals)].join(" "),
+      "manifest.json must be checked in all-ASCII, with non-ASCII characters " +
+        "as \\uXXXX escapes, so a copy change is not buried in encoding noise.",
+    ).toBe("");
+  });
+
+  it("escapes astral characters as surrogate pairs that survive a round trip", () => {
+    // JSON's \u escape is exactly four hex digits. Formatting a whole code
+    // point with one escape produced five digits, so an emoji re-parsed as a
+    // different character followed by a stray digit — valid JSON, silently
+    // wrong copy. No manifest string has one today; this keeps the first one
+    // from being corrupted quietly.
+    const encoded = escapeNonAscii(JSON.stringify({ d: "ship it \u{1F600}" }));
+    expect(encoded).toContain("\\ud83d\\ude00");
+    expect((JSON.parse(encoded) as { d: string }).d).toBe("ship it \u{1F600}");
   });
 
   it("carries the same version as package.json", () => {
