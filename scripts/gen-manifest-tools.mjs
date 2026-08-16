@@ -30,6 +30,14 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = path.join(repoRoot, "manifest.json");
 const serverModule = path.join(repoRoot, "build", "src", "server.js");
+const formatModule = path.join(repoRoot, "build", "src", "manifest-format.js");
+
+// Both live under build/ because this script runs after `npm run build:mcp`
+// (see the `gen:manifest` package script). The encoding rules are shared with
+// manifest-truth.test.ts, which imports the TypeScript source directly — a
+// second copy here is exactly how the checked-in file and the generator drifted
+// apart in the first place.
+const { renderManifest } = await import(pathToFileURL(formatModule).href);
 
 /** The tools the server serves, over a real client connection. */
 async function servedTools() {
@@ -46,22 +54,6 @@ async function servedTools() {
   }
 }
 
-/**
- * Keep the file's existing all-ASCII encoding.
- *
- * manifest.json is checked in with every non-ASCII character as a unicode
- * escape. Both forms are valid JSON, but emitting literals instead would bury
- * the first real change under a hundred lines of encoding noise.
- */
-function escapeNonAscii(json) {
-  let out = "";
-  for (const ch of json) {
-    const code = ch.codePointAt(0);
-    out += code > 127 ? "\\u" + code.toString(16).padStart(4, "0") : ch;
-  }
-  return out;
-}
-
 async function main() {
   const check = process.argv.includes("--check");
   const before = readFileSync(manifestPath, "utf-8");
@@ -73,10 +65,15 @@ async function main() {
     process.exit(1);
   }
 
-  manifest.tools = tools;
-  const after = escapeNonAscii(JSON.stringify(manifest, null, 2)) + "\n";
+  const after = renderManifest(manifest, tools);
 
-  if (after === before) {
+  // Compare with line endings normalized. This repo is developed on Windows
+  // with `core.autocrlf=true`, so a fresh checkout has CRLF in the working copy
+  // while the committed blob and this generator both use LF. A raw byte compare
+  // reports every clean Windows checkout as drifted.
+  const eol = (s) => s.replace(/\r\n/g, "\n");
+
+  if (eol(after) === eol(before)) {
     console.log(`gen-manifest-tools: manifest.json already matches the server (${tools.length} tools)`);
     return;
   }
