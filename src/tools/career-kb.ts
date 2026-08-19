@@ -63,6 +63,52 @@ export const SECTION_SHAPE_HELP = Object.entries(SECTION_SHAPES)
   .map(([section, shape]) => `${section}: ${shape}`)
   .join("\n");
 
+/**
+ * `data` has to survive arriving as a JSON string.
+ *
+ * Its shape depends on `section`, so it is declared `z.unknown()`, and zod emits
+ * `{}` for that — a required property with no `type` at all. A client with no
+ * type to hold onto sends the value as a JSON string, the section schema sees a
+ * string where it wants an object or an array, and every write is refused. That
+ * was issue #34: `save_career_section` never wrote once, for anyone, on v2.4.0,
+ * which also meant a fresh install could never leave the empty state.
+ *
+ * Parsing here rather than widening the section schemas keeps one shape on disk:
+ * the section schema stays the single description of a valid section, and this
+ * only decides what counts as "the caller sent JSON".
+ *
+ * Every section is an object or an array, so a bare string is never a valid
+ * value — parsing one can't mask a legitimate write.
+ */
+export function coerceSectionData(
+  data: unknown,
+): { ok: true; value: unknown } | { ok: false; message: string } {
+  if (typeof data !== "string") return { ok: true, value: data };
+
+  const trimmed = data.trim();
+  if (trimmed === "") {
+    return {
+      ok: false,
+      message: "`data` arrived as an empty string. Send the section contents as JSON.",
+    };
+  }
+
+  try {
+    return { ok: true, value: JSON.parse(trimmed) };
+  } catch {
+    // A string that isn't JSON is a different failure from a wrong shape, and
+    // saying so is what stops the caller re-sending the same prose twice.
+    const preview = trimmed.length > 60 ? `${trimmed.slice(0, 60)}…` : trimmed;
+    return {
+      ok: false,
+      message:
+        `\`data\` arrived as a string that isn't valid JSON, so nothing was written.\n\n` +
+        `  Received: ${preview}\n\n` +
+        `Send the section contents as JSON — an object for \`profile\`, an array for every other section.`,
+    };
+  }
+}
+
 export function registerCareerKBTools(server: McpServer): void {
 
   server.registerTool(
@@ -386,9 +432,20 @@ ${statusUpdated
         section: z.enum(CAREER_SECTIONS).describe(
           "Which part of the Career KB to write. 'profile' is a single object; every other section is a list.",
         ),
-        data: z.unknown().describe(
+        // Declared as a union, not `z.unknown()`: zod emits `{}` for unknown, and
+        // a required property with no `type` is what made clients send this as a
+        // JSON string and every write fail (#34). Object and array come first so
+        // a client picks a structured form; `string` stays in the union so a
+        // client that still stringifies reaches coerceSectionData and a useful
+        // error, instead of being refused by the SDK before the handler runs.
+        data: z.union([
+          z.record(z.string(), z.unknown()),
+          z.array(z.unknown()),
+          z.string(),
+        ]).describe(
           "The complete contents for this section — an object for 'profile', an array for every " +
-            "other section. Shapes (? marks optional):\n\n" +
+            "other section. Send it as structured JSON, not as a stringified blob. " +
+            "Shapes (? marks optional):\n\n" +
             SECTION_SHAPE_HELP,
         ),
       },
@@ -398,8 +455,23 @@ ${statusUpdated
       // disk. Writing first and validating on read would let one bad write make
       // the whole KB unloadable — loadCareerData fails closed on a corrupt
       // section, so an invalid profile.yaml takes every KB-backed tool down.
+      // Clients that get no `type` for `data` send it as a JSON string; unwrap
+      // that before validating, or every write from those clients is refused.
+      const coerced = coerceSectionData(data);
+      if (!coerced.ok) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text:
+              `❌ ${coerced.message}\n\n` +
+              `Expected \`${section}\`: ${SECTION_SHAPES[section]}`,
+          }],
+        };
+      }
+
       const schema = CAREER_SECTION_SCHEMA[section];
-      const parsed = schema.safeParse(data);
+      const parsed = schema.safeParse(coerced.value);
       if (!parsed.success) {
         const issues = parsed.error.issues
           .slice(0, 6)
