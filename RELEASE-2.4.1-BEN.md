@@ -26,6 +26,11 @@ npm publish            # prompts for your 2FA / passkey
 pack leak guard, so a broken tree cannot publish. If the passkey prompt misbehaves,
 see the note in auto-memory: `reference_npm_publish_2fa_passkey_gotcha.md`.
 
+**That whole gate was already run on this exact tree and passes** — `tsc` clean,
+335 passed / 1 skipped, pack guard 7/7. `npm pack --dry-run` produces
+`career-compass-mcp-2.4.1.tgz`, 131.2 kB, 103 files. Nothing should stand between
+you and the publish except the 2FA prompt.
+
 Verify it landed:
 
 ```bash
