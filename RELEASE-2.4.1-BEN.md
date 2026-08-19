@@ -12,15 +12,28 @@ publish.**
 
 ## 1. The publish (this is the real blocker — needs your 2FA)
 
+**Log in FIRST. This is not optional and not a fallback.** The `~/.npmrc` token expires
+between releases — it has now bitten this exact release three times (6/18, 7/24, 8/19).
+Skipping it produces a *misleading* `E404 Not Found - PUT`, which looks like the package
+is missing but means "not authenticated."
+
 ```bash
 cd ~/projects/career-compass-mcp
 git checkout main && git pull --ff-only
 
-# sanity: version should read 2.4.1
-node -p "require('./package.json').version"
+npm whoami             # E401 = expired, expected; if it prints benskamps, skip the login
 
-npm publish            # prompts for your 2FA / passkey
+npm login              # browser + passkey. MUST be a real terminal — see note below
+npm publish --ignore-scripts
 ```
+
+`--ignore-scripts` is safe here **only because `prepublishOnly` already ran green on this
+identical tree** (build clean, 335 passed / 1 skipped, pack guard 7/7). It skips a
+redundant 30s rebuild. If you touch anything first, drop the flag.
+
+> **`npm login` cannot run from inside Claude Code's shell**, including with the `!` prefix
+> — it blocks on stdin that never arrives and the printed CLI-session URL dies with the
+> process. Run it in a real terminal (the one you just used is fine).
 
 `prepublishOnly` automatically runs `build:mcp`, the full MCP test suite, and the
 pack leak guard, so a broken tree cannot publish. If the passkey prompt misbehaves,
