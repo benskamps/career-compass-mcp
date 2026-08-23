@@ -6,6 +6,8 @@ import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, append
 import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
+import { isWriteClaimUnavailable } from "../storage/write-claim.js";
+import { optionalApplicationIdArg } from "../completions.js";
 
 /** Per-section schema, so a write is validated with the same rules the loader
  *  enforces on read. Writing first and validating later would let one bad write
@@ -229,7 +231,10 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
         "positions you for future opportunities. If you pass applicationId, this also sets that " +
         "application's status to `rejected` in your pipeline — it does not only write a draft.",
       inputSchema: {
-        applicationId: z.string().optional().describe(
+        // Optional, and completable — see src/completions.ts. It stays optional:
+        // omitting it drafts a reply and writes nothing, which is a different
+        // and much less destructive tool call.
+        applicationId: optionalApplicationIdArg(
           "Pipeline application ID. Supplying it fills in the company and role from the pipeline AND " +
             "marks that application `rejected`. Leave it out to draft a reply and change nothing.",
         ),
@@ -381,6 +386,19 @@ ${statusUpdated
                 `⚠️ Couldn't save the insight: your journal file exists but is unreadable, ` +
                 `so I stopped rather than risk overwriting it.\n\n` +
                 `Fix or restore \`journal.yaml\` (a timestamped \`.bak\` sits beside it), then try again.\n\n` +
+                `Nothing was written; the insight below is unsaved:\n> ${summary}`,
+            }],
+          };
+        }
+        if (isWriteClaimUnavailable(error)) {
+          // The same shape of answer as the corrupt case, for the same reason:
+          // the write did not happen, the user can act on it, and the insight
+          // itself must come back so it is not lost to a transport error.
+          return {
+            content: [{
+              type: "text",
+              text:
+                `⚠️ Couldn't save the insight right now: ${error.message}\n\n` +
                 `Nothing was written; the insight below is unsaved:\n> ${summary}`,
             }],
           };
