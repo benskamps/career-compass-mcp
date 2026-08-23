@@ -1,0 +1,5 @@
+# Generated diagram figures: byte-stable output from tools/render-mermaid.mjs.
+# Without this, git line-ending normalisation rewrites them on every checkout
+# and the "same input -> identical output" guarantee looks broken when it is not.
+docs/report/figures/** -text
+*.svg -text
