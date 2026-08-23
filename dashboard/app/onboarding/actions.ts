@@ -1,8 +1,17 @@
 "use server";
 
+// This module is the second writer the audit found: four Server Actions in a
+// second OS process, writing the same data directory the MCP server owns.
+// It now takes the cross-process write claim through saveCareerSection like
+// everyone else; labelling it here is what makes a refusal legible ("another
+// Career Compass process is writing…, pid N").
+
 import { hasProfileData, loadCareerData } from "@/lib/data";
 import { saveCareerSection } from "@shared/storage/file-store";
+import { setClaimHolderLabel } from "@shared/storage/write-claim";
 import type { Profile, Skill } from "@shared/schemas/career-schema";
+
+setClaimHolderLabel("dashboard");
 
 export async function checkForData(): Promise<boolean> {
   return hasProfileData();

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, mkdir, writeFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BACKUP_RETENTION, savePipeline, saveCareerSection } from "../file-store.js";
+import { BACKUP_RETENTION, savePipelineUnlocked, saveCareerSection } from "../file-store.js";
 
 /**
  * Guard: timestamped `.bak` files are capped, not accumulated forever.
@@ -54,7 +54,7 @@ describe("backup pruning", () => {
       await writeFile(join(dir, bakName("applications.yaml", s)), "old\n");
     }
 
-    await savePipeline({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
+    await savePipelineUnlocked({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
 
     const left = await baksFor(dir, "applications.yaml");
     expect(left).toHaveLength(BACKUP_RETENTION);
@@ -86,7 +86,7 @@ describe("backup pruning", () => {
       await writeFile(join(dir, bakName("neighbour.yaml", s)), "old\n");
     }
 
-    await savePipeline({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
+    await savePipelineUnlocked({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
 
     expect(await baksFor(dir, "applications.yaml")).toHaveLength(BACKUP_RETENTION);
     expect(await baksFor(dir, "neighbour.yaml")).toHaveLength(8);
@@ -107,7 +107,7 @@ describe("backup pruning", () => {
       );
     }
 
-    await savePipeline({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
+    await savePipelineUnlocked({ applications: [], lastUpdated: "2026-06-20T00:00:00.000Z" });
 
     const left = await baksFor(dir, "applications.yaml");
     expect(left).toContain("applications.yaml.before-my-edit.bak");

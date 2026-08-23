@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant U as User
+    participant B as Browser
+    participant N as Next dashboard (preferred)
+    participant L as dashboard-lite (fallback)
+    participant F as file-store
+    U->>B: open http://localhost:3141
+    alt standalone build exists
+        B->>N: GET / (any Host header)
+        Note over N: no Host check
+        N->>F: loadCareerData + loadPipeline
+        F-->>N: full KB incl. salary, contacts
+        N-->>B: rendered page
+        B->>N: Server Action saveProfile(...)
+        N->>F: saveCareerSection (2nd process, outside the MCP lock)
+    else no standalone build
+        B->>L: GET / with Host
+        L->>L: isAllowedHost(Host)?
+        alt not loopback
+            L-->>B: 403 before any path is parsed
+        else loopback
+            L->>F: loadPipeline (read only)
+            F-->>L: pipeline
+            L-->>B: rendered page
+        end
+    end

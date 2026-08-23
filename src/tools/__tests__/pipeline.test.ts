@@ -17,7 +17,7 @@ import type {
 
 vi.mock("../../storage/file-store.js", () => ({
   loadPipeline: vi.fn(),
-  savePipeline: vi.fn(),
+  savePipelineUnlocked: vi.fn(),
   isCorruptDataError: (e: unknown) =>
     e instanceof Error && e.name === "CorruptDataError",
 }));

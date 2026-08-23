@@ -6,6 +6,7 @@ import { join, resolve } from "path";
 import { parse as parseYaml } from "yaml";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDataDir, loadPipeline, isCorruptDataError, CAREER_SECTIONS } from "../storage/file-store.js";
+import { inspectWriteClaim } from "../storage/write-claim.js";
 import { PKG_NAME, PKG_VERSION } from "../version.js";
 
 /**
@@ -422,7 +423,12 @@ async function pipelineFinding(dataDir: string, port: number): Promise<Finding> 
  * accumulate silently, and one of them may be the write a user thinks they made.
  */
 async function orphanFinding(dataDir: string): Promise<Finding> {
-  const dirs = [join(dataDir, "career"), join(dataDir, "pipeline")];
+  // The data-dir ROOT is scanned too, not only its two subdirectories. An
+  // external review pointed out that this scan — the one tool built to find
+  // leftover temp files — could not see leftovers written beside `career/` and
+  // `pipeline/` rather than inside them. That is a blind spot whether or not
+  // anything currently writes there.
+  const dirs = [dataDir, join(dataDir, "career"), join(dataDir, "pipeline")];
   const orphans: string[] = [];
   for (const dir of dirs) {
     let entries: string[];
@@ -444,6 +450,29 @@ async function orphanFinding(dataDir: string): Promise<Finding> {
     status: "warn",
     detail: `${orphans.length} leftover .tmp file${orphans.length === 1 ? "" : "s"} from an interrupted write: ${orphans.slice(0, 3).join(", ")}${orphans.length > 3 ? ", …" : ""}`,
     fix: "Nothing reads these — delete them. If one holds a write you thought you made, copy the contents out first.",
+  };
+}
+
+/**
+ * Is another process holding the write claim right now?
+ *
+ * The claim is the answer to "why did my save say unavailable?", so `check_setup`
+ * should be able to say it out loud. A stale claim is reported as clean because
+ * it is: the next write breaks it automatically.
+ */
+async function writeClaimFinding(dataDir: string): Promise<Finding> {
+  const holder = await inspectWriteClaim(dataDir);
+  if (!holder) {
+    return { label: "Write claim", status: "ok", detail: "No other process is writing this folder." };
+  }
+  const mine = holder.pid === process.pid;
+  return {
+    label: "Write claim",
+    status: mine ? "ok" : "warn",
+    detail: mine
+      ? `Held by this process (pid ${holder.pid}).`
+      : `Held by ${holder.holder} (pid ${holder.pid}) since ${holder.acquiredAt}. Saves will report unavailable until it finishes.`,
+    fix: mine ? undefined : "Close the other Career Compass dashboard or MCP server, or wait — a claim from a dead process expires on its own.",
   };
 }
 
@@ -630,7 +659,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
       // its own finding, never the whole report. `checkNpmForUpdate` and
       // `probeLocalDashboard` already resolve rather than throw; this is the
       // belt to their braces, and it holds for an override that is less careful.
-      const [update, sections, pipeline, orphans, dashboard] = await Promise.all([
+      const [update, sections, pipeline, orphans, claim, dashboard] = await Promise.all([
         checkForUpdates
           ? checkForUpdate().catch((error: unknown) => ({
               ok: false as const,
@@ -640,6 +669,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
         readSectionStates(careerDir),
         pipelineFinding(dataDir, dashboardPort),
         orphanFinding(dataDir),
+        writeClaimFinding(dataDir),
         probeDashboard(dashboardPort).catch(
           (): DashboardProbeResult => ({ reachable: false, reason: "the check could not run" }),
         ),
@@ -651,6 +681,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
         ...careerKbFindings(sections),
         pipeline,
         orphans,
+        claim,
         dashboardFinding(dataDir, dashboardPort, dashboard),
       ];
 

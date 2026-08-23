@@ -2,8 +2,12 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer } from "./server.js";
 import { ensureDataDirs } from "./storage/file-store.js";
+import { setClaimHolderLabel } from "./storage/write-claim.js";
 
 async function main(): Promise<void> {
+  // Names this process in a write-claim refusal, so "another process is writing"
+  // tells the user which one to close.
+  setClaimHolderLabel("MCP server");
   await ensureDataDirs();
 
   const server = createServer();

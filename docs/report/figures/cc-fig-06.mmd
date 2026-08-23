@@ -1,0 +1,13 @@
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> Guarded: every surface, no exception
+    Guarded --> Refused: Host not loopback
+    Guarded --> Reading: Host loopback
+    Reading --> Rendered
+    Rendered --> Claiming: write requested
+    Claiming --> Writing: claim acquired
+    Claiming --> Unavailable: another process holds the dir
+    Writing --> Persisted: atomic rename + .bak
+    Unavailable --> Rendered: told plainly, nothing written
+    Persisted --> [*]
+    Refused --> [*]

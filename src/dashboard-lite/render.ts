@@ -58,6 +58,30 @@ function esc(s: unknown): string {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }
 
+/**
+ * Serialize a value for interpolation into a `<script>` body.
+ *
+ * HTML-escaping is wrong inside a script element — the parser does not decode
+ * entities there, so `&quot;` would arrive as six literal characters and break
+ * the JSON. What actually has to be neutralised is any byte sequence that ends
+ * the script element early or opens an HTML comment, because the HTML parser
+ * scans for those without understanding JavaScript at all.
+ *
+ * Today the only caller passes enum-derived labels and colours from a fixed map,
+ * so nothing user-controlled reaches it. That is precisely why this exists: the
+ * page renders a user's whole job search from an unauthenticated local origin,
+ * and the distance between "safe by coincidence" and "stored XSS" was one line
+ * — someone putting company names into the chart. `esc()` covers every other
+ * interpolation on this page; this covers the last one.
+ */
+function jsonForScript(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 interface NextAction { app: Application; label: string; urgency: "overdue" | "soon" | "info"; }
 
 /** Derive next actions from follow-up dates, upcoming interviews, and expiring offers. */
@@ -195,7 +219,7 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string): strin
     </div>
   </div></div>`;
 
-  const chartData = JSON.stringify(
+  const chartData = jsonForScript(
     ACTIVE.filter((st) => apps.some((a) => a.status === st))
       .map((st) => ({ label: st[0].toUpperCase() + st.slice(1), value: apps.filter((a) => a.status === st).length, color: STAGE_COLOR[st] })),
   );
@@ -302,8 +326,12 @@ const CHART=${chartData};
   const box=document.getElementById("chart");
   if(box&&CHART.length){
     const max=Math.max(...CHART.map(d=>d.value),1);
+    // Escaped on the way into innerHTML for the same reason jsonForScript exists:
+    // these values are enum-derived today and this is the only place on the page
+    // that builds markup from data at runtime.
+    const h=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     box.innerHTML='<div class="bar-row">'+CHART.map(d=>
-      '<div class="bar"><span class="lab">'+d.label+'</span><span class="track"><span class="fill" style="width:'+(d.value/max*100)+'%;background:'+d.color+'"></span></span><span class="val">'+d.value+'</span></div>'
+      '<div class="bar"><span class="lab">'+h(d.label)+'</span><span class="track"><span class="fill" style="width:'+(Number(d.value)/max*100)+'%;background:'+h(d.color)+'"></span></span><span class="val">'+h(d.value)+'</span></div>'
     ).join("")+'</div>';
   } else if(box){ box.innerHTML='<div class="none-lg">No active applications yet.</div>'; }
   const toast=document.getElementById("toast"); let tmr;

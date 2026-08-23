@@ -6,9 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+# Two jobs, because the repository has two halves and a green that covers one of
+# them is the defect this file used to have. CI built and tested the MCP server
+# only, with a comment saying the dashboard build was "intentionally skipped" —
+# and the dashboard was the half holding the loopback guard's absence and the
+# only write path outside the MCP server. "Dev-only" describes distribution, not
+# risk. See docs/architecture-audit.md, finding P1.
+
 jobs:
   mcp:
-    name: MCP build + leak guard
+    name: MCP build + tests + leak guard
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,15 +30,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # tsc compile of the MCP server. The heavy Next dashboard build is
-      # intentionally skipped here — the leak guard + MCP tests are what
-      # protect a publish, and pack:guard's `npm pack --dry-run` does not
-      # need the dashboard built.
       - name: Build MCP (tsc)
         run: npm run build:mcp
 
       - name: Run MCP tests
         run: npm run test:mcp
 
+      # `npm pack --dry-run` against the files allowlist. Does not need the
+      # dashboard built — the dashboard is deliberately not published.
       - name: Run npm-pack leak guard
         run: npm run pack:guard
+
+  dashboard:
+    name: Dashboard build + tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # The dashboard has its own lockfile and imports the MCP sources through
+      # the @shared alias, so both installs are needed.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install dashboard dependencies
+        run: npm ci
+        working-directory: dashboard
+
+      - name: Run dashboard tests
+        run: npx vitest run
+        working-directory: dashboard
+
+      # The build is the part that catches a broken middleware, a bad @shared
+      # import, or a type error in a Server Action — none of which the unit
+      # tests see. It is the slowest step here and the one most worth having.
+      - name: Build dashboard (next build)
+        run: npx next build
+        working-directory: dashboard
