@@ -303,6 +303,7 @@ published at https://benskamps.github.io/career-compass-mcp/privacy
 | `capture_insight` | Appends a dated signal to your career journal — fit signals, interview insights, offer reflections, rejection patterns, skill evidence, wins — which later resume, interview, and fit prompts read back |
 | `save_career_section` | Writes one section of your Career KB to disk as plain YAML — this is how the KB gets populated. Replaces the whole section; the previous version is kept as a `.bak` |
 | `check_setup` | Health-checks the install in one pass — version vs. the current npm release, data directory, which Career KB sections are filled, whether the pipeline parses, leftover temp files, dashboard status — each finding with the one command that fixes it. Read-only. Run it first when anything seems off |
+| `harvest_evidence` | Reads a local project's git history and reports what you measurably did there — months active, files and file types touched, your share of commits, test ratio — each with the exact command that produced it. Only your own commits count, and it says which identity it used. Read-only: it writes nothing, anywhere. It reports counts and asks the questions a commit log cannot answer; turning those into a résumé line is your call, then `capture_insight` records it |
 
 ## Resources
 

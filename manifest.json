@@ -99,6 +99,10 @@
       "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it."
     },
     {
+      "name": "harvest_evidence",
+      "description": "Read a local project's git history and report what you measurably did there \u2014 months active, files and file types touched, your share of commits, test ratio \u2014 each with the command that produced it. Use it when the user cannot remember what they shipped, is writing a r\u00e9sum\u00e9 bullet for a project, or needs proof of a skill. It reports counts and asks the questions a commit log cannot answer; it never invents achievements and never writes to the Career KB."
+    },
+    {
       "name": "check_setup",
       "description": "Health-check this Career Compass install and report everything at once: whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding comes with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
     }

@@ -4,6 +4,7 @@ import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/fil
 import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
+import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { applicationIdArg } from "../completions.js";
 import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 import type {
@@ -312,8 +313,11 @@ export function registerPipelineTools(server: McpServer): void {
       try {
         pipeline = await loadPipeline();
       } catch (error) {
-        if (isCorruptDataError(error)) {
-          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+          // Both mean the same thing to the user: nothing was written, and here
+          // is why. A raw throw here would surface as a transport error and lose
+          // the one sentence that tells them what to do about it.
+          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -372,8 +376,11 @@ export function registerPipelineTools(server: McpServer): void {
         // the same turn cannot overwrite each other.
         return await mutatePipeline((pipeline) => handleAdd({ ...args, action: "add" } as PipelineAddArgs, pipeline));
       } catch (error) {
-        if (isCorruptDataError(error)) {
-          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+          // Both mean the same thing to the user: nothing was written, and here
+          // is why. A raw throw here would surface as a transport error and lose
+          // the one sentence that tells them what to do about it.
+          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -417,8 +424,11 @@ export function registerPipelineTools(server: McpServer): void {
       try {
         return await mutatePipeline((pipeline) => handleUpdate({ ...args, action: "update" } as PipelineUpdateArgs, pipeline));
       } catch (error) {
-        if (isCorruptDataError(error)) {
-          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+          // Both mean the same thing to the user: nothing was written, and here
+          // is why. A raw throw here would surface as a transport error and lose
+          // the one sentence that tells them what to do about it.
+          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -447,8 +457,11 @@ export function registerPipelineTools(server: McpServer): void {
       try {
         pipeline = await loadPipeline();
       } catch (error) {
-        if (isCorruptDataError(error)) {
-          return { content: [{ type: "text", text: `❌ ${error.message}` }] };
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+          // Both mean the same thing to the user: nothing was written, and here
+          // is why. A raw throw here would surface as a transport error and lose
+          // the one sentence that tells them what to do about it.
+          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }

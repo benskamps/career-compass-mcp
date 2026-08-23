@@ -68,6 +68,10 @@ const ARGS: Record<string, Record<string, unknown>> = {
   pipeline_add: { company: "Acme Health", role: "Director" },
   pipeline_update: { id: "does-not-exist", status: "interviewing" },
   capture_insight: { type: "win", summary: "Panel liked the WMS story." },
+  // Pointed at THIS repository, which is a real git repo with real history, so
+  // the read-only claim is proved against a tool that actually did work rather
+  // than one that bailed early on a bad path.
+  harvest_evidence: { projectPath: process.cwd(), since: "2026-08-01" },
   generate_rejection_response: { rejectionContent: "We went with another candidate." },
   // `checkForUpdates: false` because this suite must not reach the npm registry;
   // the update check is exercised with an injected stub in upgrade-scenarios.
