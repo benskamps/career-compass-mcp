@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { harvestEvidence, NotARepoError, type GitReader } from "../evidence.js";
+import { harvestEvidence, NotARepoError, GitUnavailableError, type GitReader } from "../evidence.js";
 import { formatReport } from "../tools/evidence.js";
 
 /**
@@ -146,6 +146,15 @@ describe("evidence harvester — refusals and limits", () => {
     expect(() =>
       harvestEvidence({ projectPath: fresh(), git: fakeGit({ isRepo: false }) }),
     ).toThrow(NotARepoError);
+  });
+
+  it("says GIT IS MISSING when git is missing, not 'not a repository'", () => {
+    // Measured against a real server launched with git off its PATH: the tool
+    // reported that this repository "is not a git repository", which is a
+    // confident, specific, wrong diagnostic — it sends the user to look at their
+    // repo instead of their PATH. A spawn failure is its own outcome.
+    const noGit: GitReader = () => ({ ok: false, stdout: "", spawnFailed: true });
+    expect(() => harvestEvidence({ projectPath: fresh(), git: noGit })).toThrow(GitUnavailableError);
   });
 
   it("refuses a path that does not exist", () => {

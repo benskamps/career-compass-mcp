@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { harvestEvidence, NotARepoError, type HarvestReport } from "../evidence.js";
+import { harvestEvidence, NotARepoError, GitUnavailableError, type HarvestReport } from "../evidence.js";
 
 /**
  * `harvest_evidence` — read a project's git history and report what is in it.
@@ -123,7 +123,7 @@ export function registerEvidenceTools(server: McpServer): void {
         const report = harvestEvidence({ projectPath, since, authorEmail });
         return { content: [{ type: "text" as const, text: formatReport(report) }] };
       } catch (error) {
-        if (error instanceof NotARepoError) {
+        if (error instanceof GitUnavailableError || error instanceof NotARepoError) {
           return { content: [{ type: "text" as const, text: `❌ ${error.message}` }] };
         }
         // A missing `git` binary is the other likely failure and is worth naming

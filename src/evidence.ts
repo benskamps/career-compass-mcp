@@ -39,7 +39,7 @@ import { basename, resolve, posix } from "path";
  */
 
 export interface GitReader {
-  (cwd: string, args: string[]): { ok: boolean; stdout: string };
+  (cwd: string, args: string[]): { ok: boolean; stdout: string; spawnFailed?: boolean };
 }
 
 /**
@@ -58,7 +58,13 @@ export const realGit: GitReader = (cwd, args) => {
     maxBuffer: 32 * 1024 * 1024,
     windowsHide: true,
   });
-  return { ok: r.status === 0 && !r.error, stdout: r.stdout ?? "" };
+  // A spawn failure ("git" not on PATH) is a different thing from git running
+  // and saying no, and conflating them produces the worst kind of diagnostic:
+  // a confident, specific, wrong one. Without this the tool told a user with no
+  // git installed that their repository "is not a git repository", sending them
+  // to look at the wrong thing entirely.
+  const spawnFailed = !!r.error && (r.error as NodeJS.ErrnoException).code === "ENOENT";
+  return { ok: r.status === 0 && !r.error, stdout: r.stdout ?? "", spawnFailed };
 };
 
 /** Hard cap on commits examined, so a monorepo cannot wedge a tool call. */
@@ -93,6 +99,17 @@ export interface HarvestReport {
   /** Questions only the user can answer. Never guessed at. */
   questions: string[];
   notes: string[];
+}
+
+export class GitUnavailableError extends Error {
+  constructor() {
+    super(
+      "`git` is not available to this server process, so there is no history to read. " +
+        "It runs wherever your MCP client launched it, which may not have your shell's PATH — " +
+        "install git, or launch the client from a shell where `git --version` works.",
+    );
+    this.name = "GitUnavailableError";
+  }
 }
 
 export class NotARepoError extends Error {
@@ -147,7 +164,9 @@ export function harvestEvidence(opts: HarvestOptions): HarvestReport {
   const since = opts.since ?? isoDaysAgo(730);
 
   if (!existsSync(path)) throw new NotARepoError(path);
-  if (!git(path, ["rev-parse", "--git-dir"]).ok) throw new NotARepoError(path);
+  const probe = git(path, ["rev-parse", "--git-dir"]);
+  if (probe.spawnFailed) throw new GitUnavailableError();
+  if (!probe.ok) throw new NotARepoError(path);
 
   const branch = git(path, ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim() || null;
 
