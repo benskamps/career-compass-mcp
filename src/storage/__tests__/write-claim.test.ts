@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync, readdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import {
@@ -71,34 +71,60 @@ describe("write claim", () => {
 
   // ── the negative control ──────────────────────────────────────────────────
 
-  it("REFUSES a second live holder, and does not run the body", async () => {
+  it("REFUSES a live foreign holder, and does not run the body", async () => {
     // The assertion that would have failed before write-claim.ts existed.
-    if (FOREIGN_PID === null) {
-      // Without a live foreign pid this would pass for the wrong reason.
-      throw new Error("no live foreign pid available; cannot exercise the refusal");
-    }
+    //
+    // Deliberately NOT nested inside an outer claim. It used to be, which was
+    // wrong twice over: nesting is now correctly re-entrant (so the inner call
+    // would pass straight through and the test would assert nothing), and
+    // before that it deadlocked once same-dir callers began queueing. Plant the
+    // foreign claim on disk and come at it from the top, which is what a second
+    // process actually does.
+    expect(FOREIGN_PID, "no live foreign pid available; the refusal is unexercisable").not.toBeNull();
+    plantForeignClaim(0, FOREIGN_PID!);
+
     let ran = false;
-    let inner: unknown;
-    await withWriteClaim(dir, async () => {
-      // Simulate the second process: same directory, claim already held.
-      inner = await withWriteClaimFromAnotherPid(dir, async () => {
+    let err: unknown;
+    try {
+      await withWriteClaim(dir, async () => {
         ran = true;
       });
-    });
+    } catch (e) {
+      err = e;
+    }
 
     expect(ran, "the body ran while another process held the claim").toBe(false);
-    expect(isWriteClaimUnavailable(inner)).toBe(true);
+    expect(isWriteClaimUnavailable(err)).toBe(true);
+    expect(existsSync(claimFile()), "the foreign claim was destroyed").toBe(true);
   });
 
   it("names the holder so the user knows what to close", async () => {
-    if (FOREIGN_PID === null) throw new Error("no live foreign pid available");
+    expect(FOREIGN_PID).not.toBeNull();
+    plantForeignClaim(0, FOREIGN_PID!);
+
     let err: unknown;
-    await withWriteClaim(dir, async () => {
-      err = await withWriteClaimFromAnotherPid(dir, async () => {});
-    });
+    try {
+      await withWriteClaim(dir, async () => {});
+    } catch (e) {
+      err = e;
+    }
     expect(isWriteClaimUnavailable(err)).toBe(true);
     expect((err as Error).message).toMatch(/Another Career Compass process is writing/);
     expect((err as Error).message).toMatch(/Nothing was written/);
+  });
+
+  it("passes straight through when the SAME call stack re-enters the same dir", async () => {
+    // Re-entrancy is by async call stack, not by pid — a nested claim is the one
+    // case where proceeding is correct. Without this, a future nested caller
+    // would wait forever on a lock it already holds.
+    let inner = false;
+    await withWriteClaim(dir, async () => {
+      await withWriteClaim(dir, async () => {
+        inner = true;
+      });
+    });
+    expect(inner, "a nested claim on the same dir deadlocked or was refused").toBe(true);
+    expect(existsSync(claimFile()), "the claim was not released").toBe(false);
   });
 
   // ── staleness: a crash must not wedge the store forever ───────────────────
@@ -130,6 +156,76 @@ describe("write claim", () => {
     expect(ran).toBe(true);
   });
 
+  // ── concurrency: the interleavings, not the description ───────────────────
+  //
+  // The first version of this file had eight cases and none of them ran two
+  // claims at once. It validated the design as written and would have passed
+  // against a module with a serious race in it — which is exactly what happened.
+  // An external review found it; a repro confirmed it; these are the tests that
+  // would have caught it first.
+
+  it("admits ONE caller at a time when this process claims the same dir concurrently", async () => {
+    // saveCareerSection() and appendJournalEntry() take DIFFERENT withDataLock
+    // keys (different file paths) but the SAME claim key (the data dir), so they
+    // arrive here genuinely concurrent. Previously the second treated the
+    // first's claim as re-entrant because the pids matched.
+    let inside = 0;
+    let maxInside = 0;
+    let vanishedMidWrite = false;
+
+    const body = async () => {
+      inside++;
+      maxInside = Math.max(maxInside, inside);
+      await new Promise((r) => setTimeout(r, 40));
+      // The killer symptom: the previous version's second caller deleted the
+      // claim file on its way out while the first was still writing, so another
+      // *process* could walk in.
+      if (!existsSync(claimFile())) vanishedMidWrite = true;
+      await new Promise((r) => setTimeout(r, 40));
+      inside--;
+    };
+
+    await Promise.all([
+      withWriteClaim(dir, body),
+      withWriteClaim(dir, body),
+      withWriteClaim(dir, body),
+    ]);
+
+    expect(maxInside, "two callers were inside the claim at once").toBe(1);
+    expect(vanishedMidWrite, "the claim file was deleted while a write was in flight").toBe(false);
+    expect(existsSync(claimFile()), "the claim was not released").toBe(false);
+  });
+
+  it("two callers racing one stale claim do not both proceed at once", async () => {
+    plantForeignClaim(CLAIM_TTL_MS + 5_000); // stale: dead pid AND expired
+    let inside = 0;
+    let maxInside = 0;
+    const body = async () => {
+      inside++;
+      maxInside = Math.max(maxInside, inside);
+      await new Promise((r) => setTimeout(r, 40));
+      inside--;
+    };
+
+    const results = await Promise.allSettled([withWriteClaim(dir, body), withWriteClaim(dir, body)]);
+
+    // Both may legitimately succeed — they are the same process and queue — but
+    // never simultaneously. The old rename-then-read-back break could let two
+    // breakers each read their own nonce and both conclude they held it.
+    expect(maxInside, "two breakers were inside the claim at once").toBe(1);
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+  });
+
+  it("leaves no temp files behind when it breaks a stale claim", async () => {
+    plantForeignClaim(CLAIM_TTL_MS + 5_000);
+    await withWriteClaim(dir, async () => {});
+    // The break used to write `<claim>.<uuid>.tmp` and rename it, which leaked
+    // on any rename failure and sat in a directory `check_setup`'s orphan scan
+    // does not walk. `wx` needs no temp file at all.
+    const strays = readdirSync(dir).filter((n) => n.includes(".write-claim"));
+    expect(strays, `stray claim artifacts: ${strays.join(", ")}`).toEqual([]);
+  });
+
   it("inspectWriteClaim reports a live holder and ignores a stale one", async () => {
     expect(await inspectWriteClaim(dir)).toBeNull();
     await withWriteClaim(dir, async () => {
@@ -157,31 +253,3 @@ const FOREIGN_PID = (() => {
   const ppid = process.ppid;
   return ppid && ppid !== process.pid && __pidAlive(ppid) ? ppid : null;
 })();
-
-/**
- * Take the claim as if from a different process, by rewriting the on-disk
- * record's pid to a live-but-not-us value first.
- *
- * Returns the thrown error rather than throwing, so the caller can assert on it
- * from inside the outer claim.
- */
-async function withWriteClaimFromAnotherPid(
-  dataDir: string,
-  fn: () => Promise<void>,
-): Promise<unknown> {
-  const file = join(dataDir, ".write-claim");
-  const held = JSON.parse(readFileSync(file, "utf-8"));
-  writeFileSync(
-    file,
-    JSON.stringify({ ...held, pid: FOREIGN_PID, holder: "other process" }),
-    "utf-8",
-  );
-  try {
-    await withWriteClaim(dataDir, fn);
-    return null;
-  } catch (e) {
-    return e;
-  } finally {
-    writeFileSync(file, JSON.stringify(held), "utf-8");
-  }
-}

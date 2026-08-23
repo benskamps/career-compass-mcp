@@ -1,6 +1,11 @@
-import { mkdir, writeFile, readFile, rm, rename } from "fs/promises";
-import { join, dirname } from "path";
+import { mkdir, writeFile, readFile, rm } from "fs/promises";
+import { join, dirname, resolve } from "path";
 import { randomUUID } from "crypto";
+import { AsyncLocalStorage } from "async_hooks";
+import { serializeOn } from "./serialize.js";
+
+/** Data dirs whose claim is held by the CURRENT async call stack. */
+const heldDirs = new AsyncLocalStorage<Set<string>>();
 
 /**
  * The write claim — one process at a time may write a given data directory.
@@ -95,10 +100,11 @@ async function readClaim(path: string): Promise<ClaimRecord | null> {
 /**
  * Is a claim expired, or held by a pid that is no longer alive?
  *
- * Deliberately separate from {@link breakable}: "nobody is really holding this"
- * and "I am allowed to take this" are different questions, and conflating them
- * made `inspectWriteClaim` report *no holder* while this very process held one —
- * a diagnostic that lies in exactly the situation it exists for.
+ * This is the ONLY question acquisition asks. "Is it mine?" is deliberately not
+ * asked — see the note below. Conflating "nobody is really holding this" with
+ * "I am allowed to take this" is what made `inspectWriteClaim` report *no
+ * holder* while this very process held one: a diagnostic that lies in exactly
+ * the situation it exists for.
  */
 function stale(claim: ClaimRecord | null, now: number): boolean {
   if (!claim) return true;
@@ -107,14 +113,25 @@ function stale(claim: ClaimRecord | null, now: number): boolean {
   return !pidAlive(claim.pid);
 }
 
-/** May this process take the claim? Stale ones, and our own, are takeable. */
-function breakable(claim: ClaimRecord | null, now: number): boolean {
-  if (stale(claim, now)) return true;
-  // A claim from this very process is ours to re-enter. Nested calls within one
-  // process are already serialized by `withDataLock`; refusing ourselves here
-  // would be a deadlock dressed as a safety check.
-  return claim!.pid === process.pid;
-}
+/**
+ * There is deliberately no "our own pid is takeable" branch.
+ *
+ * There used to be, justified by "nested calls within one process are already
+ * serialized by withDataLock" — which was **false**, and the resulting bug was
+ * the worst in this module. `withDataLock` keys on the FILE PATH; this claim
+ * keys on the DATA DIR. So `saveCareerSection("profile")` and
+ * `appendJournalEntry()` take different in-process locks and are genuinely
+ * concurrent inside the claim. The second one found a claim owned by its own
+ * pid, treated it as re-entrant, broke it, and on the way out **deleted the
+ * claim file while the first was still writing** — at which point another
+ * process could take it and write concurrently. The cross-process guarantee was
+ * being destroyed by an in-process race. Reproduced, then fixed.
+ *
+ * The fix is {@link serializeOn} keyed by the data dir, below: only one caller
+ * in this process is ever inside the claim, so a same-pid claim on disk is
+ * either genuinely stale (TTL / dead pid) or genuinely someone else's, and both
+ * are handled by {@link stale}.
+ */
 
 /**
  * Is that pid still running?
@@ -143,54 +160,89 @@ function pidAlive(pid: number): boolean {
  * The claim is always released, including when `fn` throws, and only if we are
  * still its owner: a claim we lost to a TTL break belongs to whoever took it.
  */
-export async function withWriteClaim<T>(dataDir: string, fn: () => Promise<T>): Promise<T> {
+export function withWriteClaim<T>(dataDir: string, fn: () => Promise<T>): Promise<T> {
+  const key = resolve(dataDir);
+
+  // Re-entrancy, done by call stack rather than by pid.
+  //
+  // "Same process" is the wrong question and asking it is what caused the bug
+  // described above `stale()` — two concurrent siblings share a pid and are not
+  // nested at all. "Same async call stack" is the right one, and
+  // AsyncLocalStorage answers it exactly: a claim taken inside a claim for the
+  // same directory is genuinely re-entrant and passes straight through, while a
+  // sibling gets queued below.
+  //
+  // Nothing nests today. This exists because the alternative failure is a
+  // silent deadlock — the caller waits forever on a lock it is already holding —
+  // and that is a worse thing to leave lying around than fifteen lines.
+  const held = heldDirs.getStore();
+  if (held?.has(key)) return fn();
+
+  // Serialize this process's own callers on the data dir FIRST. Queueing (not
+  // refusing) is right in-process: the second caller is a legitimate request
+  // that should proceed once the first finishes. Cross-process is the opposite —
+  // there, waiting on someone else's write is not ours to do, so it throws.
+  return serializeOn(`write-claim:${key}`, () =>
+    heldDirs.run(new Set([...(held ?? []), key]), () => acquireAndRun(dataDir, fn)),
+  );
+}
+
+async function acquireAndRun<T>(dataDir: string, fn: () => Promise<T>): Promise<T> {
   const path = claimPath(dataDir);
   const nonce = randomUUID();
-  const record: ClaimRecord = {
-    pid: process.pid,
-    nonce,
-    acquiredAt: new Date().toISOString(),
-    holder: selfLabel,
-  };
+  const record = () =>
+    JSON.stringify({
+      pid: process.pid,
+      nonce,
+      acquiredAt: new Date().toISOString(),
+      holder: selfLabel,
+    } satisfies ClaimRecord);
 
   await mkdir(dirname(path), { recursive: true });
 
-  let held = false;
-  try {
-    // `wx` fails if the path exists — atomic create, no check-then-act window.
-    await writeFile(path, JSON.stringify(record), { flag: "wx", encoding: "utf-8" });
-    held = true;
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
+  /** `wx` fails if the path exists — atomic create, no check-then-act window. */
+  const tryCreate = async (): Promise<boolean> => {
+    try {
+      await writeFile(path, record(), { flag: "wx", encoding: "utf-8" });
+      return true;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "EEXIST") return false;
+      throw e;
+    }
+  };
 
+  if (!(await tryCreate())) {
     const existing = await readClaim(path);
-    if (!breakable(existing, Date.now())) {
+    if (!stale(existing, Date.now())) {
       throw new WriteClaimUnavailableError(dataDir, existing);
     }
 
-    // Break it by writing our record to a unique temp file and renaming over
-    // the stale one. rename() is atomic, so two processes breaking the same
-    // stale claim at the same moment produce one winner rather than a mangled
-    // file — and the loser's read-back below tells it which it was.
-    const tmp = `${path}.${nonce}.tmp`;
-    await writeFile(tmp, JSON.stringify(record), "utf-8");
-    await rename(tmp, path);
-
-    const after = await readClaim(path);
-    if (after?.nonce !== nonce) {
-      throw new WriteClaimUnavailableError(dataDir, after);
+    // Break the stale claim by REMOVING it and racing for the atomic create
+    // again. The previous version wrote a temp file and renamed over the stale
+    // claim, then read back to see whose nonce survived — which is not mutual
+    // exclusion. Interleave two breakers as
+    // `A.rename → A.read → B.rename → B.read` and each reads its own nonce, so
+    // both conclude they hold it. rename() gives one final *file*, not one
+    // winner. `wx` is the primitive that actually picks a winner: exactly one
+    // create can succeed, and the loser sees EEXIST. It also removes the temp
+    // file entirely, so there is nothing to leak and no Windows rename-EPERM
+    // path to retry.
+    await rm(path, { force: true }).catch(() => {});
+    if (!(await tryCreate())) {
+      // Someone else took it in the gap. That is a correct outcome, not an
+      // error in this process: refuse rather than write alongside them.
+      throw new WriteClaimUnavailableError(dataDir, await readClaim(path));
     }
-    held = true;
   }
 
   try {
     return await fn();
   } finally {
-    if (held) {
-      const current = await readClaim(path);
-      // Only release what is still ours.
-      if (current?.nonce === nonce) await rm(path, { force: true }).catch(() => {});
-    }
+    const current = await readClaim(path);
+    // Only release what is still ours. If the TTL expired mid-write and another
+    // process broke our claim, the file on disk is theirs and deleting it would
+    // hand the directory to a third party.
+    if (current?.nonce === nonce) await rm(path, { force: true }).catch(() => {});
   }
 }
 

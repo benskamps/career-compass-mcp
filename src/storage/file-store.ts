@@ -9,6 +9,7 @@ import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
 import { withWriteClaim } from "./write-claim.js";
+import { serializeOn } from "./serialize.js";
 
 // ─── Typed errors ─────────────────────────────────────────────────────────────
 
@@ -71,22 +72,8 @@ export function isCorruptDataError(e: unknown): e is CorruptDataError {
  *   withDataLock   two awaits in this process interleaving
  *   withWriteClaim two processes believing they own the directory
  */
-const writeChains = new Map<string, Promise<unknown>>();
-
 export function withDataLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const previous = writeChains.get(key) ?? Promise.resolve();
-  // Run on both settle paths: one caller's failure must not wedge the chain.
-  const run = previous.then(fn, fn);
-  // Store a never-rejecting tail so an unhandled rejection can't escape here;
-  // `run` itself still rejects to the caller.
-  writeChains.set(
-    key,
-    run.then(
-      () => undefined,
-      () => undefined,
-    ),
-  );
-  return run;
+  return serializeOn(key, fn);
 }
 
 // ─── Path resolution ──────────────────────────────────────────────────────────

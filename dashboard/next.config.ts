@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
       // up from `storage/`, so it reaches the schema as "./schemas/…". Turbopack
       // keys on the literal specifier, so both spellings need an entry.
       "./schemas/career-schema.js": "../src/schemas/career-schema.ts",
+      "./serialize.js": "../src/storage/serialize.ts",
     },
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
   },
