@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Career Compass — Architectural Gauntlet</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c1510'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23e8833a' stroke-width='2'/%3E%3Cpath d='M20 11 L14.5 17.5 L11.5 21 L17 14.5 Z' fill='%23e8833a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bark:#1c1510; --bark-2:#241b13; --panel:#2b2117; --panel-2:#332719;
+  --line:#4a3b28; --grid:#382b1d;
+  --parchment:#ece1cc; --parchment-dim:#b8a98c;
+  --ink-label:#9a8e76; --faint:#8f8069;
+  --ember:#e8833a; --gold:#d9a441; --moss:#8aa86b; --clay:#c4744a;
+  --wax:#a84b3a; --brass:#c9a86a; --slate:#8fa3ad; --ash:#6f6557;
+  --serif:'Fraunces',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box; margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bark); color:var(--parchment);
+  font-family:var(--serif); font-weight:370; font-size:17px; line-height:1.55;
+  overflow-x:hidden}
+h1,h2{text-wrap:balance} p{text-wrap:pretty}
+a{color:var(--gold); text-decoration:none; border-bottom:1px solid rgba(217,164,65,.3)}
+a:hover{border-bottom-color:var(--gold)}
+:focus-visible{outline:2px solid var(--ember); outline-offset:3px}
+
+/* ── atmosphere: grain + lamplight + the engineering grid (third layer) ── */
+body::before{content:''; position:fixed; inset:0; pointer-events:none; z-index:40; opacity:.33;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.lamplight{position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 70% 38% at 50% -6%, rgba(232,166,74,.15), transparent 70%),
+    radial-gradient(ellipse 45% 32% at 10% 108%, rgba(196,116,74,.05), transparent 70%)}
+.gridwash{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.15;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:60px 60px}
+
+/* ── scroll spine: the corridor you are walking (art) = read progress (twin) ── */
+.spine{position:fixed; left:0; top:0; width:3px; height:100vh; z-index:30; background:rgba(74,59,40,.35)}
+.spine i{display:block; width:100%; height:var(--grow,0%);
+  background:linear-gradient(180deg,var(--ember),var(--gold) 55%,var(--moss))}
+
+main{max-width:980px; margin:0 auto; padding:9vh 6vw 4vh; position:relative; z-index:2}
+
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.42em;
+  text-transform:uppercase; color:var(--brass); margin-bottom:24px;
+  display:flex; align-items:center; gap:12px}
+.eyebrow::after{content:''; flex:1; height:1px; background:var(--line)}
+h1{font-size:clamp(42px,7.6vw,96px); font-style:italic; line-height:.98;
+  letter-spacing:-.015em; font-variation-settings:'opsz' 144,'wght' 480}
+.lede{font-style:italic; color:var(--parchment-dim); max-width:62ch; margin-top:22px; font-size:19px}
+
+.stats{display:flex; flex-wrap:wrap; gap:34px; margin:42px 0 0}
+.stat b{display:block; font-family:var(--mono); font-weight:700; font-size:30px;
+  color:var(--ember); letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.stat.cool b{color:var(--slate)}
+.stat.hot b{color:var(--clay)}
+.stat span{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink-label)}
+
+.fence{border:1px solid rgba(232,131,58,.4); background:var(--bark-2);
+  padding:15px 19px; margin:26px 0; font-family:var(--mono); font-size:11px;
+  line-height:2; letter-spacing:.06em; color:var(--parchment-dim)}
+.fence .k{color:var(--brass); letter-spacing:.2em}
+.fence.cold{border-color:rgba(143,163,173,.35)}
+.fence.cold .k{color:var(--slate)}
+
+section{margin-top:76px; scroll-margin-top:24px}
+.sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:12px}
+.sec-num{font-family:var(--mono); font-size:12px; color:var(--brass); letter-spacing:.3em}
+h2{font-style:italic; font-weight:420; font-size:28px}
+.blurb{font-style:italic; color:var(--parchment-dim); max-width:66ch; margin-bottom:22px}
+section p + p{margin-top:14px}
+section > p{max-width:70ch; color:var(--parchment-dim)}
+strong{color:var(--parchment); font-weight:600}
+code{font-family:var(--mono); font-size:.86em; color:var(--gold);
+  background:rgba(217,164,65,.09); padding:1px 5px; border-radius:3px}
+
+/* ── corner-bracket chrome (house v2) ── */
+.bracketed{position:relative}
+.bracketed::before,.bracketed::after{content:""; position:absolute; width:9px; height:9px;
+  opacity:.45; pointer-events:none}
+.bracketed::before{top:-1px; left:-1px;
+  border-top:1px solid color-mix(in srgb,var(--accent,var(--ember)) 55%,transparent);
+  border-left:1px solid color-mix(in srgb,var(--accent,var(--ember)) 55%,transparent)}
+.bracketed::after{bottom:-1px; right:-1px;
+  border-bottom:1px solid color-mix(in srgb,var(--accent,var(--ember)) 55%,transparent);
+  border-right:1px solid color-mix(in srgb,var(--accent,var(--ember)) 55%,transparent)}
+
+/* ══ THE DIAGRAM COMPONENT — house support for mermaid ══════════════════
+   Authored in mermaid, shipped as inline SVG (tools/render-mermaid.mjs).
+   The frame is the whole world: wide diagrams scroll inside their own
+   container so the page body never scrolls sideways. The mermaid source
+   rides along in a <details> — the figure can be re-derived from the file
+   it sits in, which is the mark rule applied to diagrams. */
+.diagram{margin:32px 0; background:var(--panel); border:1px solid var(--grid);
+  padding:18px 20px 14px; --accent:var(--brass)}
+.diagram-cap{font-family:var(--mono); font-size:10px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-label); margin-bottom:16px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.diagram-num{color:var(--brass); letter-spacing:.24em}
+.diagram-kind{margin-left:auto; color:var(--faint); border:1px solid var(--line);
+  padding:2px 7px; letter-spacing:.16em; font-size:9px}
+.diagram-frame{overflow-x:auto; overflow-y:hidden; padding:4px 0 10px}
+.diagram-frame svg{display:block; margin:0 auto; height:auto; max-width:100%}
+.diagram-src{margin-top:6px; border-top:1px solid var(--grid); padding-top:8px}
+.diagram-src summary{font-family:var(--mono); font-size:9.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--faint); cursor:pointer; list-style:none}
+.diagram-src summary::-webkit-details-marker{display:none}
+.diagram-src summary::before{content:'▸ '; color:var(--brass)}
+.diagram-src[open] summary::before{content:'▾ '}
+.diagram-src pre{margin-top:10px; overflow-x:auto; background:var(--bark-2);
+  border:1px solid var(--grid); padding:12px 14px}
+.diagram-src code{font-size:11px; line-height:1.7; color:var(--parchment-dim);
+  background:none; padding:0; white-space:pre}
+
+/* ── findings ladder: severity is the stripe, and the stripe never softens ── */
+.finding{background:var(--panel); border:1px solid var(--grid);
+  border-left:3px solid var(--sev,var(--ash)); padding:20px 24px; margin-top:18px}
+.finding.p0{--sev:var(--wax)} .finding.p1{--sev:var(--clay)}
+.finding.p2{--sev:var(--gold)} .finding.p3{--sev:var(--ash)}
+.finding-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px}
+.sev{font-family:var(--mono); font-size:10px; letter-spacing:.24em; color:var(--sev);
+  border:1px solid var(--sev); padding:2px 8px}
+.finding h3{font-style:italic; font-weight:430; font-size:19px; flex:1; min-width:16ch}
+.finding p{color:var(--parchment-dim); font-size:15.5px; max-width:74ch; margin-top:8px}
+.finding .src{font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-label); margin-top:10px; line-height:1.9}
+
+/* severity ladder — the one quantitative texture (§8 checklist) */
+.ladder{margin:30px 0 6px; display:grid; gap:7px}
+.rung{display:grid; grid-template-columns:44px 1fr 34px; align-items:center; gap:12px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; color:var(--ink-label)}
+.rung .bar{height:11px; background:var(--bark-2); border:1px solid var(--grid); position:relative}
+.rung .bar i{position:absolute; inset:0 auto 0 0; width:var(--w); background:var(--c);
+  animation:grow .8s .2s cubic-bezier(.2,.9,.3,1) backwards}
+@keyframes grow{from{width:0}}
+.rung .n{text-align:right; color:var(--parchment); font-variant-numeric:tabular-nums}
+
+/* ── the gate corridor: art = a lit run of gates, twin = it is the nav ── */
+.corridor{display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin:26px 0 10px}
+.gate{background:var(--bark-2); border:1px solid var(--grid); border-top:2px solid var(--gc,var(--line));
+  padding:12px 12px 14px; display:block; color:inherit; border-bottom:none}
+.gate:hover{background:var(--panel); border-bottom:none}
+.gate .g{font-family:var(--mono); font-size:9.5px; letter-spacing:.22em; color:var(--gc,var(--ink-label))}
+.gate .t{font-style:italic; font-size:14px; margin-top:6px; color:var(--parchment-dim); line-height:1.35}
+.gate.blocker{--gc:var(--wax)} .gate.near{--gc:var(--clay)}
+.gate.later{--gc:var(--brass)} .gate.far{--gc:var(--ash)}
+.gate.blocker .g::after{content:' ●'; color:var(--wax)}
+
+table{width:100%; border-collapse:collapse; margin-top:20px; font-size:14.5px}
+th,td{text-align:left; padding:11px 13px; border-bottom:1px solid var(--grid); vertical-align:top}
+th{font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-label); border-bottom-color:var(--line)}
+td{color:var(--parchment-dim)}
+tbody tr:nth-child(odd){background:rgba(43,33,23,.4)}
+.v{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; white-space:nowrap}
+.v.rej{color:var(--moss)} .v.mod{color:var(--gold)} .v.acc{color:var(--slate)}
+.tw{overflow-x:auto}
+
+.stamp{display:inline-block; margin-top:34px; padding:9px 22px; border:3px double var(--wax);
+  border-radius:4px; color:var(--wax); font-family:var(--mono); font-size:11px;
+  letter-spacing:.28em; text-transform:uppercase; transform:rotate(-2.5deg);
+  animation:stamp .5s .9s cubic-bezier(.2,1.6,.4,1) backwards}
+@keyframes stamp{from{opacity:0; transform:rotate(-2.5deg) scale(1.7)}}
+
+footer{border-top:1px solid var(--line); margin-top:90px}
+footer main{padding-top:30px; padding-bottom:46px}
+.contract{font-family:var(--mono); font-size:10px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--ink-label); line-height:2.4}
+.signoff{font-style:italic; color:var(--faint); font-size:14px; margin-top:18px; max-width:64ch}
+
+@media (max-width:860px){
+  .corridor{grid-template-columns:repeat(2,1fr)}
+  .stats{gap:22px}
+}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important; transition:none !important} }
+@media print{
+  body{background:#fff; color:#000} .lamplight,.gridwash,.spine,body::before{display:none}
+  .diagram-src{display:none}
+}
+</style>
+</head>
+<body>
+<div class="lamplight" aria-hidden="true"></div>
+<div class="gridwash" aria-hidden="true"></div>
+<div class="spine" aria-hidden="true"><i></i></div>
+
+<main>
+  <div class="eyebrow">Career Compass MCP · Architectural Gauntlet · 2026-08-22</div>
+  <h1>The care stopped at the door</h1>
+  <p class="lede">A storage layer that argues for every guard before it enforces it — and
+  two dashboards, of which the hardened one is the fallback and the unguarded one is
+  preferred. This is a gauntlet run on <code>dc823a4</code>: seventeen sections, six
+  diagrams, nine findings, and one sentence that has to change.</p>
+
+  <div class="stats">
+    <div class="stat"><b data-n="335">335</b><span>MCP tests passing</span></div>
+    <div class="stat hot"><b data-n="2">2</b><span>P0 findings</span></div>
+    <div class="stat"><b data-n="9">9</b><span>findings total</span></div>
+    <div class="stat cool"><b data-n="90">90</b><span>dashboard files, 0 host checks</span></div>
+    <div class="stat cool"><b data-n="0">0</b><span>exploits attempted</span></div>
+  </div>
+
+  <div class="fence"><span class="k">EVIDENCE ·</span> Every number on this page is measured or
+  counted from the worktree at <code>dc823a4</code> — none is representative.<br>
+  <span class="k">NOT DONE ·</span> No exploit was executed. No rebinding attempt, no XSS,
+  no live write race. Security findings are code-reading plus an absence proven by search.<br>
+  <span class="k">NOT BUILT ·</span> The Next dashboard was never built or run in this pass —
+  which is itself finding P1-C.</div>
+
+  <section id="verdict">
+    <div class="sec-head"><span class="sec-num">01</span><h2>The verdict</h2></div>
+    <p class="blurb">What the gauntlet found, in the order it matters.</p>
+    <p>Career Compass is, on the MCP side, among the most carefully built things in this
+    estate. The storage layer earns its confidence: fail-closed reads, atomic rename with a
+    Windows retry path, per-file write serialization with the read <em>inside</em> the lock,
+    backup retention, an allowlisted section name, and a genuine prompt-injection boundary
+    with a per-call nonce. Almost every invariant is argued for in a comment before it is
+    enforced in code, and several tests assert <em>documentation</em> truth rather than
+    behaviour.</p>
+    <p><strong>The defect is not in what was built. It is in where the care stopped.</strong>
+    The repository holds two dashboards. <code>src/dashboard-lite/</code> — the fallback, the
+    one that ships to npm — carries a sixty-line argument for a DNS-rebinding
+    <code>Host</code> check and implements it. <code>dashboard/</code> — which
+    <code>bin/cli.ts:97</code> prefers whenever it has been built, which renders the whole
+    Career KB including salary floor, salary ceiling and every recruiter contact, and which
+    holds the only write path outside the MCP server — has no host check, no middleware, and
+    no CI at all.</p>
+    <p>Gate 0 is the release blocker. Everything else is P2 or below. No rewrite is warranted
+    anywhere: this is a gap in coverage, not a flaw in design.</p>
+  </section>
+
+  <section id="gates">
+    <div class="sec-head"><span class="sec-num">02</span><h2>The corridor</h2></div>
+    <p class="blurb">Five gates, in binding order. The lit one is the blocker — and each is a
+    door into its own section below.</p>
+    <div class="corridor">
+      <a class="gate blocker" href="#findings"><span class="g">GATE 0</span><span class="t">Guard parity — no surface reads before its Host is loopback</span></a>
+      <a class="gate near" href="#findings"><span class="g">GATE 1</span><span class="t">One CI, both halves of the repo</span></a>
+      <a class="gate near" href="#ideal"><span class="g">GATE 2</span><span class="t">One claimed writer per data dir</span></a>
+      <a class="gate later" href="#findings"><span class="g">GATE 3</span><span class="t">No unguarded channels or unsafe exports</span></a>
+      <a class="gate far" href="#recon"><span class="g">GATE 4</span><span class="t">Published claims match the dashboard too</span></a>
+    </div>
+    <div class="fence cold"><span class="k">READING ·</span> Gate colour is severity of what it
+    contains, not progress: <span style="color:var(--wax)">wax</span> = release blocker ·
+    <span style="color:var(--clay)">clay</span> = next · <span style="color:var(--brass)">brass</span>
+    = queued · <span style="color:var(--ash)">ash</span> = after the rest. Nothing here is
+    started; this is the audit, not the migration.</div>
+  </section>
+
+  <section id="current">
+    <div class="sec-head"><span class="sec-num">03</span><h2>What is actually built</h2></div>
+    <p class="blurb">An MCP server over stdio, seventeen tools, YAML on disk — and two viewers
+    that make opposite promises from one command.</p>
+    <p>State is YAML under <code>CAREER_DATA_PATH</code>. The MCP server is the intended sole
+    writer, and <code>file-store.ts:65</code> says so in as many words. The Next dashboard is a
+    second writer in a second OS process, so that invariant is stated but not held. The clay
+    node below is the one that has no guard.</p>
+    <!--SLOT:FIG-01-->
+  </section>
+
+  <section id="findings">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Health and tech debt</h2></div>
+    <p class="blurb">Nine findings. Not one is a design flaw — every one is a place where a rule
+    this repository already states was applied to one surface and not its neighbour.</p>
+
+    <div class="ladder" role="img" aria-label="Findings by severity: two P0, three P1, three P2, one P3.">
+      <div class="rung"><span>P0</span><span class="bar"><i style="--w:66%;--c:var(--wax)"></i></span><span class="n">2</span></div>
+      <div class="rung"><span>P1</span><span class="bar"><i style="--w:100%;--c:var(--clay)"></i></span><span class="n">3</span></div>
+      <div class="rung"><span>P2</span><span class="bar"><i style="--w:100%;--c:var(--gold)"></i></span><span class="n">3</span></div>
+      <div class="rung"><span>P3</span><span class="bar"><i style="--w:33%;--c:var(--ash)"></i></span><span class="n">1</span></div>
+    </div>
+    <div class="fence cold"><span class="k">RULER ·</span> Bars are scaled to the largest band
+    (3), not to the total — the count on the right is the datum, the bar is only its shape.</div>
+
+    <div class="finding p0">
+      <div class="finding-head"><span class="sev">P0</span><h3>The preferred dashboard has no DNS-rebinding defense while rendering the entire Career KB</h3></div>
+      <p>No host check, no <code>middleware.ts</code>, no <code>isAllowedHost</code> anywhere in
+      the 90 tracked <code>dashboard/</code> files. <code>bin/cli.ts:97</code> prefers it whenever
+      the standalone build exists. Any page the user visits can point a hostname it controls at
+      <code>127.0.0.1</code> and read salary floor and ceiling, targets, history and recruiter
+      contacts as same-origin. The defense the codebase itself calls "the whole defense" lives
+      only on the fallback.</p>
+      <div class="src">PROVEN — REPOSITORY (ABSENCE BY SEARCH) · EXPLOITABILITY UNKNOWN, NOT ATTEMPTED · CF. DASHBOARD-LITE/SERVER.TS:14–28</div>
+    </div>
+
+    <div class="finding p0">
+      <div class="finding-head"><span class="sev">P0</span><h3>The same unguarded surface holds four write Server Actions</h3></div>
+      <p><code>dashboard/app/onboarding/actions.ts</code> is the only <code>"use server"</code>
+      file in the tree, and all four of its actions reach <code>saveCareerSection</code>. Under
+      rebinding the attacker's page <em>is</em> the origin, so Next's built-in Server-Action
+      origin check compares two matching attacker hostnames and does not intervene. A read
+      exposure becomes a write.</p>
+      <div class="src">PROVEN — REPOSITORY · ACTIONS.TS:11,20,28,37 · FRAMEWORK MITIGATION EXPLICITLY REJECTED, SEE D2</div>
+    </div>
+
+    <div class="finding p1">
+      <div class="finding-head"><span class="sev">P1</span><h3>The dashboard is built by no CI job and tested by no CI job</h3></div>
+      <p><code>ci.yml</code> runs <code>build:mcp</code>, <code>test:mcp</code> and
+      <code>pack:guard</code> only, with a comment saying the dashboard build is "intentionally
+      skipped". Five dashboard test files are never executed on <code>main</code>. The surface
+      carrying both P0s is the one surface no automation looks at.</p>
+      <div class="src">PROVEN — REPOSITORY · .GITHUB/WORKFLOWS/CI.YML</div>
+    </div>
+
+    <div class="finding p1">
+      <div class="finding-head"><span class="sev">P1</span><h3><code>npm test</code> and CI run disjoint suites</h3></div>
+      <p><code>scripts.test</code> is <code>cd dashboard &amp;&amp; npx vitest run</code>; CI runs
+      <code>test:mcp</code>. A contributor typing the obvious command never runs the 335 MCP
+      tests, and CI never runs the 5 dashboard ones. Both greens are honest about a suite and
+      silent about the other.</p>
+      <div class="src">PROVEN — REPOSITORY · PACKAGE.JSON:SCRIPTS</div>
+    </div>
+
+    <div class="finding p1">
+      <div class="finding-head"><span class="sev">P1</span><h3>The single-writer invariant is documented but not held</h3></div>
+      <p><code>file-store.ts:64–66</code> — "the MCP server is the single writer for a given data
+      dir. It is not a defense against two servers pointed at one directory." The repo ships that
+      second writer itself. Two concurrent read-modify-write cycles on <code>profile.yaml</code>
+      interleave; the later rename wins outright and both callers report success. The
+      <code>.bak</code> makes that recoverable, not detectable. The same class covers one server
+      registered in both Claude Desktop and Claude Code.</p>
+      <div class="src">PROVEN — REPOSITORY · FILE-STORE.TS:64–66 VS ACTIONS.TS</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="finding-head"><span class="sev">P2</span><h3><code>HOSTNAME: "localhost"</code> is passed to the Next standalone server</h3></div>
+      <p><code>bin/cli.ts:120</code>. The lite server documents at length that binding the
+      <em>name</em> on Windows resolves <code>::1</code> first, so the server binds IPv6-only
+      while clients try <code>127.0.0.1</code> and get ECONNREFUSED. The exact bug that was
+      found, diagnosed and fixed on the lite path is still live on the preferred one.</p>
+      <div class="src">PROVEN — REPOSITORY · CLI.TS:120 VS DASHBOARD-LITE/SERVER.TS:124–135</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="finding-head"><span class="sev">P2</span><h3><code>savePipeline</code> is exported unlocked</h3></div>
+      <p>It is public and takes no lock, while the twenty lines above it explain why calling it
+      by hand is the bug. Nothing in the type system stops the next call site from reintroducing
+      the lost-update race the lock exists to prevent.</p>
+      <div class="src">PROVEN — REPOSITORY · FILE-STORE.TS:373 VS :378–398</div>
+    </div>
+
+    <div class="finding p2">
+      <div class="finding-head"><span class="sev">P2</span><h3>One raw JSON→<code>&lt;script&gt;</code> channel has no escaping and no guard</h3></div>
+      <p><code>render.ts:299</code> — <code>const CHART=${chartData}</code>. Every other
+      user-controlled value on that page goes through <code>esc()</code>, verified at all eight
+      sites. <code>chartData</code> is safe <em>only</em> because its label is an enum name and
+      its colour comes from a fixed map. A one-line future change — company names in the chart —
+      turns the page that serves the whole job search into stored XSS on an unauthenticated
+      local origin. No test pins the invariant.</p>
+      <div class="src">NOT AN EXPLOITABLE XSS TODAY — SEE D4 · REPORTED AS AN UNGUARDED CHANNEL</div>
+    </div>
+
+    <div class="finding p3">
+      <div class="finding-head"><span class="sev">P3</span><h3><code>openBrowser</code> spawns through a shell</h3></div>
+      <p><code>bin/cli.ts:232</code> uses <code>shell:true</code>. The URL is built from a
+      validated integer port, so it is not injectable today — it is one refactor away from being
+      a user-controlled string in a shell.</p>
+      <div class="src">PROVEN — REPOSITORY · NOT EXPLOITABLE AT DC823A4</div>
+    </div>
+  </section>
+
+  <section id="sequence">
+    <div class="sec-head"><span class="sec-num">05</span><h2>The two branches</h2></div>
+    <p class="blurb">One command, two promises. The branch the CLI prefers is the branch with no
+    guard, and it is the only branch that writes.</p>
+    <!--SLOT:FIG-02-->
+    <p>Read as a lifecycle, the same split produces two states that should not exist:
+    <code>Rendered</code> is reachable without ever passing <code>HostChecked</code>, and
+    <code>LostUpdate</code> is reachable while both writers report success.</p>
+    <!--SLOT:FIG-03-->
+  </section>
+
+  <section id="ideal">
+    <div class="sec-head"><span class="sec-num">06</span><h2>The frontier</h2></div>
+    <p class="blurb">One guard module, one write claim, one CI that sees both halves. Everything
+    green below is new; nothing existing is rewritten.</p>
+    <!--SLOT:FIG-04-->
+    <p>One guard imported by both dashboards, so a future third viewer inherits the defense
+    instead of re-arguing it. One claim in the data directory, so "single writer" becomes a fact
+    a second process can observe rather than a sentence in a comment — and
+    <code>Unavailable</code> becomes a first-class outcome the user is told about, not a silent
+    overwrite.</p>
+    <!--SLOT:FIG-05-->
+    <!--SLOT:FIG-06-->
+  </section>
+
+  <section id="recon">
+    <div class="sec-head"><span class="sec-num">07</span><h2>What the skeptics killed</h2></div>
+    <p class="blurb">Three adversarial passes — platform/runtime, storage/concurrency,
+    product/privacy — then a contradiction-only re-read. Two claims were rejected outright; one
+    of them was mine.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Δ</th><th>Claim</th><th>Verdict</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="v">D1</td><td>"The Next dashboard is unpublished, so the missing host check is not a real defect."</td><td class="v mod">MODIFY</td><td>True that npm users never get it — and <code>cli.ts:97</code> prefers it in every source clone, which is the author's own daily path. Severity holds; blast radius stated precisely instead.</td></tr>
+        <tr><td class="v">D2</td><td>"Next.js already blocks cross-origin Server Actions, so the write path is safe."</td><td class="v rej">REJECT</td><td>The check compares <code>Origin</code> to <code>Host</code>. Under rebinding both are the attacker's hostname and they match. The framework is not the mitigation.</td></tr>
+        <tr><td class="v">D3</td><td>"The in-process lock is insufficient and should be replaced with a file lock."</td><td class="v mod">MODIFY</td><td>The lock is correct and its scope comment is honest. The gap is a second <em>process</em>, not a broken lock. Add a claim on top; do not rewrite working concurrency control.</td></tr>
+        <tr><td class="v">D4</td><td>"The <code>CHART</code> interpolation is stored XSS."</td><td class="v rej">REJECT</td><td>No user string reaches it — label is enum-derived, colour is from a fixed map. Downgraded from a vulnerability to an unguarded channel that needs a test.</td></tr>
+        <tr><td class="v">D5</td><td>"The fail-closed storage layer is over-engineered for a personal tool."</td><td class="v rej">REJECT</td><td>Every guard cites the incident it came from — 8 concurrent adds leaving 1 application, 224 backups and 23.7&nbsp;MB, Windows EPERM on rename. This is the standard the dashboard should meet, not the reverse.</td></tr>
+        <tr><td class="v">D6</td><td>"CI is fine; the dashboard is a dev-only surface."</td><td class="v rej">REJECT</td><td>"Dev-only" describes distribution, not risk. The dev-only surface holds both P0s and the only write path outside the MCP server.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="done">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Definition of done</h2></div>
+    <p><strong>Engineering.</strong> A surface that can read the Career KB must prove its caller
+    is loopback before it reads. A surface that can write it must hold a claim no other process
+    holds. Every invariant that today exists only as a comment — single writer,
+    always-<code>mutatePipeline</code>, <code>chartData</code>-is-enum-derived — is either
+    enforced by a type or asserted by a test. Every guard has a runnable negative control.</p>
+    <p><strong>Product.</strong> The promise is that your career data is yours, on your disk,
+    inspectable. The storage layer keeps that promise today. The door does not.</p>
+    <p class="lede" style="margin-top:26px">Every surface that can read the salary floor refuses
+    a stranger first, and every surface that can write it knows whether it is allowed to.</p>
+    <div class="stamp">Gate 0 — not cleared</div>
+  </section>
+
+  <section id="verification">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Verification record</h2></div>
+    <p class="blurb">What was run, what was not, and which is which.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Check</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Git baseline</td><td><code>dc823a4</code> on <code>main</code>, clean worktree. Only the audit document was added.</td></tr>
+        <tr><td>MCP build</td><td><code>npm run build:mcp</code> (tsc) — clean, exit 0.</td></tr>
+        <tr><td>MCP tests</td><td><strong>335 passed, 1 skipped, 38 files</strong>, 6.6&nbsp;s.</td></tr>
+        <tr><td>Dashboard build</td><td><strong>Not run.</strong> No standalone build exists here — which is part of P1.</td></tr>
+        <tr><td>Dashboard tests</td><td><strong>Not run.</strong> Five files exist; no automation executes them.</td></tr>
+        <tr><td>Host-check search</td><td><code>isAllowedHost</code> / <code>middleware</code> / <code>headers.get("host")</code>: <strong>0 hits</strong> across all 90 tracked dashboard files.</td></tr>
+        <tr><td>Escaping audit</td><td>All 8 user-controlled interpolations in <code>render.ts</code> pass through <code>esc()</code>; the single exception is the enum-derived <code>CHART</code> channel.</td></tr>
+        <tr><td>Untrusted-fence audit</td><td>12 interpolation sites across 5 tool modules, all via <code>embedUntrusted</code>. No raw interpolation of third-party text found.</td></tr>
+        <tr><td>Network egress audit</td><td>Exactly one outbound destination in <code>src/</code> and <code>bin/</code>: <code>registry.npmjs.org</code>. Disclosed and test-asserted.</td></tr>
+        <tr><td>Exploitation</td><td><strong>None attempted.</strong> Severities are code-reading plus proven absence.</td></tr>
+        <tr><td>Mermaid parse</td><td>All 6 diagrams rendered by <code>@mermaid-js/mermaid-cli</code> 11.16.0 without error — they are the figures above.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</main>
+
+<footer>
+  <main>
+    <div class="contract">
+      DIAGRAMS AUTHORED IN MERMAID · RENDERED TO INLINE SVG · NO CDN, NO RUNTIME PARSE<br>
+      NUMBERS COUNTED FROM THE WORKTREE AT DC823A4 · NOTHING REPRESENTATIVE<br>
+      REGENERATE · <code>node docs/report/build-report.mjs</code><br>
+      ART/UTILITY PAIRS · SCROLL SPINE = READ PROGRESS · GATE CORRIDOR = SECTION NAV · SEVERITY LADDER = THE COUNT
+    </div>
+    <p class="signoff">Filed 22 August 2026 from the home root. The canonical document is
+    <code>docs/architecture-audit.md</code>; this page is its reading surface, and both are
+    built from the same six mermaid sources. Strogies supervised from a sunbeam, as was
+    tradition.</p>
+  </main>
+</footer>
+
+<script>
+'use strict';
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* count-up (house kit) — reduced-motion jumps to the final value */
+function countUp(el,target,ms=900){
+  if(REDUCED){el.textContent=target;return}
+  const t0=performance.now();
+  (function tick(t){const p=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*e); if(p<1)requestAnimationFrame(tick)})(t0);
+}
+addEventListener('load',()=>{document.querySelectorAll('.stat b').forEach(b=>countUp(b,+b.dataset.n))});
+
+/* scroll spine — the corridor fills as you walk it. rAF-throttled.
+   PAIRING LAW: the art move (a branch growing down the page) IS the read-progress
+   indicator; there is no second widget. */
+(function(){
+  const fill=document.querySelector('.spine i'); if(!fill||REDUCED)return;
+  let queued=false;
+  function paint(){
+    queued=false;
+    const h=document.documentElement.scrollHeight-innerHeight;
+    fill.style.setProperty('--grow',(h>0?Math.min(100,scrollY/h*100):100)+'%');
+  }
+  addEventListener('scroll',()=>{if(!queued){queued=true;requestAnimationFrame(paint)}},{passive:true});
+  paint();
+})();
+
+console.log('%cCareer Compass — architectural gauntlet%c · dc823a4 · 9 findings, 2 P0, 0 exploits attempted',
+  'color:#e8833a;font-weight:bold','color:#b8a98c');
+</script>
+</body>
+</html>

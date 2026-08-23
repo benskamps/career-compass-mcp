@@ -1,0 +1,14 @@
+flowchart LR
+    REQ[Any HTTP request] --> GUARD[Shared loopback guard<br/>one module, both dashboards]
+    GUARD -->|refused| R403[403 before routing]
+    GUARD -->|allowed| VIEW[Dashboard view layer]
+    VIEW --> STORE[file-store<br/>the only door to disk]
+    WRITER[Write claim<br/>lockfile in the data dir] --> STORE
+    MCP[MCP server] --> WRITER
+    NEXT[Next dashboard] --> WRITER
+    STORE --> Y[(YAML + .bak)]
+    CI[CI: one job, both suites] -.verifies.-> GUARD
+    CI -.verifies.-> VIEW
+    CI -.verifies.-> STORE
+    classDef new fill:#243021,stroke:#8aa86b,stroke-width:2px,color:#f0e2d0;
+    class GUARD,WRITER,CI new;

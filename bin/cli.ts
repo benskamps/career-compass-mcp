@@ -6,10 +6,10 @@ import { createServer as createNetServer } from "net";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 
-/** The dashboard binds loopback and nothing else. Declared here because this
- *  file executes top-level: findPort() runs during module evaluation, so a
- *  const declared further down is still in its temporal dead zone. */
-const LOOPBACK = "127.0.0.1";
+/** The dashboard binds loopback and nothing else. Imported from the shared guard
+ *  so the literal lives in exactly one place — see src/loopback-guard.ts for why
+ *  it must be the address and never the name "localhost". */
+import { LOOPBACK } from "../src/loopback-guard.js";
 
 const args = process.argv.slice(2);
 
@@ -117,7 +117,11 @@ if (!isDashboard) {
       env: {
         ...process.env,
         PORT: String(port),
-        HOSTNAME: "localhost",
+        // The literal, not the name. Passing "localhost" lets Node resolve it,
+        // and on Windows that returns ::1 first — the server binds IPv6-only
+        // while every client tries 127.0.0.1 and gets ECONNREFUSED. The lite
+        // path was fixed for exactly this; this one had been left behind.
+        HOSTNAME: LOOPBACK,
         CAREER_DATA_PATH: dataPath,
       },
       stdio: ["pipe", "pipe", "inherit"],
@@ -228,7 +232,25 @@ function resolveDataPath(useSample: boolean): string {
   return abs;
 }
 
+/**
+ * Open the dashboard in the user's browser.
+ *
+ * `open` and `xdg-open` are real executables, so they are spawned directly with
+ * the URL as an argv entry — no shell, nothing to quote, nothing to interpret.
+ * The URL is built from a validated integer port today, so this was not
+ * injectable; routing a string through a shell for no reason is simply one
+ * refactor away from mattering, and the refactor is cheaper now than later.
+ *
+ * Windows is the exception and needs the comment: `start` is a cmd.exe builtin,
+ * not an executable, so it cannot be spawned directly. `cmd /c start "" <url>`
+ * is the documented form — the empty string is the window title, which `start`
+ * would otherwise consume the URL as.
+ */
 function openBrowser(url: string): void {
-  const cmd = process.platform === "win32" ? "start" : process.platform === "darwin" ? "open" : "xdg-open";
-  spawn(cmd, [url], { shell: true, stdio: "ignore", detached: true }).unref();
+  if (process.platform === "win32") {
+    spawn("cmd", ["/c", "start", "", url], { stdio: "ignore", detached: true }).unref();
+    return;
+  }
+  const cmd = process.platform === "darwin" ? "open" : "xdg-open";
+  spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
 }

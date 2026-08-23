@@ -1,0 +1,13 @@
+stateDiagram-v2
+    [*] --> Requested: browser issues GET
+    Requested --> HostChecked: dashboard-lite
+    Requested --> Rendered: Next dashboard (no check)
+    HostChecked --> Refused: Host not loopback
+    HostChecked --> Rendered: Host loopback
+    Rendered --> ReadOnly: lite — pipeline only
+    Rendered --> Writable: Next — full KB + Server Actions
+    Writable --> Persisted: saveCareerSection, no cross-process lock
+    Persisted --> LostUpdate: MCP wrote concurrently
+    Persisted --> [*]
+    ReadOnly --> [*]
+    Refused --> [*]

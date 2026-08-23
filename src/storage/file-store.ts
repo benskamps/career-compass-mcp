@@ -8,6 +8,7 @@ import { CareerData, Pipeline, JournalSection } from "../schemas/career-schema.j
 import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
+import { withWriteClaim } from "./write-claim.js";
 
 // ─── Typed errors ─────────────────────────────────────────────────────────────
 
@@ -61,9 +62,14 @@ export function isCorruptDataError(e: unknown): e is CorruptDataError {
  * `CAREER_DATA_PATH` is read at call time — two different data dirs are
  * genuinely independent and should not serialize against each other.
  *
- * In-process only, which is the right scope: the MCP server is the single
- * writer for a given data dir. It is not a defense against two servers pointed
- * at one directory, and does not claim to be.
+ * In-process only, by design. The cross-process half of the problem — this repo
+ * ships a second writer in the Next dashboard's Server Actions, and one MCP
+ * server can be registered in both Claude Desktop and Claude Code — is handled
+ * by {@link withWriteClaim} in ./write-claim.ts, which every mutation below
+ * takes *outside* this lock. Two layers, two different races:
+ *
+ *   withDataLock   two awaits in this process interleaving
+ *   withWriteClaim two processes believing they own the directory
  */
 const writeChains = new Map<string, Promise<unknown>>();
 
@@ -302,7 +308,9 @@ export async function saveCareerSection(section: string, data: unknown): Promise
     );
   }
   const path = join(careerDir(), `${section}.yaml`);
-  await withDataLock(path, () => atomicWriteYaml(path, data));
+  await withDataLock(path, () =>
+    withWriteClaim(getDataDir(), () => atomicWriteYaml(path, data)),
+  );
 }
 
 
@@ -336,15 +344,17 @@ export async function loadJournal(): Promise<JournalEntry[]> {
  */
 export async function appendJournalEntry(entry: JournalEntry): Promise<JournalEntry[]> {
   const path = journalPath();
-  return withDataLock(path, async () => {
-    // The read MUST be inside the lock. Loading outside it means two concurrent
-    // appends both start from the same list and the second write drops the
-    // first entry — with both calls reporting success.
-    const existing = await loadJournal();
-    const next = [...existing, entry];
-    await atomicWriteYaml(path, next);
-    return next;
-  });
+  return withDataLock(path, () =>
+    withWriteClaim(getDataDir(), async () => {
+      // The read MUST be inside both the lock and the claim. Loading outside
+      // means two concurrent appends both start from the same list and the
+      // second write drops the first entry — with both calls reporting success.
+      const existing = await loadJournal();
+      const next = [...existing, entry];
+      await atomicWriteYaml(path, next);
+      return next;
+    }),
+  );
 }
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
@@ -364,13 +374,26 @@ export async function loadPipeline(): Promise<Pipeline> {
   } catch (error) {
     console.error("Failed to parse pipeline:", error);
     // The file exists but is unreadable/invalid. Fail closed: returning an
-    // empty pipeline here would let a subsequent savePipeline() destroy the
+    // empty pipeline here would let a subsequent write destroy the
     // user's real (recoverable) applications.yaml.
     throw new CorruptDataError(path, error);
   }
 }
 
-export async function savePipeline(pipeline: Pipeline): Promise<void> {
+/**
+ * Write the pipeline. **Takes no lock — see the name.**
+ *
+ * The safe door is {@link mutatePipeline}, which is the only production caller.
+ * This one is exported for the storage tests, which need to write a known
+ * pipeline without a read-modify-write cycle around it.
+ *
+ * It used to be called `savePipeline`, and the rule that it must never be called
+ * by hand lived in a comment twenty lines below it — which is exactly the shape
+ * of invariant this audit went looking for. `write-lock-truth.test.ts` now
+ * asserts that no non-test source file imports this name, so the rule is checked
+ * rather than remembered.
+ */
+export async function savePipelineUnlocked(pipeline: Pipeline): Promise<void> {
   const path = join(pipelineDir(), "applications.yaml");
   await atomicWriteYaml(path, { ...pipeline, lastUpdated: new Date().toISOString() });
 }
@@ -379,7 +402,7 @@ export async function savePipeline(pipeline: Pipeline): Promise<void> {
  * Run a read-modify-write cycle against the pipeline as one critical section.
  *
  * This is the only correct way to mutate the pipeline. `loadPipeline()` +
- * mutate + `savePipeline()` written out by hand at a call site is exactly the
+ * mutate + `savePipelineUnlocked()` written out by hand at a call site is exactly the
  * bug this exists to prevent: the load and the save are two separate awaits, so
  * a second call can slip in between and have its write overwritten wholesale.
  *
@@ -389,28 +412,32 @@ export async function savePipeline(pipeline: Pipeline): Promise<void> {
  * signalling through a thrown sentinel.
  *
  * The write is skipped when the mutator left the pipeline structurally
- * unchanged. `savePipeline` stamps a fresh `lastUpdated` and `atomicWriteYaml`
+ * unchanged. `savePipelineUnlocked` stamps a fresh `lastUpdated` and `atomicWriteYaml`
  * copies a full `.bak` on every call, so a no-op branch that wrote anyway would
  * spend a backup and move the clock to record that nothing happened.
  *
  * A CorruptDataError from the load propagates untouched: nothing is written,
- * so an unreadable file is never overwritten.
+ * so an unreadable file is never overwritten. A WriteClaimUnavailableError
+ * likewise propagates before the load runs — another process owns this
+ * directory, so the honest outcome is "unavailable", not a second writer.
  */
 export async function mutatePipeline<T>(
   mutator: (pipeline: Pipeline) => T | Promise<T>,
 ): Promise<T> {
   const path = join(pipelineDir(), "applications.yaml");
-  return withDataLock(path, async () => {
-    const pipeline = await loadPipeline();
-    // `lastUpdated` is rewritten on every save, so comparing it would make the
-    // dirty check always true. Compare only the applications.
-    const before = JSON.stringify(pipeline.applications);
-    const result = await mutator(pipeline);
-    if (JSON.stringify(pipeline.applications) !== before) {
-      await savePipeline(pipeline);
-    }
-    return result;
-  });
+  return withDataLock(path, () =>
+    withWriteClaim(getDataDir(), async () => {
+      const pipeline = await loadPipeline();
+      // `lastUpdated` is rewritten on every save, so comparing it would make the
+      // dirty check always true. Compare only the applications.
+      const before = JSON.stringify(pipeline.applications);
+      const result = await mutator(pipeline);
+      if (JSON.stringify(pipeline.applications) !== before) {
+        await savePipelineUnlocked(pipeline);
+      }
+      return result;
+    }),
+  );
 }
 
 // ─── Initialization ───────────────────────────────────────────────────────────

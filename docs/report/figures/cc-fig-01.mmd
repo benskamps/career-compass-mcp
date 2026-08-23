@@ -1,0 +1,15 @@
+flowchart LR
+    C[MCP client<br/>Claude Desktop / Code] -->|stdio| S[src/index.ts<br/>McpServer]
+    S --> T[17 tools<br/>opportunity · resume · pipeline<br/>interview · career-kb · doctor]
+    T --> U[untrusted.ts<br/>nonce fence]
+    T --> FS[storage/file-store.ts<br/>lock · atomic write · .bak]
+    FS --> Y[(YAML on disk<br/>CAREER_DATA_PATH)]
+    D[doctor.check_setup] -->|GET /latest| NPM[registry.npmjs.org]
+    CLI[bin/cli.ts dashboard] --> L[dashboard-lite<br/>read-only · Host checked]
+    CLI --> N[Next dashboard<br/>read + WRITE · no Host check]
+    L --> Y
+    N --> Y
+    B[Browser] --> L
+    B --> N
+    classDef gap fill:#3a2118,stroke:#c4744a,stroke-width:2px,color:#f0e2d0;
+    class N gap;

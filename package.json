@@ -26,7 +26,7 @@
     "dev:dashboard": "cd dashboard && npx next dev --turbopack",
     "start": "node build/src/index.js",
     "dashboard": "node build/bin/cli.js dashboard",
-    "test": "cd dashboard && npx vitest run",
+    "test": "npm run test:mcp && npm run test:dashboard",
     "storybook": "cd dashboard && npx storybook dev -p 6006",
     "test:mcp": "vitest run --config vitest.config.ts",
     "screenshots": "npx tsx scripts/capture-screenshots.ts",
@@ -35,7 +35,8 @@
     "pack:guard": "vitest run --config vitest.config.ts src/__tests__/npm-pack-leak-guard.test.ts",
     "pack:mcpb": "npm run build:mcp && node scripts/pack-mcpb.mjs",
     "pack:mcpb:guard": "node scripts/mcpb-guard.mjs",
-    "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard"
+    "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard",
+    "test:dashboard": "cd dashboard && npx vitest run"
   },
   "keywords": [
     "mcp",

@@ -10,7 +10,7 @@ import {
   isBundledSampleDir,
   sampleAnchor,
 } from "../sample-data.js";
-import { loadPipeline, loadJournal, savePipeline } from "../storage/file-store.js";
+import { loadPipeline, loadJournal, savePipelineUnlocked } from "../storage/file-store.js";
 import { deriveNextActions } from "../dashboard-lite/render.js";
 import { handleNextActions } from "../tools/pipeline.js";
 
@@ -289,7 +289,7 @@ describe("the bundled sample, read through the store", () => {
   it("refuses to be written to", async () => {
     process.env.CAREER_DATA_PATH = bundledSampleDir()!;
     await expect(
-      savePipeline({ applications: [], lastUpdated: "2026-06-14T00:00:00.000Z" }),
+      savePipelineUnlocked({ applications: [], lastUpdated: "2026-06-14T00:00:00.000Z" }),
     ).rejects.toThrow(/read-only demo/);
   });
 });

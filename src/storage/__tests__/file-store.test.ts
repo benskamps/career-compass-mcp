@@ -21,7 +21,7 @@ vi.mock("yaml", () => ({
 import { readFile, writeFile, mkdir, rename, copyFile } from "fs/promises";
 import { existsSync } from "fs";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { loadPipeline, savePipeline, saveCareerSection, loadCareerData, CorruptDataError } from "../file-store.js";
+import { loadPipeline, savePipelineUnlocked, saveCareerSection, loadCareerData, CorruptDataError } from "../file-store.js";
 
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFile = vi.mocked(readFile);
@@ -92,9 +92,9 @@ describe("loadPipeline", () => {
   });
 });
 
-// ─── savePipeline ────────────────────────────────────────────────────────────
+// ─── savePipelineUnlocked ────────────────────────────────────────────────────────────
 
-describe("savePipeline", () => {
+describe("savePipelineUnlocked", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -110,7 +110,7 @@ describe("savePipeline", () => {
     mockRename.mockResolvedValue(undefined);
     mockExistsSync.mockReturnValue(false); // no existing file → no backup
 
-    await savePipeline(pipeline);
+    await savePipelineUnlocked(pipeline);
 
     expect(mockMkdir).toHaveBeenCalledWith(
       expect.stringContaining("pipeline"),
@@ -141,7 +141,7 @@ describe("savePipeline", () => {
     mockCopyFile.mockResolvedValue(undefined);
     mockExistsSync.mockReturnValue(true); // existing file present → back it up
 
-    await savePipeline(pipeline);
+    await savePipelineUnlocked(pipeline);
 
     expect(mockCopyFile).toHaveBeenCalledWith(
       expect.stringContaining("applications.yaml"),

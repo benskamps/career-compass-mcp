@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 import {
   loadPipeline,
-  savePipeline,
+  savePipelineUnlocked,
   saveCareerSection,
   CorruptDataError,
 } from "../file-store.js";
@@ -43,7 +43,7 @@ describe("file-store fail-closed writes (real fs, P1)", () => {
       (async () => {
         const pipeline = await loadPipeline(); // throws here
         pipeline.applications.push({} as never);
-        await savePipeline(pipeline);
+        await savePipelineUnlocked(pipeline);
       })(),
     ).rejects.toBeInstanceOf(CorruptDataError);
 
@@ -58,13 +58,13 @@ describe("file-store fail-closed writes (real fs, P1)", () => {
     const file = path.join(pipelineDir, "applications.yaml");
 
     // First save: file does not exist yet → no backup expected.
-    await savePipeline({ applications: [], lastUpdated: "x" });
+    await savePipelineUnlocked({ applications: [], lastUpdated: "x" });
     let baks = fs.readdirSync(pipelineDir).filter((f) => f.endsWith(".bak"));
     expect(baks).toHaveLength(0);
     expect(fs.existsSync(file)).toBe(true);
 
     // Second save: file exists → a timestamped .bak must be created first.
-    await savePipeline({ applications: [], lastUpdated: "y" });
+    await savePipelineUnlocked({ applications: [], lastUpdated: "y" });
     baks = fs.readdirSync(pipelineDir).filter((f) => f.endsWith(".bak"));
     expect(baks.length).toBeGreaterThanOrEqual(1);
     expect(baks[0]).toContain("applications.yaml");
