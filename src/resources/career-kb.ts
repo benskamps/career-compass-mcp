@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { completeApplicationIdValues } from "../completions.js";
 import { loadCareerData, loadPipeline } from "../storage/file-store.js";
 
 export function registerCareerResources(server: McpServer): void {
@@ -178,7 +179,41 @@ export function registerCareerResources(server: McpServer): void {
 
   // ── Per-application resource ─────────────────────────────────────────────────
 
-  const appTemplate = new ResourceTemplate("career://pipeline/{id}", { list: undefined });
+  /**
+   * The per-application template gains the two things it was missing: a listing,
+   * so applications are browsable rather than only guessable, and a completion
+   * for `id`.
+   *
+   * The completion had a false start worth recording. The obvious home for it is
+   * `pipeline_update`'s `id` argument — the one value a model cannot reason its
+   * way to. That does nothing: MCP's `completion/complete` takes `ref/prompt`
+   * and `ref/resource` and there is no `ref/tool`, so a `completable()` tool
+   * argument type-checks, registers, and is never consulted. A real stdio client
+   * asking for it got `-32601 Method not found`, because with nothing completable
+   * anywhere the SDK never installs the handler at all. A URI template is where
+   * the protocol actually looks.
+   *
+   * Upgraded in place rather than added alongside: a second
+   * `career://application/{id}` template was written first and deleted, because
+   * two URI spaces for one thing is the kind of duplicate that outlives whoever
+   * introduced it.
+   */
+  const appTemplate = new ResourceTemplate("career://pipeline/{id}", {
+    list: async () => {
+      const pipeline = await loadPipeline();
+      return {
+        resources: pipeline.applications.map((app) => ({
+          uri: `career://pipeline/${app.id}`,
+          name: `${app.company} — ${app.role}`,
+          description: `Status: ${app.status}`,
+          mimeType: "application/json",
+        })),
+      };
+    },
+    complete: {
+      id: (value) => completeApplicationIdValues(value ?? ""),
+    },
+  });
 
   server.registerResource(
     "pipeline-application",

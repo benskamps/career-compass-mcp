@@ -102,31 +102,24 @@ export async function completeApplicationId(
 }
 
 /**
- * The completable `id` schema, shared by every tool that takes an application id.
+ * The completable `id` variable for the `career://application/{id}` template.
  *
- * Defined once so a new tool cannot accidentally ship the uncompletable version
- * — the same reasoning that put the loopback guard in one module.
- */
-export function applicationIdArg(description: string) {
-  return completable(z.string().describe(description), async (value) => {
-    const suggestions = await completeApplicationId(value ?? "");
-    return suggestions.map((s) => s.value);
-  });
-}
-
-/**
- * The same, for tools where the id is optional.
+ * ── Why this lives on a resource template and not on a tool argument ────────
  *
- * Built by wrapping an already-optional schema rather than calling `.optional()`
- * on a completable one: the completion metadata lives on the wrapper, and
- * chaining a Zod modifier onto it returns a fresh schema that no longer carries
- * it. The argument would still validate and would silently stop completing —
- * the exact failure this module is supposed to prevent, hidden one method call
- * away.
+ * The obvious place for this is `pipeline_update`'s `id` argument, and that was
+ * the first implementation. It does nothing. MCP's `completion/complete` accepts
+ * exactly two reference types — `ref/prompt` and `ref/resource` — and there is
+ * no `ref/tool`. Wrapping a tool's input schema in `completable()` type-checks,
+ * registers, and is never once consulted; a real stdio client asking for
+ * completion got `-32601 Method not found`, because with nothing completable in
+ * a prompt or a template the SDK never even installs the handler.
+ *
+ * A resource template is the seat that works, and it is the better feature
+ * anyway: it makes each application individually addressable
+ * (`career://application/acme-staff-eng-2026-03`) so a host can attach one
+ * application to a conversation instead of the whole pipeline, and the id is
+ * completable while the user picks it.
  */
-export function optionalApplicationIdArg(description: string) {
-  return completable(z.string().optional().describe(description), async (value) => {
-    const suggestions = await completeApplicationId(value ?? "");
-    return suggestions.map((s) => s.value);
-  });
+export async function completeApplicationIdValues(partial: string): Promise<string[]> {
+  return (await completeApplicationId(partial)).map((s) => s.value);
 }

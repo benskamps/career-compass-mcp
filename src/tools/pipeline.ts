@@ -5,7 +5,6 @@ import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } fr
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
-import { applicationIdArg } from "../completions.js";
 import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 import type {
   PipelineAddArgs,
@@ -401,9 +400,11 @@ export function registerPipelineTools(server: McpServer): void {
       },
       description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
       inputSchema: {
-        // Completable: the one argument the model cannot reason its way to,
-        // because it exists only on the user's disk. See src/completions.ts.
-        id: applicationIdArg("Application id, as returned by pipeline_add or pipeline_view"),
+        // NOT completable: MCP has no `ref/tool`, so a completable tool argument
+        // is never consulted. The completion lives on the
+        // `career://application/{id}` resource template instead — see
+        // src/completions.ts.
+        id: z.string().describe("Application id, as returned by pipeline_add or pipeline_view"),
         status: z.string().optional().describe(
           `New status in the funnel. One of: ${STATUS_ORDER.join(", ")}. ` +
             `Any forward or backward move is allowed — searches really do go from applied straight to ` +

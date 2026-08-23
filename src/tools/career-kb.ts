@@ -7,7 +7,6 @@ import { Profile, Experience, Skill, Education, Project, Testimonial } from "../
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
-import { optionalApplicationIdArg } from "../completions.js";
 
 /** Per-section schema, so a write is validated with the same rules the loader
  *  enforces on read. Writing first and validating later would let one bad write
@@ -231,10 +230,9 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
         "positions you for future opportunities. If you pass applicationId, this also sets that " +
         "application's status to `rejected` in your pipeline — it does not only write a draft.",
       inputSchema: {
-        // Optional, and completable — see src/completions.ts. It stays optional:
-        // omitting it drafts a reply and writes nothing, which is a different
-        // and much less destructive tool call.
-        applicationId: optionalApplicationIdArg(
+        // Optional. Not completable — see the note in pipeline.ts and
+        // src/completions.ts: MCP completions do not reach tool arguments.
+        applicationId: z.string().optional().describe(
           "Pipeline application ID. Supplying it fills in the company and role from the pipeline AND " +
             "marks that application `rejected`. Leave it out to draft a reply and change nothing.",
         ),
