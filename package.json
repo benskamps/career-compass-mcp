@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "tsc && npm run build:dashboard",
-    "build:dashboard": "cd dashboard && npx next build",
+    "build:dashboard": "cd dashboard && npx next build && cd .. && node scripts/stage-standalone.mjs",
     "build:mcp": "tsc",
     "dev": "tsc --watch",
     "dev:dashboard": "cd dashboard && npx next dev --turbopack",
@@ -29,14 +29,14 @@
     "test": "npm run test:mcp && npm run test:dashboard",
     "storybook": "cd dashboard && npx storybook dev -p 6006",
     "test:mcp": "vitest run --config vitest.config.ts",
-    "screenshots": "npx tsx scripts/capture-screenshots.ts",
     "inspect": "mcp-inspector node build/src/index.js",
     "gen:manifest": "npm run build:mcp && node scripts/gen-manifest-tools.mjs",
     "pack:guard": "vitest run --config vitest.config.ts src/__tests__/npm-pack-leak-guard.test.ts",
     "pack:mcpb": "npm run build:mcp && node scripts/pack-mcpb.mjs",
     "pack:mcpb:guard": "node scripts/mcpb-guard.mjs",
     "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard",
-    "test:dashboard": "cd dashboard && npx vitest run"
+    "test:dashboard": "cd dashboard && npx vitest run",
+    "visuals": "node scripts/visual-harness.mjs"
   },
   "keywords": [
     "mcp",

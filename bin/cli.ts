@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { homedir } from "os";
-import { join, resolve } from "path";
+import { join, resolve, dirname } from "path";
 import { existsSync, mkdirSync, readFileSync } from "fs";
 import { createServer as createNetServer } from "net";
 import { spawn } from "child_process";
@@ -94,14 +94,26 @@ if (!isDashboard) {
   //   Otherwise prefer the full Next.js dashboard when it has been built.
   //   If the full build is absent (e.g. the npm install), fall back to lite
   //   instead of erroring — the dashboard now always works.
-  const useLite = forceLite || !existsSync(standalonePath);
+  // A standalone build that was never staged serves its HTML and none of its
+  // CSS or JS — `output: "standalone"` does not copy `.next/static`, and a page
+  // with no stylesheet still returns 200. Treat an unstaged build as no build:
+  // the lite dashboard is plain, but it is not BROKEN, and silently serving a
+  // stylesheet-less page is the worse of the two. `npm run build:dashboard`
+  // stages it (scripts/stage-standalone.mjs).
+  const standaloneStaged = existsSync(join(dirname(standalonePath), ".next", "static"));
+  const useLite = forceLite || !existsSync(standalonePath) || !standaloneStaged;
 
   if (useLite) {
     process.env.CAREER_DATA_PATH = dataPath; // loadPipeline() reads this
     const { startLiteDashboard } = await import("../src/dashboard-lite/server.js");
     if (!forceLite) {
-      console.error("Full dashboard isn't built in this install — starting the built-in lite dashboard.");
-      console.error("(Run `npm run build` from source for the full Next.js dashboard with kanban drag, analytics, and Career KB views.)");
+      if (existsSync(standalonePath) && !standaloneStaged) {
+        console.error("The full dashboard is built but not staged — its CSS and JS are missing, so it would");
+        console.error("render unstyled. Starting the lite dashboard instead. Fix with: npm run build:dashboard");
+      } else {
+        console.error("Full dashboard isn't built in this install — starting the built-in lite dashboard.");
+        console.error("(Run `npm run build` from source for the full Next.js dashboard with kanban drag, analytics, and Career KB views.)");
+      }
     }
     const server = await startLiteDashboard(port);
     console.error(`Lite dashboard running at http://localhost:${port}`);
