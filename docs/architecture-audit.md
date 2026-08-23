@@ -308,6 +308,30 @@ A second one arrived the same way: once `.next/standalone/` existed, the dashboa
 
 **Method note.** The first live probe used `fetch()` with a `host` header override and reported that the guard failed on every request. It had not: `host` is a forbidden header name in undici and the override was silently dropped, so all six requests carried the real authority. Raw `http.request` with `setHost: false` is the only way to put an attacker `Host` on the wire from Node. A negative control that cannot express the attack is not a negative control.
 
+## 19. Post-merge — gaps tested, not reasoned about (2026-08-23)
+
+Both PRs merged (`#37`, `#38`); `main` carries the remediation plus three MCP-native
+features. Three items §18 left open were then **tested against real processes**, and two of
+them had defects that reading could not have found:
+
+| Gap | Method | Result |
+| --- | --- | --- |
+| Resource subscriptions deliver | Real stdio client, file edited from outside the server | ✅ External edit → exactly **one** notification on the subscribed URI; unsubscribed silent; `.bak`/`.write-claim` silent. The host half (does the client refresh context) remains the host's choice and is still `UNKNOWN`. |
+| `harvest_evidence` without git on PATH | Real server spawned with git removed from `PATH` — the case a Claude Desktop launch actually hits, since the client's environment is not the shell's | ❌ **Defect.** It answered *"is not a git repository"* — a confident, specific, wrong diagnostic sending the user to their repo instead of their PATH. Now `GitUnavailableError`, with its own message. |
+| Two processes racing the write claim | **Two real OS processes**, started together, same data dir | ✅ Exactly one wrote; the other refused with a readable reason naming the holder. The external review had only *traced* this class; it is now reproduced and closed. |
+
+A fourth defect surfaced from the same discipline before merge: a **real stdio smoke test**
+showed `completion/complete` returning `-32601 Method not found`. MCP completions accept
+`ref/prompt` and `ref/resource` — **there is no `ref/tool`** — so a `completable()` tool
+argument type-checks, registers, and is never consulted. The capability was not even
+advertised. Moved onto the per-application resource template, reconciled onto the existing
+`career://pipeline/{id}` rather than added alongside.
+
+**The pattern worth extracting:** four defects, all in code that passed a green suite, all
+found by running the real thing instead of reasoning about it. The in-memory transport
+proves wiring; only the spawned process proves the product. This is the same lesson as the
+audit's own P1 — *a build nobody runs is a build that does not work* — applied one level up.
+
 ## Evidence and primary sources
 
 - `src/storage/file-store.ts`, `src/untrusted.ts`, `src/server.ts`, `src/index.ts`, `src/dashboard-lite/{server,render}.ts`, `src/tools/doctor.ts`, `bin/cli.ts`.

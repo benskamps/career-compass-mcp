@@ -148,9 +148,10 @@ code{font-family:var(--mono); font-size:.86em; color:var(--gold);
 .gate:hover{background:var(--panel); border-bottom:none}
 .gate .g{font-family:var(--mono); font-size:9.5px; letter-spacing:.22em; color:var(--gc,var(--ink-label))}
 .gate .t{font-style:italic; font-size:14px; margin-top:6px; color:var(--parchment-dim); line-height:1.35}
+.gate.done{--gc:var(--moss)}
 .gate.blocker{--gc:var(--wax)} .gate.near{--gc:var(--clay)}
 .gate.later{--gc:var(--brass)} .gate.far{--gc:var(--ash)}
-.gate.blocker .g::after{content:' ●'; color:var(--wax)}
+.gate.done .g::after{content:' ✓'; color:var(--moss)}
 
 table{width:100%; border-collapse:collapse; margin-top:20px; font-size:14.5px}
 th,td{text-align:left; padding:11px 13px; border-bottom:1px solid var(--grid); vertical-align:top}
@@ -162,6 +163,7 @@ tbody tr:nth-child(odd){background:rgba(43,33,23,.4)}
 .v.rej{color:var(--moss)} .v.mod{color:var(--gold)} .v.acc{color:var(--slate)}
 .tw{overflow-x:auto}
 
+.stamp.sealed{border-color:var(--moss); color:var(--moss)}
 .stamp{display:inline-block; margin-top:34px; padding:9px 22px; border:3px double var(--wax);
   border-radius:4px; color:var(--wax); font-family:var(--mono); font-size:11px;
   letter-spacing:.28em; text-transform:uppercase; transform:rotate(-2.5deg);
@@ -191,27 +193,35 @@ footer main{padding-top:30px; padding-bottom:46px}
 <div class="spine" aria-hidden="true"><i></i></div>
 
 <main>
-  <div class="eyebrow">Career Compass MCP · Architectural Gauntlet · 2026-08-22</div>
+  <div class="eyebrow">Career Compass MCP · Architectural Gauntlet · 2026-08-22 → closed 08-23</div>
   <h1>The care stopped at the door</h1>
   <p class="lede">A storage layer that argues for every guard before it enforces it — and
   two dashboards, of which the hardened one is the fallback and the unguarded one is
   preferred. This is a gauntlet run on <code>dc823a4</code>: seventeen sections, six
-  diagrams, nine findings, and one sentence that has to change.</p>
+  diagrams, nine findings, and one sentence that had to change. <strong>All nine are closed</strong> —
+  the corridor below stays in the present tense on purpose, because a fix is only legible
+  against the thing it fixed.</p>
 
   <div class="stats">
-    <div class="stat"><b data-n="335">335</b><span>MCP tests passing</span></div>
-    <div class="stat hot"><b data-n="2">2</b><span>P0 findings</span></div>
-    <div class="stat"><b data-n="9">9</b><span>findings total</span></div>
-    <div class="stat cool"><b data-n="90">90</b><span>dashboard files, 0 host checks</span></div>
+    <div class="stat"><b data-n="9">9</b><span>findings, all closed</span></div>
+    <div class="stat"><b data-n="411">411</b><span>MCP tests now (was 335)</span></div>
+    <div class="stat cool"><b data-n="37">37</b><span>dashboard tests, now in CI</span></div>
+    <div class="stat hot"><b data-n="4">4</b><span>defects found by RUNNING it</span></div>
     <div class="stat cool"><b data-n="0">0</b><span>exploits attempted</span></div>
   </div>
 
   <div class="fence"><span class="k">EVIDENCE ·</span> Every number on this page is measured or
   counted from the worktree at <code>dc823a4</code> — none is representative.<br>
-  <span class="k">NOT DONE ·</span> No exploit was executed. No rebinding attempt, no XSS,
-  no live write race. Security findings are code-reading plus an absence proven by search.<br>
+  <span class="k">AT AUDIT TIME ·</span> No exploit was executed; findings were code-reading
+  plus an absence proven by search.<br>
+  <span class="k">SINCE ·</span> The guard was driven live against a running server (403 on
+  pages, static chunks, and a Server-Action POST), and the write race was reproduced with
+  <em>two real OS processes</em> — one wrote, one was refused. Still no exploit: refusing a
+  crafted <code>Host</code> is a negative control, not an attack.<br>
   <span class="k">NOT BUILT ·</span> The Next dashboard was never built or run in this pass —
-  which is itself finding P1-C.</div>
+  which is itself finding P1-C. It builds now; it did not build on <code>main</code> at all.<br>
+  <span class="k">STATUS ·</span> All nine closed and merged (PR 37, PR 38). 411 MCP + 37
+  dashboard tests, <code>next build</code> green, guard verified against a running server.</div>
 
   <section id="verdict">
     <div class="sec-head"><span class="sec-num">01</span><h2>The verdict</h2></div>
@@ -237,20 +247,20 @@ footer main{padding-top:30px; padding-bottom:46px}
 
   <section id="gates">
     <div class="sec-head"><span class="sec-num">02</span><h2>The corridor</h2></div>
-    <p class="blurb">Five gates, in binding order. The lit one is the blocker — and each is a
-    door into its own section below.</p>
+    <p class="blurb">Five gates, in binding order — all five walked. Each is a door into its
+    own section below.</p>
     <div class="corridor">
-      <a class="gate blocker" href="#findings"><span class="g">GATE 0</span><span class="t">Guard parity — no surface reads before its Host is loopback</span></a>
-      <a class="gate near" href="#findings"><span class="g">GATE 1</span><span class="t">One CI, both halves of the repo</span></a>
-      <a class="gate near" href="#ideal"><span class="g">GATE 2</span><span class="t">One claimed writer per data dir</span></a>
-      <a class="gate later" href="#findings"><span class="g">GATE 3</span><span class="t">No unguarded channels or unsafe exports</span></a>
-      <a class="gate far" href="#recon"><span class="g">GATE 4</span><span class="t">Published claims match the dashboard too</span></a>
+      <a class="gate done" href="#findings"><span class="g">GATE 0</span><span class="t">Guard parity — no surface reads before its Host is loopback</span></a>
+      <a class="gate done" href="#findings"><span class="g">GATE 1</span><span class="t">One CI, both halves of the repo</span></a>
+      <a class="gate done" href="#ideal"><span class="g">GATE 2</span><span class="t">One claimed writer per data dir</span></a>
+      <a class="gate done" href="#findings"><span class="g">GATE 3</span><span class="t">No unguarded channels or unsafe exports</span></a>
+      <a class="gate done" href="#recon"><span class="g">GATE 4</span><span class="t">Published claims match the dashboard too</span></a>
     </div>
-    <div class="fence cold"><span class="k">READING ·</span> Gate colour is severity of what it
-    contains, not progress: <span style="color:var(--wax)">wax</span> = release blocker ·
-    <span style="color:var(--clay)">clay</span> = next · <span style="color:var(--brass)">brass</span>
-    = queued · <span style="color:var(--ash)">ash</span> = after the rest. Nothing here is
-    started; this is the audit, not the migration.</div>
+    <div class="fence cold"><span class="k">READING ·</span> All five are
+    <span style="color:var(--moss)">moss</span> — walked and closed, each with the negative
+    control §14 asked for actually run against a running server rather than asserted in a
+    unit test. The findings below are kept in the present tense on purpose: a fix is only
+    legible against the thing it fixed.</div>
   </section>
 
   <section id="current">
@@ -419,7 +429,7 @@ footer main{padding-top:30px; padding-bottom:46px}
     inspectable. The storage layer keeps that promise today. The door does not.</p>
     <p class="lede" style="margin-top:26px">Every surface that can read the salary floor refuses
     a stranger first, and every surface that can write it knows whether it is allowed to.</p>
-    <div class="stamp">Gate 0 — not cleared</div>
+    <div class="stamp sealed">All nine — closed</div>
   </section>
 
   <section id="verification">
