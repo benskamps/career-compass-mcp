@@ -225,7 +225,8 @@ async function main() {
     }
 
     writeFileSync(join(OUT, "shots.json"), `${JSON.stringify(shots, null, 2)}\n`, "utf-8");
-    process.stderr.write(`\n${shots.length} shots -> ${OUT}\n`);
+    writeFileSync(join(OUT, "contact-sheet.html"), contactSheet(shots), "utf-8");
+    process.stderr.write(`\n${shots.length} shots + contact-sheet.html -> ${OUT}\n`);
   } finally {
     for (const stop of servers) {
       try {
