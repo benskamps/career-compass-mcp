@@ -71,7 +71,11 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
   return (
     <div>
       <FilterBar onSearchChange={setSearch} onSortChange={setSort} onPriorityFilter={setPriorityFilter} />
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      {/* Still scrollable for narrow windows — but a scroll region with no edge
+          treatment is indistinguishable from a cut-off page, which is exactly how
+          the clipped fifth column read. The mask fades the overflowing edge so the
+          row visibly continues. */}
+      <div className="flex gap-4 overflow-x-auto pb-4 [mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)] [mask-size:100%_100%] md:[mask-image:none]">
         {KANBAN_COLUMNS.map((col) => (
           <KanbanColumn
             key={col.key}

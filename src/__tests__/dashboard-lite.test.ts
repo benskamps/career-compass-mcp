@@ -222,3 +222,42 @@ describe("renderLiteDashboard", () => {
     expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
   });
 });
+
+describe("empty state — a blank, never a zero", () => {
+  /**
+   * A brand-new user's first screen used to be six KPI cards reading 0, 0, 0, 0,
+   * 0%, 0% stacked above "your pipeline is empty". It told them six times that
+   * they had nothing, and two of those times it was false: a response rate over
+   * an empty denominator is undefined, not zero, and "0% response rate" on day
+   * one reads as *you are failing* rather than *you have not started*.
+   */
+  const emptyHtml = () => renderLiteDashboard({ applications: [], lastUpdated: "2026-08-23T00:00:00.000Z" });
+
+  it("shows no KPI row at all when there is nothing to report", () => {
+    const html = emptyHtml();
+    expect(html).not.toContain('class="kpis"');
+    expect(html).toContain("Your pipeline is empty");
+  });
+
+  it("never states a rate it cannot compute", () => {
+    const html = emptyHtml();
+    expect(html, "printed a 0% rate with an empty denominator").not.toMatch(/0%\s*<\/div>\s*<div class="l">Response rate/);
+    expect(html).not.toContain("Ghost rate");
+  });
+
+  it("still reports rates once something has actually been sent", () => {
+    const html = renderLiteDashboard({
+      applications: [
+        {
+          id: "a", company: "Acme", role: "Eng", status: "applied",
+          dateApplied: "2026-08-01", dateUpdated: "2026-08-01",
+          remote: "unknown", contacts: [], interviewRounds: [], notes: [],
+          coverLetterGenerated: false, priority: "medium",
+        } as never,
+      ],
+      lastUpdated: "2026-08-23T00:00:00.000Z",
+    });
+    expect(html).toContain('class="kpis"');
+    expect(html).toContain("Response rate");
+  });
+});

@@ -128,8 +128,19 @@ export function deriveNextActions(apps: Application[], today = new Date()): Next
 }
 
 
-function kpi(n: string | number, label: string, foot = ""): string {
-  return `<div class="kpi"><div class="n">${esc(n)}</div><div class="l">${esc(label)}</div>${foot ? `<div class="foot">${esc(foot)}</div>` : ""}</div>`;
+/**
+ * One KPI card. A `null` value renders as an em dash, not a zero.
+ *
+ * "Prefer a blank to a zero" is not a style preference here, it is accuracy. A
+ * rate over an empty denominator is undefined, and printing `0%` for it states
+ * something false in the most discouraging possible place: a brand-new user's
+ * very first screen said `0% response rate` before they had applied to
+ * anything, which reads as *you are failing* rather than *you have not started*.
+ */
+function kpi(n: string | number | null, label: string, foot = ""): string {
+  const value = n === null ? "—" : String(n);
+  const undefinedClass = n === null ? " is-undefined" : "";
+  return `<div class="kpi${undefinedClass}"><div class="n">${esc(value)}</div><div class="l">${esc(label)}</div>${foot ? `<div class="foot">${esc(foot)}</div>` : ""}</div>`;
 }
 
 function jobCard(a: Application): string {
@@ -160,14 +171,22 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string): strin
   const actions = deriveNextActions(apps);
   const lastUpdated = pipeline.lastUpdated ? new Date(pipeline.lastUpdated).toLocaleString() : "—";
 
-  const kpis = [
-    kpi(s.total, "Total applications"),
-    kpi(s.active, "Active", "in play right now"),
-    kpi(s.inConversation, "In conversation", "screening + interviewing"),
-    kpi(s.offers, "Offers", s.offers > 0 ? "🎉 decision time" : ""),
-    kpi(`${s.responseRate}%`, "Response rate"),
-    kpi(`${s.ghostRate}%`, "Ghost rate"),
-  ].join("");
+  // With nothing in the pipeline every one of these is either zero or undefined,
+  // and six cards saying so is a worse first impression than no cards at all —
+  // it tells a new user six times that they have nothing. The empty state below
+  // says it once, warmly, with the action attached.
+  const kpis = apps.length === 0
+    ? ""
+    : [
+        kpi(s.total, "Total applications"),
+        kpi(s.active, "Active", "in play right now"),
+        kpi(s.inConversation, "In conversation", "screening + interviewing"),
+        kpi(s.offers, "Offers", s.offers > 0 ? "🎉 decision time" : ""),
+        // A rate needs a denominator. Until something has been sent and had time
+        // to come back, these are unknown rather than zero.
+        kpi(s.sent > 0 ? `${s.responseRate}%` : null, "Response rate", s.sent > 0 ? "" : "no replies due yet"),
+        kpi(s.sent > 0 ? `${s.ghostRate}%` : null, "Ghost rate", s.sent > 0 ? "" : "no replies due yet"),
+      ].join("");
 
   // Only show a stage that has something in it, plus the handful of early
   // stages that read as "nothing here yet" rather than as clutter. Rendering
@@ -242,7 +261,8 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
-.kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em}.kpi .l{color:var(--muted);font-size:12px;margin-top:2px}.kpi .foot{font-size:11.5px;margin-top:6px;color:var(--muted)}
+.kpi .n{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.kpi.is-undefined .n{color:var(--muted);font-weight:500}.kpi .l{color:var(--muted);font-size:12px;margin-top:2px}.kpi .foot{font-size:11.5px;margin-top:6px;color:var(--muted)}
 /* minmax(0,…) is load-bearing, not decoration. A grid item's default
    min-width is auto — its min-content — so a bare 1fr track is a *floor*,
    not a cap: one long unbreakable token in a company name or a follow-up
@@ -307,7 +327,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
   <button class="btn primary" data-prompt="What should I focus on in my job search today? Look at my pipeline and give me the 3 highest-leverage moves.">🎯 Copy: what should I do today?</button>
   <button class="btn" data-prompt="Review my whole pipeline and flag anything stale, single-threaded, or at risk of going cold.">🔍 Copy: health check</button>
 </div>
-<div class="kpis">${kpis}</div>
+${kpis ? `<div class="kpis">${kpis}</div>` : ""}
 ${apps.length === 0 ? emptyState : `
 <div class="panel" style="margin-bottom:16px">
   <h2>Pipeline by stage</h2>
