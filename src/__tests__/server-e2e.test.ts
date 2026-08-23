@@ -122,9 +122,11 @@ describe("MCP server E2E (in-memory transport)", () => {
     for (const uri of STATIC) expect(uris, `missing ${uri}`).toContain(uri);
 
     const perApplication = uris.filter((u) => /^career:\/\/pipeline\/.+/.test(u));
-    const { applications } = JSON.parse(
-      (await client.readResource({ uri: "career://pipeline" })).contents[0].text as string,
-    );
+    // `contents[0]` is a text-or-blob union; narrow rather than cast, so a
+    // future blob resource fails here loudly instead of at runtime.
+    const first = (await client.readResource({ uri: "career://pipeline" })).contents[0];
+    expect("text" in first, "career://pipeline returned a blob, not text").toBe(true);
+    const { applications } = JSON.parse((first as { text: string }).text);
     expect(perApplication).toHaveLength(applications.length);
     expect(resources).toHaveLength(STATIC.length + applications.length);
   });
