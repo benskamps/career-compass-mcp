@@ -266,7 +266,9 @@ and calling `check_setup` with `checkForUpdates: false` never constructs the req
 
 - **What it handles:** the career history, job pipeline, and pasted documents you give it.
 - **Where it's stored:** plain YAML in the directory you set via `CAREER_DATA_PATH`
-  (default `~/.career-compass/`), plus timestamped `.bak` copies of previous versions
+  (default `~/.career-compass/`), plus timestamped `.bak` copies of previous versions,
+  and — only while a write is actually happening — a `.write-claim` file that stops a second
+  Career Compass process from writing at the same time
   (the five most recent per file are kept; older ones are pruned on the next write —
   backups you make by hand are never touched).
 - **Who else sees it:** only the MCP client you connect (e.g. Claude Desktop), and through

@@ -33,7 +33,11 @@ Career Compass reads and writes the career information *you* give it:
 
 In a single directory on your machine, set by the `CAREER_DATA_PATH` environment variable.
 The default is `~/.career-compass/`. Files are ordinary YAML you can open, edit, back up,
-or delete with any text editor. Each write also leaves a timestamped `.bak` copy of the
+or delete with any text editor. While a write is in progress the folder also briefly holds a
+`.write-claim` file naming the process doing the writing, so a second Career Compass process
+(a dashboard, or a server registered in two clients) refuses rather than overwriting it. It is
+deleted when the write finishes, contains no personal data, and is safe to remove by hand.
+Each write also leaves a timestamped `.bak` copy of the
 previous version in the same directory.
 
 **We never receive this data.** There is no Career Compass account, no cloud sync, no
@@ -106,7 +110,7 @@ anywhere else.
 
 Your files stay on your disk until you delete them. There is no retention period on our
 side because we hold nothing. To remove everything, delete your `CAREER_DATA_PATH`
-directory (including the `.bak` files) and uninstall the package.
+directory (including the `.bak` files and any leftover `.write-claim`) and uninstall the package.
 
 ## Third-party sharing
 
