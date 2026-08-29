@@ -322,7 +322,7 @@ ${embedUntrusted("offer details", offerDetails)}
 
 ${location ? `**Location:** ${location}` : ""}
 ${currentComp ? `**Current comp:** ${currentComp}` : ""}
-${marketData ? `**Market data:** ${marketData}` : ""}
+${marketData ? `**Market data:**\n${embedUntrusted("market data", marketData)}` : ""}
 ${priorities ? `**My priorities:** ${priorities}` : ""}
 ${otherOffers ? `**Other offers/processes:** ${otherOffers}` : ""}
 

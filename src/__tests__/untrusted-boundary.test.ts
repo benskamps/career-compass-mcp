@@ -155,6 +155,7 @@ describe("no tool or prompt interpolates outside text bare", () => {
       "resumeContent",
       "offerDetails",
       "notes",
+      "marketData",
     ];
     const scanDirs = [
       fileURLToPath(new URL("../tools", import.meta.url)),

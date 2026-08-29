@@ -100,12 +100,12 @@ describe("MCP server E2E (in-memory transport)", () => {
     expect(names).toContain("prepare_interview");
   });
 
-  it("registers the 8 static resources, plus one per application", async () => {
+  it("registers the 9 static resources, plus one per application", async () => {
     // The per-application template gained a `list` callback, so each application
     // is now individually browsable and attachable — a host can hand the model
     // one application instead of the whole pipeline. A fixed count here would
     // have to be edited every time the sample data changes; the contract is
-    // "the eight fixed ones, and one row per application".
+    // "the nine fixed ones, and one row per application".
     const { resources } = await client.listResources();
     const uris = resources.map((r) => r.uri);
 
@@ -117,6 +117,7 @@ describe("MCP server E2E (in-memory transport)", () => {
       "career://education",
       "career://testimonials",
       "career://full",
+      "career://journal",
       "career://pipeline",
     ];
     for (const uri of STATIC) expect(uris, `missing ${uri}`).toContain(uri);
