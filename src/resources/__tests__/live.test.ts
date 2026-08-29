@@ -227,4 +227,42 @@ describe("live resources", () => {
       expect(updates.filter((u) => u === "career://profile")).toHaveLength(1);
     },
   );
+
+  // ── NC (gauntlet-v2 final pass, HOLE-2): recovery without a re-subscribe ─────
+  // WP-3's test re-subscribed to re-arm. But a dead watcher emits no events, so
+  // "heal on the next event" can never fire for the dir that died — with a
+  // STANDING subscription and no sibling activity, the dir stayed dead forever.
+  // The recovery poll closes that: on death it arms, and a tick re-arms the dir
+  // once it is back, resuming notifications with no new subscribe.
+  it.skipIf(process.platform !== "win32")(
+    "recovers a deleted directory under a standing subscription, no re-subscribe",
+    async () => {
+      await subscribe("career://profile");
+      expect(live.__watched()).toContain("career");
+
+      rmSync(join(dir, "career"), { recursive: true, force: true });
+      await settle();
+      await settle();
+      expect(live.__watched(), "the storming watcher was not torn down").not.toContain("career");
+      // The poll is now scheduled — this is what makes recovery possible without
+      // a re-subscribe.
+      expect(live.__rearming(), "no recovery poll was armed for the dead directory").toBe(true);
+
+      // Bring the directory back and let ONE poll tick run (bypassing the cadence).
+      // No new subscribe is issued.
+      mkdirSync(join(dir, "career"), { recursive: true });
+      live.__rearmTick();
+      expect(live.__watched(), "the poll did not re-arm the recovered directory").toContain("career");
+      expect(live.__rearming(), "the poll did not stop once fully re-armed").toBe(false);
+
+      updates.length = 0;
+      writeFileSync(join(dir, "career", "profile.yaml"), "name: Grace\n");
+      await settle();
+      live.__flush();
+      expect(
+        updates.filter((u) => u === "career://profile"),
+        "a write after standing-subscription recovery produced no notification",
+      ).toHaveLength(1);
+    },
+  );
 });

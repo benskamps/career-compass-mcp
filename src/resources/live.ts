@@ -96,6 +96,10 @@ export interface LiveResources {
   __flush(): void;
   /** Names of the data subdirs currently armed. For tests and diagnostics. */
   __watched(): string[];
+  /** Is the directory-death recovery poll currently running? For tests. */
+  __rearming(): boolean;
+  /** Run one recovery attempt now, bypassing the poll cadence. For tests. */
+  __rearmTick(): void;
 }
 
 /**
@@ -114,6 +118,15 @@ export function registerLiveResources(server: McpServer): LiveResources {
   const pending = new Set<string>();
   let timer: NodeJS.Timeout | null = null;
   let closed = false;
+  // Recovery poll for a directory that was deleted while subscribed. A dead
+  // watcher emits no events, so the "heal on the next event" path in onChange
+  // can never fire for the very dir that died — nothing would ever re-arm it
+  // until unrelated sibling activity or a fresh subscribe. This is NOT the
+  // 157k/s storm: it is one cheap existsSync every REARM_POLL_MS, only while a
+  // subdir is disarmed and something is still subscribed, and it stops the
+  // instant every subdir is armed again.
+  const REARM_POLL_MS = 2_000;
+  let rearmTimer: NodeJS.Timeout | null = null;
 
   // Declaring the capability is what tells a host it may subscribe at all.
   // Without it a spec-compliant client will never send the request, and the
@@ -175,6 +188,8 @@ export function registerLiveResources(server: McpServer): LiveResources {
     // watcher or the next subscribe re-arms it lazily against the live dir.
     if (filename !== null && basename(filename) === basename(watchedPath)) {
       disarm(sub);
+      // The dead dir will emit nothing more; poll it back to life while subscribed.
+      ensureRearmPoll();
       return;
     }
     if (filename === null) return;
@@ -202,13 +217,44 @@ export function registerLiveResources(server: McpServer): LiveResources {
       // A directory that vanishes surfaces as an error event (ENOENT) on some
       // platforms rather than a throw. Drop the dead handle so a later
       // subscribe or sibling event can re-arm it; never crash the server.
-      w.on("error", () => disarm(sub));
+      w.on("error", () => {
+        disarm(sub);
+        ensureRearmPoll();
+      });
       watchers.push({ sub, path, watcher: w });
     } catch {
       // The directory may not exist yet — a first-run install has nothing to
       // watch, and subscribing before there is data is not an error. It arms
       // on a later subscribe, once the dir exists.
     }
+  };
+
+  const clearRearm = () => {
+    if (rearmTimer) {
+      clearInterval(rearmTimer);
+      rearmTimer = null;
+    }
+  };
+
+  // One recovery attempt: re-arm any missing subdir whose directory is back, and
+  // stop polling once all are armed or nothing is subscribed.
+  const rearmTick = () => {
+    if (closed || subscribed.size === 0) {
+      clearRearm();
+      return;
+    }
+    startWatching();
+    if (watchers.length >= SUBDIRS.length) clearRearm();
+  };
+
+  // Start the recovery poll if a subdir is disarmed and something is subscribed.
+  // Idempotent; self-clears once every subdir is armed again or nothing is left
+  // subscribed. Called from the two directory-death paths (disarm on a
+  // self-referential storm event, and disarm on a watcher error).
+  const ensureRearmPoll = () => {
+    if (rearmTimer || closed || subscribed.size === 0) return;
+    rearmTimer = setInterval(rearmTick, REARM_POLL_MS);
+    rearmTimer.unref?.();
   };
 
   const startWatching = () => {
@@ -240,6 +286,7 @@ export function registerLiveResources(server: McpServer): LiveResources {
   });
 
   function stopWatching() {
+    clearRearm();
     for (const w of watchers) {
       try {
         w.watcher.close();
@@ -270,6 +317,8 @@ export function registerLiveResources(server: McpServer): LiveResources {
       flush();
     },
     __watched: () => watchers.map((w) => w.sub),
+    __rearming: () => rearmTimer !== null,
+    __rearmTick: rearmTick,
   };
 }
 

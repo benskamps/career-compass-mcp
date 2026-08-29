@@ -8,6 +8,7 @@ import {
   isWriteClaimUnavailable,
   breakStaleClaim,
   CLAIM_TTL_MS,
+  CLAIM_HARD_TTL_MS,
   __pidAlive,
 } from "../write-claim.js";
 
@@ -167,6 +168,21 @@ describe("write claim", () => {
     expect(isWriteClaimUnavailable(err), "the live holder should have been refused, not broken").toBe(true);
     // The live holder's claim is left untouched.
     expect(existsSync(claimFile())).toBe(true);
+  });
+
+  it("DOES break a LIVE-looking holder past the HARD cap (the pid-reuse backstop)", async () => {
+    // A crashed holder's pid can be reused by an unrelated live process. With
+    // liveness checked first, pidAlive would report "alive" forever and the
+    // claim would never break — a permanent wedge. Past CLAIM_HARD_TTL_MS the
+    // claim must break regardless of liveness. process.pid is alive by
+    // construction, standing in for the reused pid.
+    plantForeignClaim(CLAIM_HARD_TTL_MS + 5_000, process.pid);
+
+    let ran = false;
+    await withWriteClaim(dir, async () => {
+      ran = true;
+    });
+    expect(ran, "a live-looking claim past the hard cap must be broken, not a permanent wedge").toBe(true);
   });
 
   it("DOES break a DEAD holder older than the TTL (the cross-machine backstop)", async () => {

@@ -125,4 +125,25 @@ describe("read/write surfacing — negative controls", () => {
       if (existsSync(claimFile)) rmSync(claimFile, { force: true });
     }
   });
+
+  it("P2-5 · capture_insight refuses a write against the read-only sample store with a named sentence", async () => {
+    // The journal is a write path too. Before the fix, capture_insight's catch
+    // handled corrupt-data and claim-unavailable but re-threw ReadOnlyStoreError
+    // raw — so an insight against the demo store escaped as a transport error.
+    process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
+    const claimFile = join(EXAMPLE_DATA_PATH, ".write-claim");
+    const client = await connect();
+    try {
+      const result = (await client.callTool({
+        name: "capture_insight",
+        arguments: { type: "note", summary: "Recruiter said the role skews more IC than described." },
+      })) as ToolResult;
+      expect(result.isError, "a read-only-store journal write escaped as a transport error").toBeFalsy();
+      expect(text(result)).toContain("read-only demo");
+    } finally {
+      await client.close();
+      delete process.env.CAREER_DATA_PATH;
+      if (existsSync(claimFile)) rmSync(claimFile, { force: true });
+    }
+  });
 });

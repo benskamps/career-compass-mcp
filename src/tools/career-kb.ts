@@ -414,6 +414,20 @@ ${statusUpdated
             }],
           };
         }
+        if (isReadOnlyStore(error)) {
+          // Writing to the bundled read-only demo store. Every other write tool
+          // surfaces this as a sentence; the journal must too, and the insight
+          // itself comes back so it is not lost to a raw transport error.
+          return {
+            content: [{
+              type: "text",
+              text:
+                `⚠️ This is the read-only demo store, so the insight wasn't saved. ` +
+                `Point \`CAREER_DATA_PATH\` at your own directory to keep a journal.\n\n` +
+                `The insight below is unsaved:\n> ${summary}`,
+            }],
+          };
+        }
         throw error;
       }
 

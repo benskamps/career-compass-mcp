@@ -39,15 +39,33 @@ const heldDirs = new AsyncLocalStorage<Set<string>>();
  *
  * A crashed process leaves its claim behind. A claim that outlives its holder
  * would wedge the store forever, which is a worse failure than the race it
- * prevents, so a claim older than {@link CLAIM_TTL_MS} is breakable. The TTL is
- * deliberately short: a claim is held across one read-modify-write of a small
- * YAML file, measured in single-digit milliseconds, never across a user's think
- * time. If you find yourself wanting to hold one longer, you want a different
- * design, not a longer TTL.
+ * prevents, so a stale claim is breakable. Staleness is a two-tier rule: a claim
+ * whose holder's pid is no longer alive is broken at once (a crash never wedges
+ * the store), while a claim whose pid still looks alive is left alone as a
+ * slow-but-real writer — UNTIL {@link CLAIM_HARD_TTL_MS}, past which even a
+ * live-looking pid is broken, because a pid can be reused and a small-YAML write
+ * held for minutes is a hung or reused holder, not a real one. The nominal
+ * {@link CLAIM_TTL_MS} is deliberately short: a claim is held across one
+ * read-modify-write of a small YAML file, single-digit milliseconds, never
+ * across a user's think time. If you want to hold one longer, you want a
+ * different design, not a longer TTL.
  */
 
 /** How long a claim may sit before another process may break it. */
 export const CLAIM_TTL_MS = 30_000;
+
+/**
+ * A hard upper bound past which a claim is broken even if its pid still looks
+ * alive. Liveness is checked before the ordinary TTL so a slow-but-real writer
+ * is never broken — but a pid can be REUSED. Once a crashed holder's number is
+ * reassigned to an unrelated live process, `pidAlive` reports "alive" forever,
+ * and with liveness winning the claim would never break: the directory wedges
+ * permanently, curable only by deleting `.write-claim` by hand. No legitimate
+ * write of a small YAML file is held for minutes, so a claim older than this cap
+ * is a reused pid or a hung process, and breaking it is strictly safer than a
+ * permanent wedge. Far above any real hold (single-digit ms), far below forever.
+ */
+export const CLAIM_HARD_TTL_MS = 5 * 60_000;
 
 /** Thrown when another live process holds the claim. Callers surface this. */
 export class WriteClaimUnavailableError extends Error {
@@ -109,26 +127,28 @@ async function readClaim(path: string): Promise<ClaimRecord | null> {
 function stale(claim: ClaimRecord | null, now: number): boolean {
   if (!claim) return true;
 
-  // Liveness BEFORE the TTL verdict — this is the fix. A claim whose holder is
-  // still running on this machine is NOT stale, even once it is older than
-  // CLAIM_TTL_MS. A write that outlives the TTL is slow (a large file, a paused
-  // or swapped-out process, a busy disk), not crashed, and breaking a live
-  // holder is precisely the second-writer race this module exists to prevent.
-  // The TTL used to be read first, so a live-but-slow holder past 30s was broken
+  const age = now - Date.parse(claim.acquiredAt);
+
+  // The hard cap comes FIRST and applies regardless of liveness. A claim this old
+  // is either a reused pid (a crashed holder's number now belongs to an unrelated
+  // live process, so `pidAlive` would report "alive" forever) or a hung process;
+  // breaking it is the only thing that stops a permanent wedge. An unparseable
+  // timestamp is treated the same way — never trusted forever.
+  if (!Number.isFinite(age) || age > CLAIM_HARD_TTL_MS) return true;
+
+  // Within the hard cap, liveness wins — this is the fix the audit asked for. A
+  // claim whose holder is still running on this machine is a slow-but-real writer
+  // (a large file, a paused or swapped-out process, a busy disk), not a crash,
+  // and breaking a live holder is precisely the second-writer race this module
+  // exists to prevent. Liveness is asked before the ordinary CLAIM_TTL_MS because
+  // the TTL used to be read first, so a live-but-slow holder past 30s was broken
   // and a second writer walked straight in on a live one.
   if (pidAlive(claim.pid)) return false;
 
   // The holder is not alive on this machine: it crashed (leaving a dead pid), or
   // the claim was written by a process on ANOTHER machine sharing this directory,
-  // whose pid means nothing here. A crashed holder is broken at once so a crash
-  // never wedges the store — hence a locally-dead pid is stale regardless of age.
-  // CLAIM_TTL_MS stays as the cross-machine backstop and, via the finiteness
-  // guard, breaks a claim whose timestamp will not even parse rather than
-  // trusting it forever.
-  const age = now - Date.parse(claim.acquiredAt);
-  if (!Number.isFinite(age) || age > CLAIM_TTL_MS) return true;
-  // Recent timestamp, dead pid: a fresh crash. Break it — waiting out the TTL
-  // would only delay recovery of a directory whose owner is already gone.
+  // whose pid means nothing here. A locally-dead pid is broken at once — regardless
+  // of how recent the timestamp is — so a crash never wedges the store.
   return true;
 }
 
