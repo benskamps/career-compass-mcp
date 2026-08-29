@@ -5,6 +5,7 @@ import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } fr
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
+import { isReadOnlyStore } from "../storage/read-only-error.js";
 import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
 import type {
   PipelineAddArgs,
@@ -375,7 +376,7 @@ export function registerPipelineTools(server: McpServer): void {
         // the same turn cannot overwrite each other.
         return await mutatePipeline((pipeline) => handleAdd({ ...args, action: "add" } as PipelineAddArgs, pipeline));
       } catch (error) {
-        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error) || isReadOnlyStore(error)) {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
@@ -425,7 +426,7 @@ export function registerPipelineTools(server: McpServer): void {
       try {
         return await mutatePipeline((pipeline) => handleUpdate({ ...args, action: "update" } as PipelineUpdateArgs, pipeline));
       } catch (error) {
-        if (isCorruptDataError(error) || isWriteClaimUnavailable(error)) {
+        if (isCorruptDataError(error) || isWriteClaimUnavailable(error) || isReadOnlyStore(error)) {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
