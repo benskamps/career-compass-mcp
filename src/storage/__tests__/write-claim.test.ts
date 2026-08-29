@@ -6,6 +6,7 @@ import {
   withWriteClaim,
   inspectWriteClaim,
   isWriteClaimUnavailable,
+  breakStaleClaim,
   CLAIM_TTL_MS,
   __pidAlive,
 } from "../write-claim.js";
@@ -138,13 +139,43 @@ describe("write claim", () => {
     expect(ran).toBe(true);
   });
 
-  it("breaks a claim older than the TTL even if the pid looks alive", async () => {
-    plantForeignClaim(CLAIM_TTL_MS + 1_000, process.pid);
+  // ── liveness before TTL: a slow live holder must not be broken ────────────
+  //
+  // The negative control for the "liveness before TTL" fix. `stale()` now asks
+  // whether the holder's pid is ALIVE before it asks whether the claim is older
+  // than the TTL. So a live holder that has held the claim longer than 30s — a
+  // big write, a paused process, a busy disk — is NOT broken; only a dead
+  // (crashed / cross-machine) holder past the backstop is. Reverting to the old
+  // TTL-first order breaks this test: it would treat the live-but-old claim as
+  // stale and run the body.
+
+  it("does NOT break a LIVE holder older than the TTL (liveness beats the TTL)", async () => {
+    // process.pid is alive by construction while this test runs.
+    plantForeignClaim(CLAIM_TTL_MS + 5_000, process.pid);
+
+    let ran = false;
+    let err: unknown;
+    try {
+      await withWriteClaim(dir, async () => {
+        ran = true;
+      });
+    } catch (e) {
+      err = e;
+    }
+
+    expect(ran, "a live-but-slow holder past the TTL was wrongly broken").toBe(false);
+    expect(isWriteClaimUnavailable(err), "the live holder should have been refused, not broken").toBe(true);
+    // The live holder's claim is left untouched.
+    expect(existsSync(claimFile())).toBe(true);
+  });
+
+  it("DOES break a DEAD holder older than the TTL (the cross-machine backstop)", async () => {
+    plantForeignClaim(CLAIM_TTL_MS + 5_000); // dead pid AND expired
     let ran = false;
     await withWriteClaim(dir, async () => {
       ran = true;
     });
-    expect(ran).toBe(true);
+    expect(ran, "a dead holder past the TTL must be breakable").toBe(true);
   });
 
   it("treats a garbage claim file as no claim", async () => {
@@ -214,6 +245,38 @@ describe("write claim", () => {
     // breakers each read their own nonce and both conclude they held it.
     expect(maxInside, "two breakers were inside the claim at once").toBe(1);
     expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+  });
+
+  // ── the stale-break race: exactly ONE winner ──────────────────────────────
+  //
+  // The negative control for the rename-sidecar break. Two processes that both
+  // read the SAME stale claim and both try to break it must not both proceed —
+  // the earlier `rm(path)` + `wx` break let the second breaker delete the first
+  // breaker's now-LIVE claim, so both created and both believed they held it
+  // (probe reproduced `{aWon:true, bWon:true}`). `breakStaleClaim` uses an atomic
+  // `rename`, so of two racers on one stale file exactly one CAPTURES it and the
+  // other gets ENOENT. Reverting the primitive to `rm` makes both capture and
+  // this test fails.
+
+  it("two processes racing one stale claim: exactly ONE captures it (rename, not rm)", async () => {
+    plantForeignClaim(CLAIM_TTL_MS + 5_000); // one stale claim S on disk
+
+    // Model the two-process race the way probe2 does: sequential syscalls in the
+    // order two processes attempt to break the SAME stale claim S. The atomic
+    // rename lets the first CAPTURE S; the second finds S already gone (ENOENT →
+    // false). The old rm-based break returned true for BOTH — the second rm
+    // blindly deleted whatever sat there — which is how both ended up inside the
+    // critical section (`{aWon:true, bWon:true}`). An in-process Promise.all
+    // cannot model this: production guards this behind serializeOn, so the real
+    // race is between OS processes, one breakStaleClaim call each.
+    const a = await breakStaleClaim(claimFile()); // captures S
+    const b = await breakStaleClaim(claimFile()); // S already gone → loses
+
+    expect([a, b], `expected exactly one winner, got a=${a} b=${b}`).toEqual([true, false]);
+    // The captured stale claim is gone and no `.breaking.<uuid>` sidecar leaked.
+    expect(existsSync(claimFile())).toBe(false);
+    const strays = readdirSync(dir).filter((n) => n.includes(".breaking."));
+    expect(strays, `stray break sidecars: ${strays.join(", ")}`).toEqual([]);
   });
 
   it("leaves no temp files behind when it breaks a stale claim", async () => {

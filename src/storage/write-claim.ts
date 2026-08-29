@@ -1,4 +1,4 @@
-import { mkdir, writeFile, readFile, rm } from "fs/promises";
+import { mkdir, writeFile, readFile, rm, rename } from "fs/promises";
 import { join, dirname, resolve } from "path";
 import { randomUUID } from "crypto";
 import { AsyncLocalStorage } from "async_hooks";
@@ -108,9 +108,28 @@ async function readClaim(path: string): Promise<ClaimRecord | null> {
  */
 function stale(claim: ClaimRecord | null, now: number): boolean {
   if (!claim) return true;
+
+  // Liveness BEFORE the TTL verdict — this is the fix. A claim whose holder is
+  // still running on this machine is NOT stale, even once it is older than
+  // CLAIM_TTL_MS. A write that outlives the TTL is slow (a large file, a paused
+  // or swapped-out process, a busy disk), not crashed, and breaking a live
+  // holder is precisely the second-writer race this module exists to prevent.
+  // The TTL used to be read first, so a live-but-slow holder past 30s was broken
+  // and a second writer walked straight in on a live one.
+  if (pidAlive(claim.pid)) return false;
+
+  // The holder is not alive on this machine: it crashed (leaving a dead pid), or
+  // the claim was written by a process on ANOTHER machine sharing this directory,
+  // whose pid means nothing here. A crashed holder is broken at once so a crash
+  // never wedges the store — hence a locally-dead pid is stale regardless of age.
+  // CLAIM_TTL_MS stays as the cross-machine backstop and, via the finiteness
+  // guard, breaks a claim whose timestamp will not even parse rather than
+  // trusting it forever.
   const age = now - Date.parse(claim.acquiredAt);
   if (!Number.isFinite(age) || age > CLAIM_TTL_MS) return true;
-  return !pidAlive(claim.pid);
+  // Recent timestamp, dead pid: a fresh crash. Break it — waiting out the TTL
+  // would only delay recovery of a directory whose owner is already gone.
+  return true;
 }
 
 /**
@@ -187,6 +206,42 @@ export function withWriteClaim<T>(dataDir: string, fn: () => Promise<T>): Promis
   );
 }
 
+/** How many times acquisition will break a stale claim before it gives up. */
+const MAX_BREAK_ATTEMPTS = 5;
+
+/**
+ * Break one stale claim by atomically CAPTURING it, then removing the capture.
+ *
+ * `true`  — this caller captured the stale file and removed it; the slot is now
+ *           free for it to race the `wx` create.
+ * `false` — another process captured it first (the rename hit ENOENT); this
+ *           caller lost harmlessly and should re-read and retry.
+ *
+ * The primitive is `rename`, not `rm`. The previous break did `rm(path)` then
+ * `wx` create, which is not mutual exclusion: two breakers that both read the
+ * same stale claim would each `rm` and each create, and the second `rm` deletes
+ * the FIRST breaker's now-LIVE claim — so both end up believing they hold it
+ * (reproduced as `{aWon:true, bWon:true}`). `rename(path → sidecar)` is atomic
+ * and destination-unique: of two processes racing the same stale file, exactly
+ * one rename succeeds and the other gets ENOENT, so exactly one process ever
+ * captures a given claim. The loser does not blindly delete whatever now sits at
+ * `path` — it returns `false` and the caller re-reads, refusing if the winner's
+ * fresh claim is live. The sidecar is removed immediately, so nothing leaks.
+ */
+export async function breakStaleClaim(path: string): Promise<boolean> {
+  const sidecar = `${path}.breaking.${randomUUID()}`;
+  try {
+    await rename(path, sidecar);
+  } catch (e) {
+    // ENOENT: another breaker already moved the stale claim aside (or it was
+    // released). Either way we did not capture it — the caller re-reads.
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw e;
+  }
+  await rm(sidecar, { force: true }).catch(() => {});
+  return true;
+}
+
 async function acquireAndRun<T>(dataDir: string, fn: () => Promise<T>): Promise<T> {
   const path = claimPath(dataDir);
   const nonce = randomUUID();
@@ -211,26 +266,29 @@ async function acquireAndRun<T>(dataDir: string, fn: () => Promise<T>): Promise<
     }
   };
 
-  if (!(await tryCreate())) {
+  // Acquire the claim: create it if the slot is free; refuse if a live holder
+  // owns it; break it if it is stale. The loop exists because breaking a stale
+  // claim is a race between processes and the loser must re-read rather than act
+  // on a stale reading — see {@link breakStaleClaim}.
+  for (let attempt = 0; ; attempt++) {
+    if (await tryCreate()) break; // slot was free — claim acquired.
+
     const existing = await readClaim(path);
     if (!stale(existing, Date.now())) {
+      // A live holder — either a genuine other process, or a racer that just won
+      // the break and now owns a fresh claim. Refuse; nothing is written.
       throw new WriteClaimUnavailableError(dataDir, existing);
     }
 
-    // Break the stale claim by REMOVING it and racing for the atomic create
-    // again. The previous version wrote a temp file and renamed over the stale
-    // claim, then read back to see whose nonce survived — which is not mutual
-    // exclusion. Interleave two breakers as
-    // `A.rename → A.read → B.rename → B.read` and each reads its own nonce, so
-    // both conclude they hold it. rename() gives one final *file*, not one
-    // winner. `wx` is the primitive that actually picks a winner: exactly one
-    // create can succeed, and the loser sees EEXIST. It also removes the temp
-    // file entirely, so there is nothing to leak and no Windows rename-EPERM
-    // path to retry.
-    await rm(path, { force: true }).catch(() => {});
-    if (!(await tryCreate())) {
-      // Someone else took it in the gap. That is a correct outcome, not an
-      // error in this process: refuse rather than write alongside them.
+    // Stale. Try to capture and remove it. If another process captured it first
+    // we lose harmlessly and loop: by the next read the winner either holds a
+    // live claim (refused above) or has released the slot (we create).
+    await breakStaleClaim(path);
+
+    if (attempt >= MAX_BREAK_ATTEMPTS) {
+      // Pathological churn — claims replaced faster than we can act. One last
+      // create, then refuse rather than spin. Nothing was written either way.
+      if (await tryCreate()) break;
       throw new WriteClaimUnavailableError(dataDir, await readClaim(path));
     }
   }

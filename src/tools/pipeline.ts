@@ -129,6 +129,14 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
 
   const app = pipeline.applications[idx];
 
+  // Snapshot every field except the timestamp, so we can stamp dateUpdated only
+  // when this update actually changed something. Stamping it unconditionally
+  // moved the clock on every call, which made mutatePipeline's no-op dirty check
+  // (file-store.ts) always fire — spending a `.bak` and a fresh lastUpdated to
+  // record that nothing happened. With the stamp conditional, a genuine no-op
+  // update leaves `applications` byte-identical and the write is skipped.
+  const before = JSON.stringify({ ...app, dateUpdated: undefined });
+
   // Validate before applying anything. A rejected status must not leave a
   // half-applied update behind — the note would land, the status would not, and
   // the caller would be told only about the status.
@@ -148,7 +156,9 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   if (args.interviewType) {
     app.interviewRounds.push({ type: args.interviewType, date: args.interviewDate, interviewers: [], notes: "" });
   }
-  app.dateUpdated = new Date().toISOString();
+  if (JSON.stringify({ ...app, dateUpdated: undefined }) !== before) {
+    app.dateUpdated = new Date().toISOString();
+  }
   pipeline.applications[idx] = app;
   return {
     content: [{ type: "text", text: `✅ Updated **${app.role}** at **${app.company}** (${app.id})\nStatus: ${app.status}` }],
