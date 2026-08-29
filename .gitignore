@@ -6,6 +6,9 @@ dashboard/.next/
 # Storybook build output
 dashboard/storybook-static/
 
+# Visual harness output (screenshots + contact sheet)
+.visual/
+
 # Compiled output — built from src/, not tracked in git
 # (npm publish uses the `files` field to include build/)
 build/

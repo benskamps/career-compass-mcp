@@ -13,6 +13,7 @@
     "!build/**/*.test.*",
     "data/example/",
     "README.md",
+    "PRIVACY.md",
     "LICENSE"
   ],
   "engines": {
