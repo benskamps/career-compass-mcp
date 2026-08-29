@@ -61,12 +61,21 @@ export function untrusted(label: string, text: string): string {
 }
 
 /**
- * Cap on any single untrusted span, applied at the tool boundary.
+ * Cap on any single untrusted span, applied at *render time* — the moment the
+ * text is fenced into a message via `embedUntrusted`, not the moment it enters
+ * a tool.
  *
- * Unbounded third-party text is both a context-exhaustion lever (a megabyte of
- * padding can push the tool's real directives out of the model's attention, or
- * out of the window entirely) and, for `postingText`, unbounded growth in a
- * YAML file that is rewritten and `.bak`-copied on every single write.
+ * This bounds the context-exhaustion lever: a megabyte of padding cannot push
+ * the tool's real directives out of the model's attention, because the model
+ * never sees more than this many characters of the span.
+ *
+ * It does NOT bound on-disk growth. `pipeline_add` persists `postingText` raw
+ * (`src/tools/pipeline.ts` writes `args.postingText` straight into the
+ * Application before any fence runs), so the YAML file — rewritten and
+ * `.bak`-copied on every write — can still hold an unclamped posting. A true
+ * disk-side guard would have to clamp at the persistence boundary in
+ * `pipeline.ts`, which this module cannot reach from here. The render-time cap
+ * is what protects the model's window; the disk holds whatever was pasted.
  *
  * 20 000 characters is roughly four times the longest realistic job posting,
  * so it never truncates legitimate input; the marker makes any truncation

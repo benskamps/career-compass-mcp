@@ -138,11 +138,14 @@ describe("every tool that takes outside text fences it", () => {
   });
 });
 
-describe("no tool interpolates outside text bare", () => {
-  it("has no raw ${untrustedArg} left in any tool source", () => {
-    // Structural lock: a new tool that pastes a posting straight into its
-    // markdown will trip this without anyone having to remember the rule.
-    const toolsDir = fileURLToPath(new URL("../tools", import.meta.url));
+describe("no tool or prompt interpolates outside text bare", () => {
+  it("has no raw ${untrustedArg} left in any tool or prompt source", () => {
+    // Structural lock: a new tool OR prompt that pastes a posting straight into
+    // its markdown will trip this without anyone having to remember the rule.
+    // Prompts (src/prompts/) build the same posting/notes/offer messages the
+    // tools do, from the same argument names, so they need the same guard — the
+    // structural test used to scan tools only, leaving the prompt surface
+    // unfenced and unscanned (audit P1-3).
     const UNTRUSTED_ARGS = [
       "posting",
       "postingText",
@@ -153,14 +156,21 @@ describe("no tool interpolates outside text bare", () => {
       "offerDetails",
       "notes",
     ];
+    const scanDirs = [
+      fileURLToPath(new URL("../tools", import.meta.url)),
+      fileURLToPath(new URL("../prompts", import.meta.url)),
+    ];
     const offenders: string[] = [];
-    for (const file of readdirSync(toolsDir).filter((f) => f.endsWith(".ts"))) {
-      const src = readFileSync(path.join(toolsDir, file), "utf-8");
-      for (const [i, line] of src.split("\n").entries()) {
-        for (const arg of UNTRUSTED_ARGS) {
-          // A bare `${arg}` inside a template literal, not wrapped by a helper.
-          if (new RegExp(String.raw`\$\{${arg}\}`).test(line)) {
-            offenders.push(`${file}:${i + 1} \${${arg}}`);
+    for (const dir of scanDirs) {
+      const rel = path.basename(dir);
+      for (const file of readdirSync(dir).filter((f) => f.endsWith(".ts"))) {
+        const src = readFileSync(path.join(dir, file), "utf-8");
+        for (const [i, line] of src.split("\n").entries()) {
+          for (const arg of UNTRUSTED_ARGS) {
+            // A bare `${arg}` inside a template literal, not wrapped by a helper.
+            if (new RegExp(String.raw`\$\{${arg}\}`).test(line)) {
+              offenders.push(`${rel}/${file}:${i + 1} \${${arg}}`);
+            }
           }
         }
       }
