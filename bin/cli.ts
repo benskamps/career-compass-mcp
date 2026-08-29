@@ -100,7 +100,14 @@ if (!isDashboard) {
   // the lite dashboard is plain, but it is not BROKEN, and silently serving a
   // stylesheet-less page is the worse of the two. `npm run build:dashboard`
   // stages it (scripts/stage-standalone.mjs).
-  const standaloneStaged = existsSync(join(dirname(standalonePath), ".next", "static"));
+  // Two signals, both required. `.next/static` is the CSS/JS the standalone
+  // server does not copy itself; `.staged` is the receipt scripts/stage-
+  // standalone.mjs writes LAST, so a stage interrupted after copying static but
+  // before finishing is caught here and falls back to lite rather than serving a
+  // half-staged tree.
+  const standaloneDir = dirname(standalonePath);
+  const standaloneStaged =
+    existsSync(join(standaloneDir, ".next", "static")) && existsSync(join(standaloneDir, ".staged"));
   const useLite = forceLite || !existsSync(standalonePath) || !standaloneStaged;
 
   if (useLite) {
@@ -112,7 +119,7 @@ if (!isDashboard) {
         console.error("render unstyled. Starting the lite dashboard instead. Fix with: npm run build:dashboard");
       } else {
         console.error("Full dashboard isn't built in this install — starting the built-in lite dashboard.");
-        console.error("(Run `npm run build` from source for the full Next.js dashboard with kanban drag, analytics, and Career KB views.)");
+        console.error("(Run `npm run build` from source for the full Next.js dashboard with the kanban board, analytics, and Career KB views.)");
       }
     }
     const server = await startLiteDashboard(port);

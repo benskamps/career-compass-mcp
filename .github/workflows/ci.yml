@@ -67,9 +67,26 @@ jobs:
         run: npx vitest run
         working-directory: dashboard
 
-      # The build is the part that catches a broken middleware, a bad @shared
-      # import, or a type error in a Server Action — none of which the unit
-      # tests see. It is the slowest step here and the one most worth having.
-      - name: Build dashboard (next build)
-        run: npx next build
-        working-directory: dashboard
+      # Build the dashboard the way users actually run it: `build:dashboard`
+      # runs `next build` AND stages the standalone output (scripts/stage-
+      # standalone.mjs copies .next/static + public/ into the standalone tree).
+      # A bare `next build` compiles fine and produces a server that returns 200
+      # for every route while serving no CSS or JS — so CI passing on `next
+      # build` alone was green over the exact defect that shipped. The script
+      # cd's into dashboard/ itself, so this runs from the repo root.
+      - name: Build dashboard (build:dashboard = next build + stage standalone)
+        run: npm run build:dashboard
+
+      # Assert the staging actually happened. `output: "standalone"` does not
+      # copy .next/static; if stage-standalone.mjs were dropped from
+      # build:dashboard, this file would be absent and the standalone server
+      # would serve stylesheet-less pages. Fail loudly here instead.
+      - name: Assert standalone build was staged (CSS/JS present)
+        run: |
+          staged="dashboard/.next/standalone/dashboard/.next/static"
+          if [ ! -d "$staged" ]; then
+            echo "::error::Standalone build was not staged: $staged is missing."
+            echo "The dashboard would serve HTML with no CSS or JS. Did build:dashboard still run scripts/stage-standalone.mjs?"
+            exit 1
+          fi
+          echo "Staged static assets present at $staged"

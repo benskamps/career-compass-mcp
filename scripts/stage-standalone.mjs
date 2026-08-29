@@ -17,7 +17,7 @@
  * Run automatically as part of `npm run build:dashboard`.
  */
 
-import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -51,4 +51,15 @@ for (const { from, to, required } of copies) {
   console.error(`staged ${from.replace(DASHBOARD, "dashboard")} -> ${to.replace(DASHBOARD, "dashboard")}`);
 }
 
+// Freshness marker, written LAST — only a fully-completed staging leaves it.
+// An interrupted stage (static half-copied, process killed) never reaches this
+// line, so the marker's presence is a stronger "this build is serveable" signal
+// than any single directory existing. The CLI already gates on `.next/static`;
+// this gives it (and anything else) a single stamped receipt to check.
+const stagedMarker = join(STANDALONE, ".staged");
+writeFileSync(
+  stagedMarker,
+  `${JSON.stringify({ staged: new Date().toISOString(), by: "scripts/stage-standalone.mjs" })}\n`,
+  "utf-8",
+);
 console.error("standalone build is now self-serving (CSS + JS included).");

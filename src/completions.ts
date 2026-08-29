@@ -1,5 +1,3 @@
-import { completable } from "@modelcontextprotocol/sdk/server/completable.js";
-import { z } from "zod";
 import { loadPipeline, isCorruptDataError } from "./storage/file-store.js";
 import type { Application } from "./schemas/career-schema.js";
 
@@ -35,9 +33,11 @@ const MAX_SUGGESTIONS = 20;
 /**
  * Rank applications for a partial id.
  *
- * The label a user is thinking of is the company, not the id — ids look like
- * `acme-senior-eng-2026-08`, so matching only the id prefix would fail the
- * obvious query "acme". Match across id, company and role; prefix hits sort
+ * The label a user is thinking of is the company, not the id — ids are opaque
+ * 8-char hex (the first 8 chars of a UUID, e.g. `a1b2c3d4`), so matching only
+ * the id prefix would fail the obvious query "acme" and there is nothing human
+ * in the id to match against at all. Match across id, company and role; prefix
+ * hits sort
  * above substring hits, then the most recently updated first, because the thing
  * you are updating is almost always the thing you last touched.
  */
@@ -102,7 +102,7 @@ export async function completeApplicationId(
 }
 
 /**
- * The completable `id` variable for the `career://application/{id}` template.
+ * The completable `id` variable for the `career://pipeline/{id}` template.
  *
  * ── Why this lives on a resource template and not on a tool argument ────────
  *
@@ -116,9 +116,9 @@ export async function completeApplicationId(
  *
  * A resource template is the seat that works, and it is the better feature
  * anyway: it makes each application individually addressable
- * (`career://application/acme-staff-eng-2026-03`) so a host can attach one
- * application to a conversation instead of the whole pipeline, and the id is
- * completable while the user picks it.
+ * (`career://pipeline/a1b2c3d4`) so a host can attach one application to a
+ * conversation instead of the whole pipeline, and the id is completable while
+ * the user picks it.
  */
 export async function completeApplicationIdValues(partial: string): Promise<string[]> {
   return (await completeApplicationId(partial)).map((s) => s.value);

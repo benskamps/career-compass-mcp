@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -30,6 +30,54 @@ const repoRoot = path.resolve(
 );
 const README = readFileSync(path.join(repoRoot, "README.md"), "utf-8");
 const EXAMPLE_DATA_PATH = path.join(repoRoot, "data", "example");
+const DASHBOARD_DIR = path.join(repoRoot, "dashboard");
+
+/**
+ * Every `.tsx`/`.ts` source file the dashboard actually ships to a user — its
+ * app routes and components. Skips tests, stories, node_modules and the build
+ * output, none of which a user reads.
+ */
+function dashboardSourceFiles(root: string): string[] {
+  if (!existsSync(root)) return [];
+  const out: string[] = [];
+  const SKIP_DIRS = new Set(["node_modules", ".next", ".storybook", "storybook-static"]);
+  for (const dir of ["app", "components"]) {
+    const base = path.join(root, dir);
+    if (!existsSync(base)) continue;
+    for (const entry of readdirSync(base, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      const name = entry.name;
+      if (!/\.(tsx|ts)$/.test(name)) continue;
+      if (/\.(test|stories)\.(tsx|ts)$/.test(name)) continue;
+      // Node types the recursive Dirent's parentPath; fall back to name only.
+      const parent = (entry as unknown as { parentPath?: string; path?: string }).parentPath
+        ?? (entry as unknown as { path?: string }).path
+        ?? base;
+      if (parent.split(path.sep).some((seg) => SKIP_DIRS.has(seg))) continue;
+      out.push(path.join(parent, name));
+    }
+  }
+  return out;
+}
+
+/**
+ * Tool names the dashboard surfaces to a user. The convention across the app is
+ * that a literal tool name is presented as inline code — `<code>pipeline_add</code>`
+ * — so that (and only that) is what we treat as a tool mention. Lowercase
+ * snake_case only: env vars (CAREER_DATA_PATH) are uppercase, shell examples
+ * ("npm run build") have spaces, and neither is a tool name.
+ */
+function dashboardToolMentions(files: string[]): { token: string; file: string }[] {
+  const CODE_TOKEN = /<code[^>]*>\s*([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\s*<\/code>/g;
+  const found: { token: string; file: string }[] = [];
+  for (const file of files) {
+    const src = readFileSync(file, "utf-8");
+    for (const m of src.matchAll(CODE_TOKEN)) {
+      found.push({ token: m[1], file: path.relative(repoRoot, file) });
+    }
+  }
+  return found;
+}
 
 describe("docs truth: the README describes the real surface", () => {
   let client: Client;
@@ -60,6 +108,46 @@ describe("docs truth: the README describes the real surface", () => {
       `registered but absent from README.md: ${undocumented.join(", ")}. ` +
         `Add a row to the Tools table.`,
     ).toEqual([]);
+  });
+
+  it("the dashboard only names tools that actually exist", async () => {
+    // The README is not the only place a tool name can go stale. The dashboard
+    // tells a user which tool to run — its empty state used to say "use
+    // `manage_pipeline`", a tool that has never existed (the real ones are
+    // `pipeline_add` / `pipeline_update` / `ingest_document`). A user who
+    // followed that copy asked Claude for a tool it does not have. The README
+    // guard above would never have caught it because it reads a different file.
+    const { tools } = await client.listTools();
+    const live = new Set(tools.map((t) => t.name));
+
+    const files = dashboardSourceFiles(DASHBOARD_DIR);
+    // If the dashboard tree is absent (e.g. a source-light checkout) there is
+    // nothing to scan; the guard simply has no work rather than a false pass.
+    if (files.length === 0) return;
+
+    const mentions = dashboardToolMentions(files);
+    const unknown = mentions.filter((m) => !live.has(m.token));
+    expect(
+      unknown,
+      `the dashboard names tool(s) that are not registered: ` +
+        unknown.map((u) => `\`${u.token}\` (${u.file})`).join(", ") +
+        `. Live tools: ${[...live].sort().join(", ")}. ` +
+        `A user who copies that name calls a tool Claude does not have.`,
+    ).toEqual([]);
+  });
+
+  it("NC: the dashboard tool-name scan flags a non-existent tool", async () => {
+    // Negative control for the guard above. Feeds the same extractor a synthetic
+    // `<code>` mention of a tool that does not exist and asserts it is caught, so
+    // a future refactor that quietly stops matching `<code>` tokens (and turns
+    // the real guard into a silent always-pass) fails here instead.
+    const { tools } = await client.listTools();
+    const live = new Set(tools.map((t) => t.name));
+    const CODE_TOKEN = /<code[^>]*>\s*([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\s*<\/code>/g;
+    const synthetic = `<p>Open Claude and run <code class="x">nonexistent_tool</code>.</p>`;
+    const tokens = [...synthetic.matchAll(CODE_TOKEN)].map((m) => m[1]);
+    expect(tokens).toContain("nonexistent_tool");
+    expect(tokens.filter((t) => !live.has(t))).toEqual(["nonexistent_tool"]);
   });
 
   it("documents every registered prompt", async () => {

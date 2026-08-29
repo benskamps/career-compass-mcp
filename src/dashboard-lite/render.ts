@@ -13,8 +13,7 @@ import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
  *
  * Design note: in a plain browser there is no Claude chat bridge, so the
  * "Ask Claude" affordances copy a ready-to-paste prompt to the clipboard rather
- * than dispatching it. In Cowork, the artifact variant wires the same prompts to
- * sendPrompt() instead.
+ * than dispatching it.
  */
 
 // The board's column order is the funnel order declared on the schema, shared
@@ -165,11 +164,29 @@ function jobCard(a: Application): string {
  * `~/.career-compass` unconditionally, so anyone running with CAREER_DATA_PATH
  * set was told their data was somewhere it wasn't.
  */
-export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string): string {
+export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: Date = new Date()): string {
   const apps = [...(pipeline.applications ?? [])].sort((a, b) => (b.dateUpdated ?? "").localeCompare(a.dateUpdated ?? ""));
   const s = computeStats(apps);
-  const actions = deriveNextActions(apps);
+  const actions = deriveNextActions(apps, now);
   const lastUpdated = pipeline.lastUpdated ? new Date(pipeline.lastUpdated).toLocaleString() : "—";
+
+  // Staleness. A store nobody has written to in a long time must not keep
+  // presenting itself as "in play right now" with fresh-looking KPIs — an aged
+  // pipeline read back after a two-month gap looked identical to one touched an
+  // hour ago, which is the P2-10 honesty defect. Past the threshold the page
+  // says so once, plainly, and softens the "active" framing rather than leaving
+  // a false present tense on the busiest number.
+  const STALE_AFTER_DAYS = 30;
+  const lastWriteMs = pipeline.lastUpdated ? Date.parse(pipeline.lastUpdated) : NaN;
+  const daysSinceWrite = Number.isNaN(lastWriteMs)
+    ? null
+    : Math.floor((now.getTime() - lastWriteMs) / 86400000);
+  // Only meaningful once there is something in the pipeline; an empty store has
+  // its own first-run state and "stale" would be noise there.
+  const isStale = apps.length > 0 && daysSinceWrite != null && daysSinceWrite > STALE_AFTER_DAYS;
+  const staleBanner = isStale
+    ? `<div class="stale-banner">⚠ Last updated ${daysSinceWrite} days ago — this pipeline may be stale. The numbers below reflect its last saved state, not live activity.</div>`
+    : "";
 
   // With nothing in the pipeline every one of these is either zero or undefined,
   // and six cards saying so is a worse first impression than no cards at all —
@@ -179,7 +196,7 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string): strin
     ? ""
     : [
         kpi(s.total, "Total applications"),
-        kpi(s.active, "Active", "in play right now"),
+        kpi(s.active, "Active", isStale ? `as of ${daysSinceWrite}d ago` : "in play right now"),
         kpi(s.inConversation, "In conversation", "screening + interviewing"),
         kpi(s.offers, "Offers", s.offers > 0 ? "🎉 decision time" : ""),
         // A rate needs a denominator. Until something has been sent and had time
@@ -316,6 +333,10 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .closed .dots .sw{width:8px;height:8px;border-radius:50%}
 .closed .board{margin-top:10px}
 .hidden{display:none!important}
+/* Aged-store honesty. A muted amber notice, not an alarm — the data is real,
+   just old, so it warns without shouting. Sits between the toolbar and the KPIs
+   so it is read before the numbers it qualifies. */
+.stale-banner{display:flex;gap:8px;align-items:flex-start;background:color-mix(in srgb,#f59e0b 12%,var(--card));border:1px solid color-mix(in srgb,#f59e0b 38%,var(--line));color:var(--ink);border-radius:12px;padding:11px 14px;margin:0 0 16px;font-size:12.5px;line-height:1.45}
 </style></head>
 <body><div class="wrap">
 <header class="top">
@@ -327,6 +348,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
   <button class="btn primary" data-prompt="What should I focus on in my job search today? Look at my pipeline and give me the 3 highest-leverage moves.">🎯 Copy: what should I do today?</button>
   <button class="btn" data-prompt="Review my whole pipeline and flag anything stale, single-threaded, or at risk of going cold.">🔍 Copy: health check</button>
 </div>
+${staleBanner}
 ${kpis ? `<div class="kpis">${kpis}</div>` : ""}
 ${apps.length === 0 ? emptyState : `
 <div class="panel" style="margin-bottom:16px">

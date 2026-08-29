@@ -191,7 +191,7 @@ v2.0 includes a local web dashboard — a visual layer on top of your Career KB 
 
 Four views:
 
-**Pipeline kanban board** — All your applications laid out by stage (Exploring → Applied → Screening → Interviewing → Offer → Closed). Drag to advance stages. See stale applications at a glance. Click any card to drill in.
+**Pipeline kanban board** — All your applications laid out by stage (Discovered → Applied → Screening → Interviewing → Offer → Closed). Stages change through Claude — ask it to move an application and it calls `pipeline_update`; the board reflects the new stage on the next load. See stale applications at a glance. Click any card to drill in.
 
 **Application detail view** — Full timeline for a single application: every status change, contacts associated with the role, notes from conversations, and next action. Everything Claude knows about that opportunity in one place.
 
@@ -203,7 +203,7 @@ Four views:
 
 >**Two dashboards ship now.** A built-in **lite dashboard** (zero-build, pure HTML) is bundled
 > in the npm package and starts automatically when the full dashboard isn't built - so
-> `career-compass-mcp dashboard` always works. The **full dashboard** (Next.js: kanban drag,
+> `career-compass-mcp dashboard` always works. The **full dashboard** (Next.js: kanban board,
 > analytics, Career KB views, onboarding wizard) still runs from a source build:
 
 ```bash
