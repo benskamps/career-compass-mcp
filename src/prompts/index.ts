@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { embedUntrusted } from "../untrusted.js";
 
 export function registerPrompts(server: McpServer): void {
 
@@ -23,11 +24,11 @@ export function registerPrompts(server: McpServer): void {
           text: `You are an expert resume writer and career coach. Using the career data from my Career Knowledge Base (read career://full), create a tailored, ATS-optimized resume for the following job posting.
 
 **Job Posting:**
-${posting}
+${embedUntrusted("job posting", posting)}
 
 **Format:** ${format}
 **Target length:** ${pages} page(s)
-${notes ? `**Special instructions:** ${notes}` : ""}
+${notes ? `**Special instructions:**\n${embedUntrusted("user notes", notes)}` : ""}
 
 **Requirements:**
 - Match the language and keywords from the posting exactly where truthful
@@ -71,7 +72,7 @@ Start by reading career://full, then produce the complete resume.`,
 **Interview type:** ${interviewType}
 ${interviewerInfo ? `**Interviewer:** ${interviewerInfo}` : ""}
 ${applicationId ? `**Application ID:** ${applicationId} (read career://pipeline/${applicationId} for context)` : ""}
-${notes ? `**Additional context:** ${notes}` : ""}
+${notes ? `**Additional context:**\n${embedUntrusted("user notes", notes)}` : ""}
 
 Please read career://full for my background, then provide:
 
@@ -115,9 +116,9 @@ Be specific. Don't give generic advice — connect everything back to my actual 
 ${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
 
 **Offer details:**
-${offerDetails}
+${embedUntrusted("offer details", offerDetails)}
 
-${marketData ? `**My market research:** ${marketData}` : ""}
+${marketData ? `**My market research:**\n${embedUntrusted("market data", marketData)}` : ""}
 ${priorities ? `**My priorities:** ${priorities}` : ""}
 
 Please provide:
