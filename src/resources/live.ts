@@ -1,4 +1,4 @@
-import { watch, type FSWatcher } from "fs";
+import { watch, existsSync, type FSWatcher } from "fs";
 import { join, basename } from "path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
@@ -44,6 +44,11 @@ const FILE_TO_URI: Record<string, string> = {
   "education.yaml": "career://education",
   "testimonials.yaml": "career://testimonials",
   "applications.yaml": "career://pipeline",
+  // The journal is a section of the merged KB (file-store.ts merges it into
+  // `career://full`), so a `capture_insight` append must dirty both its own
+  // resource and the aggregate. Without this entry the append fired silently:
+  // `career://full` never learned that part of its own document had changed.
+  "journal.yaml": "career://journal",
 };
 
 /**
@@ -89,6 +94,8 @@ export interface LiveResources {
   close(): void;
   /** Force a check now, bypassing the debounce. For tests. */
   __flush(): void;
+  /** Names of the data subdirs currently armed. For tests and diagnostics. */
+  __watched(): string[];
 }
 
 /**
@@ -98,7 +105,12 @@ export interface LiveResources {
  */
 export function registerLiveResources(server: McpServer): LiveResources {
   const subscribed = new Set<string>();
-  const watchers: FSWatcher[] = [];
+  // One watcher per data subdirectory, tracked by name so a single dead handle
+  // can be re-armed without disturbing its sibling. The bug this shape fixes:
+  // the old flat array early-returned from startWatching whenever *anything*
+  // was still watched, so once one subdir's watcher died the other stayed alive
+  // and no subscribe could ever re-arm the dead one.
+  const watchers: Array<{ sub: string; path: string; watcher: FSWatcher }> = [];
   const pending = new Set<string>();
   let timer: NodeJS.Timeout | null = null;
   let closed = false;
@@ -130,8 +142,47 @@ export function registerLiveResources(server: McpServer): LiveResources {
     timer.unref?.();
   };
 
-  const onChange = (filename: string | null) => {
-    if (closed || !filename) return;
+  // The data subdirectories we watch. Not recursive: `recursive: true` is
+  // unsupported on Linux in older Node and silently watches nothing there. Two
+  // shallow watchers cover the whole layout and behave the same everywhere.
+  const SUBDIRS = ["career", "pipeline"];
+
+  const isArmed = (sub: string) => watchers.some((w) => w.sub === sub);
+
+  /** Close and forget the watcher for one subdir, if present. */
+  const disarm = (sub: string) => {
+    const idx = watchers.findIndex((w) => w.sub === sub);
+    if (idx === -1) return;
+    const [w] = watchers.splice(idx, 1);
+    try {
+      w.watcher.close();
+    } catch {
+      /* already gone */
+    }
+  };
+
+  const onChange = (sub: string, watchedPath: string, filename: string | null) => {
+    if (closed) return;
+
+    // ── Directory death (measured on Windows) ────────────────────────────────
+    // Deleting the watched directory does not throw and does not merely stop
+    // events: `fs.watch` emits an unbounded rename storm (~157k/s) whose
+    // filename resolves to the watched directory itself (its own basename, not
+    // a file inside it), and the handle then stays bound to the dead inode
+    // forever — zero events even after the directory is recreated. Detect the
+    // self-referential event, tear the dead watcher down (which STOPS the
+    // storm), and leave the subdir disarmed so the next event on a sibling
+    // watcher or the next subscribe re-arms it lazily against the live dir.
+    if (filename !== null && basename(filename) === basename(watchedPath)) {
+      disarm(sub);
+      return;
+    }
+    if (filename === null) return;
+
+    // A real event proves the store is alive again — heal any sibling whose
+    // directory died and came back, without polling.
+    if (watchers.length < SUBDIRS.length) startWatching();
+
     const name = basename(filename);
     if (isInternal(name)) return;
     const uri = FILE_TO_URI[name];
@@ -140,26 +191,38 @@ export function registerLiveResources(server: McpServer): LiveResources {
     for (const agg of AGGREGATE_URIS) mark(agg);
   };
 
-  const startWatching = () => {
-    if (watchers.length || closed) return;
-    const dataDir = getDataDir();
-    for (const sub of ["career", "pipeline"]) {
-      try {
-        // Not recursive: `recursive: true` is unsupported on Linux in older
-        // Node and silently watches nothing there. Two shallow watchers cover
-        // the whole layout and behave the same on every platform.
-        const w = watch(join(dataDir, sub), { persistent: false }, (_event, filename) =>
-          onChange(filename ? String(filename) : null),
-        );
-        // A directory that vanishes (a user deleting their data dir) must not
-        // crash the server.
-        w.on("error", () => {});
-        watchers.push(w);
-      } catch {
-        // The directory may not exist yet — a first-run install has nothing to
-        // watch, and subscribing before there is data is not an error.
-      }
+  /** Arm one subdir's watcher if it isn't already, tolerating a missing dir. */
+  const armWatcher = (sub: string) => {
+    if (closed || isArmed(sub)) return;
+    const path = join(getDataDir(), sub);
+    try {
+      const w = watch(path, { persistent: false }, (_event, filename) =>
+        onChange(sub, path, filename ? String(filename) : null),
+      );
+      // A directory that vanishes surfaces as an error event (ENOENT) on some
+      // platforms rather than a throw. Drop the dead handle so a later
+      // subscribe or sibling event can re-arm it; never crash the server.
+      w.on("error", () => disarm(sub));
+      watchers.push({ sub, path, watcher: w });
+    } catch {
+      // The directory may not exist yet — a first-run install has nothing to
+      // watch, and subscribing before there is data is not an error. It arms
+      // on a later subscribe, once the dir exists.
     }
+  };
+
+  const startWatching = () => {
+    if (closed) return;
+    // Prune any watcher whose directory has vanished: its handle is dead and
+    // holding the slot would block a re-arm. This covers the deletion case that
+    // is NOT signalled by a self-referential event on every platform (the
+    // Windows storm is; a bare "gone" is not).
+    for (const w of [...watchers]) {
+      if (!existsSync(w.path)) disarm(w.sub);
+    }
+    // Idempotent per-subdir: arms only what is missing. This is what lets a
+    // fresh subscribe re-arm a watcher that died when its directory was deleted.
+    for (const sub of SUBDIRS) armWatcher(sub);
   };
 
   server.server.setRequestHandler(SubscribeRequestSchema, async (request) => {
@@ -179,7 +242,7 @@ export function registerLiveResources(server: McpServer): LiveResources {
   function stopWatching() {
     for (const w of watchers) {
       try {
-        w.close();
+        w.watcher.close();
       } catch {
         /* already gone */
       }
@@ -206,6 +269,7 @@ export function registerLiveResources(server: McpServer): LiveResources {
       }
       flush();
     },
+    __watched: () => watchers.map((w) => w.sub),
   };
 }
 
