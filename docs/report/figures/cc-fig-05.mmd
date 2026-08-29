@@ -1,26 +1,19 @@
 sequenceDiagram
-    participant B as Browser
-    participant G as Loopback guard
-    participant V as Dashboard (either)
-    participant W as Write claim
-    participant F as file-store
-    B->>G: GET / with Host
-    G->>G: isAllowedHost(Host)
-    alt not loopback
-        G-->>B: 403, no path parsed, no data read
-    else loopback
-        G->>V: proceed
-        V->>F: read
-        F-->>V: data
-        V-->>B: page
-        B->>V: write action
-        V->>W: acquire claim for this data dir
-        alt claim held elsewhere
-            W-->>V: unavailable — MCP server owns this dir
-            V-->>B: explicit refusal, no partial write
-        else claim acquired
-            V->>F: mutate under lock
-            F-->>V: durable receipt
-            V-->>B: confirmed
-        end
+    participant U as User in Claude
+    participant A as MCP App board (ui://)
+    participant S as MCP server
+    participant D as mutateCareerSection / mutatePipeline
+    participant Y as YAML store
+    U->>A: drag card to Interviewing
+    A->>S: dispatch prompt → pipeline_update
+    S->>S: fence untrusted args (tools AND prompts)
+    S->>D: mutate(id, fn) — read INSIDE lock+claim
+    alt claim held elsewhere
+        D-->>S: unavailable, holder named
+        S-->>U: told plainly, nothing written
+    else claim acquired
+        D->>Y: read → mutate → atomic write + .bak
+        Y-->>S: durable receipt
+        S->>A: resource updated → board re-renders
+        S-->>U: confirmed, truthfully
     end

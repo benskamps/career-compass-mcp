@@ -4,11 +4,22 @@ import { join, dirname, basename } from "path";
 import { homedir } from "os";
 import { randomUUID } from "crypto";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { CareerData, Pipeline, JournalSection } from "../schemas/career-schema.js";
+import {
+  CareerData,
+  Pipeline,
+  JournalSection,
+  Profile,
+  Experience,
+  Skill,
+  Education,
+  Project,
+  Testimonial,
+} from "../schemas/career-schema.js";
 import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
-import type { z } from "zod";
+import { z } from "zod";
 import { withWriteClaim } from "./write-claim.js";
+import { ReadOnlyStoreError } from "./read-only-error.js";
 import { serializeOn } from "./serialize.js";
 
 // ─── Typed errors ─────────────────────────────────────────────────────────────
@@ -177,10 +188,7 @@ async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
   // shifted dates into the demo everyone else sees, and in a global install it
   // means editing node_modules. It is a demo, not a store.
   if (servingBundledSample()) {
-    throw new Error(
-      `${filePath} is inside the bundled sample data, which is a read-only demo. ` +
-        `Point CAREER_DATA_PATH at your own directory (or unset it to use ~/.career-compass) before saving.`,
-    );
+    throw new ReadOnlyStoreError(filePath);
   }
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
@@ -297,6 +305,122 @@ export async function saveCareerSection(section: string, data: unknown): Promise
   const path = join(careerDir(), `${section}.yaml`);
   await withDataLock(path, () =>
     withWriteClaim(getDataDir(), () => atomicWriteYaml(path, data)),
+  );
+}
+
+/**
+ * The value type stored under each Career KB section.
+ *
+ * `profile` is a single object; every other section is a list. This is the
+ * contract {@link mutateCareerSection} hands its mutator, so a caller (the Next
+ * dashboard's onboarding Server Actions in particular) gets the section it asked
+ * for, correctly typed, without reaching for the whole `CareerData` document.
+ */
+export interface CareerSectionValueMap {
+  profile: Profile;
+  experience: Experience[];
+  skills: Skill[];
+  education: Education[];
+  projects: Project[];
+  testimonials: Testimonial[];
+}
+
+/** Fail-closed validation schema for each section, keyed by name. */
+const CAREER_SECTION_SCHEMA: { readonly [K in CareerSection]: z.ZodType<CareerSectionValueMap[K]> } = {
+  profile: Profile,
+  experience: z.array(Experience),
+  skills: z.array(Skill),
+  education: z.array(Education),
+  projects: z.array(Project),
+  testimonials: z.array(Testimonial),
+};
+
+/**
+ * Read one Career KB section, validated, or null if the file does not exist.
+ *
+ * Fail-closed like the rest of the store: a section file that exists but does
+ * not parse or validate throws {@link CorruptDataError} rather than degrading to
+ * an empty value a caller could then overwrite. This is stricter than
+ * {@link loadCareerData}, which lets an optional section degrade to `[]` — that
+ * is safe for a read-only merge, but this loader sits inside a read-modify-write
+ * cycle, so degrading here would clobber a recoverable file.
+ *
+ * Array sections are accepted either bare (`- …`) or wrapped (`{section: [ … ]}`),
+ * the same two on-disk shapes {@link loadCareerData} tolerates.
+ */
+async function readCareerSection<S extends CareerSection>(
+  section: S,
+): Promise<CareerSectionValueMap[S] | null> {
+  const filePath = join(careerDir(), `${section}.yaml`);
+  if (!existsSync(filePath)) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(await readFile(filePath, "utf-8"));
+  } catch (error) {
+    console.error(`Failed to parse ${section}.yaml:`, error);
+    throw new CorruptDataError(filePath, error);
+  }
+
+  const candidate =
+    section === "profile"
+      ? parsed
+      : Array.isArray(parsed)
+        ? parsed
+        : ((parsed as Record<string, unknown> | null)?.[section] ?? []);
+
+  try {
+    return CAREER_SECTION_SCHEMA[section].parse(candidate) as CareerSectionValueMap[S];
+  } catch (error) {
+    console.error(`Career section "${section}" failed validation:`, error);
+    throw new CorruptDataError(filePath, error);
+  }
+}
+
+/**
+ * Run a read-modify-write cycle against one Career KB section as a single
+ * critical section — the mirror of {@link mutatePipeline} for the Career KB.
+ *
+ * The load, the mutation, and the save all run INSIDE both `withDataLock` (this
+ * process's per-file serialization) and `withWriteClaim` (the cross-process
+ * claim), exactly as {@link appendJournalEntry} keeps its read inside the lock.
+ * That is the whole point of this door: the Next dashboard's onboarding Server
+ * Actions today do `loadCareerData()` OUTSIDE any lock, mutate a copy, then call
+ * {@link saveCareerSection} — so two concurrent edits both start from the same
+ * snapshot and the later write silently drops the earlier field, with both
+ * reporting success. Routing those writes through here closes that lost update.
+ *
+ * `mutator` receives the section's current value (or `null` when the section
+ * file does not exist yet — the caller supplies its own default) and returns the
+ * next value to persist. {@link saveCareerSection} stays for callers that truly
+ * replace a whole section without needing to read it first.
+ *
+ * A CorruptDataError from the read propagates untouched: nothing is written, so
+ * an unreadable section is never overwritten. A WriteClaimUnavailableError
+ * likewise propagates before the read runs.
+ */
+export async function mutateCareerSection<S extends CareerSection>(
+  section: S,
+  mutator: (
+    current: CareerSectionValueMap[S] | null,
+  ) => CareerSectionValueMap[S] | Promise<CareerSectionValueMap[S]>,
+): Promise<CareerSectionValueMap[S]> {
+  if (!(CAREER_SECTIONS as readonly string[]).includes(section)) {
+    throw new Error(
+      `Unknown career section "${section}". Expected one of: ${CAREER_SECTIONS.join(", ")}.`,
+    );
+  }
+  const path = join(careerDir(), `${section}.yaml`);
+  return withDataLock(path, () =>
+    withWriteClaim(getDataDir(), async () => {
+      // The read MUST be inside both the lock and the claim — same contract as
+      // appendJournalEntry. Loading the section outside is exactly the bug this
+      // exists to prevent.
+      const current = await readCareerSection(section);
+      const next = await mutator(current);
+      await atomicWriteYaml(path, next);
+      return next;
+    }),
   );
 }
 

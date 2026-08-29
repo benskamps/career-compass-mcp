@@ -18,6 +18,7 @@ const emptyCareer: CareerData = {
   education: [],
   projects: [],
   testimonials: [],
+  journal: [],
 };
 
 const fullCareer: CareerData = {
@@ -55,6 +56,7 @@ const fullCareer: CareerData = {
   testimonials: [
     { source: "Jane Doe, VP", relationship: "Manager", quote: "Outstanding performer" },
   ],
+  journal: [],
 };
 
 describe("calculateCompleteness", () => {

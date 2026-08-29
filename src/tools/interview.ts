@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData, loadPipeline } from "../storage/file-store.js";
+import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
@@ -31,11 +32,18 @@ export function registerInterviewTools(server: McpServer): void {
       },
     },
     async ({ applicationId, company, role, interviewType, interviewerInfo, postingText, focusAreas }) => {
-      const career = await loadCareerData();
+      // Reads fail-closed: a corrupt profile.yaml or applications.yaml, or an
+      // unavailable store, must surface as a repair sentence rather than a raw
+      // transport error — the same graceful surfacing the write tools carry.
+      const careerRead = await guardedRead(() => loadCareerData());
+      if (!careerRead.ok) return careerRead.response;
+      const career = careerRead.value;
       let appContext = "";
 
       if (applicationId) {
-        const pipeline = await loadPipeline();
+        const pipeRead = await guardedRead(() => loadPipeline());
+        if (!pipeRead.ok) return pipeRead.response;
+        const pipeline = pipeRead.value;
         const app = pipeline.applications.find(a => a.id === applicationId);
         if (app) {
           company = company ?? app.company;
@@ -156,7 +164,9 @@ Likely concerns they'll have about my background, and how to address them proact
       let appContext = "";
 
       if (applicationId) {
-        const pipeline = await loadPipeline();
+        const pipeRead = await guardedRead(() => loadPipeline());
+        if (!pipeRead.ok) return pipeRead.response;
+        const pipeline = pipeRead.value;
         const app = pipeline.applications.find(a => a.id === applicationId);
         if (!app) {
           return {
@@ -193,7 +203,9 @@ Likely concerns they'll have about my background, and how to address them proact
         };
       }
 
-      const career = await loadCareerData();
+      const careerRead = await guardedRead(() => loadCareerData());
+      if (!careerRead.ok) return careerRead.response;
+      const career = careerRead.value;
       if (!career) {
         return { content: [{ type: "text", text: noCareerDataMessage() }] };
       }
@@ -293,7 +305,9 @@ what makes the next projection in this process, and the next process, sharper.`,
     },
     async ({ applicationId, company, role, offerDetails, location, currentComp, marketData, priorities, otherOffers }) => {
       if (applicationId) {
-        const pipeline = await loadPipeline();
+        const pipeRead = await guardedRead(() => loadPipeline());
+        if (!pipeRead.ok) return pipeRead.response;
+        const pipeline = pipeRead.value;
         const app = pipeline.applications.find(a => a.id === applicationId);
         if (app) { company = company ?? app.company; role = role ?? app.role; }
       }
@@ -308,7 +322,7 @@ ${embedUntrusted("offer details", offerDetails)}
 
 ${location ? `**Location:** ${location}` : ""}
 ${currentComp ? `**Current comp:** ${currentComp}` : ""}
-${marketData ? `**Market data:** ${marketData}` : ""}
+${marketData ? `**Market data:**\n${embedUntrusted("market data", marketData)}` : ""}
 ${priorities ? `**My priorities:** ${priorities}` : ""}
 ${otherOffers ? `**Other offers/processes:** ${otherOffers}` : ""}
 

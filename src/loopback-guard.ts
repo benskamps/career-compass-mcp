@@ -98,7 +98,17 @@ export function hostnameOf(host: string): string | null {
 export function isAllowedHost(host: string | null | undefined): boolean {
   if (!host) return false;
   const hostname = hostnameOf(host);
-  return hostname !== null && ALLOWED_HOSTNAMES.has(hostname);
+  if (hostname === null) return false;
+  // A single trailing dot is the DNS root label: `localhost.` and `127.0.0.1.`
+  // are the fully-qualified forms of names we already answer to, and a browser
+  // will happily resolve and connect to them. Strip exactly one trailing dot
+  // before the allowlist compare so the FQDN form is not refused. This cannot
+  // widen the allowlist — `localhost.evil.com` has no trailing dot to strip and
+  // still fails, `localhost..` strips to `localhost.` which is not allowed, and
+  // fail-closed is preserved because only names that land exactly on an entry
+  // pass.
+  const normalized = hostname.endsWith(".") ? hostname.slice(0, -1) : hostname;
+  return ALLOWED_HOSTNAMES.has(normalized);
 }
 
 /**

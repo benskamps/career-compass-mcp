@@ -1,5 +1,6 @@
 import { loadPipeline } from "@/lib/data";
 import { computeAnalytics } from "@/lib/analytics";
+import { ACTIVE_STATUSES } from "@/lib/theme";
 import { StatCardsRow } from "@/components/analytics/stat-cards-row";
 import { PipelineFunnel } from "@/components/analytics/pipeline-funnel";
 import { StatusBreakdown } from "@/components/analytics/status-breakdown";
@@ -37,7 +38,7 @@ export default async function AnalyticsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="text-sm text-text-secondary mt-1 tabular-nums">
-          {data.totalApplications} applications · {data.statusCounts ? Object.keys(data.statusCounts).length : 0} stages active
+          {data.totalApplications} applications · {data.statusCounts ? ACTIVE_STATUSES.filter((s) => (data.statusCounts[s] ?? 0) > 0).length : 0} active stages
         </p>
       </header>
       <StatCardsRow data={data} />

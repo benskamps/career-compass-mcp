@@ -1,13 +1,11 @@
-import { loadCareerData, loadPipeline } from "@shared/storage/file-store";
+import { loadCareerData, loadPipeline, getDataDir } from "@shared/storage/file-store";
 import { existsSync } from "fs";
 import { join } from "path";
-import { homedir } from "os";
 
-export { loadCareerData, loadPipeline };
-
-export function getDataDir(): string {
-  return process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
-}
+// Re-exported from the shared store rather than re-implemented here: the audit
+// found this file had its own copy of getDataDir, the exact copy-drift that let
+// the two dashboards diverge. One definition, imported.
+export { loadCareerData, loadPipeline, getDataDir };
 
 export function hasProfileData(): boolean {
   const profilePath = join(getDataDir(), "career", "profile.yaml");

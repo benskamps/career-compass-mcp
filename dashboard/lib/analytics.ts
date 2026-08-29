@@ -1,7 +1,7 @@
 import type { Application, ApplicationStatus } from "@shared/schemas/career-schema";
 
 const TERMINAL_STATUSES: ApplicationStatus[] = ["rejected", "withdrawn", "accepted", "ghosted"];
-const STAGE_ORDER: ApplicationStatus[] = ["discovered", "applied", "screening", "interviewing", "offer", "negotiating", "accepted"];
+export const STAGE_ORDER: ApplicationStatus[] = ["discovered", "applied", "screening", "interviewing", "offer", "negotiating", "accepted"];
 
 export interface SourceStat { source: string; count: number; responseRate: number; furthestStage: string; }
 export interface FunnelStage { stage: string; count: number; conversionRate: number | null; }

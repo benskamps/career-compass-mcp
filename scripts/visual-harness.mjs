@@ -220,6 +220,47 @@ async function main() {
               }
             }
           }
+
+          // The empty and aged Next pipelines, mirroring the lite empty/aged
+          // shots above. The standalone server reads CAREER_DATA_PATH once at
+          // spawn, so each state needs its own process on its own port. Best
+          // effort: a failure here must not lose the shots already captured.
+          const nextStates = [
+            ["empty-state", empty, NEXT_PORT + 1],
+            ["aged", seeded, NEXT_PORT + 2],
+          ];
+          for (const [view, dataDir, port] of nextStates) {
+            try {
+              const c = spawn(process.execPath, [standalone], {
+                cwd: join(REPO, "dashboard", ".next", "standalone", "dashboard"),
+                env: { ...process.env, PORT: String(port), HOSTNAME: "127.0.0.1", CAREER_DATA_PATH: dataDir },
+                stdio: "ignore",
+              });
+              servers.push(() => c.kill());
+              const ready = await waitForServer(`http://localhost:${port}/pipeline`);
+              if (!ready) {
+                process.stderr.write(`  ! Next ${view} did not come up; skipping.\n`);
+                c.kill();
+                continue;
+              }
+              for (const theme of ["light", "dark"]) {
+                const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: theme });
+                const page = await ctx.newPage();
+                try {
+                  await capture(page, {
+                    surface: "next", view, viewport: "desktop", theme,
+                    url: `http://localhost:${port}/pipeline`,
+                  });
+                } catch (e) {
+                  process.stderr.write(`  ! ${view}/desktop/${theme}: ${String(e).slice(0, 70)}\n`);
+                }
+                await ctx.close();
+              }
+              c.kill();
+            } catch (e) {
+              process.stderr.write(`  ! Next ${view} capture failed: ${String(e).slice(0, 70)}\n`);
+            }
+          }
         }
       }
     }

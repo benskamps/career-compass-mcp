@@ -7,6 +7,7 @@ import { Profile, Experience, Skill, Education, Project, Testimonial } from "../
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
+import { isReadOnlyStore } from "../storage/read-only-error.js";
 
 /** Per-section schema, so a write is validated with the same rules the loader
  *  enforces on read. Writing first and validating later would let one bad write
@@ -253,17 +254,29 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
       if (applicationId) {
         // Same critical section as pipeline_update: this is a read-modify-write
         // on the shared pipeline file, so it must not straddle the lock.
-        await mutatePipeline((pipeline) => {
-          const app = pipeline.applications.find(a => a.id === applicationId);
-          // No match: return without mutating; mutatePipeline skips the write.
-          if (!app) return;
-          company = company ?? app.company;
-          role = role ?? app.role;
-          // Auto-update status to rejected
-          app.status = "rejected";
-          app.dateUpdated = new Date().toISOString();
-          statusUpdated = true;
-        });
+        //
+        // Wrapped in the same guard every pipeline_* write site uses: a claim
+        // conflict, a corrupt pipeline, or a write against the read-only sample
+        // store must come back as the told-plainly sentence, not escape as a raw
+        // transport error that loses the reason nothing was written.
+        try {
+          await mutatePipeline((pipeline) => {
+            const app = pipeline.applications.find(a => a.id === applicationId);
+            // No match: return without mutating; mutatePipeline skips the write.
+            if (!app) return;
+            company = company ?? app.company;
+            role = role ?? app.role;
+            // Auto-update status to rejected
+            app.status = "rejected";
+            app.dateUpdated = new Date().toISOString();
+            statusUpdated = true;
+          });
+        } catch (error) {
+          if (isCorruptDataError(error) || isWriteClaimUnavailable(error) || isReadOnlyStore(error)) {
+            return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+          }
+          throw error;
+        }
       }
 
       return {
@@ -398,6 +411,20 @@ ${statusUpdated
               text:
                 `⚠️ Couldn't save the insight right now: ${error.message}\n\n` +
                 `Nothing was written; the insight below is unsaved:\n> ${summary}`,
+            }],
+          };
+        }
+        if (isReadOnlyStore(error)) {
+          // Writing to the bundled read-only demo store. Every other write tool
+          // surfaces this as a sentence; the journal must too, and the insight
+          // itself comes back so it is not lost to a raw transport error.
+          return {
+            content: [{
+              type: "text",
+              text:
+                `⚠️ This is the read-only demo store, so the insight wasn't saved. ` +
+                `Point \`CAREER_DATA_PATH\` at your own directory to keep a journal.\n\n` +
+                `The insight below is unsaved:\n> ${summary}`,
             }],
           };
         }

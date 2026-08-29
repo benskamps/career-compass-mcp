@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
       "../schemas/career-schema.js": "../src/schemas/career-schema.ts",
       "../sample-data.js": "../src/sample-data.ts",
       "./write-claim.js": "../src/storage/write-claim.ts",
+      "./read-only-error.js": "../src/storage/read-only-error.ts",
       // Same module, different relative form — `sample-data.ts` sits one level
       // up from `storage/`, so it reaches the schema as "./schemas/…". Turbopack
       // keys on the literal specifier, so both spellings need an entry.
