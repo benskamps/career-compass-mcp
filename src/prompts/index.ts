@@ -11,7 +11,7 @@ export function registerPrompts(server: McpServer): void {
       description: "Generate a tailored, ATS-optimized resume for a specific job posting using your Career KB",
       argsSchema: {
         posting: z.string().describe("Full job posting text or URL"),
-        format: z.enum(["standard", "federal", "academic", "creative"]).optional().describe("Resume format style"),
+        format: z.enum(["standard", "federal", "academic", "functional"]).optional().describe("Resume format style"),
         pages: z.enum(["1", "2"]).optional().describe("Target page count"),
         notes: z.string().optional().describe("Any special instructions or context"),
       },
