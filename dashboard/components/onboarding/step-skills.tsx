@@ -24,8 +24,8 @@ export function StepSkills({ currentSkills }: StepSkillsProps) {
     setError(null);
     try {
       await saveSkills(updated);
-    } catch {
-      setError("Failed to save. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Failed to save. Please try again.");
     }
   };
 

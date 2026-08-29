@@ -59,7 +59,7 @@ export function KanbanBoard({ applications }: KanbanBoardProps) {
           <h2 className="text-xl font-semibold mb-2 tracking-tight">Your pipeline starts here</h2>
           <p className="text-text-secondary">
             Open Claude and use{" "}
-            <code className="font-mono text-accent text-[0.85em] px-1 py-0.5 rounded bg-bg-elevated">manage_pipeline</code>{" "}
+            <code className="font-mono text-accent text-[0.85em] px-1 py-0.5 rounded bg-bg-elevated">pipeline_add</code>{" "}
             to add your first application, or paste a job posting and run{" "}
             <code className="font-mono text-accent text-[0.85em] px-1 py-0.5 rounded bg-bg-elevated">explore_opportunity</code>.
           </p>

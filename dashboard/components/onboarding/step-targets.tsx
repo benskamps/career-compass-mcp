@@ -23,8 +23,8 @@ export function StepTargets({ currentRoles, currentIndustries, currentSizes }: S
     setError(null);
     try {
       await saveTargets({ targetRoles: r, targetIndustries: i, targetCompanySize: s });
-    } catch {
-      setError("Failed to save. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Failed to save. Please try again.");
     }
   };
 
