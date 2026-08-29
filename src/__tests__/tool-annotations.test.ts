@@ -25,9 +25,9 @@ import { createServer } from "../server.js";
  * against a real populated data directory and fingerprints the whole tree before
  * and after. If anything on disk moved, the claim was false.
  *
- * The four tools that genuinely write (`pipeline_add`, `pipeline_update`, `capture_insight`,
- * `generate_rejection_response`) are asserted as writers rather than skipped, so
- * this cannot pass by everything quietly becoming read-only.
+ * The five tools that genuinely write (`pipeline_add`, `pipeline_update`, `capture_insight`,
+ * `generate_rejection_response`, `save_career_section`) are asserted as writers rather than
+ * skipped, so this cannot pass by everything quietly becoming read-only.
  */
 
 const EXAMPLE_DATA_PATH = fileURLToPath(new URL("../../data/example", import.meta.url));
@@ -73,6 +73,11 @@ const ARGS: Record<string, Record<string, unknown>> = {
   // than one that bailed early on a bad path.
   harvest_evidence: { projectPath: process.cwd(), since: "2026-08-01" },
   generate_rejection_response: { rejectionContent: "We went with another candidate." },
+  // A real write path: a valid skills section, so if someone ever flips this
+  // writer's readOnlyHint to true the read-only loop invokes it, watches it
+  // modify the data directory, and catches it as a liar — a second place the
+  // truth NC fires, on top of the writers-are-writers check below.
+  save_career_section: { section: "skills", data: [{ name: "WMS rollout", category: "Technical" }] },
   // `checkForUpdates: false` because this suite must not reach the npm registry;
   // the update check is exercised with an injected stub in upgrade-scenarios.
   // The dashboard probe stays on, aimed at a port nothing should be serving, so
@@ -80,7 +85,7 @@ const ARGS: Record<string, Record<string, unknown>> = {
   check_setup: { checkForUpdates: false, dashboardPort: 59999 },
 };
 
-const KNOWN_WRITERS = ["pipeline_add", "pipeline_update", "capture_insight", "generate_rejection_response"];
+const KNOWN_WRITERS = ["pipeline_add", "pipeline_update", "capture_insight", "generate_rejection_response", "save_career_section"];
 
 async function connect() {
   const server = createServer();

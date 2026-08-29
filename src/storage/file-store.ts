@@ -9,6 +9,7 @@ import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import type { z } from "zod";
 import { withWriteClaim } from "./write-claim.js";
+import { ReadOnlyStoreError } from "./read-only-error.js";
 import { serializeOn } from "./serialize.js";
 
 // ─── Typed errors ─────────────────────────────────────────────────────────────
@@ -177,10 +178,7 @@ async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
   // shifted dates into the demo everyone else sees, and in a global install it
   // means editing node_modules. It is a demo, not a store.
   if (servingBundledSample()) {
-    throw new Error(
-      `${filePath} is inside the bundled sample data, which is a read-only demo. ` +
-        `Point CAREER_DATA_PATH at your own directory (or unset it to use ~/.career-compass) before saving.`,
-    );
+    throw new ReadOnlyStoreError(filePath);
   }
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
