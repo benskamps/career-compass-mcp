@@ -2,12 +2,19 @@ stateDiagram-v2
     [*] --> Requested
     Requested --> Guarded: every surface, no exception
     Guarded --> Refused: Host not loopback
-    Guarded --> Reading: Host loopback
+    Guarded --> Reading: loopback
     Reading --> Rendered
-    Rendered --> Claiming: write requested
+    Rendered --> Claiming: any writer, any surface
     Claiming --> Writing: claim acquired
-    Claiming --> Unavailable: another process holds the dir
+    Claiming --> Unavailable: live holder elsewhere
+    Claiming --> Breaking: claim stale
+    Breaking --> Writing: rename-sidecar — ONE winner
+    Breaking --> Unavailable: lost the break race
     Writing --> Persisted: atomic rename + .bak
-    Unavailable --> Rendered: told plainly, nothing written
+    Writing --> RefusedReadOnly: sample store, told plainly
+    Unavailable --> Rendered: holder named, nothing written
+    RefusedReadOnly --> Rendered
     Persisted --> [*]
     Refused --> [*]
+    classDef new fill:#243021,stroke:#8aa86b,stroke-width:2px,color:#f0e2d0;
+    class Breaking new;

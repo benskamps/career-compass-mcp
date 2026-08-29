@@ -1,26 +1,15 @@
 sequenceDiagram
-    participant U as User
-    participant B as Browser
-    participant N as Next dashboard (preferred)
-    participant L as dashboard-lite (fallback)
-    participant F as file-store
-    U->>B: open http://localhost:3141
-    alt standalone build exists
-        B->>N: GET / (any Host header)
-        Note over N: no Host check
-        N->>F: loadCareerData + loadPipeline
-        F-->>N: full KB incl. salary, contacts
-        N-->>B: rendered page
-        B->>N: Server Action saveProfile(...)
-        N->>F: saveCareerSection (2nd process, outside the MCP lock)
-    else no standalone build
-        B->>L: GET / with Host
-        L->>L: isAllowedHost(Host)?
-        alt not loopback
-            L-->>B: 403 before any path is parsed
-        else loopback
-            L->>F: loadPipeline (read only)
-            F-->>L: pipeline
-            L-->>B: rendered page
-        end
-    end
+    participant U as User (one gesture)
+    participant D as Dashboard action
+    participant M as MCP tool
+    participant F as file-store (lock+claim)
+    participant Y as profile.yaml
+    U->>D: blur field / tick checkbox
+    D->>Y: loadCareerData()  — outside every lock
+    U->>M: "save my updated profile"
+    M->>F: save_career_section
+    F->>Y: locked write (new data)
+    D->>F: saveCareerSection(merged-from-stale)
+    F->>Y: locked write — reverts M wholesale
+    Y-->>U: both surfaces report success
+    Note over D,Y: Probe 1: 20/20 runs lose a field.<br/>The lock held both times. The read did not.

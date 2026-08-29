@@ -1,206 +1,212 @@
-# Career Compass MCP — Final Architecture Audit
+# Career Compass MCP — Architecture Audit (Gauntlet v2)
 
-> **Consumer:** Ben Schippers, and the next engineer who touches the dashboard or the storage layer.
+> **Consumer:** Ben Schippers, and the next engineer who touches a writer, a prompt, or the resource layer.
 >
-> **Status:** CANONICAL technical-architecture decision surface at `dc823a4` (`main`, 2026-08-22, v2.4.1). This is the sole architecture-risk surface for this repository. It does not supersede the product/readiness question — that belongs to a `stranger-pass`.
+> **Status:** CANONICAL technical-architecture decision surface at `c23793b` (`main`, 2026-08-29, v2.5.1). This document supersedes and re-baselines the 2026-08-22 audit at `dc823a4`, whose nine findings were all remediated (PRs #37/#38 — see §18). It does not supersede the product/readiness question — that belongs to a `stranger-pass`.
+>
+> **This pass ran as a team:** a source-inventory lane, a state/concurrency lane with executed probes, a platform/runtime lane with wire-level probes, a product lane and a frontier-research lane, reconciled adversarially in §12.
 
 ## Limits of this pass
 
-- **Inspected:** repository instructions, git baseline and history, `package.json` scripts and `files` allowlist, `manifest.json`, the CI workflow, every non-test file under `src/` and `bin/`, the full `dashboard/` tracked file list plus its server actions, `README.md`, `PRIVACY.md`, and the complete MCP test suite (run, not read-only).
-- **Not inspected:** the built Next.js dashboard at runtime (no `dashboard/.next/standalone` build exists in this worktree), npm registry download/usage telemetry, the published `.mcpb` bundle as Claude Desktop actually mounts it, any real user's `~/.career-compass` contents, or a live DNS-rebinding attempt against either dashboard.
-- **Not attempted:** no exploit was executed. Every security finding below is a reading of the code plus an absence proven by search, never a demonstrated compromise. Where that distinction matters it is labelled.
+- **Inspected:** git baseline and the 11 commits since `dc823a4`; every non-test file under `src/`, `bin/`, `scripts/`; the dashboard app, components, actions, proxy, and configs; both test suites (run, not read); CI; `package.json`, `manifest.json`, `README.md`, `PRIVACY.md`; 24 fresh screenshots of every user-facing surface (both dashboards, desktop + mobile, light + dark, empty + demo + aged stores), each looked at by a person-shaped reader, not just captured.
+- **Executed (not merely read):** the full test suite (414+1 MCP, 37 dashboard); `pack:guard`; `npm pack --dry-run` allowlist verification; the visual harness; five rerunnable concurrency probes (scratchpad, `npx tsx`, no repo files touched); raw-socket Host-header probes against a live server; a boot of the standalone Next build under an attacker `Host`; an `initialize` handshake against the built server over stdio.
+- **Not inspected:** npm registry telemetry; any real user's `~/.career-compass`; the published `.mcpb` as Claude Desktop mounts it; Next's production error-masking behavior (one §12 residual); a data dir on an actual OneDrive-synced path.
+- **Not attempted:** no exploit against any real store or live user process. The concurrency probes ran against scratch directories with the repo's own modules — they are tests, and they are rerunnable. Security findings remain code-reading plus absence-proven-by-search; where exploitability was not attempted it is labelled `UNKNOWN`.
 - **Evidence labels:** `PROVEN — repository` · `PROVEN — platform` · `EMPIRICAL` · `ESTIMATED` · `PRODUCT DECISION` · `UNKNOWN`.
+- **External-seat honesty (Gate D routing):** the den's gemmi seat delivered the product lane but argued from the brief without reading source — its claims were adjudicated against the repo in §12. The codex seat was sandbox-blocked (`helper_unknown_error: apply deny-read ACLs`, surviving a fresh session and a forced canary), so the platform lane ran as a Claude pass. Nothing below silently downgrades an external review to a self-review; this line is the disclosure.
 
 ## Executive verdict
 
-Career Compass is, on the MCP side, one of the most carefully-built things in this estate. The storage layer earns its confidence: fail-closed reads, atomic rename with a Windows retry path, per-file write serialization with the read *inside* the lock, backup retention, an allowlisted section name, and a genuine prompt-injection boundary with a per-call nonce. 335 tests pass and several of them assert *documentation truth* rather than behavior. Almost every invariant in this repo is argued for in a comment before it is enforced in code.
+The 2026-08-22 gauntlet ended: *"the defect is not in what was built, it is in where the care stopped."* The remediation moved the wall — and the wall held: the loopback guard fail-closes on all nineteen adversarial Host shapes probed on a live socket, the write claim's crash-recovery is immediate, the packaging allowlist blocked one hundred percent of 188 compiled test artifacts, and PRIVACY.md survives a line-by-line check against the code. The storage layer remains the best-argued code in this estate.
 
-**The defect is not in what was built. It is in where the care stopped.**
+**The v2 defect is one sentence: every discipline in this repository is real where it was born and absent where it moved.** The three P1s all have that shape. The read-modify-write discipline lives in `mutatePipeline` — and the dashboard's onboarding actions do their read outside it, so a lost update the lifecycle spec declares unreachable was reproduced in twenty out of twenty runs. The injection fence lives in `untrusted.ts` — and the prompts surface interpolates the same untrusted arguments bare, unscanned by the structural test that guards the tools. The claim's single-winner argument lives in a comment on the `wx` create — and the stale-claim break path above it lets two breakers both win, proven by syscall replication.
 
-The repository contains two dashboards. `src/dashboard-lite/` — the fallback, the one that ships to npm users — carries a sixty-line argument for a DNS-rebinding `Host`-header check and implements it. `dashboard/` — the Next.js one, which `bin/cli.ts:97` **prefers whenever it has been built**, which renders the entire Career KB including salary floor, salary ceiling, and every recruiter contact, and which holds the only write path outside the MCP server — has **no `Host` check, no middleware, and no CI at all**. `npm test`, the command a contributor types, runs only the dashboard's suite; CI runs only the MCP suite. Neither one covers the other. The hardening lives on the surface that needed it least.
-
-**Gate 0 is the release blocker:** the Next dashboard must refuse a non-loopback `Host` before it renders a byte, and it must enter CI. Everything else here is a P2 or below. No rewrite is warranted anywhere; this is a gap in coverage, not a flaw in design.
+**Gate 0 is the release blocker for any enrichment work:** the fence and the mutate door must move to every surface that has the data, *before* new prompts, new tools, or an MCP App multiply those surfaces. The enrichment agenda this pass was asked to serve is real and well-supported (§9) — and its first item lands directly on the unfenced prompt surface.
 
 ## 1. Purpose
 
-Give a job-seeker an AI-native career co-pilot that keeps every piece of leverage — history, pipeline, salary floor, interview notes — as plain files on their own disk, so the tool can be inspected, edited by hand, and deleted, rather than trusted.
+Give a job-seeker an AI-native career co-pilot that keeps every piece of leverage — history, pipeline, salary floor, interview notes, a journal that compounds — as plain files on their own disk, so the tool can be inspected, edited by hand, and deleted, rather than trusted.
 
 ## 2. What is actually built
 
-An MCP server over stdio (`src/index.ts`) exposing seventeen tools across six domains (opportunity, resume, pipeline, interview, Career KB, install health), plus resources and prompts, registered in `src/server.ts`. State is YAML on disk under `CAREER_DATA_PATH` (default `~/.career-compass`), split into `career/*.yaml` sections, an append-only `career/journal.yaml`, and `pipeline/applications.yaml`.
+An MCP server over stdio (`src/index.ts`) exposing **18 tools** across six domains, **3 prompts**, **9 resources plus one completable resource template** (`career://pipeline/{id}`, with a `list` callback that makes applications browsable), and **live resources** (`resources.subscribe`, fs.watch-backed, 250 ms debounce, blind to `.bak`/`.tmp`/`.write-claim`). State is YAML under `CAREER_DATA_PATH` (default `~/.career-compass`): six Career KB sections, an append-only journal, and `pipeline/applications.yaml`.
 
-Two viewers sit on top of that store. `src/dashboard-lite/` is a zero-dependency Node HTTP server that re-reads and re-renders the pipeline on every request; it ships in the npm package and is **read-only**. `dashboard/` is a Next.js 15 app with kanban, analytics, Career KB views, and Storybook; it is **not published** (`package.json:files` excludes it) and only runs from a source clone, but when its standalone build exists the CLI prefers it, and it **writes** through four Server Actions.
+Every production mutation goes through exactly three doors, all lock-and-claim protected — `saveCareerSection`, `appendJournalEntry`, `mutatePipeline` (`file-store.ts:298,334,415`) — verified by call-graph in this pass; `savePipelineUnlocked` is fenced by a truth test. A cross-process **write claim** (`.write-claim`, `wx`-create, 30 s TTL, pid-liveness break, nonce-guarded release) arbitrates the MCP server against the dashboard.
 
-`bin/cli.ts` is the single entry point for both: no argument means the MCP server, `dashboard` means one of the two viewers.
+Two viewers: `src/dashboard-lite/` (zero-dep, read-only, ships to npm, Host-guarded before path parse) and `dashboard/` (Next.js 16, source-build only, guarded by `proxy.ts` with no matcher carve-outs, writing through four Server Actions). `bin/cli.ts` prefers the Next build only when it is both built **and staged** (`.next/static` copied by `scripts/stage-standalone.mjs`) — an unstaged build is deliberately treated as no build, because *plain beats broken*.
+
+Since `dc823a4`, the repo also gained `harvest_evidence` (git-measurement tool that spawns argv-only, distinguishes missing-git from missing-repo, and refuses on principle to write its findings anywhere), argument completions ranked on company/role, and the visual harness (`npm run visuals`, 24 shots including empty and aged stores).
 
 ## 3. Current architecture
 
 ```mermaid
 flowchart LR
-    C[MCP client<br/>Claude Desktop / Code] -->|stdio| S[src/index.ts<br/>McpServer]
-    S --> T[17 tools<br/>opportunity · resume · pipeline<br/>interview · career-kb · doctor]
-    T --> U[untrusted.ts<br/>nonce fence]
-    T --> FS[storage/file-store.ts<br/>lock · atomic write · .bak]
-    FS --> Y[(YAML on disk<br/>CAREER_DATA_PATH)]
-    D[doctor.check_setup] -->|GET /latest| NPM[registry.npmjs.org]
-    CLI[bin/cli.ts dashboard] --> L[dashboard-lite<br/>read-only · Host checked]
-    CLI --> N[Next dashboard<br/>read + WRITE · no Host check]
+    C[MCP client] -->|stdio| S[McpServer<br/>18 tools · 3 prompts<br/>9 resources + template]
+    S --> U[untrusted.ts<br/>nonce fence — tools only]
+    P[prompts/index.ts<br/>bare interpolation] -.-> C
+    S --> DOORS[three mutate doors<br/>lock + write claim]
+    DOORS --> Y[(YAML + .bak<br/>CAREER_DATA_PATH)]
+    LIVE[resources/live.ts<br/>subscribe · debounce] --> Y
+    B[Browser] --> G[loopback-guard<br/>one module, both doors]
+    G --> L[dashboard-lite<br/>read-only · ships]
+    G --> N[Next dashboard<br/>source-only]
     L --> Y
-    N --> Y
-    B[Browser] --> L
-    B --> N
+    N --> A[onboarding actions<br/>read OUTSIDE the door,<br/>write inside it]
+    A --> Y
     classDef gap fill:#3a2118,stroke:#c4744a,stroke-width:2px,color:#f0e2d0;
-    class N gap;
+    class A gap;
 ```
 
-The MCP server is the intended sole writer, and `file-store.ts:65` says so in as many words. The Next dashboard is a second writer in a second OS process, so that invariant is stated but not held. The browser owns presentation only. `registry.npmjs.org` is the one outbound destination in the package, and it is disclosed.
+The guard is now genuinely shared — one module, four use sites, applied before routing on both surfaces. The clay node is the v2 story: the Server Actions call `loadCareerData()` before entering the locked door, so the lock protects the write and not the read-modify-write. The prompts surface (dashed) reaches the model without passing the fence the tools pass.
 
 ## 4. Reality versus constraints
 
 | Constraint | Current approach | Verdict | Evidence class |
 | --- | --- | --- | --- |
-| Data never leaves the machine | One unauthenticated GET to the public npm registry, no headers identifying the user, skippable via `checkForUpdates:false`, disclosed in `PRIVACY.md` and asserted by `privacy-claims.test.ts`. | Match, and unusually well policed — a test fails the build if any surface reasserts the old absolute. | `PROVEN — repository` |
-| Loopback-only dashboard | `dashboard-lite` binds `127.0.0.1` literally and refuses any non-loopback `Host` (`server.ts:28,84`). The Next dashboard is spawned with `HOSTNAME: "localhost"` (`cli.ts:120`) and checks nothing. | **Mismatch.** Binding is not the defense; the `Host` check is, and it exists on one of two surfaces. | `PROVEN — repository` (absence proven by search across all 90 tracked dashboard files) |
-| Single writer per data dir | `withDataLock` serializes read-modify-write per resolved path, in-process, and documents that scope honestly. | **Mismatch.** The repo ships a second writer in a different process (`dashboard/app/onboarding/actions.ts`). | `PROVEN — repository` |
-| No durable state lost on a bad write | `.bak` copy before every write, atomic temp+rename, retention 5, fail-closed on corrupt read so an unreadable file is never overwritten. | Match. This is the strongest part of the codebase. | `PROVEN — repository`; 335/335 tests pass |
-| Untrusted third-party text cannot issue instructions | Per-call random nonce fence, stated contract before the payload, named source, 20 000-char clamp — applied at all 12 interpolation sites. | Match, with the correct caveat already written into the module: it removes the trivial forgery, it does not make injection impossible. | `PROVEN — repository` |
-| The shipped bundle contains no personal data | `npm-pack-leak-guard` and `mcpb-pack-leak-guard` tests run `--dry-run` and assert the allowlist. `pack:guard` runs in CI and in `prepublishOnly`. | Match. | `PROVEN — repository`; CI green |
-| Every user-facing surface is tested before publish | CI builds `tsc` and runs `test:mcp` + `pack:guard`. It never builds or tests `dashboard/`. `npm test` runs *only* `dashboard/`. | **Mismatch.** Two suites, each invisible to the other's runner. | `PROVEN — repository` (`.github/workflows/ci.yml`, `package.json:scripts`) |
+| Data never leaves the machine | One disclosed, skippable registry GET; `privacy-claims.test.ts` enforces the wording across four surfaces with four negative controls. PRIVACY.md verified claim-by-claim against code this pass. | Match. | `PROVEN — repository` |
+| Loopback-only dashboards | Shared guard, both surfaces, before routing; fail-closed on all 19 adversarial Host shapes probed, including HTTP/1.0-no-Host, absolute-form targets, duplicate Host, zone-ids, userinfo, decimal-IP. Standalone build booted and probed: the proxy **runs** (`Host: evil.com` → 403 incl. `/_next/static/*`). | Match — and now `EMPIRICAL`, not just read. | `EMPIRICAL` (raw-socket probes) |
+| One writer at a time per data dir | Write claim: `wx` create, TTL, immediate dead-pid break, nonce-guarded release. | **Mismatch at the margins.** The stale-claim *break* path admits two winners (§5 P1-2); TTL-before-liveness can break a live-but-stalled writer (§5 P2-2). The happy path holds. | `EMPIRICAL` (probes 2, 3) |
+| Every read-modify-write happens inside the lock | True for all of `src/` — three doors, no bypass found by call-graph. | **Mismatch.** `dashboard/app/onboarding/actions.ts` loads outside, saves inside: lost update reproduced 20/20. | `EMPIRICAL` (probe 1) |
+| Untrusted third-party text cannot impersonate instructions | `embedUntrusted` nonce fence at all tool interpolation sites, structurally tested. | **Mismatch.** `src/prompts/index.ts` interpolates `posting`, `notes`, `offerDetails`, `marketData` bare; the structural test scans `src/tools/*.ts` only. | `PROVEN — repository` |
+| The lifecycle diagram cannot drift from the code | `lifecycle-spec.test.ts`: four behavioural tests, real and good. | **Partial.** The two grep-shaped tests are exactly where drift happened (§5 P2-4, P2-5); the machine also lacks states the code has (read-only-store refusal, the break path). | `PROVEN — repository` |
+| The shipped artifact contains no personal data and no test code | `files` allowlist + negations verified by executed `npm pack --dry-run`: 0 of 188 compiled test artifacts leak; MCPB double-guard closes the 2.2.0 incident class at pack time. | Match. | `EMPIRICAL` |
+| What the copy promises, the code does | `docs-truth` covers README↔tools. | **Mismatch on the dashboard.** README promises kanban drag that does not exist anywhere; the kanban empty state instructs a tool (`manage_pipeline`) the server would reject. | `PROVEN — repository` |
 
 ## 5. Health and tech debt
 
-| Severity | Finding | Exact evidence | Consequence | Containment owner |
+| Severity | Finding | Exact evidence | Consequence | Owner |
 | --- | --- | --- | --- | --- |
-| **P0** | The preferred dashboard has no DNS-rebinding defense while rendering the entire Career KB. | No `Host` check, no `middleware.ts`, no `isAllowedHost` anywhere in the 90 tracked `dashboard/` files (proven by search). `bin/cli.ts:97` prefers it whenever `dashboard/.next/standalone/…/server.js` exists. `dashboard-lite/server.ts:14-28` argues the exact threat at length. | Any page the user visits can point a hostname it controls at `127.0.0.1` and read salary floor/ceiling, targets, history, and recruiter contacts as same-origin. Exploitability is `UNKNOWN` — not attempted — but the defense the codebase itself names as "the whole defense" is absent. | Gate 0 — host guard parity. |
-| **P0** | The same unguarded surface holds four **write** Server Actions. | `dashboard/app/onboarding/actions.ts:11,20,28,37` → `saveCareerSection`. It is the only `"use server"` file in the tree. | Rebinding makes the attacker's page same-origin, so Next's built-in Server-Action origin check (`Origin` vs `Host`) sees a match and does not intervene. A read exposure becomes a write. | Gate 0 — same guard, applied before the action layer. |
-| **P1** | `dashboard/` is built by no CI job and tested by no CI job. | `.github/workflows/ci.yml` runs `build:mcp`, `test:mcp`, `pack:guard` only, with a comment explaining the dashboard build is "intentionally skipped". Five test files under `dashboard/` are never executed on `main`. | The surface carrying both P0s is the one surface no automation looks at. A green CI badge covers the half of the repo that was already safe. | Gate 1 — CI covers both halves. |
-| **P1** | `npm test` and CI run disjoint suites. | `package.json:scripts.test` = `cd dashboard && npx vitest run`; CI runs `test:mcp`. A contributor typing `npm test` never runs the 335 MCP tests; CI never runs the 5 dashboard ones. | Both greens are honest about a suite and silent about the other. This is the same shape as "green exit-0 = UNVERIFIED". | Gate 1 — `test` runs both, or is renamed. |
-| **P1** | The MCP server's single-writer invariant is documented but not held. | `file-store.ts:64-66` — "the MCP server is the single writer for a given data dir. It is not a defense against two servers pointed at one directory." `dashboard/app/onboarding/actions.ts` is a second writer, in a second process, shipped in the same repo. The same class covers a server registered in both Claude Desktop and Claude Code. | Two concurrent read-modify-write cycles on `profile.yaml` interleave; the later rename wins outright and both callers report success. The `.bak` makes it recoverable, not detectable. | Gate 2 — cross-process write claim. |
-| **P2** | `HOSTNAME: "localhost"` is passed to the Next standalone server. | `bin/cli.ts:120`. `dashboard-lite/server.ts:124-135` documents that binding the *name* on Windows resolves `::1` first, so the server binds IPv6-only while clients try `127.0.0.1` and get ECONNREFUSED. | The precise bug that was found, diagnosed, and fixed on the lite path is still live on the preferred path. | Gate 0 — bind the literal. |
-| **P2** | `savePipeline` is exported unlocked; the "always go through `mutatePipeline`" rule is a comment. | `file-store.ts:373` is public and takes no lock; `file-store.ts:378-398` explains at length why calling it by hand is the bug. | Nothing in the type system stops the next call site from reintroducing the lost-update race the lock exists to prevent. | Gate 2 — make the unsafe path unreachable. |
-| **P2** | One raw JSON→`<script>` channel in the lite dashboard has no escaping and no guard. | `dashboard-lite/render.ts:299-300`: `const CHART=${chartData}`. Every other user-controlled value on the page goes through `esc()` (verified at all 8 interpolation sites). `chartData` is safe **only** because its `label` is an enum name and its `color` is from a fixed map. | A one-line future change — putting company names in the chart — turns the page that serves the whole job search into stored XSS on an unauthenticated local origin. No test pins the invariant. | Gate 3 — escape the channel or assert its inputs. |
-| **P3** | `openBrowser` spawns through a shell. | `bin/cli.ts:232-233`: `spawn(cmd, [url], { shell: true })`. | The URL is built from a validated integer port, so it is not injectable today. It is one refactor away from being a user-controlled string in a shell. | Gate 3 — drop `shell:true` on the non-Windows paths. |
+| **P1-1** | Dashboard onboarding actions do read-modify-write outside the lock; `LostUpdate` — spec-declared unreachable — is reachable and reproduced **20/20**. | `dashboard/app/onboarding/actions.ts:21-26,32-34,41-43` load → merge → `saveCareerSection` (which locks only the write, `file-store.ts:298-300`). `step-salary.tsx:34-39` fires concurrent saves from one human gesture (blur + checkbox). Probe 1, rerunnable. | Two overlapping saves, or one racing an MCP `save_career_section`: the later write wins whole, both report success. Exactly the class `appendJournalEntry`'s own comment warns about (`file-store.ts:336-338`). | Gate 0 |
+| **P1-2** | The stale-claim break admits two winners: the unconditional `rm` deletes the *other* breaker's freshly-won claim. | `write-claim.ts:230-235`. Syscall-replication probe 2: `{aWon: true, bWon: true}`, both enter the critical section. In-process tests cannot reach this interleaving (`serializeOn` queues same-process callers). | Post-crash stale claim + two processes walking into the break together (one user gesture can do it) → concurrent writers, the exact class the module exists to prevent. Fix shape: break by **renaming** the stale claim to a unique sidecar — rename picks exactly one breaker; `wx` then arbitrates. | Gate 1 |
+| **P1-3** | The injection fence does not cover prompts. | `src/prompts/index.ts:26,30,74,118,120` interpolate bare the same argument names in `untrusted-boundary.test.ts`'s own `UNTRUSTED_ARGS` list (`:146-155`); the scan covers `src/tools/*.ts` only (`:145`). A forged `**Instructions for Claude:**` in a posting sits at the same heading depth as `resume-tailor`'s own `**Requirements:**`. | The exact exposure `untrusted.ts:10-24` was written to eliminate, on the surface the enrichment agenda wants to grow first. Exploitability `UNKNOWN` — not attempted. | Gate 2 |
+| **P2-1** | Deleting a watched data subdir puts the server into a permanent ~157k events/sec busy loop, and live resources stay silently dead after the dir is recreated. | `live.ts:151-158`; probe 4b: ~78,500 events per 500 ms sustained, including post-recreate; a real write after recreation produced 0 events; fresh subscribes do not re-arm (`:143-163`). | Product copy invites exactly this ("open it, edit it, or delete it any time", `career-kb.ts:528`). Gated on an active subscription — which no Claude client holds today (§9) — hence P2. | Gate 6 |
+| **P2-2** | TTL is checked before pid-liveness, so a live writer stalled >30 s is broken mid-write. | `write-claim.ts:109-114`; the claim brackets the whole `fn()` incl. backup pruning and rename retries (~465 ms of sleeps worst case before any AV/sync stall). Release path verified correct under theft (probe 3 — the only execution that branch has ever had). | An AV scan or OneDrive hydration pause turns one writer into two. Consequence understated by the module's single-digit-ms argument. | Gate 1 |
+| **P2-3** | The journal is invisible: not in `FILE_TO_URI`, so `capture_insight` never dirties `career://full`; and no `career://journal` resource exists at all. | `live.ts:39-47` vs `file-store.ts:236`, `resources/career-kb.ts:139-147` (journal is part of `career://full`'s document). | The one KB section the product thesis says compounds over years is the one section with no URI and no notification — on the aggregate resource whose stated purpose is "any section changed." | Gate 3 |
+| **P2-4** | `Unavailable → Rendered: told plainly` is enforced by substring grep and drifted on two surfaces. | `lifecycle-spec.test.ts:126-133` satisfied by an unrelated import; `generate_rejection_response` calls `mutatePipeline` at `career-kb.ts:256` with no handler. The dashboard flattens every failure — including the claim's who-holds-it message — to "Failed to save. Please try again." (`step-salary.tsx:24-26` and siblings). | A refused write surfaces as a raw transport error (third occurrence of the class the executable spec was built to catch) or an anonymous apology. Next prod error-masking `UNKNOWN` — not executed. | Gate 5 |
+| **P2-5** | Read-path error handling is asymmetric across tools. | Bare `loadPipeline()` at `interview.ts:38,159,296`; every resource handler (`resources/career-kb.ts:19-227`); `dashboard/app/layout.tsx:27` — none carry the `isCorruptDataError`/`isWriteClaimUnavailable` handling all `pipeline.ts` sites have. | One corrupt `profile.yaml`: a clean repair message from `pipeline_view`, a raw transport error from `prepare_interview`. Same fault, two experiences. | Gate 5 |
+| **P2-6** | The writers-declare-themselves negative control is blind to the biggest writer. | `tool-annotations.test.ts:83` `KNOWN_WRITERS` omits `save_career_section`; no `ARGS` entry either (`:52-81`) — that suite never invokes it. | The tool that replaces whole KB sections is outside the annotation truth-net. | Gate 5 |
+| **P2-7** | User-facing copy promises what does not exist. | `README.md:194,206` "Drag to advance stages" — no drag code anywhere in `dashboard/` (proven by search); repeated by `bin/cli.ts:115` on every lite fallback. `kanban-board.tsx:65` empty state instructs `manage_pipeline` — a tool that does not exist. `docs-truth.test.ts` never scans dashboard copy. | The first screen a new Next user meets names a tool the server rejects; the README sells a gesture nobody implemented. | Gate 4 |
+| **P2-8** | CI builds the dashboard but not the staging the CLI depends on. | `ci.yml:74` runs bare `npx next build`, not `npm run build:dashboard` (which chains `stage-standalone.mjs`). `cli.ts:103-104` requires staging to select Next at all. | The `f86a346` class (every route 200, zero CSS) is free to regress with CI green — the exact defect the visual pass caught is unguarded. | Gate 4 |
+| **P2-9** | The analytics scatter chart is unreadable as shipped. | `excitement-vs-outcome.tsx:17` — Recharts `XAxis` without `type="number"` renders a *category* axis: `domain={[0,10]}` silently ignored, ticks are raw insertion-order values. Confirmed by screenshot. Y axis is raw `stageIndex` with no stage names; `data.length < 2` silently vanishes the chart. | The chart that promises the product's one novel correlation (excitement vs outcome) conveys nothing. | Gate 7 |
+| **P2-10** | The aged store lies about liveness. | Screenshot of a 74-day-stale store: "6 Active — in play right now", KPI tiles identical to a fresh demo; only the header timestamp differs while five "overdue by 70-78d" rows glow below. Copy in `dashboard-lite/render.ts`. | Violates the same no-false-implication rule that produced `kpi()`'s null-over-zero discipline. | Gate 7 |
+| P3 | Sixteen named papercuts. | (a) trailing-dot `localhost.` false-403 (`loopback-guard.ts:87-88` — fail-closed, availability only); (b) no staging freshness check — an interrupted `cpSync` leaves present-but-incomplete static served as staged (`stage-standalone.mjs:49-50`, `cli.ts:103-104`); (c) four comments name `career://application/{id}`, a URI space that does not exist (registered: `career://pipeline/{id}`); (d) `completions.ts:1-2` dead imports; (e) `completions.ts:38-42` false id-shape premise (real ids are 8-hex, `pipeline.ts:92`); (f) `render.ts:15-17` describes a Cowork/`sendPrompt` variant that does not exist in the repo; (g) `serialize.ts:24` chains map never pruned; (h) `pipeline.ts:150` stamps `dateUpdated` unconditionally, defeating the no-op skip; (i) sample-store refusal throws a plain `Error` and §11 has no state for it (`atomicWriteYaml:179-184`, `pipeline.ts:378`); (j) `untrusted.ts:66-70` claims the clamp guards disk growth but clamping is render-time only (`pipeline.ts:106` persists raw); (k) dead export `saveProfile` (`actions.ts:20`); (l) prompt offers format `"creative"`, tool implements `functional` (`prompts/index.ts:13` vs `resume.ts:24`); (m) `theme.ts:14-25` stock-Tailwind chart palette the lite renderer explicitly replaced, plus a hand-written second funnel order (`theme.ts:59-65`) and a re-implemented `getDataDir` (`dashboard/lib/data.ts:8-10`); (n) "7 stages active" vs "5 stages" taxonomy clash (`dashboard/app/analytics/page.tsx:40`); (o) unlabeled kanban card badges; (p) `lifecycle-spec.test.ts:107` soft-skips `Claiming→Unavailable` without a live foreign pid; visual harness has no Next empty/aged shots; `PRIVACY.md` absent from the npm tarball (`package.json:10-17` — hosted URL only). | Each is one refactor, one comment fix, or one test away from mattering; named so none is rediscovered. | Gate 7 / opportunistic |
 
-Nothing above is a design flaw. Every one is a place where a rule the repository already states was applied to one surface and not its neighbour.
+The pattern across every P1 and most P2s: **a discipline exists, is argued for in a comment, is enforced on the surface where it was born — and a neighbouring surface uses the same data without inheriting the rule.** Nothing here is a design flaw; the designs are unusually good. These are inheritance failures.
 
 ## 6. State and dependency inventory
 
-| State / dependency | Current owner | Durable? | Final owner | Migration seam |
+| State / dependency | Owner today | Durable? | Final owner | Migration seam |
 | --- | --- | --- | --- | --- |
-| Career KB sections (`profile`, `experience`, `skills`, `education`, `projects`, `testimonials`) | `saveCareerSection` via allowlist + lock | Yes — atomic write, `.bak`, fail-closed read | Unchanged | None. Add a cross-process claim only. |
-| Career journal (append-only signals) | `appendJournalEntry`, read inside the lock | Yes | Unchanged | None. |
-| Pipeline (`applications.yaml`) | `mutatePipeline` for every mutation | Yes, with a dirty check that skips no-op writes | Unchanged | Close the unlocked `savePipeline` export. |
-| Backups (`*.<ISO>.bak`, retention 5) | `atomicWriteYaml` → `pruneBackups` | Yes; only the tool's own name pattern is collected | Unchanged | Disclosed in `PRIVACY.md`; no change. |
-| Bundled sample (`data/example/`) | Read-only; write is refused; dates shifted at read | N/A | Unchanged | None. |
-| Data-dir path | `process.env.CAREER_DATA_PATH`, read at call time | N/A | Unchanged | The lock keys on the resolved path, which is correct. |
-| npm latest version | `registry.npmjs.org`, fail-soft, skippable | Provider-owned | Provider | None. |
-| Next dashboard build | `dashboard/.next/standalone`, absent from the package | Local build artifact | Unchanged | It gates which dashboard runs — make that decision explicit and tested. |
-| Write authority over the data dir | **Split** between the MCP process and the Next process | — | **One claimed writer at a time** | Gate 2. |
+| Career KB sections ×6 | `saveCareerSection` (lock + claim) — but the dashboard's read-merge sits outside | Yes — atomic write, `.bak` ×5, fail-closed read | A `mutateCareerSection(section, mutator)` door, used by MCP and dashboard alike | Gate 0. The mirror of `mutatePipeline`, already proven shape. |
+| Journal (append-only) | `appendJournalEntry`, read inside lock+claim — the model implementation | Yes | Unchanged — **plus** a `career://journal` URI and a `FILE_TO_URI` entry | Gate 3 |
+| Pipeline | `mutatePipeline` everywhere | Yes, dirty-check skip | Unchanged | `dateUpdated` stamp defeats the skip (P3-h) |
+| `.write-claim` | `acquireAndRun` — `wx`, TTL 30 s, pid-break, nonce release | Transient by design | Same, with a **rename-sidecar break** (single winner) and liveness-before-TTL | Gate 1 |
+| Live-resource watchers | `registerLiveResources`, lazy, teardown on last unsubscribe | N/A | Same, surviving dir deletion (detect self-referential rename → close → lazy re-arm) | Gate 6 |
+| Backups / temps | `atomicWriteYaml` → prune ×5; orphan `.tmp` surfaced by doctor | Yes | Unchanged | None |
+| npm latest version | registry GET, fail-soft, skippable, disclosed | Provider | Provider | None |
+| Next standalone + staging | `build:dashboard` chains staging; CLI treats unstaged as unbuilt | Local artifact | Same, **built the same way in CI** | Gate 4 |
+| Claim on a synced/network dir | Untested; pid-liveness meaningless cross-machine, sync can resurrect claims | — | Documented limitation in PRIVACY/README | `UNKNOWN` — labelled, not designed away (§16) |
 
 ## 7. Current critical sequence
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant B as Browser
-    participant N as Next dashboard (preferred)
-    participant L as dashboard-lite (fallback)
-    participant F as file-store
-    U->>B: open http://localhost:3141
-    alt standalone build exists
-        B->>N: GET / (any Host header)
-        Note over N: no Host check
-        N->>F: loadCareerData + loadPipeline
-        F-->>N: full KB incl. salary, contacts
-        N-->>B: rendered page
-        B->>N: Server Action saveProfile(...)
-        N->>F: saveCareerSection (2nd process, outside the MCP lock)
-    else no standalone build
-        B->>L: GET / with Host
-        L->>L: isAllowedHost(Host)?
-        alt not loopback
-            L-->>B: 403 before any path is parsed
-        else loopback
-            L->>F: loadPipeline (read only)
-            F-->>L: pipeline
-            L-->>B: rendered page
-        end
-    end
+    participant U as User (one gesture)
+    participant D as Dashboard action
+    participant M as MCP tool
+    participant F as file-store (lock+claim)
+    participant Y as profile.yaml
+    U->>D: blur field / tick checkbox
+    D->>Y: loadCareerData()  — outside every lock
+    U->>M: "save my updated profile"
+    M->>F: save_career_section
+    F->>Y: locked write (new data)
+    D->>F: saveCareerSection(merged-from-stale)
+    F->>Y: locked write — reverts M wholesale
+    Y-->>U: both surfaces report success
+    Note over D,Y: Probe 1: 20/20 runs lose a field.<br/>The lock held both times. The read did not.
 ```
-
-The two branches make opposite promises from one command. The branch the CLI prefers is the branch with no guard, and it is the only branch that writes.
 
 ## 8. Current lifecycle/state model
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Requested: browser issues GET
-    Requested --> HostChecked: dashboard-lite
-    Requested --> Rendered: Next dashboard (no check)
-    HostChecked --> Refused: Host not loopback
-    HostChecked --> Rendered: Host loopback
-    Rendered --> ReadOnly: lite — pipeline only
-    Rendered --> Writable: Next — full KB + Server Actions
-    Writable --> Persisted: saveCareerSection, no cross-process lock
-    Persisted --> LostUpdate: MCP wrote concurrently
+    [*] --> Requested
+    Requested --> Guarded: every HTTP surface
+    Guarded --> Refused: Host not loopback
+    Guarded --> Reading: loopback
+    Reading --> Rendered
+    Rendered --> Claiming: MCP write path
+    Rendered --> StaleRead: dashboard action loads outside
+    Claiming --> Writing: claim acquired
+    Claiming --> Breaking: claim stale
+    Breaking --> Writing: rm + wx — TWO can win
+    Writing --> Persisted
+    StaleRead --> Persisted: merged-from-stale write
+    Persisted --> LostUpdate: the other writer's data gone
     Persisted --> [*]
-    ReadOnly --> [*]
     Refused --> [*]
+    classDef bad fill:#3a2118,stroke:#c4744a,stroke-width:2px,color:#f0e2d0;
+    class LostUpdate bad;
 ```
 
-`LostUpdate` is reachable and reports success from both writers. `Rendered` is reachable without ever passing `HostChecked`.
+`LostUpdate` is reachable by two roads the spec test cannot see: the dashboard's `StaleRead` (probe 1) and `Breaking`'s double win (probe 2). A third defect state — the dead watcher after directory deletion — lives outside this machine entirely, which is itself the finding: the machine models writes but not the observation layer that reports them.
 
 ## 9. Frontier architecture
 
+The frontier pruned itself while nobody was looking: **sampling and roots are deprecated** in the 2026-07-28 MCP spec revision (removal ≥ 2027-07-28) — `harvest_evidence`'s dirs-via-params design already matches the post-deprecation world. Three lanes are alive, verified against primary sources this pass:
+
+- **MCP Apps** (launched 2026-01-26, live on claude.ai and Claude Desktop): a tool's `_meta.ui.resourceUri` points at a `ui://` resource of self-contained HTML. `renderLiteDashboard()` is *already* a self-contained single-file page whose clipboard-copy affordance exists only because there was no chat bridge — porting it puts the kanban board inside Claude with real prompt dispatch. **`UNKNOWN`, honestly:** whether a local stdio/`.mcpb` server gets app rendering in Desktop — the launch material showcases remote partners and never says. That is a half-day spike, and it gates this lane.
+- **Elicitation** (Claude Code only, since v2.1.76; Desktop and claude.ai have open FRs): form-mode guards on the two data-loss moments — `pipeline_update` with ambiguous fields, `save_career_section` whole-section replace — capability-checked, degrading gracefully.
+- **Prompts, annotations, structured output** (supported everywhere): the server ships 3 prompts against 18 tools; daily-ritual prompts (daily-review, post-interview-debrief, weekly-retro) are the cheapest fully-supported enrichment on the board — **and they are blocked by P1-3 until the fence covers prompts.** `outputSchema` only for the deterministic tools, flat draft-2020-12 (both major clients have schema-compile bugs otherwise).
+
+And one standing question is now answered: **no Claude client acts on `notifications/resources/updated` today** (open FRs in Claude Code; Desktop barely reads resources). The server half stays — it is lazy, narrow, and honest ("if you subscribe, you are told") — with one docs line naming the client reality.
+
 ```mermaid
 flowchart LR
-    REQ[Any HTTP request] --> GUARD[Shared loopback guard<br/>one module, both dashboards]
-    GUARD -->|refused| R403[403 before routing]
-    GUARD -->|allowed| VIEW[Dashboard view layer]
-    VIEW --> STORE[file-store<br/>the only door to disk]
-    WRITER[Write claim<br/>lockfile in the data dir] --> STORE
-    MCP[MCP server] --> WRITER
-    NEXT[Next dashboard] --> WRITER
-    STORE --> Y[(YAML + .bak)]
-    CI[CI: one job, both suites] -.verifies.-> GUARD
-    CI -.verifies.-> VIEW
-    CI -.verifies.-> STORE
+    C[Claude client] -->|stdio| S[McpServer]
+    S --> FENCE[untrusted fence<br/>tools AND prompts]
+    S --> PR[prompts ×6<br/>+ daily rituals]
+    S --> EL[elicitation guards<br/>capability-checked]
+    S --> DOORS[mutate doors ×3<br/>+ mutateCareerSection]
+    DOORS --> Y[(YAML store<br/>journal has a URI)]
+    LIVE[live resources<br/>survives dir death] --> Y
+    S --> APP[MCP App: pipeline board<br/>ui:// port of renderLiteDashboard]
+    APP -->|prompt dispatch| C
+    B[Browser] --> G[loopback guard] --> L[dashboard-lite<br/>+ detail drawer]
+    L --> Y
+    NX[Next dashboard<br/>frozen as spec quarry] -.mined for designs.-> L
     classDef new fill:#243021,stroke:#8aa86b,stroke-width:2px,color:#f0e2d0;
-    class GUARD,WRITER,CI new;
+    class APP new;
 ```
 
-One guard module, imported by both dashboards, so a future third viewer inherits the defense instead of re-arguing it. One write claim in the data directory, so "single writer" becomes a fact a second process can observe rather than a sentence in a comment. One CI job that sees both halves of the repository.
+The Next dashboard's disposition — **freeze as a spec quarry** (its detail view, onboarding wizard, and analytics become design documents; all GUI investment routes to lite + the MCP App) — is a `PRODUCT DECISION` this audit surfaces but does not make. Two lanes argued for it independently; the counter-argument is that it is the only drag-capable, richly-interactive surface in the repo. **Ben's ruling, §14 Gate 7.**
 
 ## 10. Ideal critical sequence
 
 ```mermaid
 sequenceDiagram
-    participant B as Browser
-    participant G as Loopback guard
-    participant V as Dashboard (either)
-    participant W as Write claim
-    participant F as file-store
-    B->>G: GET / with Host
-    G->>G: isAllowedHost(Host)
-    alt not loopback
-        G-->>B: 403, no path parsed, no data read
-    else loopback
-        G->>V: proceed
-        V->>F: read
-        F-->>V: data
-        V-->>B: page
-        B->>V: write action
-        V->>W: acquire claim for this data dir
-        alt claim held elsewhere
-            W-->>V: unavailable — MCP server owns this dir
-            V-->>B: explicit refusal, no partial write
-        else claim acquired
-            V->>F: mutate under lock
-            F-->>V: durable receipt
-            V-->>B: confirmed
-        end
+    participant U as User in Claude
+    participant A as MCP App board (ui://)
+    participant S as MCP server
+    participant D as mutateCareerSection / mutatePipeline
+    participant Y as YAML store
+    U->>A: drag card to Interviewing
+    A->>S: dispatch prompt → pipeline_update
+    S->>S: fence untrusted args (tools AND prompts)
+    S->>D: mutate(id, fn) — read INSIDE lock+claim
+    alt claim held elsewhere
+        D-->>S: unavailable, holder named
+        S-->>U: told plainly, nothing written
+    else claim acquired
+        D->>Y: read → mutate → atomic write + .bak
+        Y-->>S: durable receipt
+        S->>A: resource updated → board re-renders
+        S-->>U: confirmed, truthfully
     end
 ```
+
+One door shape for every writer, the read inside it; every refusal named to the person; the board re-renders from the store, never from optimism.
 
 ## 11. Ideal lifecycle/state model
 
@@ -209,136 +215,119 @@ stateDiagram-v2
     [*] --> Requested
     Requested --> Guarded: every surface, no exception
     Guarded --> Refused: Host not loopback
-    Guarded --> Reading: Host loopback
+    Guarded --> Reading: loopback
     Reading --> Rendered
-    Rendered --> Claiming: write requested
+    Rendered --> Claiming: any writer, any surface
     Claiming --> Writing: claim acquired
-    Claiming --> Unavailable: another process holds the dir
+    Claiming --> Unavailable: live holder elsewhere
+    Claiming --> Breaking: claim stale
+    Breaking --> Writing: rename-sidecar — ONE winner
+    Breaking --> Unavailable: lost the break race
     Writing --> Persisted: atomic rename + .bak
-    Unavailable --> Rendered: told plainly, nothing written
+    Writing --> RefusedReadOnly: sample store, told plainly
+    Unavailable --> Rendered: holder named, nothing written
+    RefusedReadOnly --> Rendered
     Persisted --> [*]
     Refused --> [*]
+    classDef new fill:#243021,stroke:#8aa86b,stroke-width:2px,color:#f0e2d0;
+    class Breaking new;
 ```
 
-`LostUpdate` is not a reachable state. `Unavailable` is a first-class outcome the user is told about, not a silent overwrite.
+Versus v1's machine: `Breaking` is now a first-class state with a single-winner transition (it existed in code but not in the diagram — and the gap between them is where P1-2 lived); `RefusedReadOnly` gives the sample store's refusal a state; `LostUpdate` is unreachable **for all writers**, not just `mutatePipeline`; and `Unavailable → Rendered: told plainly` must hold on every surface including the dashboard's error copy. Port the deltas into `lifecycle-spec.test.ts` as behavioural tests, not greps — the greps are where the drift got in.
 
 ## 12. Adversarial reconciliation
 
-Three skeptic passes were run against the raw source: platform/runtime, storage/concurrency, and product/privacy. A contradiction-only re-read reconciled them as follows.
+Five lanes ran: source inventory, state/concurrency (executed probes), platform/runtime (wire probes; run as a Claude pass after the codex seat was sandbox-blocked — disclosed, not silent), product (den gemmi seat — argued from the brief without reading source; adjudicated below), and frontier research (primary-source verified). Contradiction-only re-read follows.
 
 | Delta | Verdict | Evidence | Reconciled change | Residual risk |
 | --- | --- | --- | --- | --- |
-| D1 — "the Next dashboard is unpublished, so its missing `Host` check is not a real defect" | **MODIFY** | `package.json:files` does exclude it, so npm users never get it. But `bin/cli.ts:97` prefers it in every source clone, which is the author's own daily path and every contributor's. | Keep P0 severity, and state the blast radius precisely: source installs, not npm installs. Do not soften the finding on distribution grounds — the data at risk is the same data. | Whether any third party runs from source is `UNKNOWN`. |
-| D2 — "Next.js already blocks cross-origin Server Actions, so the write path is safe" | **REJECT** | Next's check compares `Origin` against `Host`. Under DNS rebinding both are the attacker's hostname, so they match. | Reject the framework as the mitigation. The guard must be a loopback-name allowlist, which is what `dashboard-lite` already implements. | Exact Next 15 Server-Action origin semantics not re-derived from source; `PROVEN — platform` at the level of documented behavior only. |
-| D3 — "the in-process lock is insufficient, so it should be replaced with a file lock" | **MODIFY** | `withDataLock` is correct and load-bearing for the single-process case, and its scope comment is honest. The gap is a *second* process, not a broken lock. | Keep the lock exactly as it is; add a claim on top of it. Do not rewrite working concurrency control to fix an adjacent problem. | A cross-process claim has its own failure mode (a stale claim after a crash) — needs a TTL and an override, which is design work, not a patch. |
-| D4 — "the `CHART` interpolation is stored XSS" | **REJECT as stated, KEEP as a seam** | `chartData`'s `label` derives from the `ACTIVE` status enum and `color` from `STAGE_COLOR`; no user string reaches it. Verified at `render.ts:296-299`. | Do not report an exploitable XSS — there isn't one. Report the unguarded channel and require a test that pins its inputs. | If a future `esc()` audit relies on reading the file rather than a test, this regresses silently. |
-| D5 — "the fail-closed storage layer is over-engineered for a personal tool" | **REJECT** | Every guard in `file-store.ts` cites the concrete incident it came from — 8 concurrent adds leaving 1 application, 224 `.bak` files and 23.7 MB, Windows EPERM on rename, a corrupt profile being overwritten with `{}`. | Retain in full. This is the model the dashboard should be held to, not the other way round. | None. |
-| D6 — "CI is fine; the dashboard is a dev-only surface" | **REJECT** | The dev-only surface is the one holding both P0s and the only write path outside the MCP server. "Dev-only" describes distribution, not risk. | CI must build and test `dashboard/`. `npm test` must stop meaning one half of the repo. | Next build time in CI is `ESTIMATED` at 1–3 min; if that is unacceptable, gate it on a path filter rather than dropping it. |
+| D1 — Platform lane's own hypothesized P0: "the standalone build's empty `middleware-manifest.json` means the proxy guard never runs — every source install is unguarded" | **REJECT — our own claim, killed by execution** | Booted `dashboard/.next/standalone/…/server.js`; `Host: evil.com` → 403 with the guard's refusal body, including on `/_next/static/*`. Next 16 wires the proxy via the compiled chunk, not `sortedMiddleware`. | No finding. The manifest is a red herring; recorded here so the next reader does not re-derive the scare. | None — this is the pass's negative control on itself. |
+| D2 — Gemmi: "the privacy promise is demonstrably violated by the npm version-check GET" | **REJECT** | The GET is disclosed (`PRIVACY.md:47-76`), skippable (`checkForUpdates:false`), fail-soft, and its wording is enforced by `privacy-claims.test.ts` with negative controls. Gemmi did not read the disclosure. | Keep the constraint row at Match. "Demonstrably violated" without reading the disclosure is the overclaim this table exists to kill. | An IP-level metadata argument survives (any HTTP call leaks an IP); the docs already frame it as an outbound call the user controls. |
+| D3 — Gemmi: "stop the visual harness; 450+ tests for 16 downloads/week is misallocation" | **REJECT (harness half)** | The visual pass found four real defects that green suites missed, including the unstyled-CSS ship and this pass's P2-9/P2-10. Cost: one script. | Keep the harness; wire its *staging* dependency into CI (Gate 4) instead of retiring it. | The broader effort-allocation question is real but belongs to the product ruling (D4). |
+| D4 — Gemmi + frontier-scout independently: "the Next dashboard is a self-licking cone; freeze it" | **MODIFY → `PRODUCT DECISION`** | It ships to nobody (`files` allowlist), duplicates lite's funnel in a second palette and column order (P3-m), and holds two of three P1-class writers. But it is also the repo's only rich-interaction surface and its designs are genuinely good (career KB page verified handsome by screenshot). | Surface freeze-as-spec-quarry as Gate 7's ruling with the evidence on both sides. The audit does not make product calls. | If frozen, P1-1 still must be fixed (the code remains runnable from source) — freezing is not a remediation. |
+| D5 — Frontier-scout: "the sendPrompt pattern already exists in-repo (per `render.ts`'s own comment)" | **MODIFY — cite corrected** | `render.ts:15-17` describes a Cowork variant that does not exist anywhere in the repo (surveyor, proven by search). | The MCP App lane stays viable but loses its claimed head start; the comment joins P3-f. A comment describing code is not code. | None. |
+| D6 — Gemmi: "completions and harvest_evidence are shelfware like the subscriptions" | **MODIFY** | `harvest_evidence` is a tool — Claude calls tools; nothing about it needs client UI. Completions live on the resource template, where the SDK actually consults them (verified on the wire this pass). Subscriptions: gemmi is right, and the frontier lane proved it with FR citations — no client acts today. | Keep all three; add the one-line client-reality note to docs for subscriptions. Shelfware verdict applies to exactly one of the three, and that one costs nothing while unsubscribed. | Client support can change without notice in either direction. |
+| D7 — Concurrency lane: "TTL-before-liveness is a defect" vs the module: "writes are single-digit ms, TTL is the safety net" | **MODIFY** | Both are right: the design is intentional and the comment argues it, but the claim brackets the whole `fn()` (up to ~465 ms of retry sleeps before any external stall), not just the write. | Reorder to liveness-before-TTL inside the break decision; keep TTL as the cross-machine/dead-pid backstop. P2, not P1: requires a >30 s stall to bite. | A truly hung-but-alive holder now wedges until killed — the correct trade for a data-owning tool. |
+| D8 — Lead's screenshot claim: "the Status Breakdown doughnut renders broken" | **MODIFY — evidence insufficient** | The arc looked like a gauge with a gap, but Recharts animates arcs and the harness screenshots at fixed delay; the component's code builds a full ring. | Recorded as `UNKNOWN` with a one-line harness improvement (disable animation for capture), not as a finding. A screenshot mid-animation is not a defect. | If a user's first paint also catches the animation, the impression is real anyway. |
 
 ## 13. Canonical migration order
 
-1. **Extract the loopback guard** from `dashboard-lite/server.ts` into one shared module and apply it to the Next dashboard before routing — including before Server Actions. Bind the literal `127.0.0.1`, not the name.
-2. **Put `dashboard/` into CI**: build it, run its suite, and make `npm test` run both suites or rename it to something that does not claim to be the test command.
-3. **Make the write claim real**: one claim per data dir, acquired by whichever process is writing, with an explicit `unavailable` outcome rather than a silent second writer.
-4. **Close the unsafe exports and channels**: `savePipeline` becomes unreachable outside `mutatePipeline`; the `CHART` channel is escaped or its inputs asserted by test.
-5. **Drop `shell:true`** from `openBrowser` where the platform does not require it.
-6. Only then consider the dashboards' feature parity as a product question.
+Binding. Frontier work does not start until steps 1–3 are merged.
+
+1. **`mutateCareerSection(section, mutator)`** — the `mutatePipeline` mirror; all three onboarding actions route through it; probe 1 joins the suite as the negative control (currently red, goes green).
+2. **Single-winner break** — rename-the-stale-claim-to-sidecar, then `wx`; liveness checked before TTL; probe 2 joins the suite.
+3. **Fence the prompts** — `embedUntrusted` at all five bare sites; `untrusted-boundary.test.ts` scans `src/prompts/` with the same `UNTRUSTED_ARGS`.
+4. **Give the journal its URI** — `FILE_TO_URI` entry, `career://journal` resource, `capture_insight` dirties `career://full`; a behavioural test, not a grep.
+5. **CI stages what the CLI needs** — `build:dashboard` (with staging) in the dashboard job, plus a staging-completeness assertion.
+6. **Watcher survives dir death** — detect the self-referential rename, close, lazy re-arm; probe 4b joins the suite.
+7. **Error-path parity** — `generate_rejection_response` handler; the shared read-wrapper for interview/resources/layout; dashboard error copy carries the claim's who-holds-it sentence; sample-store refusal gets its typed error and its state.
+8. **Copy tells the truth** — drag claim out of README and `cli.ts:115` (or drag gets built — Ben's call under Gate 7); `manage_pipeline` → real tool names; format list unified; `docs-truth` extends to dashboard copy.
+9. **The papercut sweep** — P3 list (a)–(p), one commit each or one batch, none load-bearing.
+10. **Then the frontier, in this order:** daily-ritual prompts (fence now covers them) → elicitation guards → the MCP Apps spike (the `UNKNOWN`) → if the spike lands, the `ui://` pipeline board; analytics fixes (P2-9/P2-10) ride whichever GUI ruling Gate 7 produces.
 
 ## 14. The finish line
 
 | Gate | What is finished | Owner | Required evidence | Negative control | Abort/rollback |
 | --- | --- | --- | --- | --- | --- |
-| **Gate 0 — guard parity** | No dashboard renders a byte, or runs a Server Action, before its `Host` is proven loopback. | Maintainer. | One shared guard module; a test that starts each dashboard and asserts 403 for `Host: evil.example`, `localhost.evil.example`, `[::1]evil`, and a missing header; the literal `127.0.0.1` bound on both paths. | Point a hostname at 127.0.0.1 and request the Next dashboard: it must 403 *before* reading the KB, not after. | Ship `--lite` as the default until the guard lands. |
-| **Gate 1 — one CI, both halves** | Every tracked source file is built and tested by the same green. | Maintainer. | CI builds `dashboard` and runs its suite; `npm test` runs both suites; a deliberately broken dashboard test fails `main`. | Break one dashboard test and push: CI must go red. Today it stays green. | Path-filter the dashboard job if build time is the objection — never delete it. |
-| **Gate 2 — one claimed writer** | Two processes cannot both believe they own the data dir. | Maintainer. | A claim file in the data dir with a TTL; an integration test running an MCP write and a dashboard write concurrently, asserting one succeeds and one reports `unavailable`. | Run both writers against one dir with the claim disabled and show the lost update; enable it and show the refusal. | Make the Next dashboard read-only — the lite one already is. |
-| **Gate 3 — no unguarded channels** | Every path from disk to a browser is escaped, and every unsafe export is unreachable. | Maintainer. | `savePipeline` no longer exported (or renamed `unsafe*` and asserted unused); a test asserting `chartData` contains no user-controlled string. | Put a company name into `chartData` in a test fixture and assert the guard fires. | None needed; these are local changes. |
-| **Gate 4 — published truth** | The claims on npm, in `manifest.json`, and in the README match what the code does, for the dashboard as well as the server. | Ben. | `privacy-claims.test.ts` extended to cover the dashboard's own copy; a stated answer to "which dashboard am I running and what can it do". | Reassert an outdated absolute in any surface: the suite must fail. | Revert the copy, not the test. |
+| **Gate 0 — one door per writer** | No surface reads career data outside the lock it writes under. | Maintainer | `mutateCareerSection` exists; actions use it; probe 1 in-suite and green. | Run probe 1 against the pre-fix actions: it must lose a field (it does, 20/20). Post-fix: 0/20. | Make onboarding actions read-only until fixed. |
+| **Gate 1 — one winner per break** | Two processes cannot both survive a stale-claim break. | Maintainer | Rename-sidecar break; liveness-before-TTL; probe 2 in-suite. | Probe 2 against the old algorithm: `{aWon:true,bWon:true}`. New: exactly one. | Lengthen TTL + document, if the rename path hits a Windows edge. |
+| **Gate 2 — one fence for all model-bound text** | No untrusted argument reaches the model without the nonce fence, from tools *or* prompts. | Maintainer | All five prompt sites fenced; boundary test scans `src/prompts/`. | Add a bare `${posting}` to a prompt: the suite must go red. Today it stays green. | Ship prompts disabled before shipping them unfenced. |
+| **Gate 3 — the journal is a section** | Journal has a URI; `career://full` subscribers hear journal writes. | Maintainer | Behavioural test: subscribe to `career://full`, `capture_insight`, assert notification. | Remove the `FILE_TO_URI` entry: the test must go red. | None needed. |
+| **Gate 4 — CI builds what users run** | The staged standalone — the artifact `cli.ts` selects — is produced and asserted in CI; dashboard copy is truth-tested. | Maintainer | `build:dashboard` in `ci.yml`; staging-completeness check; docs-truth over `dashboard/`. | Delete the staging step from the build script: CI must go red. Today it stays green. | Path-filter if build time objects; never delete. |
+| **Gate 5 — every refusal is a sentence** | Corrupt data and held claims produce the same named experience on every surface. | Maintainer | Shared read-wrapper; handler at `career-kb.ts:256`; dashboard shows the holder's name; spec greps replaced by behavioural tests. | Corrupt `profile.yaml`, call `prepare_interview`: must be a repair sentence, not a stack. | None needed. |
+| **Gate 6 — observation survives the user** | Deleting and recreating a data subdir leaves live resources alive. | Maintainer | Re-arm logic; probe 4b in-suite. | Probe 4b on current code: storm + permanent silence. Post-fix: re-armed, one notification on next write. | Document "restart after deleting dirs" if the fix fights Windows. |
+| **Gate 7 — the product rulings** | The decisions only Ben can make, made. | **Ben** | (1) Next dashboard: freeze-as-quarry or invest — with D4's both-sides evidence. (2) The MCP Apps spike: run it (half a day) before any board work. (3) Analytics: fix the two charts in place or as part of the App. (4) Staleness honesty copy for aged stores. | The spike is its own negative control: if a local stdio server cannot render an App, the lane dies before it consumes a sprint. | Rulings can be deferred; the freeze is reversible; nothing below Gate 7 blocks on it. |
 
 ## 15. Non-negotiable definition of done
 
-**Engineering:** a surface that can read the Career KB must prove its caller is loopback before it reads. A surface that can write it must hold a claim no other process holds. Every invariant that today exists as a comment — single writer, always-`mutatePipeline`, `chartData`-is-enum-derived — is either enforced by a type or asserted by a test. Every guard has a runnable negative control.
+**Engineering:** every writer, on every surface, does its read inside the same lock and claim its write holds; every piece of third-party text passes one fence before it reaches the model, whether a tool or a prompt carried it; every refusal — corrupt file, held claim, read-only store — reaches the person as a sentence naming what happened and what to do; and every one of those guarantees has a probe in the suite that fails when the guarantee is removed. The five probes this pass wrote are the acceptance tests; they are already rerunnable.
 
-**Product:** the tool's promise is that your career data is yours, on your disk, inspectable. That promise is kept by the storage layer today and is not yet kept by the door. The shortest honest finish-line sentence is: **every surface that can read the salary floor refuses a stranger first, and every surface that can write it knows whether it is allowed to.**
+**Product:** the promise is that your career data is yours, on your disk, compounding honestly for years. That promise now extends to the journal being as visible as the pipeline, to numbers that refuse to imply what they do not know (a 74-day-old store does not say "in play right now"), and to copy that never names a gesture or a tool that does not exist.
+
+**One sentence:** *every surface that touches the data inherits the rules of the layer that keeps it.*
 
 ## 16. Residual risks
 
-| Risk | Why it cannot be designed away | Release posture |
+| Risk | Why it cannot be designed away | Posture |
 | --- | --- | --- |
-| Prompt injection through a job posting | The channel is natural language; nothing that can be escaped cannot also be described. | `untrusted.ts` already makes the boundary unambiguous and says plainly that it is not a proof. Keep the nonce, keep the honesty. |
-| Plaintext PII at rest, including in `.bak` | The product's whole pitch is plain files the user can read and edit. Encryption would break it. | Disclosed in `PRIVACY.md` including the `.bak` copies; deletion means deleting the directory. `PRODUCT DECISION`, correctly made. |
-| A second MCP client registering the same server | Claude Desktop and Claude Code can both hold a config; nothing in MCP prevents it. | Gate 2's claim covers this exactly, and is the reason to build it rather than assume one process. |
-| The two dashboards drifting in features and in truth | They are separate implementations by construction — one has no build step. | Keep the *guard* shared even while the views differ; that is the part that must never diverge. |
+| Prompt injection through postings/emails | The channel is natural language. | The fence makes forgery non-trivial and says plainly it is not a proof; Gate 2 extends it to prompts; keep the honesty. |
+| Plaintext PII at rest incl. `.bak` | The product's pitch is inspectable plain files. | Disclosed precisely; deletion = delete the directory. `PRODUCT DECISION`, correctly made. |
+| A data dir on OneDrive/network sync | pid-liveness is meaningless across machines; sync resurrects deleted claims; conflict copies, not merges. | `UNKNOWN` — not executed. Document as a stated limitation; do not pretend the claim covers it. |
+| Client support drift (Apps, elicitation, subscriptions) | Anthropic ships clients on its own clock; FRs open and close. | Every frontier feature degrades to absence, never to error; the §9 matrix carries dates and citations so staleness is checkable. |
+| The two-dashboard drift | Two implementations by construction. | The guard is shared (held); the arithmetic is shared (held); palette/columns are not (P3-m). Gate 7 decides whether the second implementation continues to exist. |
+| A hung-but-alive claim holder after D7's reorder | Liveness-first means a zombie wedges until killed. | Correct trade for data ownership; `check_setup` already surfaces the claim and names the pid. |
 
 ## 17. Verification record
 
 | Check | Result |
 | --- | --- |
-| Git baseline / worktree | `dc823a4` on `main`, clean worktree. No files were modified by this audit other than this document. |
-| MCP build | `npm run build:mcp` (tsc): clean, exit 0. |
-| MCP tests | `npm run test:mcp`: **335 passed, 1 skipped, 38 files**, 6.6 s. |
-| Dashboard build | **Not run at audit time** — and, discovered during remediation, **it did not build at all on `main`**. See §18. |
-| Dashboard tests | **Not run at audit time.** Seven files, 37 tests; no automation executed them. Now in CI. |
-| `Host`-check search | `isAllowedHost` / `middleware` / `headers.get("host")`: **0 hits** across all 90 tracked `dashboard/` files. `PROVEN — repository` by absence. |
-| Escaping audit | `render.ts`: all 8 user-controlled interpolations pass through `esc()`; the single exception is the `CHART` script-context channel, whose inputs are enum-derived. |
-| Untrusted-fence audit | 12 interpolation sites across 5 tool modules, all via `embedUntrusted`. No raw interpolation of third-party text found. |
-| Network egress audit | Exactly one outbound destination in `src/` and `bin/`: `registry.npmjs.org`. Disclosed and test-asserted. |
-| Exploitation | **None attempted.** No rebinding, no XSS, no concurrent-write race was executed against a live process. Severities are code-reading plus proven absence. |
-| Mermaid parse | All 6 diagrams in this document rendered by `@mermaid-js/mermaid-cli` 11.16.0 without error — see the HTML report. |
+| Git baseline | `c23793b` on `main`, clean, == `origin/main`. No repo files modified by this audit except this document and the report. |
+| Full test suite (`npm test`) | **414 passed, 1 skipped (46 files) + 37 passed (7 files)**, exit 0. Run, not read. |
+| `pack:guard` | 7/7. |
+| Build + staging | `npm run build` green; staging message confirms `.next/static` copied; standalone self-serving. |
+| Visual harness | 24 shots + contact sheet regenerated this pass; every image opened and looked at. |
+| Concurrency probes 1–4b | Executed; results as cited in §5; rerunnable via `npx tsx` (session scratchpad). |
+| Host-header probes | 19 adversarial shapes vs live server + guard logic: all refused. Raw `http.request` with `setHost:false` (the undici forbidden-header trap from v1 §18 was avoided). |
+| Standalone proxy probe | Booted the staged standalone; `Host: evil.com` → 403 on pages and `/_next/static/*`. |
+| `npm pack --dry-run --json` | 131 files; 0 of 188 compiled test artifacts leak; 60 `.map` files ship (intentional). |
+| MCP handshake | `initialize` over stdio against `build/src/index.js`: `completions`, `resources.subscribe:true` negotiated; capability registration precedes transport connect. |
+| Fresh `pack:mcpb` | **Not run** (would rebuild); guard design verified by reading; "a fresh pack passes" is `UNKNOWN`. |
+| Next prod error-masking of the claim message | **Not run**; `UNKNOWN` (P2-4 residual). |
+| MCP Apps on local stdio | **Not run** — the Gate 7 spike. |
+| Exploitation | None attempted against any real store or user process. |
+| Mermaid | All 6 diagrams in this document render through the house pipeline — see the HTML report. |
 
-## 18. Remediation record — 2026-08-22, branch `gauntlet/close-the-door`
+## 18. History — the first gauntlet and its remediation
 
-All nine findings closed on one branch, with the negative controls §14 asked for
-actually run against running servers rather than asserted in unit tests.
-
-| Finding | Fix | Proof |
-| --- | --- | --- |
-| P0 — no rebinding defense on the preferred dashboard | Guard extracted to `src/loopback-guard.ts`; `dashboard/proxy.ts` applies it before routing (Next 16 renamed `middleware` → `proxy`). Matcher is `/:path*` with no carve-outs. | **Live probe against the standalone build:** `evil.example` → 403/207 bytes on `/`, `/career`, and `/_next/static/chunks/main.js`; `localhost.evil.example` → 403; loopback → 200 with data. |
-| P0 — write path on the same unguarded surface | Same proxy; it runs before Server Actions. | **Live Server-Action POST** to `/onboarding` with `Host: evil.example` → **403**, refused before Next routed it. Loopback POST reached Next (404 on the deliberately bogus action id). |
-| P1 — dashboard not built or tested by CI | `ci.yml` gains a `dashboard` job: installs both lockfiles, runs the dashboard suite, and runs `next build`. | CI file rewritten; both suites green locally. |
-| P1 — `npm test` and CI ran disjoint suites | `npm test` = `test:mcp && test:dashboard`. | `npm test` runs 362 + 37. |
-| P1 — single-writer invariant not held | New `src/storage/write-claim.ts`: an advisory claim per data dir, atomic `wx` create, TTL + dead-pid breaking, taken by every mutation in `file-store.ts`. Both writers labelled so a refusal names what to close. | `write-claim.test.ts` — the negative control asserts a second **live** holder is refused and **the body never runs**. |
-| P2 — `HOSTNAME: "localhost"` | `HOSTNAME: LOOPBACK` from the shared module. | Asserted by `loopback-guard.test.ts`. |
-| P2 — `savePipeline` exported unlocked | Renamed `savePipelineUnlocked`; `write-lock-truth.test.ts` fails if any non-test source names it. | Truth test green; comment-stripped so it cannot false-positive on prose. |
-| P2 — raw JSON → `<script>` channel | `jsonForScript()` neutralises `<`, `>`, U+2028/9; the chart's `innerHTML` build escapes its inputs. | Type-checked; existing dashboard-lite tests green. |
-| P3 — `openBrowser` through a shell | `shell:true` dropped; Windows uses the explicit `cmd /c start "" <url>` form. | Code review only; not exercised. |
-
-**One finding the gauntlet missed, found by fixing P1.** `next build` **did not build on `main` at `dc823a4`** — `Can't resolve '../sample-data.js'`, because `src/` is `module: Node16` and Turbopack does not rewrite `.js`→`.ts`. Nothing reported it: CI never built the dashboard, and `bin/cli.ts` silently falls back to the lite dashboard whenever the standalone build is absent, which it always was. So the "preferred" dashboard was unreachable in practice, and the message telling users to build from source led nowhere. Fixed with `turbopack.resolveAlias` entries plus `shared-import-aliases.test.ts`, which fails in seconds naming the exact line to add. **This is the strongest evidence for P1 in the document: a build nobody runs is a build that does not work.**
-
-A second one arrived the same way: once `.next/standalone/` existed, the dashboard suite began collecting its own tests twice — once from source, once from build output. Fixed by an `exclude` in `dashboard/vitest.config.ts`.
-
-**Method note.** The first live probe used `fetch()` with a `host` header override and reported that the guard failed on every request. It had not: `host` is a forbidden header name in undici and the override was silently dropped, so all six requests carried the real authority. Raw `http.request` with `setHost: false` is the only way to put an attacker `Host` on the wire from Node. A negative control that cannot express the attack is not a negative control.
-
-## 19. Post-merge — gaps tested, not reasoned about (2026-08-23)
-
-Both PRs merged (`#37`, `#38`); `main` carries the remediation plus three MCP-native
-features. Three items §18 left open were then **tested against real processes**, and two of
-them had defects that reading could not have found:
-
-| Gap | Method | Result |
-| --- | --- | --- |
-| Resource subscriptions deliver | Real stdio client, file edited from outside the server | ✅ External edit → exactly **one** notification on the subscribed URI; unsubscribed silent; `.bak`/`.write-claim` silent. The host half (does the client refresh context) remains the host's choice and is still `UNKNOWN`. |
-| `harvest_evidence` without git on PATH | Real server spawned with git removed from `PATH` — the case a Claude Desktop launch actually hits, since the client's environment is not the shell's | ❌ **Defect.** It answered *"is not a git repository"* — a confident, specific, wrong diagnostic sending the user to their repo instead of their PATH. Now `GitUnavailableError`, with its own message. |
-| Two processes racing the write claim | **Two real OS processes**, started together, same data dir | ✅ Exactly one wrote; the other refused with a readable reason naming the holder. The external review had only *traced* this class; it is now reproduced and closed. |
-
-A fourth defect surfaced from the same discipline before merge: a **real stdio smoke test**
-showed `completion/complete` returning `-32601 Method not found`. MCP completions accept
-`ref/prompt` and `ref/resource` — **there is no `ref/tool`** — so a `completable()` tool
-argument type-checks, registers, and is never consulted. The capability was not even
-advertised. Moved onto the per-application resource template, reconciled onto the existing
-`career://pipeline/{id}` rather than added alongside.
-
-**The pattern worth extracting:** four defects, all in code that passed a green suite, all
-found by running the real thing instead of reasoning about it. The in-memory transport
-proves wiring; only the spawned process proves the product. This is the same lesson as the
-audit's own P1 — *a build nobody runs is a build that does not work* — applied one level up.
+The 2026-08-22 audit at `dc823a4` found nine findings (two P0: the Next dashboard lacked the Host guard and held unguarded write actions; the suites were disjoint; the single-writer invariant was a comment). All nine were closed in PR #37 (`gauntlet/close-the-door`) with live negative controls; PR #38 added completions, live resources, and `harvest_evidence`; the visual pass (v2.5.1) then caught the unstyled-standalone ship, the false-zero empty state, the dual-axis chart, and the clipped kanban — four defects, zero found by reading. The full v1 text, its remediation table, and its method notes live in git history at `dc823a4..9c6855c` and in the seals of 2026-08-22/23. Its standing open question — does any client act on resource subscriptions — is answered in §9: none does, yet.
 
 ## Evidence and primary sources
 
-- `src/storage/file-store.ts`, `src/untrusted.ts`, `src/server.ts`, `src/index.ts`, `src/dashboard-lite/{server,render}.ts`, `src/tools/doctor.ts`, `bin/cli.ts`.
-- `dashboard/app/onboarding/actions.ts` and the full tracked `dashboard/` file list.
-- `.github/workflows/ci.yml`, `package.json`, `manifest.json`, `README.md`, `PRIVACY.md`.
-- Test evidence collected 2026-08-22 from this worktree at `dc823a4`.
+- Probes: session scratchpad `probe1-dashboard-rmw.ts` … `probe4b-watch-dir-delete.ts` (rerunnable, `npx tsx`, repo root).
+- Screenshots: `.visual/` at `c23793b` (24 shots + `contact-sheet.html`).
+- MCP frontier: modelcontextprotocol.io/specification/2026-07-28 (deprecated registry, changelog, elicitation); blog.modelcontextprotocol.io 2026-01-26 (MCP Apps); anthropics/claude-code#7108, #7252, #41110, #86142; anthropics/claude-ai-mcp#153, #287; modelcontextprotocol/python-sdk#1016; modelcontextprotocol/mcpb#174.
+- Source: every file cited above at `c23793b`.
 
 ---
 
-*Filed 2026-08-22 · architectural gauntlet · Claude, home-root session.*
+*Filed 2026-08-29 · architectural gauntlet v2 · Claude (lead) with the den and three agent lanes, home-root session.*

@@ -1,15 +1,15 @@
 flowchart LR
-    C[MCP client<br/>Claude Desktop / Code] -->|stdio| S[src/index.ts<br/>McpServer]
-    S --> T[17 tools<br/>opportunity · resume · pipeline<br/>interview · career-kb · doctor]
-    T --> U[untrusted.ts<br/>nonce fence]
-    T --> FS[storage/file-store.ts<br/>lock · atomic write · .bak]
-    FS --> Y[(YAML on disk<br/>CAREER_DATA_PATH)]
-    D[doctor.check_setup] -->|GET /latest| NPM[registry.npmjs.org]
-    CLI[bin/cli.ts dashboard] --> L[dashboard-lite<br/>read-only · Host checked]
-    CLI --> N[Next dashboard<br/>read + WRITE · no Host check]
+    C[MCP client] -->|stdio| S[McpServer<br/>18 tools · 3 prompts<br/>9 resources + template]
+    S --> U[untrusted.ts<br/>nonce fence — tools only]
+    P[prompts/index.ts<br/>bare interpolation] -.-> C
+    S --> DOORS[three mutate doors<br/>lock + write claim]
+    DOORS --> Y[(YAML + .bak<br/>CAREER_DATA_PATH)]
+    LIVE[resources/live.ts<br/>subscribe · debounce] --> Y
+    B[Browser] --> G[loopback-guard<br/>one module, both doors]
+    G --> L[dashboard-lite<br/>read-only · ships]
+    G --> N[Next dashboard<br/>source-only]
     L --> Y
-    N --> Y
-    B[Browser] --> L
-    B --> N
+    N --> A[onboarding actions<br/>read OUTSIDE the door,<br/>write inside it]
+    A --> Y
     classDef gap fill:#3a2118,stroke:#c4744a,stroke-width:2px,color:#f0e2d0;
-    class N gap;
+    class A gap;

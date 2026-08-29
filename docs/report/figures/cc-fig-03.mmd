@@ -1,13 +1,18 @@
 stateDiagram-v2
-    [*] --> Requested: browser issues GET
-    Requested --> HostChecked: dashboard-lite
-    Requested --> Rendered: Next dashboard (no check)
-    HostChecked --> Refused: Host not loopback
-    HostChecked --> Rendered: Host loopback
-    Rendered --> ReadOnly: lite — pipeline only
-    Rendered --> Writable: Next — full KB + Server Actions
-    Writable --> Persisted: saveCareerSection, no cross-process lock
-    Persisted --> LostUpdate: MCP wrote concurrently
+    [*] --> Requested
+    Requested --> Guarded: every HTTP surface
+    Guarded --> Refused: Host not loopback
+    Guarded --> Reading: loopback
+    Reading --> Rendered
+    Rendered --> Claiming: MCP write path
+    Rendered --> StaleRead: dashboard action loads outside
+    Claiming --> Writing: claim acquired
+    Claiming --> Breaking: claim stale
+    Breaking --> Writing: rm + wx — TWO can win
+    Writing --> Persisted
+    StaleRead --> Persisted: merged-from-stale write
+    Persisted --> LostUpdate: the other writer's data gone
     Persisted --> [*]
-    ReadOnly --> [*]
     Refused --> [*]
+    classDef bad fill:#3a2118,stroke:#c4744a,stroke-width:2px,color:#f0e2d0;
+    class LostUpdate bad;
