@@ -184,6 +184,8 @@ See [`data/example/`](data/example/) in this repo for a fully populated sample (
 
 v2.0 includes a local web dashboard — a visual layer on top of your Career KB and pipeline data. Open it alongside Claude or use it standalone to review and manage your search.
 
+> **Which dashboard is which.** The **lite dashboard** (zero-build, bundled in the npm package) is the maintained, shipped surface — it starts automatically and is what nearly everyone sees. The full **Next.js dashboard** below is a **source-build-only reference**: it is not in the npm package, it is frozen as a design quarry (its detail view, onboarding wizard, and analytics are worked-out reference implementations), and active GUI investment goes to the lite dashboard. See `dashboard/FROZEN.md` for why. The richer in-Claude surface an MCP App would give is deferred — Claude renders MCP Apps only for remote HTTP connectors, not the local stdio/`.mcpb` server this ships as.
+
 ![Pipeline Kanban](docs/screenshots/pipeline-kanban-dark.png)
 ![Application Detail](docs/screenshots/application-detail-dark.png)
 ![Career KB](docs/screenshots/career-kb-dark.png)
@@ -331,6 +333,9 @@ Power-user shortcuts (appear in Claude's prompt menu):
 | `resume-tailor` | Drop in a posting → get a tailored resume |
 | `interview-coach` | Company + role + interview type → full prep package |
 | `negotiation-coach` | Paste an offer → get analysis, strategy, and counter scripts |
+| `daily-review` | Triage the pipeline → today's highest-leverage moves, overdue items, and upcoming interviews |
+| `post-interview-debrief` | Capture what an interview surfaced → record the durable signal and set up the next step |
+| `weekly-retro` | Review the week's movement and journal signals → one takeaway that compounds |
 
 ---
 

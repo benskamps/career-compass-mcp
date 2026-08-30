@@ -335,6 +335,17 @@ Then, in the spirit of the last gauntlet's *"I shipped a lock with a race in it,
 
 **Final verification:** `npm test` — **442 MCP + 38 dashboard**, both `tsc` clean; `pack:guard` 7/7; `next build` + staging green; and the Host guard re-verified on a live standalone boot after WP-6's trailing-dot change — attacker `evil.example` and rebind-suffix `localhost.evil.com` both **403**, loopback passes, and the trailing-dot `localhost.` false-refusal is fixed (now 200-class). Nothing reached `main`; the branch awaits Ben's nod and the Gate 7 rulings.
 
+## 20. Gate 7 — the product rulings, closed
+
+All four Gate 7 items resolved 2026-08-29, with the evidence each turned on.
+
+| Ruling | Decision | Basis |
+| --- | --- | --- |
+| **MCP Apps spike** — does a local stdio/`.mcpb` server render a `ui://` App in Claude? | **No — remote-only. Defer the App board.** | The spec's `ui://` + `_meta` mechanism is transport-agnostic, but **Claude renders Apps only for remote HTTP custom connectors** — the official build guide's "Testing with Claude" offers only the tunnel-to-connector path, no stdio/`.mcpb`/`claude_desktop_config` route (modelcontextprotocol.io/extensions/apps/build; client-matrix; overview). career-compass ships stdio/`.mcpb`, exactly the transports that don't render Apps. A board would require a hosted HTTP + connector distribution (new hosting, auth, a paywall) — a different product. Revisit if Anthropic documents stdio App rendering. |
+| **Next dashboard — freeze or invest?** | **Freeze as a spec quarry.** | Ships to nobody (excluded from the npm `files` allowlist), duplicates the lite dashboard's funnel and arithmetic, and — with the App board deferred — has no in-Claude successor to become. GUI investment routes to the lite dashboard. Not deleted; its detail view, wizard, and analytics stay as reference. Marker: `dashboard/FROZEN.md`. Reversible. |
+| **Analytics — fix in place or rebuild in the App?** | **Fixed in place** (WP-5). | The App is deferred, and the defects (categorical scatter axis, aged-store liveness lie, taxonomy) were bugs, not a call for a rebuild. Closed on the lite/Next surfaces directly. |
+| **Frontier enrichments** (daily-ritual prompts · elicitation guards · App board) | **Build the ritual prompts; defer the rest.** | Prompts are the one surface every Claude client renders as a slash command, and the injection fence now covers prompts (Gate 2), so they were unblocked: shipped `daily-review`, `post-interview-debrief`, `weekly-retro` (3 → 6 prompts). Elicitation deferred — it's Claude-Code-only, and the data-loss moments it would guard are already closed by `mutateCareerSection`'s lock, so it's UX polish, not safety. App board deferred per the spike. |
+
 ## Evidence and primary sources
 
 - Probes: session scratchpad `probe1-dashboard-rmw.ts` … `probe4b-watch-dir-delete.ts` (rerunnable, `npx tsx`, repo root).

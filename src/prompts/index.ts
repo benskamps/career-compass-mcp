@@ -136,4 +136,112 @@ Then ask me if I want to do a full negotiation roleplay.`,
       }],
     })
   );
+
+  // ── Daily-ritual prompts ────────────────────────────────────────────────────
+  // Prompts are the one native surface every Claude client renders as a slash
+  // command (Claude Code /mcp__career-compass__*, Desktop + web via the + menu),
+  // and the server shipped only three against eighteen tools. These three turn
+  // the tools into a rhythm: a daily triage, a post-interview capture, and a
+  // weekly reflection — each orchestrates existing tools/resources rather than
+  // adding new ones. Free-text the user pastes is fenced like everywhere else.
+
+  server.registerPrompt(
+    "daily-review",
+    {
+      title: "Daily Review",
+      description: "Triage your job search: what needs attention today, in priority order",
+      argsSchema: {
+        focus: z.string().optional().describe("Anything specific to weight today, e.g. 'the Stratos offer'"),
+      },
+    },
+    ({ focus }) => ({
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are my job-search chief of staff. Give me today's triage — short, prioritized, and honest about what is slipping.
+
+Start by calling \`pipeline_view\` with action \`next_actions\` (overdue follow-ups, upcoming interviews, expiring offers), and read \`career://pipeline\` for the board state.
+${focus ? `\n**Weight this today:**\n${embedUntrusted("user focus", focus)}\n` : ""}
+Then give me:
+
+1. **Do first** — the 1–3 highest-leverage moves for today, each with why-now and the concrete next step
+2. **Overdue** — anything past its follow-up date, oldest first (name the company, role, and how many days)
+3. **On the horizon** — interviews in the next few days and any offer clocks running down
+4. **Quiet wins** — anything I can close or advance in five minutes
+
+Be specific to my actual pipeline — no generic advice. If nothing is urgent, say so plainly rather than inventing work.`,
+        },
+      }],
+    })
+  );
+
+  server.registerPrompt(
+    "post-interview-debrief",
+    {
+      title: "Post-Interview Debrief",
+      description: "Capture what an interview surfaced while it's fresh, then set up the next step",
+      argsSchema: {
+        company: z.string().describe("Company name"),
+        role: z.string().describe("Role title"),
+        applicationId: z.string().optional().describe("Pipeline application ID, if tracked"),
+        howItWent: z.string().describe("Your raw notes: what was asked, how you did, what you learned, how it felt"),
+      },
+    },
+    ({ company, role, applicationId, howItWent }) => ({
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are my interview debrief partner. Help me capture this while it is fresh and turn it into the next move — the value of the journal is that it compounds honestly over time.
+
+**Company:** ${company}
+**Role:** ${role}
+${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
+
+**My raw notes:**
+${embedUntrusted("interview debrief notes", howItWent)}
+
+Please:
+
+1. **Reflect it back** — a tight summary of what happened and what it tells us about my fit and their process
+2. **Capture the durable signal** — call \`capture_insight\` (type \`interview_insight\`, this company/role, honest \`sentiment\`) with the one or two things worth keeping; include any recurring strength or gap as a \`signals\` entry
+3. **Advance the pipeline** — if the stage changed, propose the \`pipeline_update\` to make (ask before writing)
+4. **Prep the next step** — run \`interview_arc\` for what likely comes next, and give me two or three things to do before then
+
+Be honest — if it went badly, record that plainly; a hard debrief is the most useful kind.`,
+        },
+      }],
+    })
+  );
+
+  server.registerPrompt(
+    "weekly-retro",
+    {
+      title: "Weekly Retro",
+      description: "Review the week's movement and journal signals, then capture one durable takeaway",
+      argsSchema: {
+        focus: z.string().optional().describe("Anything to center the retro on, e.g. 'why am I stalling at screens'"),
+      },
+    },
+    ({ focus }) => ({
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are my job-search coach running a weekly retrospective. Read \`career://full\` (my pipeline and journal) and call \`pipeline_view\` with action \`stats\`.
+${focus ? `\n**Center it on:**\n${embedUntrusted("user focus", focus)}\n` : ""}
+Then walk me through:
+
+1. **Movement** — what advanced, stalled, or closed this week, and the shape of the funnel now (where applications are actually getting stuck)
+2. **Patterns in the journal** — recurring signals across recent entries: strengths that keep landing, gaps that keep surfacing, sources that keep working
+3. **The honest read** — one thing that is working I should do more of, one that is not I should change
+4. **Next week's focus** — the single highest-leverage bet for the coming week
+5. **Capture it** — propose one \`capture_insight\` (type \`note\` or \`fit_signal\`) recording the week's durable takeaway, so next month's retro can see the trend (ask before writing)
+
+Ground every claim in my actual data — cite the applications and journal entries you're drawing from.`,
+        },
+      }],
+    })
+  );
 }
