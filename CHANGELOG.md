@@ -1,5 +1,56 @@
 # Changelog
 
+## 2.6.1 — 2026-08-31
+
+Documentation and distribution pass. No behaviour change in the server — the version
+exists because the npm README is only republished with one.
+
+### Fixed — copy truth
+
+- **The README showed the wrong dashboard.** Four screenshots of the Next.js app led the
+  dashboard section — the app that is frozen and ships to nobody. The two screenshots now
+  embedded are the **lite** dashboard, the one in the npm package, captured fresh from
+  2.6.0 (`npm run visuals`). The mcpb bundle stages what the README references, so it lost
+  the four stale images too (3.75 MB → 3.66 MB).
+- **`manifest.json` promised a view that does not exist.** `long_description` advertised
+  "per-application detail" in the bundled dashboard; the lite dashboard has KPIs, a kanban
+  by stage, next actions, and a stage-distribution chart, and no detail view. Same class of
+  defect as the drag claim closed in 2.6.0, on the surface Claude Desktop shows a stranger
+  before they install.
+- **Dead link to the Releases page.** The upgrade section pointed Claude Desktop users at
+  `/releases` for a `.mcpb` bundle, but no release had ever been published there — the link
+  went to an empty page. Fixed from the other end: **this is the first tagged release, and
+  it carries the `.mcpb`**, so the Claude Desktop extension route is real for the first
+  time and is now documented as the short way to install.
+- **`format_for_ats` listed six ATS targets; the tool takes eight** (SmartRecruiters and
+  `generic` were missing).
+- `career://journal` and `journal.yaml` were undocumented — the journal shipped as a
+  resource in 2.6.0 but never reached the resource table or the directory diagram.
+
+### Changed — install UX
+
+- **Install is now the second thing you read**, not the fifth, with a per-client route:
+  a one-line `claude mcp add` for Claude Code, the config-file path per OS for Claude
+  Desktop, and the generic stdio shape for everything else. It previously offered a single
+  hand-edited JSON block and named the wrong config file for Claude Code.
+- **A no-install demo leads the page** — `npx -y career-compass-mcp dashboard --sample`
+  was buried two-thirds down.
+- The tool table is grouped by phase of a search (find → apply → track → interview →
+  feed the KB → health) and marks each tool **Read** or **Write**, so it is clear up front
+  which ones will ask for permission.
+- Resource subscriptions are documented for the first time.
+- Merged the two duplicate build sections and the two overlapping privacy sections.
+
+### Added
+
+- **`docs/architecture.md`** — six Mermaid diagrams of the shipped system for users rather
+  than auditors: the system map, the path a posting takes from paste to offer, the
+  application state machine, the first-run write sequence, the three-peers/subscription
+  flow, and the write-claim path. All six validated through `mermaid-cli` and shaped to
+  render legibly in a README-width column. The README keeps an ASCII system diagram and
+  links out, because **npmjs.com does not render Mermaid** — verified against the `mermaid`
+  package's own npm page, which shows six raw code blocks and zero diagrams.
+
 ## 2.6.0 — 2026-08-29
 
 The architectural-gauntlet v2 release: a full remediation of the audit findings,
