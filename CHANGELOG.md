@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.9.0 — 2026-09-05
+
+### Added — said and done
+
+- **`npx -y career-compass-mcp install`.** Every install route still ended with a person opening a
+  JSON file. One command now finds the Claude clients on the machine and wires each: Claude
+  Desktop's config (backed up first, other servers untouched, Windows gets the `cmd /c npx` form
+  it needs), Claude Code through its own `claude mcp add -s user`, and Cursor's `mcp.json`.
+  Clients that are not installed are skipped and named. The report says what changed, what to
+  restart, and the first sentence to say to Claude. Idempotent: run it twice and nothing is
+  rewritten. `--dry-run` shows the plan and writes nothing; `--data <path>` sets your career
+  folder in every entry; `--client desktop|code|cursor` limits it. A config that will not parse
+  is left exactly as it was, with the fix named.
+
 ## 2.8.0 — 2026-09-05
 
 ### Added — the dashboard click that reaches Claude

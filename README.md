@@ -66,8 +66,20 @@ Claude: 3 things:
 
 ## Install
 
-Pick your client. Every route runs the same server, and none of them needs a clone or a
-build.
+One command wires every Claude client on your machine — Claude Desktop, Claude Code, and
+Cursor — and tells you what to restart:
+
+```bash
+npx -y career-compass-mcp install
+```
+
+It backs up any config it touches, leaves your other servers alone, skips clients you don't
+have, and does nothing twice. `--dry-run` shows the plan first; `--data /path/to/career-data`
+puts your files somewhere other than `~/.career-compass`. Then say to Claude: **"Run the
+Career Compass setup check."**
+
+Prefer to do it by hand, or use another client? Every route below runs the same server, and
+none of them needs a clone or a build.
 
 ### Claude Code
 
