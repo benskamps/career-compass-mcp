@@ -116,25 +116,65 @@ p{max-width:var(--measure)}
 }
 @media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
 @media print{body{background:#fff}.steps li,.card{background:#fff}}
+/* ── dashboard chapter ── */
+figure.shot{margin:22px 0 0}
+figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;box-shadow:0 1px 2px rgba(43,34,24,.06),0 6px 20px rgba(43,34,24,.06)}
+figure.shot figcaption{margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.shot figcaption .chip{display:inline-block;border:1px solid var(--rule);border-radius:999px;padding:1px 8px;margin-right:8px;color:var(--ink)}
+figure.shot figcaption .chip.frozen{border-color:var(--steel);color:var(--steel)}
+figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
+.loop{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:st}
+.loop li{position:relative;padding:18px 16px 16px;border:1px solid var(--rule);border-radius:8px;background:rgba(255,255,255,.4)}
+.loop li::before{counter-increment:st;content:counter(st,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--clay-deep)}
+.loop li::after{content:"";position:absolute;top:50%;right:-14px;width:14px;border-top:1px dashed var(--brass)}
+.loop li:last-child::after{display:none}
+.loop h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;margin:6px 0 6px;line-height:1.15}
+.loop p{font-size:14.5px;line-height:1.5;margin:0;color:var(--ink-soft)}
+.flavors{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.card.frozen{border-color:color-mix(in srgb,var(--steel) 55%,var(--rule));background:rgba(124,143,161,.05)}
+.card.frozen .eyebrow{color:var(--steel)}
+.stamp{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;border:2px double var(--steel);color:var(--steel);border-radius:4px;padding:3px 9px;transform:rotate(-2deg);margin:0 0 10px}
+.stamp.ships{border-color:var(--sage);color:var(--sage);transform:rotate(-1deg)}
+.surfaces{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:10px}
+.surfaces div{border-top:2px solid var(--clay);padding-top:10px;font-size:15px;line-height:1.45}
+.surfaces .eyebrow{display:block;margin-bottom:4px}
+.trust{margin-top:34px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.trust div{border-top:2px solid var(--sage);padding-top:10px;font-size:15px;line-height:1.45}
+.trust .eyebrow{display:block;color:var(--sage);margin-bottom:4px}
+.cmd{margin-top:18px;border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0}
+.cmd .eyebrow{display:block;margin-bottom:6px}
+.cmd code{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--ink)}
+.cmd small{display:block;color:var(--ink-soft);font-size:14px;margin-top:4px}
+@media (max-width:900px){.loop{grid-template-columns:repeat(2,minmax(0,1fr))}.loop li::after{display:none}.flavors,.trust{grid-template-columns:minmax(0,1fr)}.surfaces{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.loop,.surfaces{grid-template-columns:minmax(0,1fr)}}
+@media print{.loop li{background:#fff}}
+/* in-page contents */
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.toc a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}.toc a:hover{border-bottom-color:var(--clay)}
+.part{margin-top:72px;border-top:2px solid var(--ink);padding-top:10px}.part .eyebrow{display:block}
+.part h2.big{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(34px,5.5vw,64px);line-height:1;letter-spacing:-.015em;margin:6px 0 0}
+.part h2.big em{font-style:normal;color:var(--clay)}
+.part .dek{font-style:italic;color:var(--ink-soft);font-size:19px;max-width:60ch;margin:14px 0 0}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<nav class="crumbs">Career Compass &nbsp;·&nbsp; <a href="dashboard/">the dashboard, both flavors →</a></nav>
+<nav class="crumbs">Career Compass &nbsp;·&nbsp; <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">source ↗</a> &nbsp;·&nbsp; <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm ↗</a></nav>
 <header class="mast">
   <div>
     <div class="kicker"><span class="eyebrow">Career Compass · how it works</span><span class="eyebrow" style="color:var(--ink-soft)">v2.7.0</span></div>
     <h1>Show them how we <em>help you ask.</em></h1>
     <p class="dek">Career Compass keeps the facts about you in one place, turns them into a résumé for each posting, and builds your interview prep around the questions they will ask — and the ones you should ask back.</p>
   </div>
-  <div class="plate-meta">local-first · plain YAML on your disk<br>19 tools · 7 prompts · 9 resources<br>runs inside Claude via MCP</div>
+  <div class="plate-meta">local-first · plain text on your disk<br>19 tools · 7 prompts · 9 resources · 1 dashboard<br>runs inside Claude via MCP</div>
 </header>
 
 <figure class="plate">
   <img src="p1-the-system-web.jpg" alt="Illustration: a desk with a brass compass, a wooden index-card box holding cream cards, a lamp, a laptop showing a five-column kanban board with clay-orange and sage cards, and a single typed page — connected by a dotted pencil path from the card box to the laptop to the page." loading="eager" decoding="async" width="1400" height="781">
   <figcaption><b>Plate I</b> The whole loop on one desk: the facts (the card box) → the pipeline (the board) → the thing you send (the page).</figcaption>
 </figure>
+<div class="toc" aria-label="Contents"><a href="#steps">01 five steps</a><a href="#facts">02 facts vs. the résumé</a><a href="#ask">03 how we help you ask</a><a href="#dashboard">04 the dashboard</a><a href="#flavors">05 both flavors</a></div>
 
 <!-- ─────────────────────────────── 1 ─────────────────────────────── -->
 <section id="steps">
@@ -258,9 +298,102 @@ p{max-width:var(--measure)}
   </div>
 </section>
 
+
+<div class="part" id="part-two">
+  <span class="eyebrow">Part two · the dashboard</span>
+  <h2 class="big">The dashboard looks. <em>Claude does.</em></h2>
+  <p class="dek">A read-only view of the same files Claude reads and writes — redrawn every time you open it. Every button on it hands you the words to ask Claude for the change. Nothing on the page can edit your search; that is the point.</p>
+</div>
+<figure class="plate">
+  <img src="p4-lite-dashboard-window-web.jpg" alt="Illustration: a wooden window frame in a cream wall looks onto the same card-catalog drawer of index cards. Taped inside the glass, a freshly printed sheet shows a five-column board of small clay and sage cards, a short dotted list, and a row of horizontal bars — a live view drawn on the pane." loading="eager" decoding="async" width="1400" height="781">
+  <figcaption><b>Plate IV</b> The lite dashboard: a sheet on the glass, reprinted from the drawer each time you look.</figcaption>
+</figure>
+<!-- ─────────────────────────────── 1 ─────────────────────────────── -->
+<section id="dashboard">
+  <div class="sec-head"><div><span class="eyebrow">Panel four</span><h2>How the dashboard works</h2></div><span class="num">04</span></div>
+  <p class="lede">Four stations. The important one is the last: the page never writes. Anything you want changed, you say to Claude — and the dashboard hands you the words.</p>
+
+  <ol class="loop">
+    <li><h3>Open it</h3><p>One command starts a tiny web server on your own computer and opens your browser. It only answers the computer you are sitting at; nothing on your network, and no other website, can reach the page.</p></li>
+    <li><h3>It reads the drawer</h3><p>On every request the page re-reads the pipeline file from disk and renders the whole document fresh. Nothing is cached, nothing is remembered between loads. Refresh the browser and you are looking at the files as they are right now.</p></li>
+    <li><h3>You look</h3><p>Six numbers across the top, a kanban by stage with the closed applications folded away, a next-actions list of what is overdue or due soon, and a stage chart. Click a card and its drawer opens: days in stage, follow-up, posting, contacts, rounds, latest note.</p></li>
+    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row copies a ready-to-paste prompt for Claude — "give me a full status on my Acme application," "help me with this overdue follow-up." The work happens in the conversation. The page stays read-only.</p></li>
+  </ol>
+
+  <div class="cmd">
+    <span class="eyebrow">Try it with nobody's data</span>
+    <code>npx -y career-compass-mcp dashboard --sample</code>
+    <small>Opens the bundled Alex Rivera demo. Its dates shift to sit around today, and the tools refuse to write into it.</small>
+  </div>
+
+  <figure class="shot">
+    <img src="dashboard-lite-light.png" alt="Screenshot of the lite dashboard in light mode: six KPI cards, a five-column pipeline board with one card's detail drawer, a next-actions panel, and a stage-distribution bar chart, on the sample data." loading="lazy" decoding="async" width="1440" height="1183">
+    <figcaption><span class="chip ships">ships in 2.7.0</span>Screenshot, not illustration · the bundled sample search · captured from the published build</figcaption>
+  </figure>
+</section>
+
+<hr class="rule">
+
+<!-- ─────────────────────────────── 2 ─────────────────────────────── -->
+<section id="flavors">
+  <div class="sec-head"><div><span class="eyebrow">Panel five · zoom</span><h2>Two flavors — <em style="color:var(--clay)">one ships,</em> one is kept</h2></div><span class="num">05</span></div>
+  <p class="lede">There are two dashboards in the repository. Only one reaches you. The honest version of this page says so, and says why.</p>
+
+  <div class="flavors">
+    <div class="card">
+      <span class="stamp ships">ships · in the npm package</span>
+      <span class="eyebrow">The lite dashboard</span>
+      <h3>One HTML page, no build step</h3>
+      <ul>
+        <li><span class="kv">what</span> One plain web page, drawn fresh from your files each time you load it. It downloads nothing extra and depends on no framework, so it cannot break when something else updates.</li>
+        <li><span class="kv">why</span> It arrives with the package and works the moment the package does. Nothing to build, nothing to keep in sync with your data.</li>
+        <li><span class="kv">shows</span> KPIs · kanban by stage · card detail drawers · next actions · stage chart · a company/role filter that re-counts the columns · light and dark, following your system.</li>
+        <li><span class="kv">does not</span> Edit anything. Move cards. Store state. Talk to the network.</li>
+        <li><span class="kv">honesty</span> A pipeline nobody has written to in 30 days says so in a banner. A rate with no denominator shows a dash, not <span class="mono">0%</span>.</li>
+      </ul>
+    </div>
+    <div class="card frozen">
+      <span class="stamp">frozen · not in the package</span>
+      <span class="eyebrow">The full dashboard</span>
+      <h3>A Next.js app, kept as a design reference</h3>
+      <ul>
+        <li><span class="kv">what</span> An earlier, heavier web app for the same files: a board, a detail view with a timeline, a Career KB overview, a first-run wizard, an analytics page. It was built while the product was finding its shape.</li>
+        <li><span class="kv">status</span> It never shipped to anyone — it only ever ran from a developer's copy of the source — and in the 2.6 architecture review it was frozen: no new features, kept in the repository as a worked-out design reference. It is not a version being withheld from you.</li>
+        <li><span class="kv">why</span> Two dashboards for one folder was one too many. Two independent reviews said the same thing: put every hour of interface work into the one users actually get.</li>
+        <li><span class="kv">kept for</span> Its detail-view layout, wizard flow, and analytics designs — to mine when the lite dashboard grows those surfaces, or if a hosted version is ever built.</li>
+        <li><span class="kv">unfreeze if</span> Claude renders in-app boards for local servers, or a hosted connector build is pursued. A product decision, recorded so nobody re-derives it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <figure class="plate">
+    <img src="p5-full-dashboard-under-glass-web.jpg" alt="Illustration: a museum display case with a glass lid on a walnut stand. Under the glass, a detailed hand-drawn blueprint of a dashboard — a kanban board, a radar chart, numbered wizard steps, and analytics curves — in walnut ink with a few clay highlights. A blank brass plaque; a wooden stool beside it." loading="lazy" decoding="async" width="1400" height="781">
+    <figcaption><b>Plate V</b> The full dashboard: a finished blueprint under glass. Referenced, not in use.</figcaption>
+  </figure>
+
+  <figure class="shot">
+    <img src="application-detail-light.png" alt="Screenshot of the frozen Next.js dashboard's application detail view: Veridian Health, Director of Operations, a dated timeline from discovered through two interview rounds, a details column, and two contact cards." loading="lazy" decoding="async" width="1280" height="800">
+    <figcaption><span class="chip frozen">frozen reference</span>Screenshot, not illustration · the full app's detail view · built from source, never shipped in the package</figcaption>
+  </figure>
+
+  <span class="eyebrow" style="display:block;margin-top:34px">What the frozen app still teaches the shipping one</span>
+  <div class="surfaces">
+    <div><span class="eyebrow">Detail view</span>A dated timeline per application — discovered, applied, each round with who was in the room. The lite drawer carries a compressed version of this today.</div>
+    <div><span class="eyebrow">Onboarding wizard</span>A stepped first run. The lite side answers this with a two-step empty state and the <span class="mono">setup-career-kb</span> prompt instead.</div>
+    <div><span class="eyebrow">Career KB overview</span>Sections and a skills radar. Not yet on the lite side; the KB is read through Claude and <span class="mono">check_setup</span>.</div>
+    <div><span class="eyebrow">Analytics</span>Funnel, status breakdown, source effectiveness, excitement vs. outcome. The lite side ships the funnel and the stage chart; the rest waits for a reason to exist.</div>
+  </div>
+
+  <div class="trust">
+    <div><span class="eyebrow">Where it runs</span>On your machine only. Other websites you have open cannot read it, and nothing on your network can reach it — the server answers the computer you are sitting at and refuses everything else.</div>
+    <div><span class="eyebrow">What it stores</span>Nothing. No cookies, no saved state, no cache. Your files are the whole truth; the page is only a picture of them.</div>
+    <div><span class="eyebrow">What it changes</span>Nothing. Every change to your search goes through Claude and the tools, which check that the data has the right shape before saving and keep the previous version of each file.</div>
+  </div>
+</section>
+
 <footer class="colophon">
-  <div>Career Compass · career-compass-mcp 2.7.0 · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm</a><br>Every claim on this page is checked against the 2.7.0 tool list and README · numbers: 19 tools, 7 prompts, 9 resources · no usage or outcome figures are quoted because none are measured</div>
-  <div>Plates I–III: illustrations, not screenshots · commissioned in the den, 2026-09-05<br>ASSETS · keep the three *-web.jpg plates beside this file</div>
+  <div>Career Compass · career-compass-mcp 2.7.0 · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm</a><br>Every claim on this page is checked against the 2.7.0 tool list, README, and dashboard/FROZEN.md · numbers: 19 tools, 7 prompts, 9 resources · no usage or outcome figures are quoted because none are measured</div>
+  <div>Plates I–V: illustrations · two real screenshots, labelled ships / frozen · commissioned in the den, 2026-09-05<br>ASSETS · keep the five *-web.jpg plates and two .png screenshots beside this file</div>
 </footer>
 
 </div>
