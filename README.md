@@ -127,9 +127,24 @@ Restart Claude Desktop. To choose your own data directory, add an `env` block al
 
 ### Any other MCP client
 
-Cursor, Windsurf, Zed, Cline, Continue and friends all take the same shape — a stdio server
+Cursor, Windsurf, Cline, Continue and friends all take the same shape — a stdio server
 with `command: "npx"` and `args: ["-y", "career-compass-mcp"]`. Drop that into whatever the
 client calls its MCP config.
+
+**Zed** — add to your `settings.json`:
+
+```json
+{
+  "context_servers": {
+    "career-compass": {
+      "command": {
+        "path": "npx",
+        "args": ["-y", "career-compass-mcp"]
+      }
+    }
+  }
+}
+```
 
 ### Prefer a global install
 
@@ -310,6 +325,7 @@ Power-user shortcuts. Most clients surface these as slash commands.
 | `resume-tailor` | Drop in a posting → get a tailored résumé |
 | `interview-coach` | Company + role + interview type → full prep package |
 | `negotiation-coach` | Paste an offer → analysis, strategy, and counter scripts |
+| `setup-career-kb` | Walk through building your Career KB from scratch — profile, experience, skills, first pipeline entry |
 | `daily-review` | Triage the pipeline → today's highest-leverage moves, overdue items, upcoming interviews |
 | `post-interview-debrief` | Capture what an interview surfaced → record the durable signal, set up the next step |
 | `weekly-retro` | Review the week's movement and journal signals → one takeaway that compounds |
@@ -333,8 +349,11 @@ npx -y career-compass-mcp dashboard
 
 It re-reads your YAML on **every request**, so a browser refresh always shows the current
 state of your files. Stages change through Claude — ask it to move an application and it
-calls `pipeline_update`; the board reflects that on the next load. Clicking a card copies a
-ready-to-paste prompt for Claude, which is where the work actually happens.
+calls `pipeline_update`; the board reflects that on the next load. Click a card to open its
+detail drawer (days in stage, follow-up, posting link, contacts, interview rounds, latest
+note); the drawer's button and every next-action row copy a ready-to-paste prompt for
+Claude, which is where the work actually happens. Type in the filter box (or press `/`) to
+narrow the board by company or role; the column counts follow.
 
 ![The same dashboard in light mode](docs/screenshots/dashboard-lite-light.png)
 

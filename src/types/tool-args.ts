@@ -57,5 +57,6 @@ export type PipelineArgs =
 // ─── Tool Response ────────────────────────────────────────────────────────────
 
 export type ToolResponse = {
+  isError?: boolean;
   content: Array<{ type: "text"; text: string }>;
 };

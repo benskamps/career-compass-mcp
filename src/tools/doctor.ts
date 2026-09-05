@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { access, readdir, readFile } from "fs/promises";
 import { constants as FS } from "fs";
+import { execFile } from "child_process";
 import { homedir } from "os";
 import { join, resolve } from "path";
+import { promisify } from "util";
 import { parse as parseYaml } from "yaml";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDataDir, loadPipeline, isCorruptDataError, CAREER_SECTIONS } from "../storage/file-store.js";
@@ -210,6 +212,53 @@ function versionFinding(result: UpdateCheckResult | null): Finding {
     status: "ok",
     detail: `v${PKG_VERSION} is the current release.`,
   };
+}
+
+// ─── Git check ────────────────────────────────────────────────────────────────
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Checks whether the data directory lives inside a git repo.
+ *
+ * Career KB data is plain YAML on disk — version-controlling it with git gives
+ * users free backup, diff history, and the ability to `git stash` before a big
+ * restructure. This finding nudges them toward it rather than leaving it as an
+ * undiscoverable best practice. It is `warn`, never `problem` — the lack of git
+ * is not an error, only an opportunity, and the report's summary line already
+ * words a warn-only report as "nothing is broken".
+ *
+ * Only the one stderr git prints for "no repo here" earns the tip. Every other
+ * failure — git not installed, the data dir not created yet, a "dubious
+ * ownership" refusal, a timeout — returns null and the finding is omitted:
+ * a health check must not diagnose "no repository" from an error that says
+ * something else.
+ */
+async function gitFinding(dataDir: string): Promise<Finding | null> {
+  try {
+    await execFileAsync("git", ["rev-parse", "--git-dir"], { cwd: dataDir, timeout: 2000 });
+    // Git IS tracking this directory — confirm it so the user knows backups are in play.
+    return {
+      label: "Git backup",
+      status: "ok",
+      detail: `${dataDir} is tracked in a git repository — your career data has version history.`,
+    };
+  } catch (err: unknown) {
+    const e = err as { stderr?: unknown; message?: string };
+    const msg = `${typeof e.stderr === "string" ? e.stderr : ""}\n${e.message ?? ""}`;
+    if (msg.includes("not a git repository")) {
+      return {
+        label: "Git backup",
+        status: "warn",
+        detail: `${dataDir} is not a git repository.`,
+        // Three plain lines, not a `&&` chain: the chain fails in Windows
+        // PowerShell 5.1, which is the default shell on the boxes that hit
+        // this most. Same per-shell honesty the dashboard tips below keep.
+        fix: `Turn it into one, in any shell:\n  git init "${dataDir}"\n  git -C "${dataDir}" add -A\n  git -C "${dataDir}" commit -m "initial career kb"\nThat gives you free backup and a diff history for all your career data.`,
+      };
+    }
+    return null;
+  }
 }
 
 // ─── Data directory ───────────────────────────────────────────────────────────
@@ -659,7 +708,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
       // its own finding, never the whole report. `checkNpmForUpdate` and
       // `probeLocalDashboard` already resolve rather than throw; this is the
       // belt to their braces, and it holds for an override that is less careful.
-      const [update, sections, pipeline, orphans, claim, dashboard] = await Promise.all([
+      const [update, sections, pipeline, orphans, claim, dashboard, git] = await Promise.all([
         checkForUpdates
           ? checkForUpdate().catch((error: unknown) => ({
               ok: false as const,
@@ -673,11 +722,13 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
         probeDashboard(dashboardPort).catch(
           (): DashboardProbeResult => ({ reachable: false, reason: "the check could not run" }),
         ),
+        gitFinding(dataDir),
       ]);
 
       const findings: Finding[] = [
         versionFinding(update),
         await dataDirFinding(dataDir),
+        ...(git ? [git] : []),
         ...careerKbFindings(sections),
         pipeline,
         orphans,

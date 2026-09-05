@@ -1,4 +1,6 @@
 import { createServer, type Server } from "http";
+import { existsSync } from "fs";
+import { join } from "path";
 import { getDataDir, loadPipeline, isCorruptDataError } from "../storage/file-store.js";
 import { renderLiteDashboard } from "./render.js";
 import { ALLOWED_HOSTNAMES, LOOPBACK, isAllowedHost, refusalBody } from "../loopback-guard.js";
@@ -38,9 +40,9 @@ export function createLiteDashboardServer(): Server {
     }
     try {
       const pipeline = await loadPipeline();
-      // Read per request, like the pipeline itself: the footer names the folder
-      // this page is actually serving, not the default one.
-      const html = renderLiteDashboard(pipeline, getDataDir());
+      const dataDir = getDataDir();
+      const hasCareerKB = existsSync(join(dataDir, "career", "profile.yaml"));
+      const html = renderLiteDashboard(pipeline, dataDir, new Date(), hasCareerKB);
       res.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         // Never cache: the whole point is a live read of local data.

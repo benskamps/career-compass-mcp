@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
+import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
@@ -28,7 +29,9 @@ export function registerOpportunityTools(server: McpServer): void {
       },
     },
     async ({ posting, company, notes, sourceFitLabel }) => {
-      const career = await loadCareerData();
+      const read = await guardedRead(() => loadCareerData());
+      if (!read.ok) return read.response;
+      const career = read.value;
       if (!career) {
         return {
           content: [{
@@ -137,7 +140,9 @@ Pursue or not? The strategic case for or against, stated in one paragraph. If an
       },
     },
     async ({ company, role, applicationId }) => {
-      const career = await loadCareerData();
+      const read = await guardedRead(() => loadCareerData());
+      if (!read.ok) return read.response;
+      const career = read.value;
       const profile = career?.profile;
 
       return {

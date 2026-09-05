@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadCareerData } from "../storage/file-store.js";
+import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
@@ -28,7 +29,9 @@ export function registerResumeTools(server: McpServer): void {
       },
     },
     async ({ posting, format, pages, includeProjects, focusAreas }) => {
-      const career = await loadCareerData();
+      const read = await guardedRead(() => loadCareerData());
+      if (!read.ok) return read.response;
+      const career = read.value;
       if (!career) {
         return {
           content: [{ type: "text", text: noCareerDataMessage() }],
@@ -69,6 +72,15 @@ ${format === "federal" ? `1. Header with full contact info
 3. Education
 4. Certifications & Training
 5. Skills Matrix` : ""}
+${format === "academic" ? `1. Header & Contact Information
+2. Research Profile / Executive Summary
+3. Education & Credentials (degrees, dissertations, honors)
+4. Academic Appointments & Research Experience
+5. Publications & Peer-Reviewed Works
+6. Grants, Fellowships & Awards
+7. Teaching Experience, Advising & Curriculum Development
+8. Invited Talks, Conference Presentations & Symposia
+9. Professional Service, Editorial Roles & Affiliations` : ""}
 ${format === "functional" ? `1. Header
 2. Professional Summary
 3. Core Competencies by theme
@@ -112,7 +124,9 @@ Output the full resume text, then a "Keyword Match Report" showing which posting
       },
     },
     async ({ posting, company, hiringManager, tone, angle }) => {
-      const career = await loadCareerData();
+      const read = await guardedRead(() => loadCareerData());
+      if (!read.ok) return read.response;
+      const career = read.value;
       if (!career) {
         return {
           content: [{ type: "text", text: noCareerDataMessage() }],

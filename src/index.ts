@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createServer } from "./server.js";
 import { ensureDataDirs } from "./storage/file-store.js";
 import { setClaimHolderLabel } from "./storage/write-claim.js";
+import { stdioBanner } from "./stdio-banner.js";
 
 async function main(): Promise<void> {
   // Names this process in a write-claim refusal, so "another process is writing"
@@ -17,7 +18,7 @@ async function main(): Promise<void> {
 
   // Silence console.log to avoid polluting STDIO transport
   // Use console.error for any debug output
-  console.error("Career Compass MCP server running on stdio");
+  console.error(stdioBanner(Boolean(process.stdin.isTTY)));
 }
 
 main().catch((err) => {

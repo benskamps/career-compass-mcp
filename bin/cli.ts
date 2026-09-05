@@ -38,28 +38,27 @@ if (args.includes("--help") || args.includes("-h")) {
 career-compass-mcp v${pkgVersion}
 
 Usage:
-  career-compass-mcp                         Run MCP server (stdio)
-  career-compass-mcp dashboard               Open web dashboard (full if built, else lite)
-  career-compass-mcp dashboard --sample      Open the bundled Alex Rivera demo
-  career-compass-mcp dashboard --lite        Force the zero-build lite dashboard
+  career-compass-mcp                         Run the MCP server on stdio (your MCP client launches this; you don't)
+  career-compass-mcp dashboard               Open the local web dashboard on your data
+  career-compass-mcp dashboard --sample      Open the bundled Alex Rivera demo — no data of your own needed
   career-compass-mcp dashboard --port 3000   Specify port (default: 3141)
-  career-compass-mcp dashboard --no-open     Start without opening browser
+  career-compass-mcp dashboard --no-open     Start without opening a browser
 
 Options:
   -h, --help       Show this help message
   -v, --version    Show version number
   --sample         Serve the bundled read-only demo (alias: --demo).
                    Ignores CAREER_DATA_PATH; writes nothing.
-  --lite           Use the built-in zero-build dashboard (no Next.js build needed)
   --port <number>  Dashboard port (default: 3141)
-  --no-open        Don't auto-open browser
+  --no-open        Don't auto-open a browser
+  --lite           Force the built-in dashboard (only matters in a source checkout that built the full one)
 
 Your data folder is CAREER_DATA_PATH, or ~/.career-compass when that is unset.
 `);
   process.exit(0);
 }
 
-const isDashboard = args[0] === "dashboard";
+const isDashboard = args.includes("dashboard");
 
 if (!isDashboard) {
   // Run MCP server on stdio (existing behavior)
@@ -115,11 +114,9 @@ if (!isDashboard) {
     const { startLiteDashboard } = await import("../src/dashboard-lite/server.js");
     if (!forceLite) {
       if (existsSync(standalonePath) && !standaloneStaged) {
-        console.error("The full dashboard is built but not staged — its CSS and JS are missing, so it would");
-        console.error("render unstyled. Starting the lite dashboard instead. Fix with: npm run build:dashboard");
+        console.error("The full dashboard is built but not staged — starting the lite dashboard instead.");
       } else {
-        console.error("Full dashboard isn't built in this install — starting the built-in lite dashboard.");
-        console.error("(Run `npm run build` from source for the full Next.js dashboard with the kanban board, analytics, and Career KB views.)");
+        console.error("Starting the built-in lite dashboard.");
       }
     }
     const server = await startLiteDashboard(port);

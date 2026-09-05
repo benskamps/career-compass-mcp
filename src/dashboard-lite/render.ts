@@ -142,15 +142,53 @@ function kpi(n: string | number | null, label: string, foot = ""): string {
   return `<div class="kpi${undefinedClass}"><div class="n">${esc(value)}</div><div class="l">${esc(label)}</div>${foot ? `<div class="foot">${esc(foot)}</div>` : ""}</div>`;
 }
 
-function jobCard(a: Application): string {
+function jobCard(a: Application, now: Date = new Date()): string {
   const color = STAGE_COLOR[a.status];
   const pr = a.priority ? `<span class="pill p-${esc(a.priority)}">${esc(a.priority)}</span>` : "";
   const exc = a.excitement != null ? `<span class="exc">🔥 ${esc(a.excitement)}/10</span>` : "";
   const prompt = `Give me a full status on my ${a.company} application (${a.role}) — where it stands, what's next, and anything I'm at risk of dropping.`;
-  return `<div class="jc" style="--stage:${color}" data-prompt="${esc(prompt)}">
+
+  // Detail drawer content — only if there's something to show
+  const details: string[] = [];
+  // How long the card has sat where it is. `dateUpdated` moves on every status
+  // change, so this is "days in this stage" — the number that tells you a
+  // screening has gone quiet before the next-actions rules do.
+  if (a.dateUpdated) {
+    const sinceMs = Date.parse(a.dateUpdated);
+    if (!Number.isNaN(sinceMs)) {
+      const d = Math.max(0, Math.floor((now.getTime() - sinceMs) / 86400000));
+      details.push(`<div class="dd-row"><b>In stage</b> ${d === 0 ? "since today" : `${d}d`}${a.dateApplied ? ` · applied ${esc(a.dateApplied)}` : ""}</div>`);
+    }
+  }
+  if (a.followUpDue) details.push(`<div class="dd-row"><b>Follow-up</b> ${esc(a.followUpDue)}</div>`);
+  // `postingUrl` is an unvalidated string that a model wrote after reading an
+  // untrusted job posting. Only http(s) becomes a live link; anything else is
+  // shown as text so a `javascript:` scheme can never ride into an href.
+  if (a.postingUrl) {
+    details.push(/^https?:\/\//i.test(a.postingUrl)
+      ? `<div class="dd-row"><b>Posting</b> <a href="${esc(a.postingUrl)}" target="_blank" rel="noopener noreferrer">link ↗</a></div>`
+      : `<div class="dd-row"><b>Posting</b> ${esc(a.postingUrl)}</div>`);
+  }
+  if (a.source) details.push(`<div class="dd-row"><b>Source</b> ${esc(a.source)}</div>`);
+  if (a.contacts && a.contacts.length > 0) {
+    details.push(`<div class="dd-row"><b>Contacts</b> ${a.contacts.map(c => esc(c.name + (c.title ? ` (${c.title})` : ""))).join(", ")}</div>`);
+  }
+  if (a.interviewRounds && a.interviewRounds.length > 0) {
+    details.push(`<div class="dd-row"><b>Interviews</b> ${a.interviewRounds.map(r => esc(`${r.type}${r.date ? ` ${r.date}` : ""}`)).join(", ")}</div>`);
+  }
+  const lastNote = a.notes && a.notes.length > 0 ? a.notes[a.notes.length - 1] : null;
+  if (lastNote) details.push(`<div class="dd-row dd-note"><b>Latest note</b> ${esc(lastNote)}</div>`);
+
+  const drawer = details.length > 0
+    ? `<div class="dd">${details.join("")}<button class="btn dd-ask" data-prompt="${esc(prompt)}">📋 Copy prompt</button></div>`
+    : `<div class="dd"><div class="dd-row" style="color:var(--muted)">No details recorded yet.</div><button class="btn dd-ask" data-prompt="${esc(prompt)}">📋 Copy prompt</button></div>`;
+
+  return `<div class="jc" style="--stage:${color}" data-id="${esc(a.id)}" data-company="${esc(a.company)}" data-role="${esc(a.role)}" role="button" tabindex="0" aria-expanded="false" title="Click to expand">
+    <span class="chev" aria-hidden="true">▸</span>
     <div class="co">${esc(a.company)}</div>
     <div class="ro">${esc(a.role)}</div>
     <div class="meta">${pr}${exc}</div>
+    ${drawer}
   </div>`;
 }
 
@@ -164,7 +202,7 @@ function jobCard(a: Application): string {
  * `~/.career-compass` unconditionally, so anyone running with CAREER_DATA_PATH
  * set was told their data was somewhere it wasn't.
  */
-export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: Date = new Date()): string {
+export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: Date = new Date(), hasCareerKB: boolean = true): string {
   const apps = [...(pipeline.applications ?? [])].sort((a, b) => (b.dateUpdated ?? "").localeCompare(a.dateUpdated ?? ""));
   const s = computeStats(apps);
   const actions = deriveNextActions(apps, now);
@@ -220,7 +258,7 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: D
     const items = apps.filter((a) => a.status === st);
     return `<div class="col">
       <div class="h"><span class="sw" style="background:${STAGE_COLOR[st]}"></span> ${st} <span class="count">${items.length}</span></div>
-      <div class="stack">${items.map(jobCard).join("") || '<div class="none">Nothing here yet</div>'}</div>
+      <div class="stack">${items.map((a) => jobCard(a, now)).join("") || '<div class="none">Nothing here yet</div>'}</div>
     </div>`;
   };
 
@@ -243,15 +281,27 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: D
     : "";
 
   const actionsHtml = actions.length
-    ? actions.map((x) => `<div class="action ${x.urgency}"><span class="dot"></span><div class="t"><b>${esc(x.label)}</b><span>${esc(x.app.role)}</span></div></div>`).join("")
+    ? actions.map((x) => {
+        const actionPrompt = `Help me with this: ${x.label}. Look up my ${x.app.company} application (${x.app.role}, ID: ${x.app.id}) and tell me exactly what to do next.`;
+        return `<div class="action ${x.urgency}" data-prompt="${esc(actionPrompt)}" role="button" tabindex="0" title="Copy a prompt for Claude"><span class="dot"></span><div class="t"><b>${esc(x.label)}</b><span>${esc(x.app.role)}</span></div><span class="hint" aria-hidden="true">📋 copy</span></div>`;
+      }).join("")
     : `<div class="none-lg">✅ Nothing overdue. Follow-ups, upcoming interviews, and expiring offers surface here.</div>`;
 
-  const emptyState = `<div class="panel"><div class="state">
+  const emptyState = hasCareerKB
+    ? `<div class="panel"><div class="state">
     <h3>Your pipeline is empty — let's fix that</h3>
-    <div>Career Compass builds everything off your pipeline. Add your first opportunity and this dashboard lights up.</div>
+    <div>Your Career KB is set up. Now add your first opportunity and this dashboard lights up.</div>
     <div class="btns">
       <button class="btn primary" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis.">Copy: track a job posting</button>
       <button class="btn" data-prompt="Add an application to my pipeline — I'll give you the company and role.">Copy: add manually</button>
+    </div>
+  </div></div>`
+    : `<div class="panel"><div class="state">
+    <h3>Welcome to Career Compass 🧭</h3>
+    <div>Two things to get started: build your Career Knowledge Base (your profile, experience, and skills), then add your first pipeline entry.</div>
+    <div class="btns">
+      <button class="btn primary" data-prompt="I'm new to Career Compass. Let's set up my Career Knowledge Base — start with my profile and walk me through the process.">Copy: set up my Career KB</button>
+      <button class="btn" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis.">Copy: track a job posting</button>
     </div>
   </div></div>`;
 
@@ -337,6 +387,33 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
    just old, so it warns without shouting. Sits between the toolbar and the KPIs
    so it is read before the numbers it qualifies. */
 .stale-banner{display:flex;gap:8px;align-items:flex-start;background:color-mix(in srgb,#f59e0b 12%,var(--card));border:1px solid color-mix(in srgb,#f59e0b 38%,var(--line));color:var(--ink);border-radius:12px;padding:11px 14px;margin:0 0 16px;font-size:12.5px;line-height:1.45}
+/* Detail drawer — collapsed by default, toggled by JS adding .open */
+.dd{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted)}
+.jc.open .dd{display:block}.jc.open{box-shadow:var(--shadow);border-color:var(--accent)}
+.dd-row{padding:3px 0}.dd-row b{color:var(--ink);margin-right:6px}.dd-row a{color:var(--accent);text-decoration:none}
+.dd-note{max-height:3.6em;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.dd-ask{margin-top:8px;width:100%;font-size:11.5px}
+/* Expand affordance on cards — a chevron that turns when the drawer opens */
+.jc{position:relative}.jc .chev{position:absolute;top:9px;right:10px;color:var(--muted);font-size:11px;transition:transform .15s,color .12s}
+.jc:hover .chev{color:var(--accent)}.jc.open .chev{transform:rotate(90deg);color:var(--accent)}
+.jc .co{padding-right:16px}
+/* Search/filter — hugs the right of the toolbar, never wider than it needs */
+.search-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 1 320px;min-width:180px}
+.search{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 12px;font-size:12.5px;outline:none;transition:.12s}
+.search-count{color:var(--muted);font-size:11.5px;white-space:nowrap;min-width:0}.search-count:empty{display:none}
+@media(max-width:700px){.search-wrap{flex:1 1 100%;margin-left:0}}
+/* Hover hint on clickable next actions */
+.action .hint{display:none;align-self:center;color:var(--accent);font-size:11px;font-weight:600;white-space:nowrap}
+.action[data-prompt]:hover .hint,.action[data-prompt]:focus-visible .hint{display:inline}
+.search:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent)}
+.search::placeholder{color:var(--muted)}
+/* Mobile horizontal scroll for kanban */
+@media(max-width:700px){.board{display:flex!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;gap:12px;padding-bottom:8px}.board>.col{min-width:220px;flex:0 0 220px;scroll-snap-align:start}}
+/* Clickable action items */
+.action[data-prompt]{cursor:pointer;border-radius:8px;padding-left:10px;padding-right:10px;margin:0 -10px;transition:.1s}.action[data-prompt]:hover{background:var(--sunk)}
+/* Accessibility — focus rings for keyboard users */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.jc:focus-visible{outline-offset:0;border-radius:10px}
 </style></head>
 <body><div class="wrap">
 <header class="top">
@@ -347,6 +424,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 <div class="toolbar">
   <button class="btn primary" data-prompt="What should I focus on in my job search today? Look at my pipeline and give me the 3 highest-leverage moves.">🎯 Copy: what should I do today?</button>
   <button class="btn" data-prompt="Review my whole pipeline and flag anything stale, single-threaded, or at risk of going cold.">🔍 Copy: health check</button>
+${apps.length === 0 ? "" : `  <div class="search-wrap"><input type="search" class="search" id="filter" placeholder="Filter by company or role…  ( / )" aria-label="Filter applications"><span class="search-count" id="filter-count" aria-live="polite"></span></div>`}
 </div>
 ${staleBanner}
 ${kpis ? `<div class="kpis">${kpis}</div>` : ""}
@@ -359,7 +437,7 @@ ${apps.length === 0 ? emptyState : `
   <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
   <div class="panel"><h2>Stage distribution</h2><div class="body"><div id="chart" class="chart-box"></div></div></div>
 </div>`}
-<div class="foot-note">${dataDir ? `Data stays local (<code>${esc(dataDir)}</code>).` : "Data stays local on this machine."} Click any card to copy a prompt for Claude — that's where the work happens. Refresh the page to re-read from disk.</div>
+<div class="foot-note">${dataDir ? `Data stays local (<code>${esc(dataDir)}</code>).` : "Data stays local on this machine."} Click cards to expand details, or click buttons to copy prompts for Claude. Refresh to re-read from disk.</div>
 </div>
 <div id="toast"></div>
 <script>
@@ -378,14 +456,58 @@ const CHART=${chartData};
   } else if(box){ box.innerHTML='<div class="none-lg">No active applications yet.</div>'; }
   const toast=document.getElementById("toast"); let tmr;
   function flash(m){ toast.textContent=m; toast.classList.add("show"); clearTimeout(tmr); tmr=setTimeout(()=>toast.classList.remove("show"),1900); }
-  document.querySelectorAll("[data-prompt]").forEach(el=>{
-    el.addEventListener("click",()=>{
-      const p=el.getAttribute("data-prompt");
-      if(navigator.clipboard&&navigator.clipboard.writeText){
-        navigator.clipboard.writeText(p).then(()=>flash("Prompt copied — paste it to Claude 🧭")).catch(()=>flash(p));
-      } else { flash("Copy this: "+p); }
-    });
+  function copyPrompt(p){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(p).then(()=>flash("Prompt copied — paste it to Claude 🧭")).catch(()=>flash(p)); } else { flash("Copy this: "+p); } }
+  // Card drawer toggle — click the card to expand/collapse, NOT copy
+  document.querySelectorAll(".jc[data-id]").forEach(card=>{
+    function toggle(e){
+      // Don't toggle if clicking a link or the inner copy button
+      if(e.target.closest("a,button")) return;
+      const open=card.classList.toggle("open");
+      card.setAttribute("aria-expanded",open?"true":"false");
+    }
+    card.addEventListener("click",toggle);
+    card.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(e); } });
   });
+  // Buttons and actions with data-prompt — copy on click
+  document.querySelectorAll("[data-prompt]").forEach(el=>{
+    // Skip cards — they use the drawer toggle above
+    if(el.classList.contains("jc")) return;
+    function doCopy(){ copyPrompt(el.getAttribute("data-prompt")); }
+    el.addEventListener("click",doCopy);
+    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doCopy(); } });
+  });
+  // Search/filter — hides non-matching cards, re-counts every column badge so
+  // the numbers describe what is on screen, and says "N of M" beside the box.
+  // "/" focuses it from anywhere; Esc clears it.
+  const filterInput=document.getElementById("filter");
+  const filterCount=document.getElementById("filter-count");
+  if(filterInput){
+    const cards=[...document.querySelectorAll(".jc[data-id]")];
+    function applyFilter(){
+      const q=filterInput.value.trim().toLowerCase();
+      let shown=0;
+      cards.forEach(card=>{
+        const co=(card.getAttribute("data-company")||"").toLowerCase();
+        const ro=(card.getAttribute("data-role")||"").toLowerCase();
+        const hit=!q||co.includes(q)||ro.includes(q);
+        card.style.display=hit?"":"none"; if(hit) shown++;
+      });
+      document.querySelectorAll(".col").forEach(col=>{
+        const n=[...col.querySelectorAll(".jc[data-id]")].filter(c=>c.style.display!=="none").length;
+        const badge=col.querySelector(".count"); if(badge) badge.textContent=String(n);
+        const none=col.querySelector(".none-match");
+        if(q&&n===0&&col.querySelector(".jc[data-id]")){ if(!none){ const d=document.createElement("div"); d.className="none none-match"; d.textContent="No matches"; col.querySelector(".stack").appendChild(d);} }
+        else if(none) none.remove();
+      });
+      if(filterCount) filterCount.textContent=q?(shown+" of "+cards.length):"";
+      document.body.classList.toggle("filtering",!!q);
+    }
+    filterInput.addEventListener("input",applyFilter);
+    filterInput.addEventListener("keydown",e=>{ if(e.key==="Escape"){ filterInput.value=""; applyFilter(); filterInput.blur(); } });
+    document.addEventListener("keydown",e=>{
+      if(e.key==="/"&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!(e.target instanceof HTMLInputElement)){ e.preventDefault(); filterInput.focus(); filterInput.select(); }
+    });
+  }
 })();
 </script>
 </body></html>`;

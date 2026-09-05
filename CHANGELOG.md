@@ -1,5 +1,76 @@
 # Changelog
 
+## 2.7.0 — 2026-09-05
+
+Productization pass: four phases drafted by Antigravity, validated and hardened here.
+Every behaviour change below now has a test; the pass landed with only the prompt-count
+test touched.
+
+### Fixed
+
+- **Corrupt-store reads surfaced as stack traces in the résumé and opportunity tools.**
+  Both tools in `resume.ts` and both in `opportunity.ts` called `loadCareerData()` bare;
+  they now go through `guardedRead()` like every other reader.
+- **`tailor_resume` accepted `format: "academic"` and produced a standard résumé.** The
+  academic structure (publications, grants, teaching, service) is now a real branch.
+- **Subscribing to `career://pipeline/{id}` never notified.** A write to
+  `applications.yaml` marked the aggregate URIs only; per-application subscriptions now
+  fire too.
+- **Validation failures in `pipeline_*` returned as successes.** Unknown id, bad status,
+  refused transition, missing id and unknown action all carry `isError: true` now, so a
+  host can tell a refusal from a result.
+- **`pipeline_view next_actions` compared date-only fields as UTC timestamps.** Ported the
+  calendar-day logic the lite dashboard already used; a follow-up due today is due today
+  in every timezone. Ghosted applications are skipped, matching the dashboard.
+- **`career-compass-mcp dashboard` only matched as the first argument.**
+- **`CAREER_DATA_PATH=~/...` created a literal `~` directory.** Claude Desktop's env block
+  never passes through a shell; the tilde is now expanded to the home directory.
+- **`resume-tailor` prompt offered pages 1–2; the tool takes 1–4.** Aligned.
+
+### Fixed — from the pre-publish stranger pass (drove the packed tarball over stdio as a first-time user)
+
+- **The onboarding prompt taught the wrong field name.** `setup-career-kb` said experience takes
+  "company, title, dates"; the schema wants `role`, `startDate`, `endDate` (`'present'` for a
+  current job) and object achievements. A save built from the prompt's own words was refused
+  on step 2. The prompt now uses the schema's names.
+- **An empty pipeline read back as a table header over nothing.** `pipeline_view list` now says
+  no applications are tracked and names `pipeline_add` (and `status: discovered`); a filter
+  that matches nothing blames the filter. `next_actions` on an empty pipeline no longer says
+  "your pipeline is up to date" — there is no pipeline.
+- **Two spellings of one folder.** `check_setup` printed `CAREER_DATA_PATH` verbatim (mixed
+  separators on Windows) while `tailor_resume` printed the same folder normalized.
+  `getDataDir()` now resolves the path once, so every surface prints the same string.
+- **The git tip was a bash-only `&&` chain** that fails in Windows PowerShell 5.1. Three plain
+  lines now, like the other per-shell tips.
+- **A bare `career-compass-mcp` in a terminal sat forever with no orientation.** When stdin is a
+  TTY it now says the client launches this, points at `dashboard --sample`, and names Ctrl+C.
+- **`--help` leaked "full if built" and "Next.js"** at the npm audience, who can have neither.
+- **`pipeline_add` without a status silently recorded "applied".** The reply now says the
+  status was defaulted and how to mark a role you have only found.
+
+### Added
+
+- **`setup-career-kb` prompt** — first-contact walkthrough that builds the Career KB in
+  conversation, optionally from a pasted résumé. Seventh prompt.
+- **Two-step empty state** in the lite dashboard: a Welcome screen when there is no Career
+  KB yet, the pipeline-only empty state once there is.
+- **Lite dashboard: per-card detail drawer** (follow-up, posting link, source, contacts,
+  interview rounds, latest note), **clickable next actions** that copy a targeted prompt,
+  a **company/role filter**, horizontal-scroll kanban under 700px, and keyboard/focus
+  accessibility on every clickable element. A posting URL is only rendered as a link when
+  it is http(s); anything else is shown as text.
+- **`check_setup` git finding** — a `warn` with the init command when the data directory
+  is not a git repository, `ok` when it is. Omitted, never misreported, when git is
+  missing or fails for some other reason.
+- **Lite dashboard polish on top of the pass.** Cards carry a chevron that turns when the
+  drawer opens; the drawer leads with *days in stage*; the filter hugs the right of the
+  toolbar, shows "N of M", re-counts every column badge, writes "No matches" into an
+  emptied column, focuses on `/` and clears on Esc, and is not rendered on an empty
+  pipeline; next-action rows reveal a copy hint on hover and focus.
+- README: dashboard section describes the drawer and filter (it still said "clicking a
+  card copies a prompt"); screenshots regenerated from 2.7.0; Zed config snippet; prompt
+  table lists `setup-career-kb`.
+
 ## 2.6.1 — 2026-08-31
 
 Documentation and distribution pass. No behaviour change in the server — the version

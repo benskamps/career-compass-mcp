@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, rename, copyFile, readdir, rm } from "fs/promises";
 import { existsSync } from "fs";
-import { join, dirname, basename } from "path";
+import { join, dirname, basename, resolve } from "path";
 import { homedir } from "os";
 import { randomUUID } from "crypto";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
@@ -91,9 +91,24 @@ export function withDataLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
 
 /** Absolute path of the directory the Career KB is read from and written to.
  *  Exported so empty-state messages can name the user's real folder instead of
- *  a repo-relative path that exists nowhere on their machine. */
+ *  a repo-relative path that exists nowhere on their machine.
+ *
+ *  Tilde expansion: if CAREER_DATA_PATH starts with `~/` or `~\` the leading
+ *  tilde is replaced with the OS home directory. Claude Desktop's env block does
+ *  not go through a shell, so the shell never expands `~` — without this the
+ *  path arrives literally as `~/.career-compass` and mkdirSync creates a
+ *  directory named `~` in the process's cwd. */
 export function getDataDir(): string {
-  return process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
+  const raw = process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
+  if (raw === "~") return homedir();
+  if (raw.startsWith("~/") || raw.startsWith("~\\")) {
+    return join(homedir(), raw.slice(2));
+  }
+  // One spelling of the folder everywhere it is printed. A value with mixed
+  // separators (`C:\Users\me/data` — common on Windows) reached check_setup
+  // verbatim while tailor_resume printed the same folder through path.join:
+  // two tools, two spellings of one directory, on a first-run screen.
+  return resolve(raw);
 }
 
 function careerDir(): string { return join(getDataDir(), "career"); }

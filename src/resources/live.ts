@@ -204,6 +204,13 @@ export function registerLiveResources(server: McpServer): LiveResources {
     if (!uri) return;
     mark(uri);
     for (const agg of AGGREGATE_URIS) mark(agg);
+    if (name === "applications.yaml") {
+      for (const subUri of subscribed) {
+        if (subUri.startsWith("career://pipeline/")) {
+          mark(subUri);
+        }
+      }
+    }
   };
 
   /** Arm one subdir's watcher if it isn't already, tolerating a missing dir. */

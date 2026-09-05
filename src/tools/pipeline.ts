@@ -87,7 +87,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
   // job you had only found could not be tracked as `discovered`, which is the
   // stage's entire purpose.
   const checked = args.status ? parseStatus(args.status) : ({ ok: true, status: "applied" } as const);
-  if (!checked.ok) return { content: [{ type: "text", text: checked.message }] };
+  if (!checked.ok) return { isError: true, content: [{ type: "text", text: checked.message }] };
   const status = checked.status;
 
   const id = randomUUID().slice(0, 8);
@@ -118,14 +118,21 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
   };
   pipeline.applications.push(newApp);
   return {
-    content: [{ type: "text", text: `✅ Added application: **${args.role}** at **${args.company}**\nID: \`${id}\`\nStatus: ${status}` }],
+    content: [{
+      type: "text",
+      text: `✅ Added application: **${args.role}** at **${args.company}**\nID: \`${id}\`\nStatus: ${status}${
+        // The default is a guess about the user's world. Say so once, with the
+        // alternative, so a role that was only found is not recorded as sent.
+        args.status ? "" : " (defaulted — if you haven't applied yet, update it to `discovered`)"
+      }`,
+    }],
   };
 }
 
 export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline): Promise<ToolResponse> {
   const idx = pipeline.applications.findIndex(a => a.id === args.id);
   // Returns normally: mutatePipeline skips the write because nothing changed.
-  if (idx === -1) return { content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
+  if (idx === -1) return { isError: true, content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
 
   const app = pipeline.applications[idx];
 
@@ -142,9 +149,9 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   // the caller would be told only about the status.
   if (args.status) {
     const checked = parseStatus(args.status);
-    if (!checked.ok) return { content: [{ type: "text", text: checked.message }] };
+    if (!checked.ok) return { isError: true, content: [{ type: "text", text: checked.message }] };
     const refusal = transitionRefusal(app.status, checked.status);
-    if (refusal) return { content: [{ type: "text", text: refusal }] };
+    if (refusal) return { isError: true, content: [{ type: "text", text: refusal }] };
     app.status = checked.status;
   }
   if (args.followUpDue) app.followUpDue = args.followUpDue;
@@ -167,7 +174,7 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
 
 export function handleGet(args: PipelineGetArgs, pipeline: Pipeline): ToolResponse {
   const app = pipeline.applications.find(a => a.id === args.id);
-  if (!app) return { content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
+  if (!app) return { isError: true, content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
   return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }] };
 }
 
@@ -195,6 +202,17 @@ export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResp
     }
     return 0;
   });
+
+  // A header row over nothing is not an answer. On a fresh install this is the
+  // very first thing a user reads back, and it has to say what to do next; on
+  // a filtered read it has to say the filter is why.
+  if (apps.length === 0) {
+    const filtered = args.filterStatus || args.filterPriority;
+    const text = filtered
+      ? `No applications match that filter${args.filterStatus ? ` (status: ${args.filterStatus})` : ""}${args.filterPriority ? ` (priority: ${args.filterPriority})` : ""}. ${pipeline.applications.length} tracked in total — drop the filter to see them all.`
+      : `No applications tracked yet.\n\nAdd the first one with \`pipeline_add\` — or paste a job posting and say "track this" and I'll add it with a fit analysis. Pass \`status: discovered\` for a role you have only found, not applied to.`;
+    return { content: [{ type: "text", text }] };
+  }
 
   const limited = apps.slice(0, args.limit ?? 20);
   const rows = limited.map(a =>
@@ -247,11 +265,25 @@ export function handleNextActions(pipeline: Pipeline): ToolResponse {
   const now = new Date();
   const actions: string[] = [];
 
-  for (const app of pipeline.applications) {
-    if (["rejected", "withdrawn", "accepted"].includes(app.status)) continue;
+  // Compare CALENDAR DAYS in the user's own timezone, not timestamps.
+  // `new Date("2026-07-24")` is parsed as UTC midnight, while `Date.now()` is
+  // local — so west of UTC a follow-up due today came out negative, and east
+  // of UTC tomorrow's reminder fired a day early. A date-only field has no
+  // time in it; treating it as one is the bug.
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const days = (iso?: string): number => {
+    if (!iso) return NaN;
+    const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+    if (!y || !m || !d) return NaN;
+    return Math.round((new Date(y, m - 1, d).getTime() - midnight) / 86400000);
+  };
 
-    const updatedDate = new Date(app.dateUpdated);
-    const daysSinceUpdate = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
+  for (const app of pipeline.applications) {
+    // Same closed set the lite dashboard's deriveNextActions skips: a ghosted
+    // application is over, and nagging "follow up" on it is the wrong advice.
+    if (["rejected", "withdrawn", "accepted", "ghosted"].includes(app.status)) continue;
+
+    const daysSinceUpdate = -(days(app.dateUpdated) || 0);
 
     if (app.status === "applied" && daysSinceUpdate >= 7) {
       actions.push(`📬 **Follow up** — ${app.company} / ${app.role} (applied ${daysSinceUpdate}d ago, ID: ${app.id})`);
@@ -259,11 +291,16 @@ export function handleNextActions(pipeline: Pipeline): ToolResponse {
     if (app.status === "screening" && daysSinceUpdate >= 5) {
       actions.push(`📞 **Check status** — ${app.company} / ${app.role} (in screening ${daysSinceUpdate}d, ID: ${app.id})`);
     }
-    if (app.followUpDue && new Date(app.followUpDue) <= now) {
+    const followUpDays = days(app.followUpDue);
+    if (!Number.isNaN(followUpDays) && followUpDays <= 0) {
       actions.push(`⚠️ **Overdue follow-up** — ${app.company} / ${app.role} (due ${app.followUpDue}, ID: ${app.id})`);
     }
     if (app.status === "interviewing") {
-      const nextInterview = app.interviewRounds.find(r => r.date && new Date(r.date) > now);
+      const upcomingRounds = app.interviewRounds
+        .map(r => ({ ...r, d: days(r.date) }))
+        .filter(r => !Number.isNaN(r.d) && r.d >= 0)
+        .sort((a, b) => a.d - b.d);
+      const nextInterview = upcomingRounds[0];
       if (nextInterview) {
         actions.push(`🎯 **Upcoming interview** — ${app.company} / ${app.role}: ${nextInterview.type} on ${nextInterview.date} (ID: ${app.id})`);
       }
@@ -278,7 +315,11 @@ export function handleNextActions(pipeline: Pipeline): ToolResponse {
       type: "text",
       text: actions.length > 0
         ? `# Next Actions (${actions.length})\n\n${actions.join("\n")}`
-        : "✅ No immediate actions needed. Your pipeline is up to date.",
+        // "Up to date" over an empty pipeline is reassurance where orientation
+        // was needed; say which of the two states this is.
+        : pipeline.applications.length === 0
+          ? "Nothing tracked yet, so there is nothing to act on. Add your first application with `pipeline_add` and follow-ups, interviews, and expiring offers will surface here."
+          : "✅ No immediate actions needed. Your pipeline is up to date.",
     }],
   };
 }
@@ -334,7 +375,7 @@ export function registerPipelineTools(server: McpServer): void {
 
       switch (args.action) {
         case "get": {
-          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for action=get." }] };
+          if (!args.id) return { content: [{ type: "text", text: "❌ id is required for action=get." }], isError: true };
           return handleGet(args as PipelineGetArgs, pipeline);
         }
         case "list":
@@ -344,7 +385,7 @@ export function registerPipelineTools(server: McpServer): void {
         case "next_actions":
           return handleNextActions(pipeline);
         default:
-          return { content: [{ type: "text", text: `❌ Unknown action: ${args.action}` }] };
+          return { content: [{ type: "text", text: `❌ Unknown action: ${args.action}` }], isError: true };
       }
     }
   );

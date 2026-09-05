@@ -12,11 +12,11 @@ export function registerPrompts(server: McpServer): void {
       argsSchema: {
         posting: z.string().describe("Full job posting text or URL"),
         format: z.enum(["standard", "federal", "academic", "functional"]).optional().describe("Resume format style"),
-        pages: z.enum(["1", "2"]).optional().describe("Target page count"),
+        pages: z.coerce.number().min(1).max(4).optional().describe("Target page count (1–4)"),
         notes: z.string().optional().describe("Any special instructions or context"),
       },
     },
-    ({ posting, format = "standard", pages = "2", notes }) => ({
+    ({ posting, format = "standard", pages = 2, notes }) => ({
       messages: [{
         role: "user",
         content: {
@@ -240,6 +240,49 @@ Then walk me through:
 5. **Capture it** — propose one \`capture_insight\` (type \`note\` or \`fit_signal\`) recording the week's durable takeaway, so next month's retro can see the trend (ask before writing)
 
 Ground every claim in my actual data — cite the applications and journal entries you're drawing from.`,
+        },
+      }],
+    })
+  );
+
+  // ── Onboarding prompt ──────────────────────────────────────────────────────
+  // A first-contact prompt for users with no Career KB data yet. Rather than
+  // dumping them into a blank `save_career_section`, this walks them through
+  // the minimum viable Career KB in conversation — a profile and one experience
+  // entry — so the pipeline and résumé tools have something to work with.
+
+  server.registerPrompt(
+    "setup-career-kb",
+    {
+      title: "Set Up Your Career KB",
+      description: "Walk through building your Career Knowledge Base from scratch — profile, experience, skills, and first pipeline entry",
+      argsSchema: {
+        resumeText: z.string().optional().describe("Paste your existing résumé here and I'll extract the structured data for you"),
+      },
+    },
+    ({ resumeText }) => ({
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are my career coach helping me set up Career Compass for the first time. Let's build my Career Knowledge Base step by step so the pipeline, résumé, and interview tools have something to work with.
+
+${resumeText ? `**Here's my existing résumé — extract what you can:**\n${embedUntrusted("user resume", resumeText)}\n\nParse this into the structured fields below, then ask me to confirm and fill any gaps.` : "I don't have a résumé handy, so let's build from conversation."}
+
+**Walk me through these, one section at a time:**
+
+1. **Profile** — name, summary, target roles, target industries, email, location. Save with \`save_career_section\` (section: profile)
+2. **Experience** — for each job: \`role\` (the job title), \`company\`, \`startDate\` and \`endDate\` as \`YYYY-MM\` (use \`'present'\` for a current job), and \`achievements\` as \`{ metric, context, impact }\` objects — not plain strings. Save with \`save_career_section\` (section: experience)
+3. **Skills** — technical, leadership, and domain skills with proficiency levels. Save with \`save_career_section\` (section: skills)
+4. **First pipeline entry** — do I have a job I'm eyeing or already applied to? If so, add it with \`pipeline_add\`
+
+**Rules:**
+- Save each section as we go — don't wait until the end
+- Ask clarifying questions to pull out quantified achievements (numbers, percentages, timelines)
+- If I give vague descriptions, push me for the metric and the impact
+- After we finish, run \`check_setup\` to confirm everything landed
+
+Let's start with my profile.`,
         },
       }],
     })
