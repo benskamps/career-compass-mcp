@@ -364,6 +364,21 @@ put it, so it works from any directory and any shell. The sample's dates are shi
 around today each time it is read — so the pipeline always looks like a live search — and
 Career Compass refuses to write into it.
 
+**Make the buttons ask Claude for you.** If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+installed, start the dashboard with `--ask-claude`:
+
+```bash
+npx -y career-compass-mcp dashboard --ask-claude
+```
+
+Every card, next-action row, and toolbar button then asks Claude directly instead of copying a
+prompt — the server runs `claude` headless with Career Compass as its only tool set, and the
+answer streams into a panel on the page, with a *Reload the board* button when Claude may have
+changed your files. It is opt-in, loopback-only, one question at a time, and Claude Code runs
+without your user hooks, without other MCP servers, and without shell or file-editing tools.
+Prompts that need you to paste a posting still copy. Without the flag (or without Claude
+Code) the buttons copy, exactly as before.
+
 Other flags: `--port <n>` (default 3141, falling back to the next free port), `--no-open` to
 skip launching a browser, `--lite` to force this dashboard explicitly. Full list:
 `career-compass-mcp --help`.

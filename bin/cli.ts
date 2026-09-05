@@ -51,6 +51,9 @@ Options:
                    Ignores CAREER_DATA_PATH; writes nothing.
   --port <number>  Dashboard port (default: 3141)
   --no-open        Don't auto-open a browser
+  --ask-claude     Dashboard buttons ask Claude directly (needs Claude Code installed).
+                   Runs \`claude\` headless with your Career Compass data; the answer
+                   streams into the page. Without it, buttons copy a prompt to paste.
   --lite           Force the built-in dashboard (only matters in a source checkout that built the full one)
 
 Your data folder is CAREER_DATA_PATH, or ~/.career-compass when that is unset.
@@ -107,11 +110,15 @@ if (!isDashboard) {
   const standaloneDir = dirname(standalonePath);
   const standaloneStaged =
     existsSync(join(standaloneDir, ".next", "static")) && existsSync(join(standaloneDir, ".staged"));
-  const useLite = forceLite || !existsSync(standalonePath) || !standaloneStaged;
+  // --ask-claude lives in the lite dashboard, so asking for it means asking for
+  // lite even in a source checkout that has the full app built.
+  const askClaudeFlag = args.includes("--ask-claude");
+  const useLite = forceLite || askClaudeFlag || !existsSync(standalonePath) || !standaloneStaged;
 
   if (useLite) {
     process.env.CAREER_DATA_PATH = dataPath; // loadPipeline() reads this
     const { startLiteDashboard } = await import("../src/dashboard-lite/server.js");
+    const { resolveClaudeCommand } = await import("../src/dashboard-lite/ask-bridge.js");
     if (!forceLite) {
       if (existsSync(standalonePath) && !standaloneStaged) {
         console.error("The full dashboard is built but not staged — starting the lite dashboard instead.");
@@ -119,8 +126,28 @@ if (!isDashboard) {
         console.error("Starting the built-in lite dashboard.");
       }
     }
-    const server = await startLiteDashboard(port);
+    // The Ask bridge: opt-in, and only when Claude Code is actually here.
+    // Asking for it without the binary is an error, not a silent downgrade —
+    // the user asked for a behaviour and would otherwise never learn why the
+    // buttons still copy.
+    const askClaude = askClaudeFlag;
+    const claudeCmd = resolveClaudeCommand();
+    if (askClaude && !claudeCmd) {
+      console.error("--ask-claude needs Claude Code, and `claude` was not found on your PATH.");
+      console.error("Install it (https://docs.anthropic.com/en/docs/claude-code) or start without --ask-claude to use copy-and-paste.");
+      process.exit(1);
+    }
+    if (askClaude && useSample) {
+      console.error("--ask-claude is off for the bundled sample: it is read-only and not yours to change.");
+    }
+    const ask = askClaude && claudeCmd && !useSample ? { cmd: claudeCmd } : undefined;
+    const server = await startLiteDashboard(port, undefined, { ask });
     console.error(`Lite dashboard running at http://localhost:${port}`);
+    if (ask) {
+      console.error("Ask Claude: ON — dashboard buttons run Claude Code headless with your Career Compass data (only this package's tools; no shell, no file edits).");
+    } else if (claudeCmd && !useSample) {
+      console.error("Tip: add --ask-claude and the dashboard buttons will ask Claude directly instead of copying a prompt.");
+    }
     if (!noOpen) openBrowser(`http://localhost:${port}`);
     const shutdownLite = () => { server.close(); process.exit(0); };
     process.on("SIGINT", shutdownLite);

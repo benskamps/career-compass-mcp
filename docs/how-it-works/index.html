@@ -302,13 +302,13 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
 <!-- ─────────────────────────────── 1 ─────────────────────────────── -->
 <section id="dashboard">
   <div class="sec-head"><div><span class="eyebrow">Panel four</span><h2>How the dashboard works</h2></div><span class="num">04</span></div>
-  <p class="lede">Four stations. The important one is the last: the page never writes. Anything you want changed, you say to Claude — and the dashboard hands you the words.</p>
+  <p class="lede">Four stations. The important one is the last: the page never writes. Anything you want changed, you say to Claude — and the dashboard either hands you the words, or, with Claude Code installed, asks for you.</p>
 
   <ol class="loop">
     <li><h3>Open it</h3><p>One command starts a tiny web server on your own computer and opens your browser. It only answers the computer you are sitting at; nothing on your network, and no other website, can reach the page.</p></li>
     <li><h3>It reads the drawer</h3><p>On every request the page re-reads the pipeline file from disk and renders the whole document fresh. Nothing is cached, nothing is remembered between loads. Refresh the browser and you are looking at the files as they are right now.</p></li>
     <li><h3>You look</h3><p>Six numbers across the top, a kanban by stage with the closed applications folded away, a next-actions list of what is overdue or due soon, and a stage chart. Click a card and its drawer opens: days in stage, follow-up, posting, contacts, rounds, latest note.</p></li>
-    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row copies a ready-to-paste prompt for Claude — "give me a full status on my Acme application," "help me with this overdue follow-up." The work happens in the conversation. The page stays read-only.</p></li>
+    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row carries a ready-made question — "give me a full status on my Acme application," "help me with this overdue follow-up." By default it copies the words for you to paste. Start the dashboard with <span class="mono">--ask-claude</span> and, if Claude Code is installed, the click asks Claude directly: the answer streams into a panel on the page, and a reload button appears once Claude may have changed your files. Either way the page itself stays read-only.</p></li>
   </ol>
 
   <div class="cmd">
