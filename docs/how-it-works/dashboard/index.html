@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Career Compass dashboard, both flavors</title>
+<meta name="description" content="How the Career Compass dashboard works: the lite one that ships in the npm package and re-reads your files on every load, and the full Next.js one that is kept frozen as a design reference.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b2218'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c2603c'/%3E%3Cpath d='M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z' fill='%232b2218'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+<style>
+/* Same paper-and-ink register as how-it-works.html; serif narrates, mono labels. Zero JS. */
+:root{--paper:#f6f2ea;--paper-deep:#ece4d3;--ink:#2b2218;--ink-soft:#5a4a39;--rule:#d9cdb8;--clay:#c2603c;--clay-deep:#8a3b1f;--sage:#5a6b3c;--steel:#7c8fa1;--brass:#a2894f;--measure:72ch}
+*{box-sizing:border-box}html{background:var(--paper)}
+body{margin:0;color:var(--ink);background:var(--paper);font-family:Fraunces,Georgia,serif;font-weight:400;font-size:17.5px;line-height:1.58;-webkit-font-smoothing:antialiased;background-image:radial-gradient(ellipse 60% 30% at 12% -4%,rgba(194,96,60,.10),transparent 70%),radial-gradient(ellipse 50% 28% at 96% 104%,rgba(162,137,79,.10),transparent 70%),repeating-linear-gradient(0deg,rgba(43,34,24,.018) 0 1px,transparent 1px 3px)}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--clay-deep)}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 72px}
+hr.rule{border:0;border-top:1px solid var(--rule);margin:48px 0}
+.crumbs{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:22px}
+.crumbs a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+.mast{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.mast .kicker{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.mast h1{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(40px,7vw,86px);line-height:.98;letter-spacing:-.015em;margin:0}
+.mast h1 em{font-style:normal;color:var(--clay)}
+.mast .dek{font-style:italic;color:var(--ink-soft);font-size:20px;max-width:56ch;margin:16px 0 0}
+.mast .plate-meta{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:right;line-height:1.9}
+figure.plate{margin:28px 0 0}
+figure.plate img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;background:var(--paper-deep)}
+figure.plate figcaption{display:flex;gap:12px;align-items:baseline;margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.plate figcaption b{color:var(--clay-deep);font-weight:600}
+figure.shot{margin:22px 0 0}
+figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;box-shadow:0 1px 2px rgba(43,34,24,.06),0 6px 20px rgba(43,34,24,.06)}
+figure.shot figcaption{margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.shot figcaption .chip{display:inline-block;border:1px solid var(--rule);border-radius:999px;padding:1px 8px;margin-right:8px;color:var(--ink)}
+figure.shot figcaption .chip.frozen{border-color:var(--steel);color:var(--steel)}
+figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
+section{margin-top:56px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:22px}
+.sec-head h2{font-family:Fraunces,serif;font-style:italic;font-weight:400;font-size:clamp(28px,3.6vw,40px);line-height:1.08;margin:6px 0 0;letter-spacing:-.01em}
+.sec-head .num{font-family:"JetBrains Mono",monospace;font-size:44px;font-weight:300;color:var(--clay);line-height:1;letter-spacing:-.04em}
+.lede{font-size:20px;font-style:italic;color:var(--ink-soft);max-width:var(--measure);margin:0 0 22px}
+p{max-width:var(--measure)}
+/* the loop — four stations on a rail */
+.loop{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:st}
+.loop li{position:relative;padding:18px 16px 16px;border:1px solid var(--rule);border-radius:8px;background:rgba(255,255,255,.4)}
+.loop li::before{counter-increment:st;content:counter(st,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--clay-deep)}
+.loop li::after{content:"";position:absolute;top:50%;right:-14px;width:14px;border-top:1px dashed var(--brass)}
+.loop li:last-child::after{display:none}
+.loop h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;margin:6px 0 6px;line-height:1.15}
+.loop p{font-size:14.5px;line-height:1.5;margin:0;color:var(--ink-soft)}
+/* the two flavors */
+.flavors{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.card{border:1px solid var(--rule);border-radius:10px;background:rgba(255,255,255,.4);padding:20px 22px}
+.card .eyebrow{display:block;margin-bottom:8px}
+.card h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:24px;margin:0 0 10px;line-height:1.1}
+.card ul{margin:10px 0 0;padding-left:0;list-style:none}
+.card li{padding:7px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.card li:first-child{border-top:0}
+.card li b{font-weight:600}
+.card .kv{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;margin-right:8px}
+.card.frozen{border-color:color-mix(in srgb,var(--steel) 55%,var(--rule));background:rgba(124,143,161,.05)}
+.card.frozen .eyebrow{color:var(--steel)}
+.stamp{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;border:2px double var(--steel);color:var(--steel);border-radius:4px;padding:3px 9px;transform:rotate(-2deg);margin:0 0 10px}
+.stamp.ships{border-color:var(--sage);color:var(--sage);transform:rotate(-1deg)}
+/* the surfaces list */
+.surfaces{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:10px}
+.surfaces div{border-top:2px solid var(--clay);padding-top:10px;font-size:15px;line-height:1.45}
+.surfaces .eyebrow{display:block;margin-bottom:4px}
+/* trust strip */
+.trust{margin-top:34px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.trust div{border-top:2px solid var(--sage);padding-top:10px;font-size:15px;line-height:1.45}
+.trust .eyebrow{display:block;color:var(--sage);margin-bottom:4px}
+.cmd{margin-top:18px;border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0}
+.cmd .eyebrow{display:block;margin-bottom:6px}
+.cmd code{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--ink)}
+.cmd small{display:block;color:var(--ink-soft);font-size:14px;margin-top:4px}
+.colophon{margin-top:64px;border-top:2px solid var(--ink);padding-top:14px;display:grid;grid-template-columns:1fr auto;gap:16px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);line-height:1.9}
+.colophon a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+@media (max-width:900px){.loop{grid-template-columns:repeat(2,minmax(0,1fr))}.loop li::after{display:none}.flavors,.trust{grid-template-columns:minmax(0,1fr)}.surfaces{grid-template-columns:repeat(2,minmax(0,1fr))}.mast{grid-template-columns:1fr}.mast .plate-meta{text-align:left}.colophon{grid-template-columns:1fr}}
+@media (max-width:560px){.loop,.surfaces{grid-template-columns:minmax(0,1fr)}}
+@media print{body{background:#fff}.loop li,.card{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="crumbs"><a href="../">How Career Compass works</a> &nbsp;·&nbsp; the dashboard, both flavors</nav>
+
+<header class="mast">
+  <div>
+    <div class="kicker"><span class="eyebrow">Career Compass · the dashboard</span><span class="eyebrow" style="color:var(--ink-soft)">v2.7.0</span></div>
+    <h1>The dashboard looks. <em>Claude does.</em></h1>
+    <p class="dek">A read-only view of the same files Claude reads and writes — redrawn every time you open it. Every button on it hands you the words to ask Claude for the change. Nothing on the page can edit your search; that is the point.</p>
+  </div>
+  <div class="plate-meta">two flavors · one ships · one is kept<br>reads on every request · writes nothing<br>loopback only · never on the network</div>
+</header>
+
+<figure class="plate">
+  <img src="../p4-lite-dashboard-window-web.jpg" alt="Illustration: a wooden window frame in a cream wall looks onto the same card-catalog drawer of index cards. Taped inside the glass, a freshly printed sheet shows a five-column board of small clay and sage cards, a short dotted list, and a row of horizontal bars — a live view drawn on the pane." loading="eager" decoding="async" width="1400" height="781">
+  <figcaption><b>Plate IV</b> The lite dashboard: a sheet on the glass, reprinted from the drawer each time you look.</figcaption>
+</figure>
+
+<!-- ─────────────────────────────── 1 ─────────────────────────────── -->
+<section id="loop">
+  <div class="sec-head"><div><span class="eyebrow">Panel four</span><h2>How the dashboard works</h2></div><span class="num">04</span></div>
+  <p class="lede">Four stations. The important one is the last: the page never writes. Anything you want changed, you say to Claude — and the dashboard hands you the words.</p>
+
+  <ol class="loop">
+    <li><h3>Open it</h3><p>One command starts a tiny web server on your own computer and opens your browser. It only answers the computer you are sitting at; nothing on your network, and no other website, can reach the page.</p></li>
+    <li><h3>It reads the drawer</h3><p>On every request the page re-reads the pipeline file from disk and renders the whole document fresh. Nothing is cached, nothing is remembered between loads. Refresh the browser and you are looking at the files as they are right now.</p></li>
+    <li><h3>You look</h3><p>Six numbers across the top, a kanban by stage with the closed applications folded away, a next-actions list of what is overdue or due soon, and a stage chart. Click a card and its drawer opens: days in stage, follow-up, posting, contacts, rounds, latest note.</p></li>
+    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row copies a ready-to-paste prompt for Claude — "give me a full status on my Acme application," "help me with this overdue follow-up." The work happens in the conversation. The page stays read-only.</p></li>
+  </ol>
+
+  <div class="cmd">
+    <span class="eyebrow">Try it with nobody's data</span>
+    <code>npx -y career-compass-mcp dashboard --sample</code>
+    <small>Opens the bundled Alex Rivera demo. Its dates shift to sit around today, and the tools refuse to write into it.</small>
+  </div>
+
+  <figure class="shot">
+    <img src="../dashboard-lite-light.png" alt="Screenshot of the lite dashboard in light mode: six KPI cards, a five-column pipeline board with one card's detail drawer, a next-actions panel, and a stage-distribution bar chart, on the sample data." loading="lazy" decoding="async" width="1440" height="1183">
+    <figcaption><span class="chip ships">ships in 2.7.0</span>Screenshot, not illustration · the bundled sample search · captured from the published build</figcaption>
+  </figure>
+</section>
+
+<hr class="rule">
+
+<!-- ─────────────────────────────── 2 ─────────────────────────────── -->
+<section id="flavors">
+  <div class="sec-head"><div><span class="eyebrow">Panel five · zoom</span><h2>Two flavors — <em style="color:var(--clay)">one ships,</em> one is kept</h2></div><span class="num">05</span></div>
+  <p class="lede">There are two dashboards in the repository. Only one reaches you. The honest version of this page says so, and says why.</p>
+
+  <div class="flavors">
+    <div class="card">
+      <span class="stamp ships">ships · in the npm package</span>
+      <span class="eyebrow">The lite dashboard</span>
+      <h3>One HTML page, no build step</h3>
+      <ul>
+        <li><span class="kv">what</span> One plain web page, drawn fresh from your files each time you load it. It downloads nothing extra and depends on no framework, so it cannot break when something else updates.</li>
+        <li><span class="kv">why</span> It arrives with the package and works the moment the package does. Nothing to build, nothing to keep in sync with your data.</li>
+        <li><span class="kv">shows</span> KPIs · kanban by stage · card detail drawers · next actions · stage chart · a company/role filter that re-counts the columns · light and dark, following your system.</li>
+        <li><span class="kv">does not</span> Edit anything. Move cards. Store state. Talk to the network.</li>
+        <li><span class="kv">honesty</span> A pipeline nobody has written to in 30 days says so in a banner. A rate with no denominator shows a dash, not <span class="mono">0%</span>.</li>
+      </ul>
+    </div>
+    <div class="card frozen">
+      <span class="stamp">frozen · not in the package</span>
+      <span class="eyebrow">The full dashboard</span>
+      <h3>A Next.js app, kept as a design reference</h3>
+      <ul>
+        <li><span class="kv">what</span> An earlier, heavier web app for the same files: a board, a detail view with a timeline, a Career KB overview, a first-run wizard, an analytics page. It was built while the product was finding its shape.</li>
+        <li><span class="kv">status</span> It never shipped to anyone — it only ever ran from a developer's copy of the source — and in the 2.6 architecture review it was frozen: no new features, kept in the repository as a worked-out design reference. It is not a version being withheld from you.</li>
+        <li><span class="kv">why</span> Two dashboards for one folder was one too many. Two independent reviews said the same thing: put every hour of interface work into the one users actually get.</li>
+        <li><span class="kv">kept for</span> Its detail-view layout, wizard flow, and analytics designs — to mine when the lite dashboard grows those surfaces, or if a hosted version is ever built.</li>
+        <li><span class="kv">unfreeze if</span> Claude renders in-app boards for local servers, or a hosted connector build is pursued. A product decision, recorded so nobody re-derives it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <figure class="plate">
+    <img src="../p5-full-dashboard-under-glass-web.jpg" alt="Illustration: a museum display case with a glass lid on a walnut stand. Under the glass, a detailed hand-drawn blueprint of a dashboard — a kanban board, a radar chart, numbered wizard steps, and analytics curves — in walnut ink with a few clay highlights. A blank brass plaque; a wooden stool beside it." loading="lazy" decoding="async" width="1400" height="781">
+    <figcaption><b>Plate V</b> The full dashboard: a finished blueprint under glass. Referenced, not in use.</figcaption>
+  </figure>
+
+  <figure class="shot">
+    <img src="../application-detail-light.png" alt="Screenshot of the frozen Next.js dashboard's application detail view: Veridian Health, Director of Operations, a dated timeline from discovered through two interview rounds, a details column, and two contact cards." loading="lazy" decoding="async" width="1280" height="800">
+    <figcaption><span class="chip frozen">frozen reference</span>Screenshot, not illustration · the full app's detail view · built from source, never shipped in the package</figcaption>
+  </figure>
+
+  <span class="eyebrow" style="display:block;margin-top:34px">What the frozen app still teaches the shipping one</span>
+  <div class="surfaces">
+    <div><span class="eyebrow">Detail view</span>A dated timeline per application — discovered, applied, each round with who was in the room. The lite drawer carries a compressed version of this today.</div>
+    <div><span class="eyebrow">Onboarding wizard</span>A stepped first run. The lite side answers this with a two-step empty state and the <span class="mono">setup-career-kb</span> prompt instead.</div>
+    <div><span class="eyebrow">Career KB overview</span>Sections and a skills radar. Not yet on the lite side; the KB is read through Claude and <span class="mono">check_setup</span>.</div>
+    <div><span class="eyebrow">Analytics</span>Funnel, status breakdown, source effectiveness, excitement vs. outcome. The lite side ships the funnel and the stage chart; the rest waits for a reason to exist.</div>
+  </div>
+
+  <div class="trust">
+    <div><span class="eyebrow">Where it runs</span>On your machine only. Other websites you have open cannot read it, and nothing on your network can reach it — the server answers the computer you are sitting at and refuses everything else.</div>
+    <div><span class="eyebrow">What it stores</span>Nothing. No cookies, no saved state, no cache. Your files are the whole truth; the page is only a picture of them.</div>
+    <div><span class="eyebrow">What it changes</span>Nothing. Every change to your search goes through Claude and the tools, which check that the data has the right shape before saving and keep the previous version of each file.</div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <div>Career Compass · career-compass-mcp 2.7.0 · <a href="../">how it works</a> · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm</a><br>claims checked against the 2.7.0 source, dashboard/FROZEN.md, and the architecture audit · screenshots labelled ships / frozen · no usage figures quoted because none are measured</div>
+  <div>Plates IV–V: illustrations · screenshots: two real captures · commissioned in the den, 2026-09-05<br>ASSETS · keep the *-web.jpg plates and the two .png screenshots beside this file</div>
+</footer>
+
+</div>
+</body>
+</html>

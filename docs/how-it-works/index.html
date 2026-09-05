@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Career Compass works</title>
+<meta name="description" content="Career Compass keeps the facts about you in one place, turns them into a résumé per posting, and builds your interview prep around the questions they will ask — and the ones you should ask back.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b2218'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c2603c'/%3E%3Cpath d='M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z' fill='%232b2218'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+<style>
+/* ── Paper & ink, tuned to Career Compass's own clay accent ───────────────
+   Serif (Fraunces) is the human voice; mono (JetBrains Mono) labels every
+   datum. Zero JS: this is a document, not an instrument. ─────────────────── */
+:root{
+  --paper:#f6f2ea; --paper-deep:#ece4d3; --ink:#2b2218; --ink-soft:#5a4a39; --rule:#d9cdb8;
+  --clay:#c2603c; --clay-deep:#8a3b1f; --sage:#5a6b3c; --steel:#7c8fa1; --brass:#a2894f;
+  --measure:72ch;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);background:var(--paper);font-family:Fraunces,Georgia,serif;font-weight:400;font-size:17.5px;line-height:1.58;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 60% 30% at 12% -4%, rgba(194,96,60,.10), transparent 70%),
+    radial-gradient(ellipse 50% 28% at 96% 104%, rgba(162,137,79,.10), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(43,34,24,.018) 0 1px, transparent 1px 3px);}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--clay-deep)}
+.crumbs{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:22px}.crumbs a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 72px}
+hr.rule{border:0;border-top:1px solid var(--rule);margin:48px 0}
+
+/* masthead */
+.mast{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.mast .kicker{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.mast h1{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(40px,7vw,86px);line-height:.98;letter-spacing:-.015em;margin:0}
+.mast h1 em{font-style:normal;color:var(--clay)}
+.mast .dek{font-style:italic;color:var(--ink-soft);font-size:20px;max-width:56ch;margin:16px 0 0}
+.mast .plate-meta{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:right;line-height:1.9}
+
+/* figures */
+figure.plate{margin:28px 0 0}
+figure.plate img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;background:var(--paper-deep)}
+figure.plate figcaption{display:flex;gap:12px;align-items:baseline;margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.plate figcaption b{color:var(--clay-deep);font-weight:600}
+
+/* section heads */
+section{margin-top:56px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:22px}
+.sec-head h2{font-family:Fraunces,serif;font-style:italic;font-weight:400;font-size:clamp(28px,3.6vw,40px);line-height:1.08;margin:6px 0 0;letter-spacing:-.01em}
+.sec-head .num{font-family:"JetBrains Mono",monospace;font-size:44px;font-weight:300;color:var(--clay);line-height:1;letter-spacing:-.04em}
+.lede{font-size:20px;font-style:italic;color:var(--ink-soft);max-width:var(--measure);margin:0 0 22px}
+p{max-width:var(--measure)}
+
+/* the five steps — a rail */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;counter-reset:step}
+.steps li{position:relative;padding:18px 16px 16px;border:1px solid var(--rule);border-radius:8px;background:rgba(255,255,255,.4);transition:background .2s}
+.steps li:hover{background:rgba(255,255,255,.8)}
+.steps li::before{counter-increment:step;content:counter(step,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--clay-deep)}
+.steps li::after{content:"";position:absolute;top:50%;right:-14px;width:14px;border-top:1px dashed var(--brass)}
+.steps li:last-child::after{display:none}
+.steps h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;margin:6px 0 6px;line-height:1.15}
+.steps p{font-size:14.5px;line-height:1.5;margin:0;color:var(--ink-soft)}
+.steps .tools{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-soft);line-height:1.8}
+.steps .tools code{color:var(--ink);background:var(--paper-deep);padding:1px 5px;border-radius:3px}
+.you-say{margin-top:18px;border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0}
+.you-say .eyebrow{display:block;margin-bottom:4px}
+.you-say q{font-style:italic;font-size:18px}
+.you-say q::before,.you-say q::after{color:var(--clay)}
+
+/* two-column zoom */
+.zoom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.card{border:1px solid var(--rule);border-radius:10px;background:rgba(255,255,255,.4);padding:20px 22px}
+.card .eyebrow{display:block;margin-bottom:8px}
+.card h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:24px;margin:0 0 10px;line-height:1.1}
+.card ul{margin:10px 0 0;padding-left:0;list-style:none}
+.card li{padding:7px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.card li:first-child{border-top:0}
+.card li b{font-weight:600}
+.card .kv{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;margin-right:8px}
+.fact-shape{margin-top:14px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.7;background:var(--paper-deep);border-radius:8px;padding:12px 14px;color:var(--ink);overflow-x:auto}
+.fact-shape .k{color:var(--clay-deep)}.fact-shape .c{color:var(--ink-soft)}
+.arrow-note{grid-column:1/-1;text-align:center;font-style:italic;color:var(--ink-soft);font-size:17px;padding:4px 0 0}
+.arrow-note b{color:var(--clay-deep);font-weight:600}
+
+/* interview prep — the two columns of asking */
+.ask{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start}
+.pack{list-style:none;margin:0;padding:0;counter-reset:pack}
+.pack li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px dashed var(--rule)}
+.pack li:first-child{border-top:0}
+.pack li::before{counter-increment:pack;content:counter(pack);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--clay-deep);padding-top:3px;letter-spacing:.1em}
+.pack h4{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:18px;margin:0 0 3px;line-height:1.15}
+.pack p{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.45}
+.pack li.ask-half{background:linear-gradient(90deg, rgba(194,96,60,.08), transparent 70%);border-radius:8px;padding-left:10px;margin-left:-10px;border-top-color:transparent}
+.pack li.ask-half + li{border-top-color:transparent}
+.tips h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:22px;margin:0 0 8px}
+.tips li{padding:8px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.tips li:first-child{border-top:0}
+.tips li b{font-weight:600;color:var(--clay-deep)}
+
+/* honesty strip */
+.honesty{margin-top:34px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.honesty div{border-top:2px solid var(--sage);padding-top:10px;font-size:15px;line-height:1.45}
+.honesty .eyebrow{display:block;color:var(--sage);margin-bottom:4px}
+
+/* colophon */
+.colophon{margin-top:64px;border-top:2px solid var(--ink);padding-top:14px;display:grid;grid-template-columns:1fr auto;gap:16px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);line-height:1.9}
+.colophon a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+
+@media (max-width:900px){
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}.steps li::after{display:none}
+  .zoom,.ask,.honesty{grid-template-columns:minmax(0,1fr)}
+  .mast{grid-template-columns:1fr}.mast .plate-meta{text-align:left}
+  .colophon{grid-template-columns:1fr}
+}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+@media print{body{background:#fff}.steps li,.card{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="crumbs">Career Compass &nbsp;·&nbsp; <a href="dashboard/">the dashboard, both flavors →</a></nav>
+<header class="mast">
+  <div>
+    <div class="kicker"><span class="eyebrow">Career Compass · how it works</span><span class="eyebrow" style="color:var(--ink-soft)">v2.7.0</span></div>
+    <h1>Show them how we <em>help you ask.</em></h1>
+    <p class="dek">Career Compass keeps the facts about you in one place, turns them into a résumé for each posting, and builds your interview prep around the questions they will ask — and the ones you should ask back.</p>
+  </div>
+  <div class="plate-meta">local-first · plain YAML on your disk<br>19 tools · 7 prompts · 9 resources<br>runs inside Claude via MCP</div>
+</header>
+
+<figure class="plate">
+  <img src="p1-the-system-web.jpg" alt="Illustration: a desk with a brass compass, a wooden index-card box holding cream cards, a lamp, a laptop showing a five-column kanban board with clay-orange and sage cards, and a single typed page — connected by a dotted pencil path from the card box to the laptop to the page." loading="eager" decoding="async" width="1400" height="781">
+  <figcaption><b>Plate I</b> The whole loop on one desk: the facts (the card box) → the pipeline (the board) → the thing you send (the page).</figcaption>
+</figure>
+
+<!-- ─────────────────────────────── 1 ─────────────────────────────── -->
+<section id="steps">
+  <div class="sec-head"><div><span class="eyebrow">Panel one</span><h2>How it works, in five steps</h2></div><span class="num">01</span></div>
+  <p class="lede">You talk to Claude. Claude uses the tools. The tools read and write a folder of plain text files that never leave your machine.</p>
+
+  <ol class="steps">
+    <li>
+      <h3>Install</h3>
+      <p>Connect it to your Claude app with one line of config, or one click in Claude Desktop. Works with Claude Code, Cursor, Zed and any other app that speaks MCP.</p>
+      <div class="tools"><code>npx -y career-compass-mcp</code></div>
+    </li>
+    <li>
+      <h3>Tell it who you are</h3>
+      <p>Paste your résumé, performance reviews, award emails. Claude pulls out the facts and asks for the numbers you left vague. You confirm each section before it is written.</p>
+      <div class="tools"><code>ingest_document</code> <code>save_career_section</code><br>prompt: <code>setup-career-kb</code></div>
+    </li>
+    <li>
+      <h3>Find and assess a role</h3>
+      <p>Paste a posting. You get an honest fit score checked against your whole preference contract — salary band, remote, relocation, notice period — never a flattering one.</p>
+      <div class="tools"><code>explore_opportunity</code> <code>research_company</code></div>
+    </li>
+    <li>
+      <h3>Apply and track</h3>
+      <p>A résumé tailored to that posting, a cover letter, an ATS-safe version — and one card on a pipeline that moves from <em>discovered</em> to <em>offer</em>. The local dashboard shows what needs attention today.</p>
+      <div class="tools"><code>tailor_resume</code> <code>generate_cover_letter</code> <code>format_for_ats</code> <code>pipeline_*</code></div>
+    </li>
+    <li>
+      <h3>Interview, decide, learn</h3>
+      <p>A prep package per round, a mid-process map of what has been covered and what has not, an offer broken down against your targets, and a journal that records what each step taught you.</p>
+      <div class="tools"><code>prepare_interview</code> <code>interview_arc</code> <code>evaluate_offer</code> <code>capture_insight</code></div>
+    </li>
+  </ol>
+
+  <div class="you-say">
+    <span class="eyebrow">Your first sentence</span>
+    <q>Set up my Career KB. Here's my résumé:</q> <span style="color:var(--ink-soft)">— then paste it. That is the whole setup.</span>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ─────────────────────────────── 2 ─────────────────────────────── -->
+<section id="facts">
+  <div class="sec-head"><div><span class="eyebrow">Panel two · zoom</span><h2>Facts about you <em style="color:var(--clay)">vs.</em> the résumé you send</h2></div><span class="num">02</span></div>
+  <p class="lede">A résumé is not where your career lives. It is a print. The facts live in the Career KB, and every résumé is a fresh print of those facts against one posting.</p>
+
+  <figure class="plate">
+    <img src="p2-facts-vs-resume-web.jpg" alt="Illustration, split in two: on the left an open wooden card-catalog drawer full of index cards with small clay-orange badges; on the right a hand letterpress with one crisp typed page coming off the plate and a fan of five slightly different pages behind it, each with a different colored tab. A sage ribbon flows from the drawer into the press." loading="lazy" decoding="async" width="1400" height="1050">
+    <figcaption><b>Plate II</b> One drawer of facts, many prints. The drawer is edited; the prints are generated.</figcaption>
+  </figure>
+
+  <div class="zoom" style="margin-top:26px">
+    <div class="card">
+      <span class="eyebrow">The Career KB · the source</span>
+      <h3>Facts about you</h3>
+      <ul>
+        <li><span class="kv">shape</span> Structured, not prose. Each achievement is a <b>metric</b>, the <b>context</b> it happened in, and the <b>impact</b> it had.</li>
+        <li><span class="kv">sections</span> profile · experience · skills · education · projects · testimonials — plus a dated journal of signals.</li>
+        <li><span class="kv">writes</span> Only <span class="mono">save_career_section</span> writes it. One section at a time, validated first, previous version kept as a <span class="mono">.bak</span>. Your client asks you to confirm.</li>
+        <li><span class="kv">grows</span> Every posting explored, interview debriefed, and offer weighed can add a dated signal back. It can also read a project's own change history and pull out what you measurably did there — months active, what you touched — so the numbers come from the record, not from memory.</li>
+      </ul>
+      <div class="fact-shape"><span class="k">achievements:</span><br>&nbsp;&nbsp;- <span class="k">metric:</span> cut onboarding from 6 weeks to 9 days<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">context:</span> 40-person support org, no runbooks<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">impact:</span> freed two leads for the Q3 launch<br><span class="c"># one fact. it will outlive every résumé it appears in.</span></div>
+    </div>
+    <div class="card">
+      <span class="eyebrow">tailor_resume · a rendering</span>
+      <h3>The résumé you send</h3>
+      <ul>
+        <li><span class="kv">input</span> The KB and one posting. Nothing else.</li>
+        <li><span class="kv">output</span> The résumé text in the format you chose — standard, federal, academic, or functional; one to four pages — plus a <b>Keyword Match Report</b> naming which of the posting's terms it covered.</li>
+        <li><span class="kv">writes</span> Nothing. A résumé is disposable; the facts are not. Edit a print and the drawer does not change. Add a fact to the drawer and every future print improves.</li>
+        <li><span class="kv">then</span> <span class="mono">generate_cover_letter</span> for the story, <span class="mono">format_for_ats</span> for the parser (Workday, Greenhouse, Lever and five more).</li>
+      </ul>
+    </div>
+    <p class="arrow-note">The habit this builds: <b>when something goes well at work, add the fact</b> — not "update my résumé." The résumé is an output.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ─────────────────────────────── 3 ─────────────────────────────── -->
+<section id="ask">
+  <div class="sec-head"><div><span class="eyebrow">Panel three · zoom</span><h2>Interview prep — how we help you <em style="color:var(--clay)">ask</em></h2></div><span class="num">03</span></div>
+  <p class="lede">An interview is two lists of questions. Career Compass prepares both: the ones they will ask you, answered from your own facts — and the ones you should ask them, which is where most candidates go quiet.</p>
+
+  <figure class="plate">
+    <img src="p3-how-we-help-you-ask-web.jpg" alt="Illustration: two empty wooden chairs face each other across a small round table in lamplight. On the table an open notebook — one page a column of question-mark shapes pointing toward the far chair, the other a short stack of story cards with small stars — and a cup of tea. A compass rose is embossed on the notebook cover." loading="lazy" decoding="async" width="1400" height="1050">
+    <figcaption><b>Plate III</b> Two chairs, one notebook, both pages filled before you sit down.</figcaption>
+  </figure>
+
+  <div class="ask" style="margin-top:26px">
+    <div>
+      <span class="eyebrow">What <span class="mono">prepare_interview</span> hands you, per round</span>
+      <ol class="pack" style="margin-top:8px">
+        <li><div><h4>Opening pitch, 60–90 seconds</h4><p>"Tell me about yourself," bridged to this role and this company — not your life story.</p></div></li>
+        <li><div><h4>7–10 STAR stories from your facts</h4><p>Situation, Task, Action — <em>clear about your own part, without erasing the team</em> — and a Result with the number. Each tagged with the question type it answers. The themes shift by round: phone screen, behavioral, technical, panel, final.</p></div></li>
+        <li><div><h4>10–15 likely questions</h4><p>Specific to the company and role, each with an answer angle from your own background.</p></div></li>
+        <li class="ask-half"><div><h4>7–10 questions to ask them</h4><p>Thoughtful, not generic — built from the company research and the posting's own gaps. <b>This is the half that is usually improvised in the room. Here it is prepared before you walk in.</b></p></div></li>
+        <li><div><h4>Company and role alignment</h4><p>How your background connects to their mission, product, and current problems.</p></div></li>
+        <li><div><h4>Bridge topics</h4><p>The surprising connections between your experience and their world.</p></div></li>
+        <li><div><h4>Watch-outs and reframes</h4><p>The concerns they are likely to raise about your background, each with an honest answer ready — so when the question comes, you are not improvising. Prepared, not volunteered.</p></div></li>
+      </ol>
+    </div>
+    <div class="tips card">
+      <span class="eyebrow">Between rounds</span>
+      <h3>Tips the tools are built around</h3>
+      <ul style="list-style:none;padding:0;margin:0">
+        <li><b>Ask about the gap, not the perk.</b> The posting always leaves something unsaid — the team's size, who owns the roadmap, why the seat is open. The fit check and the company brief surface those gaps, and they become your first questions.</li>
+        <li><b>Don't repeat ground already covered.</b> Between rounds, ask for the map of the process so far: what each round surfaced, the open threads, the untested gaps, and the questions the <em>next</em> round is most likely to ask.</li>
+        <li><b>Debrief while it's fresh.</b> Right after an interview, tell Claude what the room told you. The durable part goes into your journal, and your next prep starts from it instead of from zero.</li>
+        <li><b>Say the number, then the context.</b> Every STAR story is drawn from an achievement that already has a metric. If a story has no number, that is a fact to go find — not a sentence to pad.</li>
+        <li><b>"Not set" is not "no."</b> If you never told it your salary band or relocation stance, the fit check says so and asks — it will not quietly assume an answer and rule a role out on it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="honesty">
+    <div><span class="eyebrow">Who does what</span>Claude does the reasoning and the writing. The tools supply your facts and the structure. Neither invents a preference you did not state.</div>
+    <div><span class="eyebrow">Where your data is</span>Simple text files in a folder on your own computer, readable in any editor. No account, no cloud sync, no tracking. The one optional outbound request is a version check.</div>
+    <div><span class="eyebrow">What "honest" means here</span>The fit score is a verdict, not encouragement. A role that matches on skills but misses your floor is not an 8. The Keyword Match Report shows what a résumé did <em>not</em> cover.</div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <div>Career Compass · career-compass-mcp 2.7.0 · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm</a><br>Every claim on this page is checked against the 2.7.0 tool list and README · numbers: 19 tools, 7 prompts, 9 resources · no usage or outcome figures are quoted because none are measured</div>
+  <div>Plates I–III: illustrations, not screenshots · commissioned in the den, 2026-09-05<br>ASSETS · keep the three *-web.jpg plates beside this file</div>
+</footer>
+
+</div>
+</body>
+</html>
