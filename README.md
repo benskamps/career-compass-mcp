@@ -30,6 +30,8 @@ machine.
 
 ## What it feels like
 
+> **Prefer the picture?** [How Career Compass works](https://benskamps.github.io/career-compass-mcp/how-it-works/) — one illustrated page: the five steps, facts-about-you vs. the résumé you send, how the interview prep helps you ask, and [the dashboard in both flavors](https://benskamps.github.io/career-compass-mcp/how-it-works/#dashboard). Also on [brokenbranch.dev](https://www.brokenbranch.dev/career-compass/).
+
 ```
 You: I have a panel interview at Veridian Health on Friday — Director of Operations role.
      Can you prep me?
