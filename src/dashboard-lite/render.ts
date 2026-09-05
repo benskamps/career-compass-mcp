@@ -435,7 +435,7 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 .ask-body{padding:10px 14px;overflow:auto;flex:1;min-height:48px}
 .ask-body p{margin:0 0 8px}.ask-body b{font-weight:650}.ask-body code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--sunk);padding:1px 5px;border-radius:4px}
 .ask-h{font-weight:650;margin:10px 0 4px;color:var(--ink)}.ask-li{padding-left:14px;position:relative;margin:2px 0}.ask-li::before{content:"•";position:absolute;left:2px;color:var(--accent)}.ask-li.n::before{content:""}
-.ask-err{color:#c04a3a}
+.ask-err{color:#c04a3a}.ask-detail{color:var(--muted);font-size:12px}
 .ask-foot{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
 .ask-cost{margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--muted)}
 @media(max-width:700px){.ask{right:0;bottom:0;width:100vw;max-height:80vh;border-radius:14px 14px 0 0}}
@@ -519,9 +519,13 @@ const ASK=${jsonForScript(ask ? { token: ask.token } : null)};
       return l?"<p>"+l+"</p>":"";
     }).join("");
   }
+  // Tool names are for the machine; the status line is for the person.
+  const TOOL_PHRASES={pipeline_view:"Reading your pipeline…",pipeline_add:"Adding to your pipeline…",pipeline_update:"Updating your pipeline…",check_setup:"Checking your setup…",tailor_resume:"Working on your résumé…",generate_cover_letter:"Drafting the cover letter…",explore_opportunity:"Weighing the fit…",research_company:"Researching the company…",prepare_interview:"Building your interview prep…",interview_arc:"Reading the interview so far…",evaluate_offer:"Weighing the offer…",save_career_section:"Saving to your Career KB…",ingest_document:"Reading the document…",capture_insight:"Writing to your journal…",harvest_evidence:"Reading the project history…",format_for_ats:"Formatting for the ATS…",classify_email:"Reading the email…",generate_rejection_response:"Drafting the reply…"};
+  function toolPhrase(n){ return TOOL_PHRASES[n]||"Reading your data…"; }
+  let t0=0;
   async function askClaude(prompt){
     if(!ASK||!panel) return copyPrompt(prompt);
-    lastPrompt=prompt;
+    lastPrompt=prompt; t0=Date.now();
     const body=document.getElementById("ask-body"), status=document.getElementById("ask-status"), q=document.getElementById("ask-q"), reload=document.getElementById("ask-reload"), cost=document.getElementById("ask-cost");
     panel.hidden=false; panel.classList.add("working"); panel.classList.remove("done","failed");
     status.textContent="Asking Claude…"; q.textContent=prompt; body.innerHTML=""; reload.hidden=true; cost.textContent="";
@@ -538,16 +542,16 @@ const ASK=${jsonForScript(ask ? { token: ask.token } : null)};
           if(!frame.startsWith("data: ")) continue;
           const ev=JSON.parse(frame.slice(6));
           if(ev.type==="text"){ text+=(text?"\\n":"")+ev.text; body.innerHTML=md(text); status.textContent="Claude is writing…"; }
-          else if(ev.type==="tool"){ status.textContent="Reading your data · "+ev.name; }
-          else if(ev.type==="done"){ if(!text&&ev.text){ text=ev.text; body.innerHTML=md(text); } panel.classList.remove("working"); panel.classList.add(ev.isError?"failed":"done"); status.textContent=ev.isError?"Claude hit a problem":"Done"; reload.hidden=false; if(typeof ev.costUsd==="number") cost.textContent="$"+ev.costUsd.toFixed(2); }
-          else if(ev.type==="error"){ panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Couldn't reach Claude"; body.innerHTML+="<p class=\\"ask-err\\">"+md(ev.message)+"</p>"; }
+          else if(ev.type==="tool"){ status.textContent=toolPhrase(ev.name); }
+          else if(ev.type==="done"){ if(!text&&ev.text){ text=ev.text; body.innerHTML=md(text); } panel.classList.remove("working"); panel.classList.add(ev.isError?"failed":"done"); status.textContent=ev.isError?"Claude hit a problem":"Done"; reload.hidden=false; cost.textContent=Math.round((Date.now()-t0)/1000)+" s"; if(ev.isError&&!text){ body.innerHTML+="<p class=\\"ask-err\\">Claude couldn't finish this one. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p>"; } }
+          else if(ev.type==="error"){ panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Couldn't reach Claude"; body.innerHTML+="<p class=\\"ask-err\\">Something went wrong asking Claude directly. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p><p class=\\"ask-detail\\">"+md(ev.message)+"</p>"; }
           body.scrollTop=body.scrollHeight;
         }
       }
       if(panel.classList.contains("working")){ panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Claude stopped early"; }
     }catch(err){
       panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Couldn't reach Claude";
-      body.innerHTML+="<p class=\\"ask-err\\">"+md(String(err&&err.message||err))+"</p><p>The prompt is still yours to paste — use the copy button below.</p>";
+      body.innerHTML+="<p class=\\"ask-err\\">Something went wrong asking Claude directly. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p><p class=\\"ask-detail\\">"+md(String(err&&err.message||err))+"</p>";
     }
   }
   if(panel){

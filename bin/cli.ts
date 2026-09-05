@@ -144,7 +144,8 @@ if (!isDashboard) {
     const server = await startLiteDashboard(port, undefined, { ask });
     console.error(`Lite dashboard running at http://localhost:${port}`);
     if (ask) {
-      console.error("Ask Claude: ON — dashboard buttons run Claude Code headless with your Career Compass data (only this package's tools; no shell, no file edits).");
+      console.error("Ask Claude: ON — dashboard buttons send their question to Claude Code on this machine.");
+      console.error("  Claude reads and updates your career data only through Career Compass's own tools — no shell, no other files.");
     } else if (claudeCmd && !useSample) {
       console.error("Tip: add --ask-claude and the dashboard buttons will ask Claude directly instead of copying a prompt.");
     }

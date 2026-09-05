@@ -223,8 +223,8 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
     const text = (code: number, body: string) => { res.writeHead(code, { "content-type": "text/plain; charset=utf-8" }); res.end(body); };
     if (req.method !== "POST") return text(405, "POST only.");
     if (!isAllowedOrigin(req.headers.origin as string | undefined)) return text(403, "Only the dashboard's own page may ask.");
-    if (req.headers["x-cc-ask-token"] !== token) return text(403, "Missing or stale ask token — reload the dashboard.");
-    if (inFlight) return text(409, "Claude is already working on a question from this dashboard. Wait for it to finish.");
+    if (req.headers["x-cc-ask-token"] !== token) return text(403, "This page is out of date — refresh it and ask again.");
+    if (inFlight) return text(409, "Claude is still working on your last question. Wait for it to finish, then ask again.");
 
     let raw = "";
     for await (const chunk of req) { raw += chunk; if (raw.length > MAX_PROMPT_CHARS * 4) return text(413, "Prompt too long."); }
@@ -234,6 +234,7 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
     if (prompt.length > MAX_PROMPT_CHARS) return text(413, `Prompt too long (max ${MAX_PROMPT_CHARS} characters).`);
 
     inFlight = true;
+    const started = Date.now();
     res.writeHead(200, {
       "content-type": "text/event-stream; charset=utf-8",
       "cache-control": "no-store",
@@ -241,7 +242,16 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
     });
     const { child, finished } = runAsk({
       prompt, cmd: opts.cmd, mcpConfigPath, cwd: opts.dataDir, timeoutMs: opts.timeoutMs,
-      onEvent: (ev) => send(res, ev),
+      onEvent: (ev) => {
+        send(res, ev);
+        // The operator's terminal gets the receipt (time, and the API-equivalent
+        // cost Claude Code reports); the page shows elapsed time only — a dollar
+        // figure beside an answer reads as a hidden charge to someone on a plan.
+        if (ev.type === "done") {
+          const secs = ((Date.now() - started) / 1000).toFixed(1);
+          console.error(`ask: ${ev.isError ? "failed" : "done"} in ${secs}s${ev.costUsd != null ? ` · $${ev.costUsd.toFixed(2)} API-equivalent` : ""}`);
+        }
+      },
     });
     req.on("close", () => { try { child.kill(); } catch { /* already gone */ } });
     await finished;
