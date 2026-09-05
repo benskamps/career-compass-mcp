@@ -180,8 +180,8 @@ function jobCard(a: Application, now: Date = new Date()): string {
   if (lastNote) details.push(`<div class="dd-row dd-note"><b>Latest note</b> ${esc(lastNote)}</div>`);
 
   const drawer = details.length > 0
-    ? `<div class="dd">${details.join("")}<button class="btn dd-ask" data-prompt="${esc(prompt)}">📋 Copy prompt</button></div>`
-    : `<div class="dd"><div class="dd-row" style="color:var(--muted)">No details recorded yet.</div><button class="btn dd-ask" data-prompt="${esc(prompt)}">📋 Copy prompt</button></div>`;
+    ? `<div class="dd">${details.join("")}<button class="btn dd-ask" data-prompt="${esc(prompt)}"><span class="v-copy">📋 Copy prompt</span><span class="v-ask">✦ Ask Claude</span></button></div>`
+    : `<div class="dd"><div class="dd-row" style="color:var(--muted)">No details recorded yet.</div><button class="btn dd-ask" data-prompt="${esc(prompt)}"><span class="v-copy">📋 Copy prompt</span><span class="v-ask">✦ Ask Claude</span></button></div>`;
 
   return `<div class="jc" style="--stage:${color}" data-id="${esc(a.id)}" data-company="${esc(a.company)}" data-role="${esc(a.role)}" role="button" tabindex="0" aria-expanded="false" title="Click to expand">
     <span class="chev" aria-hidden="true">▸</span>
@@ -202,7 +202,17 @@ function jobCard(a: Application, now: Date = new Date()): string {
  * `~/.career-compass` unconditionally, so anyone running with CAREER_DATA_PATH
  * set was told their data was somewhere it wasn't.
  */
-export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: Date = new Date(), hasCareerKB: boolean = true): string {
+export function renderLiteDashboard(
+  pipeline: Pipeline,
+  dataDir?: string,
+  now: Date = new Date(),
+  hasCareerKB: boolean = true,
+  ask?: { token: string },
+): string {
+  // Every prompt-bearing control has two voices: "Copy: …" when the page can
+  // only hand you the words, "Ask: …" when the Ask bridge is on and the click
+  // runs Claude Code for you. Same prompt either way — see ask-bridge.ts.
+  const verb = ask ? "Ask Claude" : "Copy";
   const apps = [...(pipeline.applications ?? [])].sort((a, b) => (b.dateUpdated ?? "").localeCompare(a.dateUpdated ?? ""));
   const s = computeStats(apps);
   const actions = deriveNextActions(apps, now);
@@ -283,7 +293,7 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: D
   const actionsHtml = actions.length
     ? actions.map((x) => {
         const actionPrompt = `Help me with this: ${x.label}. Look up my ${x.app.company} application (${x.app.role}, ID: ${x.app.id}) and tell me exactly what to do next.`;
-        return `<div class="action ${x.urgency}" data-prompt="${esc(actionPrompt)}" role="button" tabindex="0" title="Copy a prompt for Claude"><span class="dot"></span><div class="t"><b>${esc(x.label)}</b><span>${esc(x.app.role)}</span></div><span class="hint" aria-hidden="true">📋 copy</span></div>`;
+        return `<div class="action ${x.urgency}" data-prompt="${esc(actionPrompt)}" role="button" tabindex="0" title="${ask ? "Ask Claude about this" : "Copy a prompt for Claude"}"><span class="dot"></span><div class="t"><b>${esc(x.label)}</b><span>${esc(x.app.role)}</span></div><span class="hint" aria-hidden="true">${ask ? "✦ ask" : "📋 copy"}</span></div>`;
       }).join("")
     : `<div class="none-lg">✅ Nothing overdue. Follow-ups, upcoming interviews, and expiring offers surface here.</div>`;
 
@@ -292,16 +302,16 @@ export function renderLiteDashboard(pipeline: Pipeline, dataDir?: string, now: D
     <h3>Your pipeline is empty — let's fix that</h3>
     <div>Your Career KB is set up. Now add your first opportunity and this dashboard lights up.</div>
     <div class="btns">
-      <button class="btn primary" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis.">Copy: track a job posting</button>
-      <button class="btn" data-prompt="Add an application to my pipeline — I'll give you the company and role.">Copy: add manually</button>
+      <button class="btn primary" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis." data-needs-paste="1">${verb}: track a job posting</button>
+      <button class="btn" data-prompt="Add an application to my pipeline — I'll give you the company and role." data-needs-paste="1">${verb}: add manually</button>
     </div>
   </div></div>`
     : `<div class="panel"><div class="state">
     <h3>Welcome to Career Compass 🧭</h3>
     <div>Two things to get started: build your Career Knowledge Base (your profile, experience, and skills), then add your first pipeline entry.</div>
     <div class="btns">
-      <button class="btn primary" data-prompt="I'm new to Career Compass. Let's set up my Career Knowledge Base — start with my profile and walk me through the process.">Copy: set up my Career KB</button>
-      <button class="btn" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis.">Copy: track a job posting</button>
+      <button class="btn primary" data-prompt="I'm new to Career Compass. Let's set up my Career Knowledge Base — start with my profile and walk me through the process." data-needs-paste="1">${verb}: set up my Career KB</button>
+      <button class="btn" data-prompt="I found a job posting I want to track. Here it is: [paste posting]. Add it to my pipeline and give me a fit analysis." data-needs-paste="1">${verb}: track a job posting</button>
     </div>
   </div></div>`;
 
@@ -411,19 +421,37 @@ h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}.sub{color:var(--muted);f
 @media(max-width:700px){.board{display:flex!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;gap:12px;padding-bottom:8px}.board>.col{min-width:220px;flex:0 0 220px;scroll-snap-align:start}}
 /* Clickable action items */
 .action[data-prompt]{cursor:pointer;border-radius:8px;padding-left:10px;padding-right:10px;margin:0 -10px;transition:.1s}.action[data-prompt]:hover{background:var(--sunk)}
+/* Ask bridge — the copy/ask label pair on the drawer button, and the answer panel */
+.dd-ask .v-ask{display:none}body.ask-on .dd-ask .v-copy{display:none}body.ask-on .dd-ask .v-ask{display:inline}
+.ask{position:fixed;right:20px;bottom:20px;width:min(480px,calc(100vw - 40px));max-height:min(72vh,720px);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:14px;box-shadow:0 12px 40px rgba(31,30,29,.18),var(--shadow);z-index:50;font-size:13.5px;line-height:1.5}
+.ask.done{border-left-color:#4f8a6d}.ask.failed{border-left-color:#c04a3a}
+.ask-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ask-head .glyph{color:var(--accent);font-size:14px;display:inline-block}
+.ask.working .glyph{animation:ask-spin 1.6s linear infinite}
+@keyframes ask-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ask.working .glyph{animation:none;opacity:.6}}
+.ask-x{margin-left:auto;border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0 4px}.ask-x:hover{color:var(--ink)}
+.ask-q{padding:8px 14px;font-size:12px;color:var(--muted);font-style:italic;border-bottom:1px dashed var(--line);max-height:3.2em;overflow:hidden}
+.ask-body{padding:10px 14px;overflow:auto;flex:1;min-height:48px}
+.ask-body p{margin:0 0 8px}.ask-body b{font-weight:650}.ask-body code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+.ask-h{font-weight:650;margin:10px 0 4px;color:var(--ink)}.ask-li{padding-left:14px;position:relative;margin:2px 0}.ask-li::before{content:"•";position:absolute;left:2px;color:var(--accent)}.ask-li.n::before{content:""}
+.ask-err{color:#c04a3a}.ask-detail{color:var(--muted);font-size:12px}
+.ask-foot{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.ask-cost{margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--muted)}
+@media(max-width:700px){.ask{right:0;bottom:0;width:100vw;max-height:80vh;border-radius:14px 14px 0 0}}
 /* Accessibility — focus rings for keyboard users */
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .jc:focus-visible{outline-offset:0;border-radius:10px}
 </style></head>
-<body><div class="wrap">
+<body${ask ? ' class="ask-on"' : ""}><div class="wrap">
 <header class="top">
   <div><h1>🧭 Career Compass — Pipeline</h1>
   <div class="sub">Live view of your job search · re-read from disk on every load · last write ${esc(lastUpdated)}</div></div>
   <div class="chip">● local</div>
 </header>
 <div class="toolbar">
-  <button class="btn primary" data-prompt="What should I focus on in my job search today? Look at my pipeline and give me the 3 highest-leverage moves.">🎯 Copy: what should I do today?</button>
-  <button class="btn" data-prompt="Review my whole pipeline and flag anything stale, single-threaded, or at risk of going cold.">🔍 Copy: health check</button>
+  <button class="btn primary" data-prompt="What should I focus on in my job search today? Look at my pipeline and give me the 3 highest-leverage moves.">${ask ? "✦" : "🎯"} ${verb}: what should I do today?</button>
+  <button class="btn" data-prompt="Review my whole pipeline and flag anything stale, single-threaded, or at risk of going cold.">${ask ? "✦" : "🔍"} ${verb}: health check</button>
 ${apps.length === 0 ? "" : `  <div class="search-wrap"><input type="search" class="search" id="filter" placeholder="Filter by company or role…  ( / )" aria-label="Filter applications"><span class="search-count" id="filter-count" aria-live="polite"></span></div>`}
 </div>
 ${staleBanner}
@@ -437,11 +465,18 @@ ${apps.length === 0 ? emptyState : `
   <div class="panel"><h2>Next actions</h2><div class="body">${actionsHtml}</div></div>
   <div class="panel"><h2>Stage distribution</h2><div class="body"><div id="chart" class="chart-box"></div></div></div>
 </div>`}
-<div class="foot-note">${dataDir ? `Data stays local (<code>${esc(dataDir)}</code>).` : "Data stays local on this machine."} Click cards to expand details, or click buttons to copy prompts for Claude. Refresh to re-read from disk.</div>
+<div class="foot-note">${dataDir ? `Data stays local (<code>${esc(dataDir)}</code>).` : "Data stays local on this machine."} Click cards to expand details${ask ? "; buttons ask Claude Code directly and the answer appears here" : ", or click buttons to copy prompts for Claude"}. Refresh to re-read from disk.</div>
 </div>
 <div id="toast"></div>
+${ask ? `<aside id="ask-panel" class="ask" hidden aria-live="polite" aria-label="Claude's answer">
+  <div class="ask-head"><span class="glyph" aria-hidden="true">✦</span><span id="ask-status">Asking Claude…</span><button class="ask-x" id="ask-close" aria-label="Close">×</button></div>
+  <div class="ask-q" id="ask-q"></div>
+  <div class="ask-body" id="ask-body"></div>
+  <div class="ask-foot"><button class="btn primary" id="ask-reload" hidden>↻ Reload the board</button><button class="btn" id="ask-copy">📋 Copy this prompt instead</button><span class="ask-cost" id="ask-cost"></span></div>
+</aside>` : ""}
 <script>
 const CHART=${chartData};
+const ASK=${jsonForScript(ask ? { token: ask.token } : null)};
 (function(){
   const box=document.getElementById("chart");
   if(box&&CHART.length){
@@ -468,13 +503,72 @@ const CHART=${chartData};
     card.addEventListener("click",toggle);
     card.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(e); } });
   });
-  // Buttons and actions with data-prompt — copy on click
+  // ── The Ask bridge (only when the server switched it on) ─────────────────
+  // POST the prompt to /ask, read the server-sent events, render the answer in
+  // the side panel. Everything Claude does happens in Claude Code with the
+  // career-compass tools; this page only shows the transcript.
+  const panel=document.getElementById("ask-panel");
+  let lastPrompt="";
+  function md(s){
+    const h=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    return h(s).split("\\n").map(line=>{
+      let l=line.replace(/\\*\\*(.+?)\\*\\*/g,"<b>$1</b>").replace(/\`([^\`]+)\`/g,"<code>$1</code>");
+      if(/^#{1,3}\\s/.test(l)) return "<div class=\\"ask-h\\">"+l.replace(/^#{1,3}\\s/,"")+"</div>";
+      if(/^\\s*[-*•]\\s/.test(l)) return "<div class=\\"ask-li\\">"+l.replace(/^\\s*[-*•]\\s/,"")+"</div>";
+      if(/^\\s*\\d+[.)]\\s/.test(l)) return "<div class=\\"ask-li n\\">"+l+"</div>";
+      return l?"<p>"+l+"</p>":"";
+    }).join("");
+  }
+  // Tool names are for the machine; the status line is for the person.
+  const TOOL_PHRASES={pipeline_view:"Reading your pipeline…",pipeline_add:"Adding to your pipeline…",pipeline_update:"Updating your pipeline…",check_setup:"Checking your setup…",tailor_resume:"Working on your résumé…",generate_cover_letter:"Drafting the cover letter…",explore_opportunity:"Weighing the fit…",research_company:"Researching the company…",prepare_interview:"Building your interview prep…",interview_arc:"Reading the interview so far…",evaluate_offer:"Weighing the offer…",save_career_section:"Saving to your Career KB…",ingest_document:"Reading the document…",capture_insight:"Writing to your journal…",harvest_evidence:"Reading the project history…",format_for_ats:"Formatting for the ATS…",classify_email:"Reading the email…",generate_rejection_response:"Drafting the reply…"};
+  function toolPhrase(n){ return TOOL_PHRASES[n]||"Reading your data…"; }
+  let t0=0;
+  async function askClaude(prompt){
+    if(!ASK||!panel) return copyPrompt(prompt);
+    lastPrompt=prompt; t0=Date.now();
+    const body=document.getElementById("ask-body"), status=document.getElementById("ask-status"), q=document.getElementById("ask-q"), reload=document.getElementById("ask-reload"), cost=document.getElementById("ask-cost");
+    panel.hidden=false; panel.classList.add("working"); panel.classList.remove("done","failed");
+    status.textContent="Asking Claude…"; q.textContent=prompt; body.innerHTML=""; reload.hidden=true; cost.textContent="";
+    let text="";
+    try{
+      const r=await fetch("/ask",{method:"POST",headers:{"content-type":"application/json","x-cc-ask-token":ASK.token},body:JSON.stringify({prompt})});
+      if(!r.ok){ throw new Error(await r.text()); }
+      const reader=r.body.getReader(), dec=new TextDecoder(); let buf="";
+      for(;;){
+        const {value,done}=await reader.read(); if(done) break;
+        buf+=dec.decode(value,{stream:true});
+        let i; while((i=buf.indexOf("\\n\\n"))>=0){
+          const frame=buf.slice(0,i); buf=buf.slice(i+2);
+          if(!frame.startsWith("data: ")) continue;
+          const ev=JSON.parse(frame.slice(6));
+          if(ev.type==="text"){ text+=(text?"\\n":"")+ev.text; body.innerHTML=md(text); status.textContent="Claude is writing…"; }
+          else if(ev.type==="tool"){ status.textContent=toolPhrase(ev.name); }
+          else if(ev.type==="done"){ if(!text&&ev.text){ text=ev.text; body.innerHTML=md(text); } panel.classList.remove("working"); panel.classList.add(ev.isError?"failed":"done"); status.textContent=ev.isError?"Claude hit a problem":"Done"; reload.hidden=false; cost.textContent=Math.round((Date.now()-t0)/1000)+" s"; if(ev.isError&&!text){ body.innerHTML+="<p class=\\"ask-err\\">Claude couldn't finish this one. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p>"; } }
+          else if(ev.type==="error"){ panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Couldn't reach Claude"; body.innerHTML+="<p class=\\"ask-err\\">Something went wrong asking Claude directly. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p><p class=\\"ask-detail\\">"+md(ev.message)+"</p>"; }
+          body.scrollTop=body.scrollHeight;
+        }
+      }
+      if(panel.classList.contains("working")){ panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Claude stopped early"; }
+    }catch(err){
+      panel.classList.remove("working"); panel.classList.add("failed"); status.textContent="Couldn't reach Claude";
+      body.innerHTML+="<p class=\\"ask-err\\">Something went wrong asking Claude directly. Use <b>Copy this prompt instead</b> and paste it into your Claude app.</p><p class=\\"ask-detail\\">"+md(String(err&&err.message||err))+"</p>";
+    }
+  }
+  if(panel){
+    document.getElementById("ask-close").addEventListener("click",()=>{ panel.hidden=true; });
+    document.getElementById("ask-copy").addEventListener("click",()=>copyPrompt(lastPrompt));
+    document.getElementById("ask-reload").addEventListener("click",()=>location.reload());
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!panel.hidden&&!(e.target instanceof HTMLInputElement)) panel.hidden=true; });
+  }
+  // Buttons and actions with data-prompt — ask on click when the bridge is on,
+  // otherwise copy. Prompts that contain a "[paste posting]" slot can't be run
+  // as-is, so those always copy; Claude would only ask for the posting anyway.
   document.querySelectorAll("[data-prompt]").forEach(el=>{
     // Skip cards — they use the drawer toggle above
     if(el.classList.contains("jc")) return;
-    function doCopy(){ copyPrompt(el.getAttribute("data-prompt")); }
-    el.addEventListener("click",doCopy);
-    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doCopy(); } });
+    function go(){ const p=el.getAttribute("data-prompt"); if(ASK&&!el.hasAttribute("data-needs-paste")) askClaude(p); else copyPrompt(p); }
+    el.addEventListener("click",go);
+    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
   });
   // Search/filter — hides non-matching cards, re-counts every column badge so
   // the numbers describe what is on screen, and says "N of M" beside the box.

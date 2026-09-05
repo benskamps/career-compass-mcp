@@ -4,8 +4,14 @@ import { join } from "path";
 import { getDataDir, loadPipeline, isCorruptDataError } from "../storage/file-store.js";
 import { renderLiteDashboard } from "./render.js";
 import { ALLOWED_HOSTNAMES, LOOPBACK, isAllowedHost, refusalBody } from "../loopback-guard.js";
+import { createAskBridge, type AskBridge, type ClaudeCommand } from "./ask-bridge.js";
 
 export { ALLOWED_HOSTNAMES, isAllowedHost, hostnameOf } from "../loopback-guard.js";
+
+export interface LiteServerOptions {
+  /** When set, dashboard buttons ask Claude Code directly instead of copying a prompt. */
+  ask?: { cmd: ClaudeCommand; timeoutMs?: number };
+}
 
 /**
  * Zero-build "lite" dashboard server.
@@ -22,7 +28,15 @@ export { ALLOWED_HOSTNAMES, isAllowedHost, hostnameOf } from "../loopback-guard.
  * unguarded. The names are re-exported above because this module's tests have
  * always reached them through this path.
  */
-export function createLiteDashboardServer(): Server {
+export function createLiteDashboardServer(options: LiteServerOptions = {}): Server {
+  // One bridge per server, so the token in the page matches the token the
+  // handler expects for the life of this process and no longer.
+  let bridge: AskBridge | null = null;
+  const getBridge = (): AskBridge | null => {
+    if (!options.ask) return null;
+    if (!bridge) bridge = createAskBridge({ dataDir: getDataDir(), cmd: options.ask.cmd, timeoutMs: options.ask.timeoutMs });
+    return bridge;
+  };
   return createServer(async (req, res) => {
     // Checked before anything else, including the path: a rejected origin must
     // not learn which paths exist or how the server responds to them.
@@ -31,8 +45,15 @@ export function createLiteDashboardServer(): Server {
       res.end(refusalBody(req.headers.host));
       return;
     }
-    // Only serve the dashboard at "/"; everything else 404s (favicon, etc.).
     const path = (req.url ?? "/").split("?")[0];
+    // The Ask bridge, only when the operator switched it on.
+    if (path === "/ask") {
+      const b = getBridge();
+      if (!b) { res.writeHead(404, { "content-type": "text/plain" }); res.end("Not found"); return; }
+      await b.handle(req, res);
+      return;
+    }
+    // Only serve the dashboard at "/"; everything else 404s (favicon, etc.).
     if (path !== "/" && path !== "/index.html") {
       res.writeHead(404, { "content-type": "text/plain" });
       res.end("Not found");
@@ -42,7 +63,8 @@ export function createLiteDashboardServer(): Server {
       const pipeline = await loadPipeline();
       const dataDir = getDataDir();
       const hasCareerKB = existsSync(join(dataDir, "career", "profile.yaml"));
-      const html = renderLiteDashboard(pipeline, dataDir, new Date(), hasCareerKB);
+      const b = getBridge();
+      const html = renderLiteDashboard(pipeline, dataDir, new Date(), hasCareerKB, b ? { token: b.token } : undefined);
       res.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         // Never cache: the whole point is a live read of local data.
@@ -78,15 +100,17 @@ export function createLiteDashboardServer(): Server {
  *
  * Both are loopback: the dashboard is never reachable from the network.
  */
-export function startLiteDashboard(port: number, hostname: string = LOOPBACK): Promise<Server> {
-  const server = createLiteDashboardServer();
+export function startLiteDashboard(port: number, hostname: string = LOOPBACK, options: LiteServerOptions = {}): Promise<Server> {
+  const server = createLiteDashboardServer(options);
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, hostname, () => {
       if (hostname !== LOOPBACK) return resolve(server);
       // Best-effort dual-stack. Its lifetime is tied to the primary server so
       // `close()` on the returned handle tears down both.
-      const v6 = createLiteDashboardServer();
+      // Same options, so an ::1 visitor gets the same bridge (and a token that
+      // its own page carries). Tokens differ per listener; each page matches its own.
+      const v6 = createLiteDashboardServer(options);
       v6.once("error", () => resolve(server)); // no IPv6 loopback: IPv4 is enough
       v6.listen(port, "::1", () => {
         server.once("close", () => v6.close());

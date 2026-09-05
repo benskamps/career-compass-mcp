@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.8.0 — 2026-09-05
+
+### Added — the dashboard click that reaches Claude
+
+- **`career-compass-mcp dashboard --ask-claude`.** Until now every dashboard button copied a
+  prompt for you to paste into Claude — the one piece of friction the page could not remove
+  on its own, because Claude Desktop has no door a web page can knock on. With Claude Code
+  installed and this flag on, the buttons ask Claude directly: the lite server runs
+  `claude -p` headless with this package as its only MCP server, and the answer streams into
+  a panel on the page. Cards, next-action rows, and the toolbar all switch from "Copy" to
+  "Ask Claude"; prompts with a `[paste posting]` slot keep copying, since Claude would only
+  ask for the posting.
+- **The panel** shows what Claude is reading (tool names as they run), the answer as it
+  arrives, the cost of the turn, and a *Reload the board* button once Claude may have changed
+  your files. Esc closes it; a copy button keeps the prompt yours if the bridge fails.
+- **Guard rails.** Opt-in twice (the flag AND a `claude` binary on PATH); POST only from a
+  loopback Origin with a per-process token; one ask at a time; the child is killed when the
+  browser leaves. Claude Code runs with `--strict-mcp-config` (only this server),
+  `--setting-sources project` from your data directory (none of your user hooks or other MCP
+  servers), `--no-session-persistence`, and Bash/Edit/Write/Web tools disallowed. The bridge
+  is off for the bundled `--sample` data, which is read-only by design.
+- Without the flag, or without Claude Code, nothing changes: the buttons copy, as before.
+
 ## 2.7.0 — 2026-09-05
 
 Productization pass: four phases drafted by Antigravity, validated and hardened here.
