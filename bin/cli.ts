@@ -38,6 +38,9 @@ if (args.includes("--help") || args.includes("-h")) {
 career-compass-mcp v${pkgVersion}
 
 Usage:
+  career-compass-mcp install                 Wire it into every Claude client on this machine (Claude Desktop, Claude Code, Cursor)
+  career-compass-mcp install --dry-run       Show what install would change, write nothing
+  career-compass-mcp install --data <path>   Same, with your career files somewhere other than ~/.career-compass
   career-compass-mcp                         Run the MCP server on stdio (your MCP client launches this; you don't)
   career-compass-mcp dashboard               Open the local web dashboard on your data
   career-compass-mcp dashboard --sample      Open the bundled Alex Rivera demo — no data of your own needed
@@ -62,6 +65,18 @@ Your data folder is CAREER_DATA_PATH, or ~/.career-compass when that is unset.
 }
 
 const isDashboard = args.includes("dashboard");
+
+// ─── Install ─────────────────────────────────────────────────────────────────
+// `career-compass-mcp install` — wire every Claude client on this machine.
+if (args[0] === "install") {
+  const { runInstall, renderInstallReport, parseInstallArgs } = await import("../src/install.js");
+  let opts;
+  try { opts = parseInstallArgs(args.slice(1)); }
+  catch (e) { console.error(`Error: ${(e as Error).message}`); process.exit(2); }
+  const results = runInstall(opts);
+  console.log(renderInstallReport(results, { dryRun: opts.dryRun }));
+  process.exit(results.some((r) => r.status === "failed") ? 1 : 0);
+}
 
 if (!isDashboard) {
   // Run MCP server on stdio (existing behavior)

@@ -1,6 +1,6 @@
 {
   "name": "career-compass-mcp",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "AI-native career co-pilot for Claude — Career KB, resume tailoring, job pipeline, interview prep, and offer evaluation via MCP",
   "type": "module",
   "main": "build/src/index.js",
