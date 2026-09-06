@@ -261,8 +261,7 @@ ${apps.filter(a => a.priority === "high" && ACTIVE_STATUSES.includes(a.status)).
   };
 }
 
-export function handleNextActions(pipeline: Pipeline): ToolResponse {
-  const now = new Date();
+export function handleNextActions(pipeline: Pipeline, now: Date = new Date()): ToolResponse {
   const actions: string[] = [];
 
   // Compare CALENDAR DAYS in the user's own timezone, not timestamps.
@@ -283,7 +282,13 @@ export function handleNextActions(pipeline: Pipeline): ToolResponse {
     // application is over, and nagging "follow up" on it is the wrong advice.
     if (["rejected", "withdrawn", "accepted", "ghosted"].includes(app.status)) continue;
 
-    const daysSinceUpdate = -(days(app.dateUpdated) || 0);
+    // `dateUpdated` is a full timestamp (toISOString), not a date-only field, so
+    // it gets timestamp arithmetic. Running it through the calendar-day helper
+    // took its UTC date against LOCAL midnight — between UTC midnight and local
+    // midnight every "applied Nd ago" came out one day short. Caught by the
+    // 7+-day test failing only in the evening, US time.
+    const updatedMs = Date.parse(app.dateUpdated);
+    const daysSinceUpdate = Number.isNaN(updatedMs) ? 0 : Math.floor((now.getTime() - updatedMs) / 86400000);
 
     if (app.status === "applied" && daysSinceUpdate >= 7) {
       actions.push(`📬 **Follow up** — ${app.company} / ${app.role} (applied ${daysSinceUpdate}d ago, ID: ${app.id})`);

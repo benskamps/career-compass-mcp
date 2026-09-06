@@ -96,6 +96,14 @@ describe("S2/S3 — an empty pipeline reads back as a sentence with a next step,
     expect(text).toContain("match that filter");
     expect(text).toContain("1 tracked in total");
   });
+  it("counts 'applied Nd ago' from the timestamp, even between UTC midnight and local midnight", () => {
+    // 00:30Z — in the Americas this is still the previous local day. A date-only
+    // reading of the timestamp lost a day here; the timestamp reading does not.
+    const now = new Date("2026-09-06T00:30:00.000Z");
+    const p: Pipeline = { applications: [{ id: "ten", company: "Acme", role: "PM", status: "applied", priority: "medium",
+      dateUpdated: new Date(now.getTime() - 10 * 86400000).toISOString(), remote: "unknown", contacts: [], interviewRounds: [], notes: [], coverLetterGenerated: false }], lastUpdated: now.toISOString() } as Pipeline;
+    expect(handleNextActions(p, now).content[0].text).toContain("applied 10d ago");
+  });
   it("next_actions distinguishes 'nothing tracked' from 'nothing due'", () => {
     expect(handleNextActions(EMPTY).content[0].text).toContain("Nothing tracked yet");
     expect(handleNextActions(EMPTY).content[0].text).not.toContain("up to date");
