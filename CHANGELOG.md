@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.9.1 — 2026-09-05
+
+### Fixed
+
+- **`install --dry-run` said "No Claude client was found" under two clients it had just listed.** A
+  dry run that would configure a client has found one; the summary now says so and tells you to
+  run it without `--dry-run` to write. Caught by the stranger install of 2.9.0.
+
 ## 2.9.0 — 2026-09-05
 
 ### Added — said and done

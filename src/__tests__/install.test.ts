@@ -98,7 +98,10 @@ describe("runInstall (fake machine)", () => {
     expect(res).toHaveLength(1);
     expect(res[0].status).toBe("dry-run");
     expect(existsSync(path.join(claudeDir, "claude_desktop_config.json"))).toBe(false);
-    expect(renderInstallReport(res, { dryRun: true })).toContain("dry run, nothing written");
+    const report = renderInstallReport(res, { dryRun: true });
+    expect(report).toContain("dry run, nothing written");
+    expect(report).not.toContain("No Claude client was found"); // it just listed one it would configure
+    expect(report).toContain("Run it without --dry-run");
   });
 
   it("refuses to clobber a config it cannot parse", () => {
