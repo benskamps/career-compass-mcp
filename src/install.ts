@@ -181,13 +181,17 @@ const GLYPH: Record<ClientResult["status"], string> = { added: "✅", updated: "
 export function renderInstallReport(results: ClientResult[], opts: { dryRun?: boolean } = {}): string {
   const lines = [opts.dryRun ? "Career Compass — install (dry run, nothing written)" : "Career Compass — install", ""];
   for (const r of results) lines.push(`${GLYPH[r.status]} ${r.label} — ${r.detail}`);
-  const done = results.filter((r) => r.status === "added" || r.status === "updated" || r.status === "present");
+  // A dry run that WOULD configure a client has found one; only "skipped" and
+  // "failed" mean nothing was there to wire. The first published dry run said
+  // "No Claude client was found" directly under two clients it had just listed.
+  const found = results.filter((r) => r.status !== "skipped" && r.status !== "failed");
   const restarts = [...new Set(results.filter((r) => r.restart && r.status !== "present").map((r) => r.restart!))];
   lines.push("");
-  if (done.length === 0) {
+  if (found.length === 0) {
     lines.push("No Claude client was found on this machine. Install Claude Desktop, Claude Code, or Cursor and run this again —");
     lines.push("or wire any MCP client by hand: command `npx`, args `-y career-compass-mcp`.");
   } else {
+    if (opts.dryRun) lines.push("Run it without --dry-run to write these.");
     if (restarts.length) lines.push(restarts.join(" "));
     lines.push("Then say to Claude: \"Run the Career Compass setup check.\"");
     lines.push("First conversation: \"Set up my Career KB. Here's my résumé:\" — and paste it.");
