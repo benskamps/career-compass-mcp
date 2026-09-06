@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- **`pipeline_view next_actions` under-counted "applied Nd ago" by a day between UTC midnight and
+  local midnight.** 2.7.0's calendar-day fix was applied to `dateUpdated`, which is a full timestamp,
+  not a date. Timestamps get timestamp arithmetic again; date-only fields keep the calendar-day
+  logic. Found by a test that only failed in the evening, US time.
 - **`install --dry-run` said "No Claude client was found" under two clients it had just listed.** A
   dry run that would configure a client has found one; the summary now says so and tells you to
   run it without `--dry-run` to write. Caught by the stranger install of 2.9.0.
