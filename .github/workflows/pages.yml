@@ -1,0 +1,56 @@
+name: Pages
+
+# Publishes docs/ to GitHub Pages.
+#
+# This exists to replace GitHub's auto-generated `pages-build-deployment`
+# workflow, which is what you get from Settings > Pages > "Deploy from a
+# branch". That workflow is not a file in this repo, cannot be edited, and
+# pinned actions/upload-artifact@v4 — so every single deployment carried a
+# Node 20 deprecation annotation that no change here could clear. Owning the
+# workflow is the only way to own its action versions.
+#
+# docs/ contains a .nojekyll file, so the legacy build served the directory
+# verbatim with no Jekyll processing. Uploading docs/ as-is reproduces that
+# byte for byte.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deployment midway — a half-published site is worse than a
+# slightly stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build + deploy docs/
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload docs/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
