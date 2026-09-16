@@ -64,8 +64,15 @@ function packedFiles(): string[] {
     stdio: ["ignore", "pipe", "ignore"],
     shell: process.platform === "win32",
   });
-  const parsed = JSON.parse(raw) as PackResult[];
-  return parsed[0].files.map((f) => f.path.replace(/\\/g, "/"));
+  // npm 10 returns an array of pack results; npm 11 returns an object keyed by
+  // package name, so `parsed[0]` is undefined there and this read threw
+  // "Cannot read properties of undefined (reading 'files')". It surfaced in the
+  // v2.9.2 release run, where the publish workflow upgrades npm to >= 11.5.1 for
+  // trusted publishing and prepublishOnly then runs this guard. Accept both
+  // shapes: the guard has to work on whatever npm the person running it has.
+  const parsed = JSON.parse(raw) as PackResult[] | Record<string, PackResult>;
+  const result = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0];
+  return result.files.map((f) => f.path.replace(/\\/g, "/"));
 }
 
 /**
