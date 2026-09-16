@@ -56,6 +56,7 @@ const EXAMPLE_DIR = fileURLToPath(new URL("../../../data/example", import.meta.u
 const ORIGINAL_PATH = process.env.CAREER_DATA_PATH;
 
 let client: Client;
+let server: McpServer;
 let populatedDir: string;
 let emptyDir: string;
 
@@ -75,13 +76,19 @@ function useEmpty(): void {
 beforeAll(async () => {
   populatedDir = await freshExampleCopy();
   emptyDir = await mkdtemp(join(tmpdir(), "cc-empty-"));
-  ({ client } = await makeClient());
+  ({ client, server } = await makeClient());
 });
 
 afterAll(async () => {
+  // Close BEFORE restoring the env var, not after. getDataDir() re-reads
+  // CAREER_DATA_PATH on every call, so any work still in flight when the path
+  // is restored resolves against the real ~/.career-compass — a test writing
+  // into the developer's own data directory. Shut the server down first, then
+  // hand the path back.
+  await client?.close();
+  await server?.close();
   if (ORIGINAL_PATH === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = ORIGINAL_PATH;
-  await client?.close();
   await rm(populatedDir, { recursive: true, force: true });
   await rm(emptyDir, { recursive: true, force: true });
 });

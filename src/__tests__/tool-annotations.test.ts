@@ -87,12 +87,24 @@ const ARGS: Record<string, Record<string, unknown>> = {
 
 const KNOWN_WRITERS = ["pipeline_add", "pipeline_update", "capture_insight", "generate_rejection_response", "save_career_section"];
 
+/**
+ * A connected client AND its server, so the caller can close both.
+ *
+ * Returning only the client leaked a server per test. Nothing closed them, so a
+ * finished test's in-flight work stayed alive — and because `getDataDir()` reads
+ * `process.env.CAREER_DATA_PATH` fresh on every call, that work resolved into
+ * the NEXT test's freshly-mkdtemp'd directory and took its `.write-claim` there.
+ * The next writer then found the directory claimed, refused to write (correctly
+ * — that is the claim doing its job), and the fingerprint never moved. It
+ * surfaced as this file's writer test failing roughly one run in ten, and only
+ * under a full suite: in isolation there is no previous test to leak from.
+ */
 async function connect() {
   const server = createServer();
   const client = new Client({ name: "annotations-test", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
-  return client;
+  return { client, server };
 }
 
 describe("tool annotations", () => {
@@ -114,7 +126,7 @@ describe("tool annotations", () => {
   });
 
   it("every tool carries a title and an applicable hint (directory requirement)", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { tools } = await client.listTools();
       const bad = tools
@@ -131,11 +143,12 @@ describe("tool annotations", () => {
       ).toEqual([]);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("every tool claiming readOnlyHint leaves the data directory byte-identical", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { tools } = await client.listTools();
       const readOnly = tools.filter((t) => t.annotations?.readOnlyHint === true);
@@ -159,11 +172,12 @@ describe("tool annotations", () => {
       ).toEqual([]);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("the tools that do write are declared as writers, not quietly read-only", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { tools } = await client.listTools();
       const wronglyReadOnly = tools
@@ -176,20 +190,32 @@ describe("tool annotations", () => {
       ).toEqual([]);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("actually persists a change when a writer is called (the fingerprint can detect writes)", async () => {
     // Negative control for the harness itself: if fingerprint() were broken, the
     // read-only test above would pass vacuously.
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const before = fingerprint(dataDir);
-      await client.callTool({ name: "pipeline_add", arguments: ARGS.pipeline_add });
+      const result = await client.callTool({ name: "pipeline_add", arguments: ARGS.pipeline_add });
       const after = fingerprint(dataDir);
-      expect(after, "pipeline_add should change the data directory").not.toBe(before);
+
+      // Check the call SUCCEEDED before checking what it wrote. Without this the
+      // only signal was two identical hashes, which is true of every reason a
+      // write might not happen and names none of them — a refused write claim
+      // read exactly like a broken fingerprint() for as long as this test
+      // existed. A tool that declines says so in its text rather than by
+      // throwing, so the text is where the reason lives.
+      const said = JSON.stringify(result.content);
+      expect(said, `pipeline_add refused instead of writing: ${said}`).not.toContain("❌");
+
+      expect(after, `pipeline_add should change the data directory (tool said: ${said})`).not.toBe(before);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });

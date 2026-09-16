@@ -56,13 +56,14 @@ function textOf(result: unknown): string {
 
 describe("MCP server E2E (in-memory transport)", () => {
   let client: Client;
+  let server: ReturnType<typeof createServer>;
   let originalDataPath: string | undefined;
 
   beforeAll(async () => {
     originalDataPath = process.env.CAREER_DATA_PATH;
     process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
 
-    const server = createServer();
+    server = createServer();
     client = new Client({ name: "e2e-test-client", version: "0.0.0" });
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -75,6 +76,7 @@ describe("MCP server E2E (in-memory transport)", () => {
 
   afterAll(async () => {
     await client?.close();
+    await server?.close();
     if (originalDataPath === undefined) {
       delete process.env.CAREER_DATA_PATH;
     } else {

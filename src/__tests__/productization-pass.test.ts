@@ -22,12 +22,21 @@ import type { Application, Pipeline } from "../schemas/career-schema.js";
  * would go red.
  */
 
+/**
+ * A connected client AND its server, so the caller can close both.
+ *
+ * Returning only the client leaked a server per test. Nothing closed them, so a
+ * finished test's in-flight work stayed alive — and because `getDataDir()` reads
+ * `process.env.CAREER_DATA_PATH` fresh on every call, that work resolved into the
+ * NEXT test's directory and took its `.write-claim`. The next writer then found
+ * the directory claimed and correctly refused to write.
+ */
 async function connect() {
   const server = createServer();
   const client = new Client({ name: "productization-pass", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
-  return client;
+  return { client, server };
 }
 
 const textOf = (r: unknown) =>
@@ -145,7 +154,7 @@ describe("pipeline validation failures carry isError", () => {
   });
 
   it("over the wire: unknown id, missing id, unknown action, bad status, refused transition", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const call = (args: Record<string, unknown>) =>
         client.callTool({ name: "pipeline_view", arguments: args });
@@ -171,6 +180,7 @@ describe("pipeline validation failures carry isError", () => {
       expect(isError(ok)).toBe(false);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -179,7 +189,7 @@ describe("pipeline validation failures carry isError", () => {
 
 describe("tailor_resume format=academic", () => {
   it("emits an academic structure, and standard does not", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const wrote = await client.callTool({
         name: "save_career_section",
@@ -199,6 +209,7 @@ describe("tailor_resume format=academic", () => {
       expect(standard).not.toContain("Publications & Peer-Reviewed Works");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -211,7 +222,7 @@ describe("résumé and opportunity tools guard the Career KB read", () => {
     async (tool) => {
       mkdirSync(path.join(dataDir, "career"), { recursive: true });
       writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: [unclosed\n  :: not yaml", "utf-8");
-      const client = await connect();
+      const { client, server } = await connect();
       try {
         const r = await client.callTool({ name: tool, arguments: { posting: "Anything", company: "Acme" } });
         const text = textOf(r);
@@ -220,6 +231,7 @@ describe("résumé and opportunity tools guard the Career KB read", () => {
         expect(text).toContain("profile.yaml");
       } finally {
         await client.close();
+        await server.close();
       }
     },
   );
@@ -229,7 +241,7 @@ describe("résumé and opportunity tools guard the Career KB read", () => {
 
 describe("prompts", () => {
   it("setup-career-kb embeds a pasted résumé and names the writer tool", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { messages } = await client.getPrompt({
         name: "setup-career-kb",
@@ -241,11 +253,12 @@ describe("prompts", () => {
       expect(text).toContain("check_setup");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("resume-tailor accepts pages 3 (the tool's range is 1–4)", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { messages } = await client.getPrompt({
         name: "resume-tailor",
@@ -254,6 +267,7 @@ describe("prompts", () => {
       expect((messages[0].content as { text: string }).text).toContain("3 page");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -315,7 +329,7 @@ const gitAvailable = (() => {
 
 describe.skipIf(!gitAvailable)("check_setup git finding", () => {
   it("warns with the init command outside a repo, confirms inside one", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const before = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
       expect(before).toContain("Git backup");
@@ -328,6 +342,7 @@ describe.skipIf(!gitAvailable)("check_setup git finding", () => {
       expect(after).not.toContain("git init");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -339,7 +354,7 @@ describe("live subscription to one application", () => {
     const a = app({ id: "live0001" });
     await savePipelineUnlocked({ applications: [a], lastUpdated: new Date().toISOString() } as Pipeline);
 
-    const client = await connect();
+    const { client, server } = await connect();
     const seen: string[] = [];
     client.setNotificationHandler(ResourceUpdatedNotificationSchema, (n) => {
       seen.push(n.params.uri);
@@ -358,6 +373,7 @@ describe("live subscription to one application", () => {
       expect(seen).toContain("career://pipeline/live0001");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });

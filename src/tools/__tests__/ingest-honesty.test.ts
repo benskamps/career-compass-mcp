@@ -23,6 +23,8 @@ import { registerCareerKBTools } from "../career-kb.js";
  */
 
 let client: Client;
+
+let server: McpServer;
 let dataDir: string;
 let originalDataPath: string | undefined;
 
@@ -31,7 +33,7 @@ beforeAll(async () => {
   dataDir = await mkdtemp(join(tmpdir(), "cc-ingest-"));
   process.env.CAREER_DATA_PATH = dataDir;
 
-  const server = new McpServer({ name: "ingest-honesty", version: "0.0.0" });
+  server = new McpServer({ name: "ingest-honesty", version: "0.0.0" });
   registerCareerKBTools(server);
   const [c, s] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: "ingest-honesty-client", version: "0.0.0" });
@@ -40,6 +42,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client?.close();
+  await server?.close();
   if (originalDataPath === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = originalDataPath;
   await rm(dataDir, { recursive: true, force: true });

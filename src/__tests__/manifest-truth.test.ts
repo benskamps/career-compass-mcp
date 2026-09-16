@@ -62,6 +62,7 @@ async function servedTools(): Promise<ToolEntry[]> {
     return tools.map((t) => ({ name: t.name, description: t.description }));
   } finally {
     await client.close();
+    await server.close();
   }
 }
 

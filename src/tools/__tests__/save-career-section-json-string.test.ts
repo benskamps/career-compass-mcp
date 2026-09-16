@@ -26,6 +26,8 @@ const textOf = (r: unknown) =>
     .map((p) => p.text ?? "").join("\n");
 
 let client: Client;
+
+let server: ReturnType<typeof createServer>;
 let dataDir: string;
 let original: string | undefined;
 
@@ -33,7 +35,7 @@ beforeEach(async () => {
   original = process.env.CAREER_DATA_PATH;
   dataDir = mkdtempSync(join(tmpdir(), "cc-json-string-"));
   process.env.CAREER_DATA_PATH = dataDir;
-  const server = createServer();
+  server = createServer();
   client = new Client({ name: "json-string-test", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
@@ -41,6 +43,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await client?.close();
+  await server?.close();
   if (original === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = original;
   rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });

@@ -18,6 +18,7 @@ import { loadJournal } from "../../storage/file-store.js";
 const ORIGINAL_PATH = process.env.CAREER_DATA_PATH;
 let dataDir: string;
 let client: Client;
+let server: McpServer;
 
 async function callText(name: string, args: Record<string, unknown>): Promise<string> {
   const res = await client.callTool({ name, arguments: args });
@@ -29,7 +30,7 @@ beforeEach(async () => {
   dataDir = await mkdtemp(join(tmpdir(), "cc-capture-"));
   process.env.CAREER_DATA_PATH = dataDir;
 
-  const server = new McpServer({ name: "capture-test", version: "0.0.0" });
+  server = new McpServer({ name: "capture-test", version: "0.0.0" });
   registerCareerKBTools(server);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: "capture-test-client", version: "0.0.0" });
@@ -38,6 +39,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await client?.close();
+  await server?.close();
   if (ORIGINAL_PATH === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = ORIGINAL_PATH;
   await rm(dataDir, { recursive: true, force: true });

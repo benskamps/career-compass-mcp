@@ -44,6 +44,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   await client?.close();
+  await server?.close();
   delete process.env.CAREER_DATA_PATH;
   rmSync(dir, { recursive: true, force: true });
 });
