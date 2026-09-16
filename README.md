@@ -551,10 +551,28 @@ will close.
 
 ---
 
+## Did this help?
+
+There is no telemetry in this package, so I have genuinely no idea whether it is working for
+anyone. Download counts are mostly registry mirrors rather than people. That is the trade: the
+privacy is real, and the consequence is silence.
+
+So if Career Compass got you through a week of applications:
+
+- **[Star the repo](https://github.com/benskamps/career-compass-mcp)** — the only signal that
+  survives having no analytics.
+- **[Say so in Discussions](https://github.com/benskamps/career-compass-mcp/discussions)** —
+  what you used it for, what was missing, what you wish it did instead. Job searches differ
+  enough that I would rather hear about yours than guess at it.
+
+Neither one sends me anything you have not chosen to type.
+
 ## Contributing
 
 [Issues](https://github.com/benskamps/career-compass-mcp/issues) and PRs welcome — bug
-reports with a reproduction are especially useful, and they do get fixed. If you add a tool,
+reports with a reproduction are especially useful, and they do get fixed.
+[Discussions](https://github.com/benskamps/career-compass-mcp/discussions) is the place for
+anything that is not a defect: questions, workflows, or a tool you wish existed. If you add a tool,
 register it in `src/server.ts` and follow the
 pattern in any existing tool file — each tool returns a structured prompt that Claude acts
 on with the full KB in context. The test suite includes docs-truth guards, so a new tool or
