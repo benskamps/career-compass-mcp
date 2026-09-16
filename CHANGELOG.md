@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.9.2 — 2026-09-15
+
+### Fixed
+
+- **Five vulnerable packages were shipping to users, and the issue tracking them said they were
+  not.** `@modelcontextprotocol/sdk` declares `hono`, `@hono/node-server`, `express`,
+  `express-rate-limit` and `ajv` as production dependencies, so `hono`, `@hono/node-server`,
+  `fast-uri`, `ip-address` and `qs` installed on every machine running this package. `npm why`
+  reports a single chain and hides the second one; `npm ls --omit=dev --all` shows it. Severity
+  was genuinely low — every one of those advisories needs a live HTTP server and this is a stdio
+  server, so the code shipped but was never exercised — but low is not absent. The patched
+  versions already sat inside the SDK's own ranges, so the fix is mostly a lockfile refresh:
+  `hono` 4.12.30 → 4.13.8, `@hono/node-server` 1.19.14 → 2.1.1, `fast-uri` 3.1.3 → 3.1.8,
+  `ip-address` 10.2.0 → 10.7.2, `qs` 6.15.3 → 6.16.0. `npm audit` now reports **0
+  vulnerabilities**, dev included.
+- **A write-claim leak in the test suite meant CI was green partly by luck.** The tools tests
+  opened an MCP server each and closed only the client, so a finished test's in-flight work
+  survived, followed `CAREER_DATA_PATH` into the next test's directory, and claimed it. The
+  writer that ran next was correctly refused and the assertion reported only that two hashes
+  matched. 22 test files now close what they open. No production code involved.
+
+### Changed
+
+- **`@modelcontextprotocol/sdk` 1.29 → 1.30.** Load-bearing rather than hygiene: 1.29 pinned
+  `@hono/node-server` to `^1.19.9`, and 1.30 widens it to `^1.19.9 || ^2.0.5`, which is what
+  admits the patched 2.x.
+- **Published to npm through trusted publishing (OIDC).** No token is involved any more. npm is
+  retiring tokens that bypass 2FA — account and package management went in August 2026, direct
+  publishing goes around January 2027 — and a short-lived identity minted per workflow run has
+  nothing to leak.
+- **Build and test toolchain:** TypeScript 6 → 7 (with Next 16.2.1 → 16.3.5, which TypeScript 7
+  requires — 7 drops the JS Compiler API that Next detects TypeScript by), `@types/node` 25 → 22
+  to match the Node 22 the project is tested on, vitest 4 → 5, and
+  `@modelcontextprotocol/inspector` 0.21 → 2.6. None of these reach the published package.
+
 ## 2.9.1 — 2026-09-05
 
 ### Fixed
