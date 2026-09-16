@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^2.6.0",
-    "@types/node": "^25.5.0",
+    "@types/node": "^22.20.3",
     "playwright": "^1.59.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
