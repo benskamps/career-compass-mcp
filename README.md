@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-green.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
 
 **An AI-native career co-pilot for Claude.**
