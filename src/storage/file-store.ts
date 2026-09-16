@@ -188,6 +188,30 @@ async function pruneBackups(dir: string, base: string): Promise<void> {
 }
 
 /**
+ * Take the write claim for the current data dir — but refuse a bundled-sample
+ * store BEFORE the claim is taken, not after.
+ *
+ * {@link atomicWriteYaml} already refuses to write into the demo that ships
+ * inside the package. Doing it only there meant the claim file was created in
+ * `data/example/` first and removed a moment later, so a *refused* write still
+ * touched the package's own directory — in a global install, a write into
+ * node_modules, which is the exact thing that refusal exists to prevent. On a
+ * read-only install (root-owned node_modules, a container image, a cached CI
+ * layer) creating that claim fails with a permission error, replacing the one
+ * sentence that explains the situation with one that does not.
+ *
+ * It also leaked into the test suite: the scaffold fixtures `cp` the bundled
+ * sample into a throwaway dir, and a copy taken inside that window inherited a
+ * live claim, so the next writer was correctly refused for a reason that had
+ * nothing to do with the test. That surfaced as a ~4% flake (#56).
+ */
+function withStoreWriteClaim<T>(fn: () => Promise<T>): Promise<T> {
+  const dir = getDataDir();
+  if (isBundledSampleDir(dir)) return Promise.reject(new ReadOnlyStoreError(dir));
+  return withWriteClaim(dir, fn);
+}
+
+/**
  * Back up (if the target exists) then write atomically.
  *
  * 1. If the destination already exists, copy it to a timestamped `.bak` so a
@@ -319,7 +343,7 @@ export async function saveCareerSection(section: string, data: unknown): Promise
   }
   const path = join(careerDir(), `${section}.yaml`);
   await withDataLock(path, () =>
-    withWriteClaim(getDataDir(), () => atomicWriteYaml(path, data)),
+    withStoreWriteClaim(() => atomicWriteYaml(path, data)),
   );
 }
 
@@ -427,7 +451,7 @@ export async function mutateCareerSection<S extends CareerSection>(
   }
   const path = join(careerDir(), `${section}.yaml`);
   return withDataLock(path, () =>
-    withWriteClaim(getDataDir(), async () => {
+    withStoreWriteClaim(async () => {
       // The read MUST be inside both the lock and the claim — same contract as
       // appendJournalEntry. Loading the section outside is exactly the bug this
       // exists to prevent.
@@ -471,7 +495,7 @@ export async function loadJournal(): Promise<JournalEntry[]> {
 export async function appendJournalEntry(entry: JournalEntry): Promise<JournalEntry[]> {
   const path = journalPath();
   return withDataLock(path, () =>
-    withWriteClaim(getDataDir(), async () => {
+    withStoreWriteClaim(async () => {
       // The read MUST be inside both the lock and the claim. Loading outside
       // means two concurrent appends both start from the same list and the
       // second write drops the first entry — with both calls reporting success.
@@ -552,7 +576,7 @@ export async function mutatePipeline<T>(
 ): Promise<T> {
   const path = join(pipelineDir(), "applications.yaml");
   return withDataLock(path, () =>
-    withWriteClaim(getDataDir(), async () => {
+    withStoreWriteClaim(async () => {
       const pipeline = await loadPipeline();
       // `lastUpdated` is rewritten on every save, so comparing it would make the
       // dirty check always true. Compare only the applications.
