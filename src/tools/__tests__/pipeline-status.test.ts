@@ -26,6 +26,8 @@ import { STATUS_ORDER } from "../../schemas/career-schema.js";
  */
 
 let client: Client;
+
+let server: McpServer;
 let dataDir: string;
 let originalDataPath: string | undefined;
 
@@ -46,7 +48,7 @@ beforeEach(async () => {
   dataDir = await mkdtemp(join(tmpdir(), "cc-status-"));
   process.env.CAREER_DATA_PATH = dataDir;
 
-  const server = new McpServer({ name: "status-test", version: "0.0.0" });
+  server = new McpServer({ name: "status-test", version: "0.0.0" });
   registerPipelineTools(server);
   const [c, s] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: "status-test-client", version: "0.0.0" });
@@ -55,6 +57,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await client?.close();
+  await server?.close();
   if (originalDataPath === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = originalDataPath;
   await rm(dataDir, { recursive: true, force: true });

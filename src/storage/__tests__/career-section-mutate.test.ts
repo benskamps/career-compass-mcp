@@ -86,6 +86,16 @@ describe("mutateCareerSection", () => {
   // (as the dashboard's saveProfile does today) and both start from the same
   // snapshot: the later write drops the other's field and this fails.
 
+  // 30s, not vitest's default 5s. This is a deliberate I/O stress test: 25 rounds
+  // of a reset plus two racing mutations, each a real read-modify-write through
+  // the claim and the atomic-rename path — 75+ disk round-trips. Alone the file
+  // finishes in ~800ms, but the suite runs one worker per file (55 of them), and
+  // under that contention on Windows it crossed 5s about one run in twenty and
+  // failed as a timeout rather than a correctness error.
+  //
+  // The timeout moves rather than RUNS. RUNS is what gives this negative control
+  // its power to catch the read-outside-the-lock regression it exists for;
+  // shrinking it to fit a clock would quietly weaken the test into passing.
   it("two concurrent mutations on different fields BOTH survive (read inside the lock)", async () => {
     const RUNS = 25;
     for (let i = 0; i < RUNS; i++) {
@@ -98,7 +108,7 @@ describe("mutateCareerSection", () => {
       expect(after?.summary, `run ${i}: A's field was dropped`).toBe("SET-BY-A");
       expect(after?.targetRoles, `run ${i}: B's field was dropped`).toEqual(["PM"]);
     }
-  });
+  }, 30_000);
 
   // ── fail-closed: never overwrite an unreadable section ────────────────────
 

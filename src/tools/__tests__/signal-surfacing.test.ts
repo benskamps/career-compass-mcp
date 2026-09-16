@@ -21,6 +21,8 @@ const EXAMPLE_DIR = fileURLToPath(new URL("../../../data/example", import.meta.u
 const ORIGINAL_PATH = process.env.CAREER_DATA_PATH;
 
 let client: Client;
+
+let server: McpServer;
 let dataDir: string;
 
 async function callText(name: string, args: Record<string, unknown>): Promise<string> {
@@ -34,7 +36,7 @@ beforeAll(async () => {
   await cp(EXAMPLE_DIR, dataDir, { recursive: true });
   process.env.CAREER_DATA_PATH = dataDir;
 
-  const server = new McpServer({ name: "surface-test", version: "0.0.0" });
+  server = new McpServer({ name: "surface-test", version: "0.0.0" });
   registerOpportunityTools(server);
   registerResumeTools(server);
   registerInterviewTools(server);
@@ -45,6 +47,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client?.close();
+  await server?.close();
   if (ORIGINAL_PATH === undefined) delete process.env.CAREER_DATA_PATH;
   else process.env.CAREER_DATA_PATH = ORIGINAL_PATH;
   await rm(dataDir, { recursive: true, force: true });

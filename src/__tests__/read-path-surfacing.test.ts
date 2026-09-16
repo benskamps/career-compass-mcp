@@ -20,12 +20,21 @@ import { createServer } from "../server.js";
 
 const EXAMPLE_DATA_PATH = fileURLToPath(new URL("../../data/example", import.meta.url));
 
+/**
+ * A connected client AND its server, so the caller can close both.
+ *
+ * Returning only the client leaked a server per test. Nothing closed them, so a
+ * finished test's in-flight work stayed alive — and because `getDataDir()` reads
+ * `process.env.CAREER_DATA_PATH` fresh on every call, that work resolved into the
+ * NEXT test's directory and took its `.write-claim`. The next writer then found
+ * the directory claimed and correctly refused to write.
+ */
 async function connect() {
   const server = createServer();
   const client = new Client({ name: "read-path-nc", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
-  return client;
+  return { client, server };
 }
 
 type ToolResult = { isError?: boolean; content?: Array<{ text?: string }> };
@@ -65,7 +74,7 @@ describe("read/write surfacing — negative controls", () => {
       rmSync(dir, { recursive: true, force: true });
       return; // no live foreign pid to hold the claim; nothing to assert
     }
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const result = (await client.callTool({
         name: "generate_rejection_response",
@@ -77,6 +86,7 @@ describe("read/write surfacing — negative controls", () => {
       expect(text(result)).toContain("Nothing was written");
     } finally {
       await client.close();
+      await server.close();
       delete process.env.CAREER_DATA_PATH;
       rmSync(dir, { recursive: true, force: true });
     }
@@ -89,7 +99,7 @@ describe("read/write surfacing — negative controls", () => {
     // so loadCareerData must fail closed with a CorruptDataError.
     writeFileSync(join(dir, "career", "profile.yaml"), "not-a-valid-profile\n", "utf-8");
     process.env.CAREER_DATA_PATH = dir;
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const result = (await client.callTool({
         name: "prepare_interview",
@@ -99,6 +109,7 @@ describe("read/write surfacing — negative controls", () => {
       expect(text(result)).toContain("Refusing to continue");
     } finally {
       await client.close();
+      await server.close();
       delete process.env.CAREER_DATA_PATH;
       rmSync(dir, { recursive: true, force: true });
     }
@@ -109,7 +120,7 @@ describe("read/write surfacing — negative controls", () => {
     // servingBundledSample() true, so a copy would not exercise the refusal.
     process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
     const claimFile = join(EXAMPLE_DATA_PATH, ".write-claim");
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const result = (await client.callTool({
         name: "pipeline_add",
@@ -119,6 +130,7 @@ describe("read/write surfacing — negative controls", () => {
       expect(text(result)).toContain("read-only demo");
     } finally {
       await client.close();
+      await server.close();
       delete process.env.CAREER_DATA_PATH;
       // The write claim is released by the store itself; clean up defensively so
       // a mid-test crash never leaves a stray claim in the tracked sample dir.
@@ -132,7 +144,7 @@ describe("read/write surfacing — negative controls", () => {
     // raw — so an insight against the demo store escaped as a transport error.
     process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
     const claimFile = join(EXAMPLE_DATA_PATH, ".write-claim");
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const result = (await client.callTool({
         name: "capture_insight",
@@ -142,6 +154,7 @@ describe("read/write surfacing — negative controls", () => {
       expect(text(result)).toContain("read-only demo");
     } finally {
       await client.close();
+      await server.close();
       delete process.env.CAREER_DATA_PATH;
       if (existsSync(claimFile)) rmSync(claimFile, { force: true });
     }

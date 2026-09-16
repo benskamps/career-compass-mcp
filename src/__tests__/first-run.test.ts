@@ -29,12 +29,21 @@ import { createServer } from "../server.js";
 
 const EXPECTED_WRITER = "save_career_section";
 
+/**
+ * A connected client AND its server, so the caller can close both.
+ *
+ * Returning only the client leaked a server per test. Nothing closed them, so a
+ * finished test's in-flight work stayed alive — and because `getDataDir()` reads
+ * `process.env.CAREER_DATA_PATH` fresh on every call, that work resolved into the
+ * NEXT test's directory and took its `.write-claim`. The next writer then found
+ * the directory claimed and correctly refused to write.
+ */
 async function connect() {
   const server = createServer();
   const client = new Client({ name: "first-run", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
-  return client;
+  return { client, server };
 }
 
 const textOf = (r: unknown) =>
@@ -59,7 +68,7 @@ describe("first run from an empty data directory", () => {
   });
 
   it("exposes a tool that can write the Career KB", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { tools } = await client.listTools();
       const names = tools.map((t) => t.name);
@@ -75,11 +84,12 @@ describe("first run from an empty data directory", () => {
       expect(writer.annotations?.readOnlyHint).not.toBe(true);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("round-trips a profile: write it, read it back, and stop reporting empty", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       // A KB-backed tool should say there's nothing yet.
       const before = textOf(
@@ -121,11 +131,12 @@ describe("first run from an empty data directory", () => {
       expect(after).toContain("Alex Rivera");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("refuses a section that does not match the schema, without touching disk", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const r = await client.callTool({
         name: EXPECTED_WRITER,
@@ -135,11 +146,12 @@ describe("first run from an empty data directory", () => {
       expect(existsSync(path.join(dataDir, "career", "profile.yaml"))).toBe(false);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("cannot be talked into writing outside the career directory", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       // `section` becomes a filename, and a model supplies it.
       const r = await client.callTool({
@@ -150,6 +162,7 @@ describe("first run from an empty data directory", () => {
       expect(existsSync(path.join(dataDir, "..", "escaped.yaml"))).toBe(false);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -170,7 +183,7 @@ describe("tools do not claim writes they did not make", () => {
   });
 
   it("generate_rejection_response does not report a status change for an unknown id", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const out = textOf(
         await client.callTool({
@@ -185,11 +198,12 @@ describe("tools do not claim writes they did not make", () => {
       expect(out).toMatch(/no application matching/i);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("no tool output references a tool that is not registered", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { tools } = await client.listTools();
       const registered = new Set(tools.map((t) => t.name));
@@ -212,6 +226,7 @@ describe("tools do not claim writes they did not make", () => {
       ).toEqual([]);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });

@@ -55,7 +55,10 @@ async function connectedClient(): Promise<{ client: Client; close: () => Promise
   const client = new Client({ name: "concurrency-test", version: "0.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
-  return { client, close: async () => { await client.close(); } };
+  // Closes the server too. A client-only close leaves the server's in-flight
+  // work alive, and since getDataDir() re-reads CAREER_DATA_PATH per call, that
+  // work lands in the NEXT test's directory and claims it.
+  return { client, close: async () => { await client.close(); await server.close(); } };
 }
 
 describe("concurrent writes must not lose data", () => {

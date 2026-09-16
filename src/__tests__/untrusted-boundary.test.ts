@@ -71,12 +71,13 @@ describe("untrusted() fencing", () => {
 
 describe("every tool that takes outside text fences it", () => {
   let client: Client;
+  let server: ReturnType<typeof createServer>;
   let originalDataPath: string | undefined;
 
   beforeAll(async () => {
     originalDataPath = process.env.CAREER_DATA_PATH;
     process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
-    const server = createServer();
+    server = createServer();
     client = new Client({ name: "untrusted-test", version: "0.0.0" });
     const [c, s] = InMemoryTransport.createLinkedPair();
     await Promise.all([server.connect(s), client.connect(c)]);
@@ -84,6 +85,7 @@ describe("every tool that takes outside text fences it", () => {
 
   afterAll(async () => {
     await client?.close();
+    await server?.close();
     if (originalDataPath === undefined) delete process.env.CAREER_DATA_PATH;
     else process.env.CAREER_DATA_PATH = originalDataPath;
   });

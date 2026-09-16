@@ -16,12 +16,21 @@ import type { Pipeline } from "../schemas/career-schema.js";
  * back. Every test here names what a first-time user SAW that was wrong.
  */
 
+/**
+ * A connected client AND its server, so the caller can close both.
+ *
+ * Returning only the client leaked a server per test. Nothing closed them, so a
+ * finished test's in-flight work stayed alive — and because `getDataDir()` reads
+ * `process.env.CAREER_DATA_PATH` fresh on every call, that work resolved into the
+ * NEXT test's directory and took its `.write-claim`. The next writer then found
+ * the directory claimed and correctly refused to write.
+ */
 async function connect() {
   const server = createServer();
   const client = new Client({ name: "stranger-seams", version: "0.0.0" });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(s), client.connect(c)]);
-  return client;
+  return { client, server };
 }
 const textOf = (r: unknown) =>
   (((r as { content?: Array<{ text?: string }> }).content) ?? []).map((p) => p.text ?? "").join("\n");
@@ -43,7 +52,7 @@ afterEach(() => {
 
 describe("S1 — the onboarding prompt uses the schema's own field names", () => {
   it("setup-career-kb names role/startDate/endDate/'present' and object achievements, never 'title'", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const { messages } = await client.getPrompt({ name: "setup-career-kb", arguments: {} });
       const text = (messages[0].content as { text: string }).text;
@@ -55,11 +64,12 @@ describe("S1 — the onboarding prompt uses the schema's own field names", () =>
       expect(experienceLine).not.toContain("company, title"); // the wording that taught the wrong field
     } finally {
       await client.close();
+      await server.close();
     }
   });
 
   it("an experience entry written the way the prompt describes it is accepted", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const r = await client.callTool({
         name: "save_career_section",
@@ -74,6 +84,7 @@ describe("S1 — the onboarding prompt uses the schema's own field names", () =>
       expect((r as { isError?: boolean }).isError ?? false, textOf(r)).toBe(false);
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
@@ -121,7 +132,7 @@ describe("S4 — one spelling of the data folder, everywhere", () => {
   });
   it("check_setup and tailor_resume print the same folder string", async () => {
     process.env.CAREER_DATA_PATH = process.platform === "win32" ? dataDir.replace(/\\/g, "/") : dataDir;
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const setup = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
       const resume = textOf(await client.callTool({ name: "tailor_resume", arguments: { posting: "PM" } }));
@@ -130,13 +141,14 @@ describe("S4 — one spelling of the data folder, everywhere", () => {
       if (process.platform === "win32") expect(setup).not.toContain(dataDir.replace(/\\/g, "/"));
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });
 
 describe("S5 — the git tip is not a bash-only && chain", () => {
   it("check_setup prints three plain git lines", async () => {
-    const client = await connect();
+    const { client, server } = await connect();
     try {
       const setup = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
       const gitBlock = setup.split("\n").filter((l) => l.includes("git "));
@@ -144,6 +156,7 @@ describe("S5 — the git tip is not a bash-only && chain", () => {
       for (const line of gitBlock) expect(line).not.toContain("&&");
     } finally {
       await client.close();
+      await server.close();
     }
   });
 });

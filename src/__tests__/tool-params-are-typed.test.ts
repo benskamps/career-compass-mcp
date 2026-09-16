@@ -61,6 +61,8 @@ describe("every tool parameter is advertised with a type", () => {
     ).toEqual([]);
 
     await client.close();
+
+    await server.close();
   });
 
   it("negative control: the check would catch an untyped schema", () => {
