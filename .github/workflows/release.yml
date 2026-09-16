@@ -1,0 +1,81 @@
+name: Release
+
+# Publishes career-compass-mcp to npm using trusted publishing (OIDC).
+#
+# There is no token here on purpose. npm is retiring tokens that bypass 2FA:
+# account/org/package management actions were cut off in Aug 2026, and direct
+# publishing from such a token goes away around Jan 2027 — after which a
+# bypass-2FA token can only stage a publish for a human to approve. OIDC sidesteps
+# that entirely: GitHub mints a short-lived identity token for this exact
+# workflow in this exact repo, and npm trusts it because the package is
+# configured to. Nothing long-lived exists to leak.
+#
+# Setup this depends on (one-time, on npmjs.com > package > Settings >
+# Trusted Publisher):
+#   Organization or user : benskamps
+#   Repository           : career-compass-mcp
+#   Workflow filename    : release.yml      <- filename only, not a path
+# If this file is ever renamed, that field must be updated or publishing fails.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # mints the OIDC token; without it npm cannot authenticate
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Node 22 to match what CI tests on (ci.yml), so the tarball is built by
+      # the same runtime the test suite proves. Trusted publishing needs
+      # >= 22.14.0, which any current 22.x satisfies.
+      #
+      # package-manager-cache: false is required for release builds — a warm npm
+      # cache can serve a stale tree into the published artifact.
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      # Node 22 bundles npm 10.x; trusted publishing needs >= 11.5.1. Pinning to
+      # @latest rather than a fixed version because this is the publish path and
+      # npm's OIDC support is still moving.
+      - name: Upgrade npm (trusted publishing requires >= 11.5.1)
+        run: |
+          npm install -g npm@latest
+          echo "npm $(npm -v) / node $(node -v)"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A release tagged v2.9.2 that publishes 2.9.1 is worse than a failed
+      # release — it is silent and it is permanent, because npm forbids
+      # republishing a version. Fail loudly before npm publish instead.
+      - name: Assert the release tag matches package.json
+        if: github.event_name == 'release'
+        run: |
+          pkg="$(node -p "require('./package.json').version")"
+          tag="${GITHUB_REF_NAME#v}"
+          echo "package.json=$pkg  tag=$tag"
+          if [ "$pkg" != "$tag" ]; then
+            echo "::error::Release tag ($tag) does not match package.json ($pkg). Refusing to publish."
+            exit 1
+          fi
+
+      # No NODE_AUTH_TOKEN / NPM_TOKEN: OIDC handles auth.
+      #
+      # This also runs the repo's own prepublishOnly gate (build:mcp +
+      # test:mcp + pack:guard), which is the existing publish contract — not
+      # duplicated here on purpose, so the two cannot drift apart.
+      - name: Publish
+        run: npm publish
