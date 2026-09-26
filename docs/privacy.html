@@ -61,7 +61,7 @@
 <header>
   <p class="eyebrow">Career Compass MCP</p>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated 2026-08-08 · applies to all versions of the MCP server and its bundled local dashboard</p>
+  <p class="meta">Last updated 2026-09-26 · applies to all versions of the MCP server and its bundled local dashboard</p>
 </header>
 
 <div class="lede">
@@ -83,6 +83,10 @@ projects, testimonials, and a dated journal of your own notes.</li>
 recruiter and hiring-manager contact details you enter, interview dates, and your notes.</li>
 <li><strong>Text you paste in</strong> — job postings, emails, offer letters, performance reviews, and
 similar documents you hand to a tool.</li>
+<li><strong>Git history of a project folder you name</strong> — only when you ask <code>harvest_evidence</code> to
+look at one. It reads that folder&#39;s commit history locally (commit authors, dates, and
+which files each commit touched) to report what you measurably did there. It writes
+nothing, anywhere, and sends nothing.</li>
 </ul>
 <h2 id="where-it-is-stored">Where it is stored</h2>
 <p>In a single directory on your machine, set by the <code>CAREER_DATA_PATH</code> environment variable.
@@ -112,10 +116,11 @@ visible to the registry, as it is to any website you open.</li>
 <li><strong>What comes back.</strong> The published metadata for the latest version. Career Compass reads
 one field from it — the version number — and discards the rest.</li>
 <li><strong>When it happens.</strong> Only while <code>check_setup</code> is running, and only if its
-<code>checkForUpdates</code> parameter is true. No other tool makes it, nothing makes it on
-startup, on a schedule, or in the background.</li>
-<li><strong>How to turn it off.</strong> Call <code>check_setup</code> with <code>checkForUpdates: false</code>. The rest of
-the health check runs normally and no request is constructed.</li>
+<code>checkForUpdates</code> parameter is true. It is false by default, so a setup check Claude runs
+on its own stays offline; Claude turns it on when you ask about updates. No other tool
+makes it, nothing makes it on startup, on a schedule, or in the background.</li>
+<li><strong>How to keep it off.</strong> Do nothing: without <code>checkForUpdates: true</code> the rest of the
+health check runs normally and no request is constructed.</li>
 <li><strong>When it fails.</strong> If you are offline, behind a proxy, or the registry is slow, the
 check times out after a few seconds and the report says it could not check. It is never
 an error and it never blocks the rest of the report.</li>

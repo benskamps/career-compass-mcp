@@ -5,7 +5,7 @@ permalink: /privacy
 
 # Privacy Policy — Career Compass MCP
 
-**Last updated:** 2026-08-08
+**Last updated:** 2026-09-26
 **Applies to:** the `career-compass-mcp` MCP server and its bundled local dashboard, all versions.
 
 ---
@@ -33,6 +33,10 @@ Career Compass reads and writes the career information *you* give it:
   recruiter and hiring-manager contact details you enter, interview dates, and your notes.
 - **Text you paste in** — job postings, emails, offer letters, performance reviews, and
   similar documents you hand to a tool.
+- **Git history of a project folder you name** — only when you ask `harvest_evidence` to
+  look at one. It reads that folder's commit history locally (commit authors, dates, and
+  which files each commit touched) to report what you measurably did there. It writes
+  nothing, anywhere, and sends nothing.
 
 ## Where it is stored
 
@@ -69,10 +73,11 @@ Precisely what that involves:
 - **What comes back.** The published metadata for the latest version. Career Compass reads
   one field from it — the version number — and discards the rest.
 - **When it happens.** Only while `check_setup` is running, and only if its
-  `checkForUpdates` parameter is true. No other tool makes it, nothing makes it on
-  startup, on a schedule, or in the background.
-- **How to turn it off.** Call `check_setup` with `checkForUpdates: false`. The rest of
-  the health check runs normally and no request is constructed.
+  `checkForUpdates` parameter is true. It is false by default, so a setup check Claude runs
+  on its own stays offline; Claude turns it on when you ask about updates. No other tool
+  makes it, nothing makes it on startup, on a schedule, or in the background.
+- **How to keep it off.** Do nothing: without `checkForUpdates: true` the rest of the
+  health check runs normally and no request is constructed.
 - **When it fails.** If you are offline, behind a proxy, or the registry is slow, the
   check times out after a few seconds and the report says it could not check. It is never
   an error and it never blocks the rest of the report.

@@ -63,6 +63,13 @@ const SURFACES: { name: string; text: string }[] = [
   { name: "PRIVACY.md (whole file)", text: read("PRIVACY.md") },
   { name: "manifest.json long_description", text: manifest.long_description },
   { name: "manifest.json description", text: manifest.description },
+  // The published policy page is the URL the Claude directory listing links to,
+  // and it said "no outbound network requests" for two months after PRIVACY.md
+  // stopped saying it, because nothing here read it.
+  { name: "docs/privacy.md", text: read("docs/privacy.md") },
+  { name: "docs/privacy/index.html", text: read("docs/privacy/index.html") },
+  { name: "docs/privacy.html", text: read("docs/privacy.html") },
+  { name: "plugin/README.md", text: read("plugin/README.md") },
 ];
 
 /** The surfaces that carry a privacy *paragraph*, as opposed to a one-liner. */
@@ -80,7 +87,7 @@ describe("privacy claims match the code", () => {
     expect(
       denials,
       `this surface claims ${denials.join(", ")}, but check_setup GETs ${REGISTRY_URL} ` +
-        `and its checkForUpdates parameter defaults to true. Say what the call is ` +
+        `when asked to. Say what the call is ` +
         `instead of denying it — PRIVACY.md's "Update checks" section is the wording.`,
     ).toEqual([]);
   });

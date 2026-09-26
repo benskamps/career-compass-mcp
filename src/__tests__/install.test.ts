@@ -92,6 +92,31 @@ describe("runInstall (fake machine)", () => {
     expect(readdirSync(claudeDir).length).toBe(before);
   });
 
+  it("leaves Claude Code alone when the Career Compass plugin already runs the server", () => {
+    // A directory install starts the same server. `claude mcp add` on top of it
+    // would list every tool twice.
+    const binDir = path.join(home, "bin"); mkdirSync(binDir); writeFileSync(path.join(binDir, "claude.exe"), "");
+    const calls: string[][] = [];
+    const exec = (_cmd: string, args: string[]) => {
+      calls.push(args);
+      if (args[0] === "plugin") return JSON.stringify([{ id: "design@synced" }, { id: "career-compass@claude-plugins", enabled: true }]);
+      throw new Error("not found");
+    };
+    const res = runInstall({ platform: "win32", env: { APPDATA: appdata, PATH: binDir }, home, exec, only: ["claude-code"] });
+    expect(res.map((r) => r.status)).toEqual(["present"]);
+    expect(res[0].detail).toMatch(/plugin/i);
+    expect(calls.some((a) => a[0] === "mcp" && a[1] === "add"), "registered a second copy next to the plugin").toBe(false);
+
+    // Negative control: a different plugin whose name merely contains ours is not it.
+    const other = (_cmd: string, args: string[]) => {
+      if (args[0] === "plugin") return JSON.stringify([{ id: "career-compass-extras@someone" }]);
+      if (args[1] === "get") throw new Error("not found");
+      return "";
+    };
+    const res2 = runInstall({ platform: "win32", env: { APPDATA: appdata, PATH: binDir }, home, exec: other, only: ["claude-code"] });
+    expect(res2.map((r) => r.status)).toEqual(["added"]);
+  });
+
   it("dry-run writes nothing and names what it would do", () => {
     const claudeDir = path.join(appdata, "Claude"); mkdirSync(claudeDir);
     const res = runInstall({ platform: "win32", env: winEnv(), home, dryRun: true, exec: () => { throw new Error("no"); }, only: ["claude-desktop"] });

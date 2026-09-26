@@ -66,6 +66,20 @@ Claude: 3 things:
 
 ## Install
 
+### From the Claude directory (Claude Code and Cowork)
+
+Find **Career Compass** in the directory under **Customize → Plugins** on claude.ai or in
+the desktop app, and add it. That's the whole install: the plugin starts the server for you
+and brings a skill that teaches Claude the working order. Change where your files live in
+the plugin's settings (**Career data folder**). If you installed it this way, skip the rest
+of this section. Running the command below as well would register a second copy of every
+tool, so `install` detects the plugin and leaves Claude Code alone.
+
+The plugin's server runs on your own computer, so it works in Claude Code and in Cowork
+sessions on your machine, but not in claude.ai chat on the web or mobile.
+
+### Everywhere else, in one command
+
 One command wires every Claude client on your machine — Claude Desktop, Claude Code, and
 Cursor — and tells you what to restart:
 
@@ -224,16 +238,15 @@ on your own disk**.
   it nowhere on its own.
 - **The one network call:** `check_setup` asks the public **npm registry** whether a newer
   version has been released. It is an unauthenticated GET for the package name, carrying
-  nothing about you or your data, and calling `check_setup` with `checkForUpdates: false`
-  never constructs the request at all. There is no analytics or phone-home path anywhere
-  else in the package.
+  nothing about you or your data, and it only happens when `check_setup` is called with
+  `checkForUpdates: true`, which Claude does when you ask about updates. It is off by
+  default. There is no analytics or phone-home path anywhere else in the package.
 - **What ships in the package:** the server code and a small set of **fictional** example
   files (`data/example/` — the Alex Rivera persona). A publish-time leak guard enforces that
   no real career data can ride along.
 - **The dashboard reads at request time, locally.** Your YAML is read when you open a page,
   by a server on your own `localhost`. It is never baked into a build, never prerendered,
-  and never sent over the network. A regression test (`standalone-dynamic.test.ts`) guards
-  exactly that.
+  and never sent over the network.
 - **What else is in that folder:** timestamped `.bak` copies of previous versions (the five
   most recent per file; older ones are pruned on the next write, and backups you make by
   hand are never touched), plus — only while a write is actually happening — a

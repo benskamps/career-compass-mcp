@@ -170,8 +170,8 @@ function versionFinding(result: UpdateCheckResult | null): Finding {
     return {
       label: "Version",
       status: "unknown",
-      detail: `v${PKG_VERSION} installed. Update check skipped, as you asked.`,
-      fix: "Run this again with checkForUpdates: true to compare against the npm registry.",
+      detail: `v${PKG_VERSION} installed. Not compared against npm — the update check is off unless you ask for it.`,
+      fix: 'Say "check Career Compass for updates" to run this with checkForUpdates: true (one request to the public npm registry).',
     };
   }
   if (!result.ok) {
@@ -249,7 +249,7 @@ async function gitFinding(dataDir: string): Promise<Finding | null> {
     if (msg.includes("not a git repository")) {
       return {
         label: "Git backup",
-        status: "warn",
+        status: "unknown",
         detail: `${dataDir} is not a git repository.`,
         // Three plain lines, not a `&&` chain: the chain fails in Windows
         // PowerShell 5.1, which is the default shell on the boxes that hit
@@ -428,7 +428,7 @@ async function pipelineFinding(dataDir: string, port: number): Promise<Finding> 
     if (total === 0) {
       return {
         label: "Pipeline",
-        status: "warn",
+        status: "unknown",
         detail: "No applications tracked yet.",
         fix:
           "Add the first one with `pipeline_add`, then watch it move:\n" +
@@ -574,7 +574,10 @@ export async function probeLocalDashboard(port: number, timeoutMs = 1500): Promi
  */
 export function dashboardCommand(dataDir: string, port: number): string {
   const flags = port === DEFAULT_DASHBOARD_PORT ? "" : ` --port ${port}`;
-  const command = `npx career-compass-mcp dashboard${flags}`;
+  // Pinned to the running version: a bare package name runs whatever is newest
+  // on npm, which is not the release this server is, and not the one a
+  // directory reviewer checked.
+  const command = `npx -y career-compass-mcp@${PKG_VERSION} dashboard${flags}`;
   if (resolve(dataDir) === resolve(join(homedir(), ".career-compass"))) return command;
   return (
     `PowerShell:  $env:CAREER_DATA_PATH="${dataDir}"; ${command}\n` +
@@ -684,9 +687,9 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
       inputSchema: {
         checkForUpdates: z
           .boolean()
-          .default(true)
+          .default(false)
           .describe(
-            "Whether to ask the public npm registry which version is current. This is the only outbound network call Career Compass ever makes: an unauthenticated GET for the package name, sending nothing about you or your data. Set false to run the check entirely offline.",
+            "Whether to ask the public npm registry which version is current. Off by default: pass true only when the user asks about updates or versions. This is the only outbound network call Career Compass ever makes: an unauthenticated GET for the package name, sending nothing about you or your data.",
           ),
         dashboardPort: z
           .number()
