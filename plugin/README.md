@@ -1,6 +1,6 @@
 # Career Compass
 
-![Career Compass icon](icon.png)
+![Career Compass icon](.claude-plugin/icon.png)
 
 **A local-first career co-pilot for Claude.**
 
