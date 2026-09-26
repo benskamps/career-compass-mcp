@@ -3,6 +3,7 @@ import { homedir } from "os";
 import { join } from "path";
 import { dashboardCommand, DEFAULT_DASHBOARD_PORT, renderReport } from "../doctor.js";
 import type { Finding } from "../doctor.js";
+import { PKG_VERSION } from "../../version.js";
 
 /**
  * `check_setup` tells you where your data is; its commands have to go there.
@@ -28,7 +29,7 @@ describe("dashboardCommand", () => {
     expect(out).toContain("PowerShell:");
     expect(out).toContain(`$env:CAREER_DATA_PATH="${custom}"`);
     expect(out).toContain("bash/zsh:");
-    expect(out).toContain(`CAREER_DATA_PATH="${custom}" npx career-compass-mcp dashboard`);
+    expect(out).toContain(`CAREER_DATA_PATH="${custom}" npx -y career-compass-mcp@${PKG_VERSION} dashboard`);
     // The PowerShell line must not be the bash prefix form, which is what
     // shipped and what a Windows user would paste into an error.
     expect(out).not.toMatch(/PowerShell:\s+CAREER_DATA_PATH=/);
@@ -39,7 +40,7 @@ describe("dashboardCommand", () => {
     // environment plumbing to read past — and the guard above would pass on a
     // function that just always printed the prefix.
     const out = dashboardCommand(DEFAULT_DIR, DEFAULT_DASHBOARD_PORT);
-    expect(out).toBe("npx career-compass-mcp dashboard");
+    expect(out).toBe(`npx -y career-compass-mcp@${PKG_VERSION} dashboard`);
     expect(out).not.toContain("CAREER_DATA_PATH");
   });
 

@@ -231,7 +231,7 @@ describe("check_setup reports version drift", () => {
       doctor: { checkForUpdate: async () => ({ ok: true, latest }) },
     });
     try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
       expect(out).toContain(PKG_VERSION);
       expect(out).toContain(latest);
       // A version number with no next step is trivia. The finding must carry one.
@@ -246,7 +246,7 @@ describe("check_setup reports version drift", () => {
   it("says so plainly when the install is current", async () => {
     const client = await connect();
     try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
       expect(out).toMatch(/current release/i);
       expect(out).not.toMatch(/update career-compass-mcp to/i);
     } finally {
@@ -261,9 +261,31 @@ describe("check_setup reports version drift", () => {
       doctor: { checkForUpdate: async () => ({ ok: true, latest: "0.0.1" }) },
     });
     try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
       expect(out).toMatch(/ahead of/i);
       expect(out).not.toMatch(/update career-compass-mcp to/i);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("does not ask the registry unless asked to", async () => {
+    // PRIVACY.md promises the one outbound request happens only when the user
+    // asks for it, and the plugin's skill runs check_setup on first contact —
+    // so the default has to be off, or a first-time user reaches npm unasked.
+    let asked = false;
+    const client = await connect({
+      doctor: {
+        checkForUpdate: async () => {
+          asked = true;
+          return { ok: true, latest: PKG_VERSION };
+        },
+      },
+    });
+    try {
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      expect(asked, "check_setup with no arguments reached the npm registry").toBe(false);
+      expect(out).toMatch(/checkForUpdates: true/);
     } finally {
       await client.close();
     }
@@ -322,7 +344,7 @@ describe("check_setup stays useful offline", () => {
   it("reports an unreachable registry as unknown, not as a failure", async () => {
     const client = await connect({ doctor: { checkForUpdate: async () => OFFLINE } });
     try {
-      const result = await client.callTool({ name: "check_setup", arguments: {} });
+      const result = await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } });
       const out = textOf(result);
 
       // Being offline is not an error condition of the tool.
@@ -710,7 +732,7 @@ describe("check_setup on an empty install", () => {
       doctor: { checkForUpdate: async () => ({ ok: true, latest }) },
     });
     try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
       expect(out).toContain(latest);
     } finally {
       await client.close();
@@ -741,7 +763,7 @@ describe("check_setup reports the dashboard", () => {
     const client = await connect();
     try {
       const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
-      expect(out).toMatch(/career-compass-mcp dashboard/);
+      expect(out).toMatch(/career-compass-mcp@\d+\.\d+\.\d+\S* dashboard/);
       expect(out).not.toContain("❌ **Dashboard**");
     } finally {
       await client.close();

@@ -14,7 +14,7 @@ There is no account, no cloud sync, and no telemetry.
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.9.2`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.9.3`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **One skill** (`skills/career-compass`) that teaches Claude the working order: set up
@@ -56,16 +56,19 @@ Full documentation: <https://github.com/benskamps/career-compass-mcp#readme>
 ## Privacy Policy
 
 Your data stays on your machine. Career Compass stores your career knowledge base and job
-pipeline as YAML in `~/.career-compass/`, or in the folder named by the
-`CAREER_DATA_PATH` environment variable. It sends that data nowhere on its own: it is
-passed only to the Claude client you use, and only for the requests you make.
+pipeline as YAML in `~/.career-compass/`, or in the folder you choose in the plugin's
+**Career data folder** setting. It sends that data nowhere on its own: it is passed only to
+the Claude client you use, and only for the requests you make. When you ask
+`harvest_evidence` to look at a project folder, it reads that folder's git history locally
+and writes nothing.
 
 The plugin makes two kinds of network request, and neither carries your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.2` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.3` and its
   dependencies from the public npm registry.
-- **Update check:** the `check_setup` tool asks the public npm registry for the latest
-  published version. Calling it with `checkForUpdates: false` skips the request.
+- **Update check, only when you ask:** the `check_setup` tool can ask the public npm
+  registry for the latest published version. It is off by default; Claude turns it on when
+  you ask whether there is an update.
 
 Files stay until you delete them; removing the data folder removes everything. The full
 policy, covering collection, storage, sharing, retention, and contact details, is at

@@ -102,6 +102,21 @@ describe("getDataDir expands a leading tilde", () => {
     expect(getDataDir()).toBe(expected);
   });
 
+  it.each([[""], ["   "], ["\t\n"]])(
+    "treats %j as unset — the default folder, never the process cwd",
+    (raw) => {
+      // A plugin setting left blank arrives as "", and resolve("") is the cwd:
+      // career data would land in whatever folder the client started in.
+      process.env.CAREER_DATA_PATH = raw;
+      expect(getDataDir()).toBe(path.join(homedir(), ".career-compass"));
+    },
+  );
+
+  it("trims surrounding whitespace from a real path", () => {
+    process.env.CAREER_DATA_PATH = `  ${dataDir}  `;
+    expect(getDataDir()).toBe(dataDir);
+  });
+
   it("leaves an absolute path and an inner tilde alone", () => {
     process.env.CAREER_DATA_PATH = dataDir;
     expect(getDataDir()).toBe(dataDir);

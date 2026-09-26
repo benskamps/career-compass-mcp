@@ -99,7 +99,12 @@ export function withDataLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
  *  path arrives literally as `~/.career-compass` and mkdirSync creates a
  *  directory named `~` in the process's cwd. */
 export function getDataDir(): string {
-  const raw = process.env.CAREER_DATA_PATH ?? join(homedir(), ".career-compass");
+  // Empty and whitespace-only count as unset. A plugin setting left blank, or an
+  // empty env block in a client config, arrives as "" — and `resolve("")` is the
+  // process cwd, which would write career data into whatever folder the client
+  // happened to start in.
+  const configured = process.env.CAREER_DATA_PATH?.trim();
+  const raw = configured ? configured : join(homedir(), ".career-compass");
   if (raw === "~") return homedir();
   if (raw.startsWith("~/") || raw.startsWith("~\\")) {
     return join(homedir(), raw.slice(2));

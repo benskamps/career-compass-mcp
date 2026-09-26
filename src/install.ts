@@ -145,6 +145,14 @@ export function installClaudeCode(opts: InstallOptions, platform: NodeJS.Platfor
   const label = "Claude Code";
   const bin = claudeCodeOnPath(platform, env);
   if (!bin) return { client: "claude-code", label, status: "skipped", detail: "Claude Code not found on PATH." };
+  if (claudeCodeHasPlugin(bin, exec)) {
+    return {
+      client: "claude-code",
+      label,
+      status: "present",
+      detail: "The Career Compass plugin is installed and already runs the server. Nothing to add, which avoids a second copy of every tool.",
+    };
+  }
   let present = false;
   try { exec(bin, ["mcp", "get", "career-compass"]); present = true; } catch { present = false; }
   if (present) return { client: "claude-code", label, status: "present", detail: "Already registered (claude mcp get career-compass)." };
@@ -157,6 +165,26 @@ export function installClaudeCode(opts: InstallOptions, platform: NodeJS.Platfor
     return { client: "claude-code", label, status: "added", detail: `Registered for every project: claude ${args.join(" ")}`, restart: "Open a new Claude Code session." };
   } catch (e) {
     return { client: "claude-code", label, status: "failed", detail: `claude mcp add failed: ${(e as Error).message}` };
+  }
+}
+
+/**
+ * Whether the Career Compass plugin (from the Claude directory, or synced from
+ * claude.ai) is installed in Claude Code. The plugin starts the same server, so
+ * registering it again with `claude mcp add` would list every tool twice.
+ * Any failure (an older CLI without `plugin list --json`, unparseable output)
+ * reads as "no plugin", which keeps the pre-plugin behaviour.
+ */
+export function claudeCodeHasPlugin(bin: string, exec: (cmd: string, args: string[]) => string): boolean {
+  try {
+    const list = JSON.parse(exec(bin, ["plugin", "list", "--json"])) as unknown;
+    if (!Array.isArray(list)) return false;
+    return list.some((p) => {
+      const id = (p as { id?: unknown })?.id;
+      return typeof id === "string" && id.split("@")[0] === "career-compass";
+    });
+  } catch {
+    return false;
   }
 }
 

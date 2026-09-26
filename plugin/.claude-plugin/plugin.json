@@ -2,7 +2,7 @@
   "name": "career-compass",
   "displayName": "Career Compass",
   "icon": "./.claude-plugin/icon.png",
-  "version": "2.9.2",
+  "version": "2.9.3",
   "description": "Local-first career co-pilot: keeps your career history as plain YAML on your own disk, then tailors resumes, scores job fit, tracks your application pipeline, preps interviews, and evaluates offers.",
   "author": {
     "name": "Ben Schippers",
@@ -18,5 +18,13 @@
     "interview-prep",
     "application-tracking",
     "offer-evaluation"
-  ]
+  ],
+  "userConfig": {
+    "data_path": {
+      "type": "directory",
+      "title": "Career data folder",
+      "description": "Where your career history and job pipeline are kept, as plain YAML on this computer. Nothing is uploaded. Leave the default unless you want it somewhere specific, such as inside a folder you already back up.",
+      "default": "~/.career-compass"
+    }
+  }
 }

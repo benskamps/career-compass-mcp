@@ -1,5 +1,41 @@
 # Changelog
 
+## 2.9.3 — unreleased
+
+### Fixed
+
+- **A blank data-folder setting wrote career data into whatever folder the client started in.**
+  `CAREER_DATA_PATH=""` (a plugin setting left empty, or an empty `env` block in a client
+  config) slipped past `??` and `resolve("")` returned the process cwd. Empty and
+  whitespace-only values now count as unset and fall back to `~/.career-compass`, and a real
+  path is trimmed.
+- **The update check reached npm without being asked.** `check_setup`'s `checkForUpdates`
+  defaulted to true, and the directory plugin's skill runs `check_setup` on first contact, so
+  a brand-new user's first conversation made a registry request PRIVACY.md said happens "only
+  when you ask for it". It now defaults to false; Claude passes true when the user asks about
+  updates.
+- **`check_setup` recommended an unpinned `npx career-compass-mcp dashboard`,** which runs
+  whatever is newest on npm rather than the release that printed it. It now prints
+  `npx -y career-compass-mcp@<this version> dashboard`.
+- **`install` registered a second copy of the server next to the directory plugin.** When
+  `claude plugin list --json` shows the Career Compass plugin, Claude Code is left alone.
+
+### Changed
+
+- **A fresh install no longer shows a wall of ⚠️.** "Not a git repository" and "no
+  applications yet" are ℹ️ tips, not warnings.
+- **Privacy policy:** discloses that `harvest_evidence` reads the git history of a folder you
+  name, and that the update check is off by default. The published page
+  (benskamps.github.io/career-compass-mcp/privacy) was two versions behind PRIVACY.md and still
+  said the software makes no outbound requests; it is regenerated from PRIVACY.md, and the
+  privacy-claims test now reads it, so it can't drift silently again.
+- **Directory plugin:** a **Career data folder** setting (`userConfig.data_path`, default
+  `~/.career-compass`) replaces the README's advice to set an environment variable, which the
+  directory scanner flags. The skill's dashboard command is pinned, and
+  `plugin-bundle-truth.test.ts` fails on any unpinned `npx career-compass-mcp` in `plugin/`.
+- README leads Install with the Claude directory. Removed a stale `NIGHT-NOTES` file and a
+  README sentence citing a test that guards the frozen Next.js dashboard, not the shipped one.
+
 ## 2.9.2 — 2026-09-15
 
 ### Fixed

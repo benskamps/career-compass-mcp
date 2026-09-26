@@ -2,7 +2,13 @@
   "mcpServers": {
     "career-compass": {
       "command": "npx",
-      "args": ["-y", "career-compass-mcp@2.9.2"]
+      "args": [
+        "-y",
+        "career-compass-mcp@2.9.3"
+      ],
+      "env": {
+        "CAREER_DATA_PATH": "${user_config.data_path}"
+      }
     }
   }
 }

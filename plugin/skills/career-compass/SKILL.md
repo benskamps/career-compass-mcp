@@ -16,8 +16,9 @@ It runs locally, in Claude Code and in Cowork sessions on the user's computer, a
 Node.js 22 or newer. Say so plainly rather than improvising the tools' output.
 
 When the user is new, or something seems off, call `check_setup` first. It reports the data
-folder, which KB sections are filled in, whether the pipeline parses, and whether a newer
-version exists.
+folder, which KB sections are filled in, and whether the pipeline parses. It stays offline
+by default. Pass `checkForUpdates: true` only when the user asks about updates or versions;
+that makes one request to the public npm registry.
 
 ## Build the Career KB before using it
 
@@ -54,4 +55,6 @@ After an interview, offer, or rejection, suggest a `capture_insight` entry so la
 checks and interview prep can use it. When the user mentions a status change, offer to
 record it with `pipeline_update` instead of leaving the pipeline stale.
 
-The user can also see the pipeline in a local dashboard: `npx -y career-compass-mcp dashboard`.
+The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
+command for their data folder; with the default folder it is
+`npx -y career-compass-mcp@2.9.3 dashboard`.
