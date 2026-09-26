@@ -1,5 +1,7 @@
 # Career Compass
 
+![Career Compass icon](icon.png)
+
 **A local-first career co-pilot for Claude.**
 
 Career Compass keeps your whole career history as plain YAML files on your own computer,
