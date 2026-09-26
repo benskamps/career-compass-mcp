@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "career-compass": {
+      "command": "npx",
+      "args": ["-y", "career-compass-mcp@2.9.2"]
+    }
+  }
+}
