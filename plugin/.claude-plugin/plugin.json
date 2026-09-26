@@ -1,0 +1,14 @@
+{
+  "name": "career-compass",
+  "displayName": "Career Compass",
+  "version": "2.9.2",
+  "description": "Local-first career co-pilot: keeps your career history as plain YAML on your own disk, then tailors resumes, scores job fit, tracks your application pipeline, preps interviews, and evaluates offers.",
+  "author": {
+    "name": "Ben Schippers",
+    "url": "https://github.com/benskamps"
+  },
+  "homepage": "https://benskamps.github.io/career-compass-mcp/how-it-works/",
+  "repository": "https://github.com/benskamps/career-compass-mcp",
+  "license": "MIT",
+  "keywords": ["career", "job-search", "resume", "interview-prep", "application-tracking", "offer-evaluation"]
+}
