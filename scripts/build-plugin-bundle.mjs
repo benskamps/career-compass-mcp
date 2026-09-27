@@ -4,8 +4,8 @@
 //
 //   cd career-compass-plugin && node ../career-compass-mcp/scripts/build-plugin-bundle.mjs 2.9.3
 //
-// .github/workflows/rebuild-plugin-bundle.yml runs this after every npm release and opens a
-// pull request on the plugin repo.
+// The plugin repo's own .github/workflows/rebuild.yml runs this once a day: when npm has a
+// newer release than the plugin, it rebuilds and opens a pull request there.
 //
 // What it does, in order:
 //   1. Downloads career-compass-mcp@<version> from npm (the exact tarball users of the
@@ -19,7 +19,7 @@
 //   5. Checks the directory's file limits: 512 files, 256 KiB per non-image file.
 //
 // Needs Node 22+, npm, git, and esbuild resolvable from this script
-// (the workflow runs `npm i --no-save esbuild@0.28.2` in this repo).
+// (the workflow runs `npm i --prefix . --no-save esbuild@0.28.2` next to this script).
 //
 // CC_PACKAGE_TGZ can point at a local `npm pack` tarball (for a dry run before a release
 // exists), and CC_SOURCE_DIR at a checkout of this repo at tag v<version>; each skips its
