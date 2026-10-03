@@ -1,0 +1,31 @@
+# One prompt per line. Career Compass should stay out of these.
+Write a Python function that reverses a linked list.
+What's a good recipe for vegetarian chili?
+Explain how TCP handshakes work.
+Plan a 4-day trip to Lisbon in April.
+Summarize the causes of World War I in three paragraphs.
+Fix this SQL: SELECT name FROM users WHERE created_at > '2026-01-01' GROUP BY email;
+I'm hiring a backend engineer. Write the job description for our careers page.
+Write interview questions I can ask candidates for a sales manager role at my company.
+Help me write a performance review for one of my direct reports.
+Write a Python script that parses PDF resumes and extracts email addresses.
+Draft an email to my landlord about a broken heater.
+What's the difference between a Roth IRA and a traditional IRA?
+Translate "where is the train station" into Japanese.
+Write a birthday poem for my mom.
+How do I set up a Kubernetes ingress controller?
+Explain the plot of Hamlet.
+Help me design a database schema for a library management system.
+What are good stretches for lower back pain?
+Write a short story about a lighthouse keeper.
+How do I calculate compound interest?
+Our team's sprint retro keeps going badly. How do I facilitate it better?
+Write a press release announcing our company's new office in Denver.
+What's the best way to learn Spanish in six months?
+Create a weekly meal plan for a family of four.
+Debug this React error: "Cannot read properties of undefined (reading 'map')".
+Write a LinkedIn post announcing our product launch.
+What should I name my new golden retriever puppy?
+Explain the difference between supervised and unsupervised learning.
+How do I onboard a new hire on my team in their first week?
+Write a rejection email to a candidate we interviewed but aren't hiring.
