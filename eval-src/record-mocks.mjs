@@ -48,6 +48,12 @@ const VARIANTS = {
       interview_arc: { company: "Veridian Health", role: "Director of Operations" },
     },
   },
+  "kb-meridian": {
+    state: "kb",
+    calls: {
+      generate_cover_letter: { company: "Meridian Logistics Group", role: "Head of Customer Success" },
+    },
+  },
 };
 
 function sample(schema, field) {

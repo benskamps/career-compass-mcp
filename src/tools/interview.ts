@@ -5,6 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
+import { MARKET_DATA_RULE, TRUTH_RULE } from "./truth-rule.js";
 import type { CareerData, InterviewRound, JournalEntry } from "../schemas/career-schema.js";
 
 export function registerInterviewTools(server: McpServer): void {
@@ -104,8 +105,8 @@ Generate complete interview prep tailored to a ${interviewType.replace("_", " ")
 ### 1. Opening Pitch (60-90 seconds)
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
-### 2. STAR Stories (7-10 stories)
-For each story, provide:
+### 2. STAR Stories (5-8 stories)
+Build each one from a real achievement in the Career KB, written out in full. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
@@ -132,7 +133,9 @@ How my background specifically connects to ${company ?? "their"} mission, produc
 Surprising connections between my experience and their world — things that will make me memorable.
 
 ### 7. Watch-outs & Reframes
-Likely concerns they'll have about my background, and how to address them proactively and honestly.`,
+Likely concerns they'll have about my background, and how to address them proactively and honestly.
+
+${TRUTH_RULE}`,
         }],
       };
     }
@@ -334,16 +337,14 @@ ${otherOffers ? `**Other offers/processes:** ${otherOffers}` : ""}
 Break down every component with annualized values:
 - Base salary
 - Target bonus (% and $ amount)
-- Equity (value at current valuation, vesting schedule, cliff)
+- Equity (grant, vesting schedule, cliff; a dollar value only if the valuation or price per share and the share count are known, otherwise list exactly what to ask for)
 - Benefits (health, 401k match, PTO, etc. — assign approximate $ values)
 - **Total Year 1 comp**
 - **Total Year 4 comp** (fully vested)
 
 ### 2. Market Comparison
 Compare to market rate for ${role ?? "this role"} at ${company ?? "this company type"}'s stage/size${location ? ` in ${location}` : ""}:
-- P25, P50, P75 benchmarks (cite sources if market data provided)
-- How does this offer rank?
-- Is this competitive, low, or above market?
+${marketData ? "- Compare against the market data above, citing it\n- How does this offer rank against it?" : "- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)\n- Compare instead against my current pay, my stated targets, and any other offers"}
 
 ### 3. Negotiation Strategy
 - What should I push on first?
@@ -369,7 +370,11 @@ If base is firm, what else to ask for:
 
 ### 6. Decision Framework
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk
-Overall recommendation: Accept / Negotiate / Decline?`,
+Overall recommendation: Accept / Negotiate / Decline?
+
+${MARKET_DATA_RULE}
+
+${TRUTH_RULE}`,
         }],
       };
     }

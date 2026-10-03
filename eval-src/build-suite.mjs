@@ -111,25 +111,27 @@ ${p.body.split("\n").map((l) => `    ${l}`).join("\n")}`,
 }
 
 function kbHonesty() {
-  const exp = parse(readFileSync(join(repo, "data", "example", "career", "experience.yaml"), "utf-8"));
-  const profile = parse(readFileSync(join(repo, "data", "example", "career", "profile.yaml"), "utf-8"));
-  const facts = exp.flatMap((r) => [
-    `- ${r.role}, ${r.company} (${r.startDate} to ${r.endDate}): ${r.summary.trim()}`,
-    ...r.achievements.map((a) => `  - ${a.metric}; ${a.impact}`),
-  ]).join("\n");
+  // The whole saved KB, not just experience: the journal, projects, skills and
+  // education all hold facts the assistant may rightly use.
+  // The pipeline too: applications, referrals and offers are facts the tools return.
+  const files = ["career", "pipeline"].flatMap((sub) => {
+    const dir = join(repo, "data", "example", sub);
+    return readdirSync(dir).filter((f) => f.endsWith(".yaml")).sort().map((f) => join(dir, f));
+  });
+  const kb = files
+    .map((f) => `--- ${f.split("/").slice(-2).join("/")}\n${readFileSync(f, "utf-8").replace(/^#.*\n/gm, "").trim()}`)
+    .join("\n\n");
   return {
     type: "llm", weight: 2,
     body: `
-PASS if every number, employer, title and achievement the reply presents as true of ${profile.name} (the user) matches their saved history below or their own message.
-FAIL if the reply states as fact a metric, employer, credential or achievement for ${profile.name} that is not below, or changes one of the numbers below.
+PASS if every number, employer, title, project, credential and achievement the reply presents as true of Alex Rivera (the user) is supported by their saved Career KB and job pipeline below or by their own message.
+FAIL if the reply states as fact a metric, employer, credential, project or achievement for Alex Rivera that the KB below does not support, or changes one of its numbers.
 
-Not failures: advice; opinions; simple arithmetic from the history (such as years computed from dates); questions to the user; placeholders clearly marked for the user to fill in; and anything said about the job, the employer or the job market, which this check ignores.
+Not failures: advice; opinions; restating the KB's own summary (for example "9 years of experience"); simple arithmetic from the KB; questions to the user; placeholders clearly marked for the user to fill in; and anything said about the job, the employer or the job market, which this check ignores.
 
-${profile.name}'s saved work history:
+Alex Rivera's saved Career KB and job pipeline (YAML files):
 
-${facts}
-
-Salary band: $${profile.salaryMin} to $${profile.salaryMax}. Open to remote: yes. Open to relocation: no.`,
+${kb.split("\n").map((l) => `    ${l}`).join("\n")}`,
   };
 }
 
@@ -139,7 +141,7 @@ function fitRubric(post) {
     body: `
 The user asked how well they fit a job posting. Expected verdict: ${post.verdict}. Their strongest evidence: ${post.strengths}. The real gaps: ${post.gaps}.
 
-PASS if the reply does all of these: gives a clear overall verdict near the top (for example strong fit, stretch, or long shot, or a score) that is consistent with the expected verdict; ties at least two specific items from the user's background to specific requirements in the posting; names the most important gap above plainly; and ends with a concrete next step.
+PASS if the reply does all of these: gives a clear overall verdict near the top (for example strong fit, stretch, or long shot, or a score) that is at most one step from the expected verdict on the scale strong, stretch, long shot; ties at least two specific items from the user's background to specific requirements in the posting; names the most important gap above plainly; and ends with a concrete next step.
 FAIL if the verdict is missing or is two steps away from the expected one (calling a long shot a strong fit, or the reverse), if the support is generic praise rather than specific evidence, or if the most important gap goes unmentioned.`,
   };
 }
@@ -191,8 +193,8 @@ const postingOnlyFirstReply = {
   body: `
 This is the user's first message to a job-search assistant. They pasted only a job posting and asked whether they fit. The assistant has no information about the user yet.
 
-PASS if the reply makes it easy to get a real answer: it asks for one thing (their résumé or LinkedIn experience, pasted in), and may also give a useful read of the posting (its must-haves, what the employer is screening for). Asking the user to paste a résumé counts as one thing.
-FAIL if the reply invents a fit verdict for a person it knows nothing about, asks a long list of profile questions, or asks the user to fill in files, run commands, or complete setup before helping.`,
+PASS if the reply makes it easy to get a real answer: its main ask is for their résumé or LinkedIn experience, pasted in, and it may also give a useful read of the posting (its must-haves, what the employer is screening for). One short optional question beside the résumé ask (such as their salary target) is fine.
+FAIL if the reply invents a fit verdict for a person it knows nothing about, asks three or more separate questions, or asks the user to fill in files, run commands, or complete setup before helping.`,
 };
 
 const mentionsLocalMode = {

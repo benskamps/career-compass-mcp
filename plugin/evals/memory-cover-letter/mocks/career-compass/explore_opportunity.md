@@ -94,3 +94,9 @@ Anything in the posting that warrants clarification or concern.
 
 ### 10. Verdict
 Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
+
+**Truth rule (applies to everything you write about me):**
+- Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".
+- In drafted résumé bullets, letters, and interview answers, do not add context the source does not state: no new audience, domain, scope, outcome, tool, or reason. Rewording is fine; new facts are not.
+- If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a visible placeholder such as [confirm: who used these reports?]. Never leave a section empty instead.
+- Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
