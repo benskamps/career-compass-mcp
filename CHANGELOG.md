@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **The directory plugin helps on first contact instead of asking for setup.** Installs were
+  far outpacing use. The skill only triggered when the user named Career Compass, told Claude
+  to stop when the tools were missing (as they are in claude.ai chat, where many installs
+  land), and asked for a full Career KB before doing anything. It now triggers on any
+  job-search task, does the fit check, tailoring, interview prep, or offer review first and
+  offers to save afterwards, and works from pasted text when the server is not running.
+- **Four commands in the plugin:** `/career-compass:start`, `/career-compass:fit-check`,
+  `/career-compass:interview-prep`, and `/career-compass:today`, so a new install has an
+  obvious first thing to type.
+- **The plugin's description leads with what it does for you** rather than how it stores data.
+
 ## 2.9.3 — unreleased
 
 ### Fixed
