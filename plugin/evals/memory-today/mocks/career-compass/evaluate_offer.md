@@ -25,16 +25,15 @@ END_UNTRUSTED_0E7A1C55>>>
 Break down every component with annualized values:
 - Base salary
 - Target bonus (% and $ amount)
-- Equity (value at current valuation, vesting schedule, cliff)
+- Equity (grant, vesting schedule, cliff; a dollar value only if the valuation or price per share and the share count are known, otherwise list exactly what to ask for)
 - Benefits (health, 401k match, PTO, etc. — assign approximate $ values)
 - **Total Year 1 comp**
 - **Total Year 4 comp** (fully vested)
 
 ### 2. Market Comparison
 Compare to market rate for this role at this company type's stage/size:
-- P25, P50, P75 benchmarks (cite sources if market data provided)
-- How does this offer rank?
-- Is this competitive, low, or above market?
+- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)
+- Compare instead against my current pay, my stated targets, and any other offers
 
 ### 3. Negotiation Strategy
 - What should I push on first?
@@ -61,3 +60,11 @@ If base is firm, what else to ask for:
 ### 6. Decision Framework
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk
 Overall recommendation: Accept / Negotiate / Decline?
+
+**Market data rule:** Only cite salary, bonus, or equity benchmarks that appear in the market data above or that I gave you. If there are none, say so plainly, tell me where to get them (Levels.fyi, Glassdoor, Carta's equity benchmarks, a recruiter), and reason from my own numbers and stated targets instead. Never put a dollar value on equity without the company's valuation or price per share and the total share count.
+
+**Truth rule (applies to everything you write about me):**
+- Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".
+- In drafted résumé bullets, letters, and interview answers, do not add context the source does not state: no new audience, domain, scope, outcome, tool, or reason. Rewording is fine; new facts are not.
+- If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a visible placeholder such as [confirm: who used these reports?]. Never leave a section empty instead.
+- Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.

@@ -486,8 +486,8 @@ Generate complete interview prep tailored to a phone screen at this company:
 ### 1. Opening Pitch (60-90 seconds)
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
-### 2. STAR Stories (7-10 stories)
-For each story, provide:
+### 2. STAR Stories (5-8 stories)
+Build each one from a real achievement in the Career KB, written out in full. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
@@ -515,3 +515,9 @@ Surprising connections between my experience and their world — things that wil
 
 ### 7. Watch-outs & Reframes
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
+
+**Truth rule (applies to everything you write about me):**
+- Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".
+- In drafted résumé bullets, letters, and interview answers, do not add context the source does not state: no new audience, domain, scope, outcome, tool, or reason. Rewording is fine; new facts are not.
+- If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a visible placeholder such as [confirm: who used these reports?]. Never leave a section empty instead.
+- Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.

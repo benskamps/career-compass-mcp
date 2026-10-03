@@ -68,6 +68,7 @@ export const MEMORY_CASES = [
   },
   {
     id: "memory-cover-letter",
+    mocks: "kb-meridian",
     ask: "Write a cover letter for the Head of Customer Success role at Meridian Logistics Group.",
     uses: "118%|1\\.2M|97\\.3|on-time|Brightline|Apex",
     expect: "a cover letter that pairs Alex's customer success record at Brightline (118% net revenue retention, $1.2M expansion) with the logistics operations work at Apex Logistics Partners",

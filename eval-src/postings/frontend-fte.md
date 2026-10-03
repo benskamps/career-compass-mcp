@@ -1,7 +1,7 @@
 ---
 id: frontend-fte
 persona: contractor
-verdict: strong
+verdict: strong or stretch
 strengths: React and TypeScript, WCAG 2.1 AA work, Jest, and the insurance quote form rebuild
 gaps: the pattern of short contracts will draw questions about a full-time move; design systems are not shown
 ---

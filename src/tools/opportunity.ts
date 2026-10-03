@@ -5,6 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
+import { TRUTH_RULE } from "./truth-rule.js";
 import type { CareerData } from "../schemas/career-schema.js";
 
 export function registerOpportunityTools(server: McpServer): void {
@@ -115,7 +116,9 @@ Based on the posting, describe the first 90 days and a typical week in this role
 Anything in the posting that warrants clarification or concern.
 
 ### 10. Verdict
-Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.`,
+Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
+
+${TRUTH_RULE}`,
         }],
       };
     }

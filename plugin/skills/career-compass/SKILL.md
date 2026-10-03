@@ -1,6 +1,6 @@
 ---
 name: career-compass
-description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, debriefing one, a rejection, or weighing or negotiating an offer.
+description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, or weighing or negotiating an offer.
 ---
 
 # Working with Career Compass
@@ -60,13 +60,31 @@ and say the fastest start is pasting a résumé plus one posting.
 
 Never invent achievements, dates, or metrics. If the KB lacks something a résumé needs, ask.
 
+## Everything you write about the user must be true
+
+This applies with or without the tools, and it matters most in drafts written in the
+user's voice: résumé bullets, cover letters, and interview answers.
+
+- Use only facts from the Career KB or what the user has said. Copy numbers exactly.
+- Rewording is fine; new facts are not. Don't add an audience ("non-technical
+  stakeholders"), a domain ("regulated", "payments"), a scope, an outcome, a tool, or a
+  reason the source doesn't state, even when it would make the draft stronger.
+- When a stronger draft needs a missing fact, still write the whole draft and mark the
+  gap in place, like `[confirm: who used these reports?]`. Don't skip the section.
+- What the user hasn't told you about their situation (work authorization after a move,
+  why a job ended, whether a career break is over, current equity) is a question, not an
+  assumption. Name it as a gap, and never answer it for them in their voice.
+- Don't state salary, bonus, or equity norms as fact unless the user gave you the data.
+  Say where to get it instead, and don't value equity in dollars without the valuation or
+  share price and share count.
+
 ## Match the request to the tool
 
 | The user wants to | Use |
 |---|---|
 | Know whether a posting fits | `explore_opportunity` (pass the job board's own fit label as `sourceFitLabel` when they have it) |
 | Learn about a company | `research_company` |
-| Apply | `tailor_resume`, then `generate_cover_letter`; `format_for_ats` for a specific ATS |
+| Apply | `tailor_resume`, then `generate_cover_letter`; `format_for_ats` for a specific ATS. With a saved KB, `generate_cover_letter` works without a posting (it uses the pipeline's), so draft first and offer to sharpen it with the posting after |
 | Track an application | `pipeline_add` for a new one, `pipeline_update` to change status, notes, follow-ups, contacts, or interview rounds |
 | See what needs attention | `pipeline_view` |
 | Make sense of a recruiter email | `classify_email`, then offer the pipeline update it suggests |
@@ -87,10 +105,16 @@ Use what the user pasted, and say what you could not check.
 - **Tailored résumé:** reorder and reword real bullets toward the posting's language, lead
   with quantified outcomes, and keep every fact true. List any claim you need them to
   confirm.
+- **Cover letter:** open with a specific achievement or something the posting says, never
+  "I'm applying for the X role". Use two concrete achievements that match the posting, and
+  keep it under 400 words.
 - **Interview prep:** likely questions for the role and stage, three to five STAR stories
-  drawn from their actual history, and questions for them to ask.
-- **Offer review:** total compensation, how it compares to what they told you they want,
-  and the two or three points most worth negotiating, with wording.
+  written out in full from real items in their history (mark missing details with
+  `[confirm: ...]` rather than leaving a step blank), a plan for the weak spots an
+  interviewer will probe, and questions for them to ask.
+- **Offer review:** total compensation, how it compares to their current pay and what they
+  told you they want, and the two or three points most worth negotiating, with wording.
+  Address any deadline. No market benchmarks unless they gave you some.
 
 ## Keep the loop closing
 

@@ -131,17 +131,25 @@
     {
       "name": "generate_cover_letter",
       "title": "Generate Cover Letter",
-      "description": "Write a compelling, personalized cover letter for a specific job posting using your Career KB.",
+      "description": "Write a compelling, personalized cover letter using your Career KB. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "posting": {
-            "type": "string",
-            "description": "Full job posting text"
+            "description": "Full job posting text. Optional: without it, the cached posting from the pipeline is used, or the letter is written from the role and your history",
+            "type": "string"
           },
           "company": {
             "type": "string",
             "description": "Company name"
+          },
+          "role": {
+            "description": "Role title, used to find the application in the pipeline and when there is no posting",
+            "type": "string"
+          },
+          "applicationId": {
+            "description": "Pipeline application ID, to use its cached posting and notes",
+            "type": "string"
           },
           "hiringManager": {
             "description": "Hiring manager name if known",
@@ -164,7 +172,6 @@
           }
         },
         "required": [
-          "posting",
           "company"
         ],
         "$schema": "http://json-schema.org/draft-07/schema#"

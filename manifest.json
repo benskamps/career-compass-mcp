@@ -48,7 +48,7 @@
     },
     {
       "name": "generate_cover_letter",
-      "description": "Write a compelling, personalized cover letter for a specific job posting using your Career KB."
+      "description": "Write a compelling, personalized cover letter using your Career KB. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role."
     },
     {
       "name": "format_for_ats",
