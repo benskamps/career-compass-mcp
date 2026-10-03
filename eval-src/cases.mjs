@@ -31,7 +31,7 @@ export const CHAT_TASKS = [
       "Start date: in 3 weeks\nOffer expires in 5 business days." },
   { persona: "return-to-work", task: "cover", posting: "marketing-director",
     ask: "Help me write a cover letter for this. I don't know how to handle the gap.",
-    special: "the career break since July 2023, named plainly and briefly, with no apology and no invented activity during the gap" },
+    special: "the career break since July 2023 to care for a family member (the résumé states that reason), named plainly and briefly, with no apology and no invented activity during the gap" },
   { persona: "non-native", task: "interview", posting: "data-engineer",
     ask: "i have the interview with the hiring manager next week. please help me prepare, my english is not perfect." },
   { persona: "contractor", task: "recruiter",
