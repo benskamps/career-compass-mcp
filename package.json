@@ -37,7 +37,10 @@
     "pack:mcpb:guard": "node scripts/mcpb-guard.mjs",
     "prepublishOnly": "npm run build:mcp && npm run test:mcp && npm run pack:guard",
     "test:dashboard": "cd dashboard && npx vitest run",
-    "visuals": "node scripts/visual-harness.mjs"
+    "visuals": "node scripts/visual-harness.mjs",
+    "eval:mocks": "npm run build:mcp && node eval-src/record-mocks.mjs",
+    "eval:build": "node eval-src/build-suite.mjs",
+    "eval:score": "node eval-src/scoreboard.mjs"
   },
   "keywords": [
     "mcp",

@@ -1,0 +1,61 @@
+# One prompt per line. Each should make Claude reach for Career Compass.
+Here's a job posting for a Product Analyst role at Stripe. How well do I fit it? I've been a data analyst for 3 years.
+Do I have a shot at this? "Senior Accountant, 5+ years, CPA required, NetSuite." I have 4 years and I'm studying for the CPA.
+Can you tailor my resume for a customer success manager job? I'll paste both.
+Write me a cover letter for the marketing coordinator role at Hubspot. I have 2 years in social media marketing.
+I have a panel interview at Target on Friday for a supply chain analyst job. Help me prepare.
+Prep me for a behavioral interview at Amazon next week.
+I just got an offer: $118k base, 10% bonus, 15 days PTO. Is that good for a senior QA engineer in Chicago?
+How do I negotiate this offer? They offered $95k and I was hoping for $105k.
+A recruiter emailed me about a "great opportunity" at a startup. What should I reply?
+I got rejected after the final round at Deloitte. How should I respond to the email?
+I've applied to 30 jobs and heard nothing back. What am I doing wrong?
+Help me keep track of my job applications.
+I want to switch from nursing to health informatics. Where do I start?
+What questions should I ask at the end of my interview with a hospital IT director?
+Turn my resume into something that gets past ATS filters.
+I just finished my second-round interview at Spotify. Can we debrief it?
+Rewrite my resume bullets to sound more impactful. I managed a team of 5 at a call center.
+Should I take the job with higher pay or the one with remote work?
+I was laid off yesterday. Help me plan my job search.
+Is this job a good fit for me? Junior UX designer, Figma, 1-2 years. I just finished a bootcamp.
+Can you help me write a thank-you note after my interview with the hiring manager?
+Help me prepare STAR stories for a program manager interview.
+They asked for my salary expectations in the application form. What do I put?
+Compare these two job postings and tell me which one I should apply to first.
+I'm a teacher and want to become an instructional designer. Can you look at my resume?
+What should my LinkedIn headline say if I'm looking for data engineering roles?
+I have a phone screen with a recruiter tomorrow for a sales engineer role. What will they ask?
+Here's my resume. What kinds of roles should I be applying for?
+Write a follow-up email to a recruiter who hasn't replied in two weeks.
+I got a counteroffer from my current employer after resigning. Should I stay?
+The job posting says 7 years of experience and I have 4. Should I still apply?
+How do I explain a two-year gap on my resume?
+I need to prep for a case interview at a consulting firm.
+Help me answer "tell me about yourself" for a software engineering interview.
+Tailor my resume to this posting: Operations Manager, Lean Six Sigma, 5 years managing warehouse teams.
+I got the job offer but the start date is too soon. How do I ask to push it back?
+Review my cover letter for a nonprofit program director role.
+Which of my past projects should I highlight for a machine learning engineer application?
+What does my next interview round at Google probably cover? I passed the coding screen.
+I keep getting to the final round and losing. Can you help me figure out why?
+How do I decline a job offer politely without burning the bridge?
+I want to apply to this job but I'm not sure my experience matches. Here's the description: Clinical Research Coordinator, 2 years in clinical trials, GCP certification.
+Help me write a résumé summary for a career change into product management.
+What should I say when a recruiter asks why I'm leaving my current job?
+Evaluate this offer: $140k base, 0.1% equity at a Series B, 401k match 4%, fully remote.
+I'm interviewing for a VP role. How should I prepare differently than for a director role?
+Help me rewrite my resume for a federal government job.
+A hiring manager reached out on LinkedIn. How do I respond so I get an interview?
+What are my strongest selling points for a project manager job? I've done event planning for 6 years.
+I need a cover letter that explains why I'm moving from Canada to the US for this role.
+How do I prep for a technical interview for a DevOps role in 3 days?
+I applied to Microsoft two weeks ago. When should I follow up?
+Make my resume one page. It's two pages now and I'm a recent grad.
+I bombed a question about conflict with a coworker. How do I answer it better next time?
+Is it a red flag that this job posting has been up for four months?
+Write a reply accepting the interview invitation for Tuesday at 2pm.
+Help me figure out what salary to ask for as a senior data scientist in Austin.
+What should I put in my portfolio for UX research jobs?
+I'm 55 and looking for work after 20 years at one company. How do I modernize my resume?
+Help me organize my job search this week. I have three interviews and five applications to send.

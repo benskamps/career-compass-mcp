@@ -1,0 +1,78 @@
+name: Evals
+
+# Runs the plugin's offline eval suites with `claude plugin eval` and uploads the
+# scoreboard. See eval-src/README.md.
+#
+# Manual only: every run is real model calls on the ANTHROPIC_API_KEY secret, and
+# a full run is about 900 agent runs. Each suite has its own cost ceiling below;
+# hitting one stops the suite and still writes partial results.
+#
+# Setup this depends on (one-time): a repository secret named ANTHROPIC_API_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: Runs per case per arm
+        default: "3"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Plugin evals
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Pinned so a model rollout isn't mistaken for a plugin change.
+      EVAL_FLAGS: --trust-plugin --no-publish --model claude-sonnet-5-5 --judge-model claude-sonnet-5-5 -j 6 --runs ${{ inputs.runs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Builds the server the mocks were recorded from, so the truth test below
+      # can confirm the suite is current before paying for a run.
+      - name: Build MCP (tsc)
+        run: npm run build:mcp
+
+      - name: Check the suite is current
+        run: npx vitest run --config vitest.config.ts src/__tests__/eval-suite-truth.test.ts
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      # Exit code 1 means a case scored below 1.0, which is expected while the
+      # scores are being climbed; the scoreboard is the result, not the exit code.
+      - name: Activation (trigger prompts)
+        run: claude plugin eval plugin --eval-dir evals-chat --tag trigger --ablation none $EVAL_FLAGS --max-cost-usd 25 --json trigger.json || true
+
+      - name: Quality on Claude.ai (no tools)
+        run: claude plugin eval plugin --eval-dir evals-chat --tag quality $EVAL_FLAGS --max-cost-usd 40 --json chat.json || true
+
+      - name: Quality on Claude Code and Cowork (tools)
+        run: claude plugin eval plugin --tag quality $EVAL_FLAGS --max-cost-usd 40 --json tools.json || true
+
+      - name: Scoreboard
+        run: node eval-src/scoreboard.mjs trigger.json chat.json tools.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: |
+            trigger.json
+            chat.json
+            tools.json
+            plugin/evals/results/
+            plugin/evals-chat/results/

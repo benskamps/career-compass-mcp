@@ -1,0 +1,982 @@
+{
+  "tools": [
+    {
+      "name": "explore_opportunity",
+      "title": "Explore Opportunity",
+      "description": "Analyze a job posting against your Career KB and your stated preferences — salary band, remote/relocation, notice period. Returns an honest fit verdict (checked against the job board's own label, if you supply it), matched strengths, gaps, talking points, and a 'day in the life' brief.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "posting": {
+            "type": "string",
+            "description": "Full job posting text, or paste the raw text from a job board"
+          },
+          "company": {
+            "description": "Company name (if not in posting)",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Any additional context about this opportunity",
+            "type": "string"
+          },
+          "sourceFitLabel": {
+            "description": "The fit label the job board showed, e.g. 'LinkedIn: strong match' or 'Indeed: 62% match' — the analysis will explicitly agree or disagree with it",
+            "type": "string"
+          }
+        },
+        "required": [
+          "posting"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "research_company",
+      "title": "Research Company",
+      "description": "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company": {
+            "type": "string",
+            "description": "Company name"
+          },
+          "role": {
+            "description": "The role you're targeting",
+            "type": "string"
+          },
+          "applicationId": {
+            "description": "Pipeline application ID for additional context",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "tailor_resume",
+      "title": "Tailor Resume",
+      "description": "Generate a tailored, ATS-optimized resume matched to a specific job posting using your Career KB.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "posting": {
+            "type": "string",
+            "description": "Full job posting text"
+          },
+          "format": {
+            "default": "standard",
+            "description": "Resume format",
+            "type": "string",
+            "enum": [
+              "standard",
+              "federal",
+              "academic",
+              "functional"
+            ]
+          },
+          "pages": {
+            "default": 2,
+            "description": "Target page count",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "includeProjects": {
+            "default": true,
+            "description": "Include projects section",
+            "type": "boolean"
+          },
+          "focusAreas": {
+            "description": "Specific areas to emphasize, e.g. 'leadership, data analysis'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "posting"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "generate_cover_letter",
+      "title": "Generate Cover Letter",
+      "description": "Write a compelling, personalized cover letter for a specific job posting using your Career KB.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "posting": {
+            "type": "string",
+            "description": "Full job posting text"
+          },
+          "company": {
+            "type": "string",
+            "description": "Company name"
+          },
+          "hiringManager": {
+            "description": "Hiring manager name if known",
+            "type": "string"
+          },
+          "tone": {
+            "default": "professional",
+            "description": "Voice of the letter. Match it to the company: professional for traditional or regulated employers, conversational for startups, enthusiastic when you genuinely want this one, concise when the posting asks for brevity.",
+            "type": "string",
+            "enum": [
+              "professional",
+              "conversational",
+              "enthusiastic",
+              "concise"
+            ]
+          },
+          "angle": {
+            "description": "The key story or angle to lead with",
+            "type": "string"
+          }
+        },
+        "required": [
+          "posting",
+          "company"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "format_for_ats",
+      "title": "Format for ATS",
+      "description": "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "resumeContent": {
+            "type": "string",
+            "description": "The resume text to format"
+          },
+          "targetSystem": {
+            "type": "string",
+            "enum": [
+              "workday",
+              "greenhouse",
+              "lever",
+              "linkedin",
+              "icims",
+              "taleo",
+              "smartrecruiters",
+              "generic"
+            ],
+            "description": "Target ATS system"
+          },
+          "postingUrl": {
+            "description": "Job posting URL for reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resumeContent",
+          "targetSystem"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pipeline_view",
+      "title": "View Application Pipeline",
+      "description": "Read the job application pipeline: list applications, summarize stats, surface what needs attention, or fetch one application by id. Read-only — never modifies anything.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "stats",
+              "next_actions",
+              "get"
+            ],
+            "description": "list = all applications (filterable); stats = funnel and response-rate summary; next_actions = what is overdue or due now; get = one application by id"
+          },
+          "id": {
+            "description": "Application id. Required when action=get.",
+            "type": "string"
+          },
+          "filterStatus": {
+            "description": "action=list only: show only applications in this status",
+            "type": "string",
+            "enum": [
+              "discovered",
+              "applied",
+              "screening",
+              "interviewing",
+              "offer",
+              "negotiating",
+              "accepted",
+              "rejected",
+              "withdrawn",
+              "ghosted"
+            ]
+          },
+          "filterPriority": {
+            "description": "action=list only: show only applications at this priority",
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "sortBy": {
+            "default": "date",
+            "description": "action=list only: ordering. date = most recently updated first (the default); status = funnel order, discovered through ghosted, ties broken by most recent; priority = high to low; company = A-Z; excitement = highest first.",
+            "type": "string",
+            "enum": [
+              "date",
+              "status",
+              "priority",
+              "company",
+              "excitement"
+            ]
+          },
+          "limit": {
+            "default": 20,
+            "description": "action=list only: maximum applications to return (1-500)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pipeline_add",
+      "title": "Add Application to Pipeline",
+      "description": "Add one job application to the pipeline. Creates a new record; never modifies an existing one. Use pipeline_update to change an application already being tracked.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "company": {
+            "type": "string",
+            "description": "Company name"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role title as posted"
+          },
+          "status": {
+            "description": "Where this one already stands, if not at the start. One of: discovered, applied, screening, interviewing, offer, negotiating, accepted, rejected, withdrawn, ghosted. Defaults to applied. Use 'discovered' for a role you have found but not applied to — it is dated as discovered rather than applied, so it will not show up as awaiting a reply.",
+            "type": "string"
+          },
+          "postingUrl": {
+            "description": "Link to the job posting",
+            "type": "string"
+          },
+          "postingText": {
+            "description": "Full posting text to cache, so later interview prep can reference it without the link",
+            "type": "string"
+          },
+          "source": {
+            "description": "Where you found it: LinkedIn, Referral, Company site, etc.",
+            "type": "string"
+          },
+          "referral": {
+            "description": "Name of the person who referred you, if any",
+            "type": "string"
+          },
+          "priority": {
+            "description": "How hard you intend to push on this one. Defaults to medium.",
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "excitement": {
+            "description": "How excited you are about the role, 1-10. Used later to compare excitement against outcomes.",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "salaryMin": {
+            "description": "Bottom of the posted or expected salary range, in whole currency units",
+            "type": "number"
+          },
+          "salaryMax": {
+            "description": "Top of the posted or expected salary range, in whole currency units",
+            "type": "number"
+          }
+        },
+        "required": [
+          "company",
+          "role"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "pipeline_update",
+      "title": "Update Application in Pipeline",
+      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Application id, as returned by pipeline_add or pipeline_view"
+          },
+          "status": {
+            "description": "New status in the funnel. One of: discovered, applied, screening, interviewing, offer, negotiating, accepted, rejected, withdrawn, ghosted. Any forward or backward move is allowed — searches really do go from applied straight to rejected, or from ghosted back to interviewing. The one exception is an application already marked accepted, which cannot return to a live stage.",
+            "type": "string"
+          },
+          "priority": {
+            "description": "New priority",
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "notes": {
+            "description": "A note to append. Existing notes are kept; this is added with today's date.",
+            "type": "string"
+          },
+          "followUpDue": {
+            "description": "ISO date (YYYY-MM-DD) to be reminded to follow up",
+            "type": "string"
+          },
+          "contactName": {
+            "description": "Name of a person met in this process, appended to the application's contacts",
+            "type": "string"
+          },
+          "contactTitle": {
+            "description": "That person's title",
+            "type": "string"
+          },
+          "contactEmail": {
+            "description": "That person's email",
+            "type": "string"
+          },
+          "interviewType": {
+            "description": "Type of an interview round to append",
+            "type": "string",
+            "enum": [
+              "phone_screen",
+              "behavioral",
+              "technical",
+              "panel",
+              "final",
+              "offer_call",
+              "other"
+            ]
+          },
+          "interviewDate": {
+            "description": "ISO date of that interview round",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "classify_email",
+      "title": "Classify Email",
+      "description": "Classify a job-search-related email and extract structured data: type, company, role, contact, next action, and urgency.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "emailContent": {
+            "type": "string",
+            "description": "Full email content — paste subject line and body"
+          },
+          "autoUpdatePipeline": {
+            "default": false,
+            "description": "If true, the classification includes the specific pipeline field changes it implies, so you can review them before anything is written. This tool only classifies — it never writes.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "emailContent"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "prepare_interview",
+      "title": "Prepare Interview",
+      "description": "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics — tailored to interview type.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "description": "Pipeline application ID",
+            "type": "string"
+          },
+          "company": {
+            "description": "Company name (if no application ID)",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role title (if no application ID)",
+            "type": "string"
+          },
+          "interviewType": {
+            "type": "string",
+            "enum": [
+              "phone_screen",
+              "behavioral",
+              "technical",
+              "panel",
+              "final",
+              "negotiation"
+            ],
+            "description": "Type of interview"
+          },
+          "interviewerInfo": {
+            "description": "Interviewer name, title, LinkedIn — helps personalize prep",
+            "type": "string"
+          },
+          "postingText": {
+            "description": "Job posting text for this role",
+            "type": "string"
+          },
+          "focusAreas": {
+            "description": "Specific topics or concerns to focus on",
+            "type": "string"
+          }
+        },
+        "required": [
+          "interviewType"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "interview_arc",
+      "title": "Project Interview Arc",
+      "description": "Mid-process projection: reconstructs the interview arc so far — rounds completed, what each surfaced, threads left open — then projects what the NEXT round will probe, without repeating ground already covered.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "description": "Pipeline application ID — pulls the rounds, posting, and linked journal entries for this process",
+            "type": "string"
+          },
+          "company": {
+            "description": "Company name (if no application ID, or to match journal entries)",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role title (if no application ID, or to match journal entries)",
+            "type": "string"
+          },
+          "interviewSoFarNotes": {
+            "description": "Freeform notes on what has happened so far — questions they asked, what you answered, where the last interview stopped",
+            "type": "string"
+          },
+          "nextRoundType": {
+            "description": "Type of the upcoming round, if you know it. Omit and the projection will infer the likely next stage.",
+            "type": "string",
+            "enum": [
+              "phone_screen",
+              "behavioral",
+              "technical",
+              "panel",
+              "final",
+              "offer_call",
+              "other"
+            ]
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "evaluate_offer",
+      "title": "Evaluate Offer",
+      "description": "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "description": "Pipeline application ID",
+            "type": "string"
+          },
+          "company": {
+            "description": "Company making the offer. Used to pull the matching application for context.",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role being offered.",
+            "type": "string"
+          },
+          "offerDetails": {
+            "type": "string",
+            "description": "Full offer: base salary, bonus, equity, benefits, start date, title"
+          },
+          "location": {
+            "description": "Work location (affects cost of living calc)",
+            "type": "string"
+          },
+          "currentComp": {
+            "description": "Your current total comp for comparison",
+            "type": "string"
+          },
+          "marketData": {
+            "description": "Salary research from Levels.fyi, Glassdoor, LinkedIn, etc.",
+            "type": "string"
+          },
+          "priorities": {
+            "description": "What matters most: cash, equity, flexibility, title, growth?",
+            "type": "string"
+          },
+          "otherOffers": {
+            "description": "Competing offers or processes (for leverage)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offerDetails"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "ingest_document",
+      "title": "Ingest Career Document",
+      "description": "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements for your Career KB. Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Full document text to ingest"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "performance_review",
+              "award",
+              "project_summary",
+              "recommendation",
+              "email",
+              "self_review",
+              "other"
+            ],
+            "description": "Type of document"
+          },
+          "associatedRole": {
+            "description": "Job role this document relates to",
+            "type": "string"
+          },
+          "associatedCompany": {
+            "description": "Company this document relates to",
+            "type": "string"
+          },
+          "datePeriod": {
+            "description": "Time period this covers, e.g. '2023 Q1' or '2022-2023'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "documentType"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "generate_rejection_response",
+      "title": "Generate Rejection Response",
+      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities. If you pass applicationId, this also sets that application's status to `rejected` in your pipeline — it does not only write a draft.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "description": "Pipeline application ID. Supplying it fills in the company and role from the pipeline AND marks that application `rejected`. Leave it out to draft a reply and change nothing.",
+            "type": "string"
+          },
+          "company": {
+            "description": "Company that sent the rejection. Filled in automatically when applicationId is given.",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role you were rejected for. Filled in automatically when applicationId is given.",
+            "type": "string"
+          },
+          "rejectionContent": {
+            "type": "string",
+            "description": "The rejection email or message content"
+          },
+          "responseGoal": {
+            "default": "keep_door_open",
+            "description": "What you want the reply to achieve: stay on good terms for future roles, ask why you were passed over, decline politely, or signal you would still take another opening there.",
+            "type": "string",
+            "enum": [
+              "keep_door_open",
+              "request_feedback",
+              "decline_gracefully",
+              "express_continued_interest"
+            ]
+          },
+          "contactName": {
+            "description": "Person who sent the rejection",
+            "type": "string"
+          },
+          "hadGoodRapport": {
+            "default": false,
+            "description": "Did you have positive interactions during the process?",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rejectionContent"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "capture_insight",
+      "title": "Capture Career Insight",
+      "description": "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "fit_signal",
+              "interview_insight",
+              "offer_reflection",
+              "rejection_pattern",
+              "skill_evidence",
+              "win",
+              "note"
+            ],
+            "description": "What kind of signal this is"
+          },
+          "summary": {
+            "type": "string",
+            "description": "One-line durable takeaway — the thing worth keeping"
+          },
+          "detail": {
+            "description": "Longer context, if useful",
+            "type": "string"
+          },
+          "applicationId": {
+            "description": "Pipeline application ID this relates to",
+            "type": "string"
+          },
+          "company": {
+            "description": "Company this insight relates to, if any. Lets later prompts surface it when you work on that company again.",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role this insight relates to, if any.",
+            "type": "string"
+          },
+          "signals": {
+            "default": [],
+            "description": "Recurring strengths, gaps, or keywords to track over time",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sentiment": {
+            "description": "Honest emotional read — 'hard' is valid and worth recording",
+            "type": "string",
+            "enum": [
+              "positive",
+              "neutral",
+              "hard"
+            ]
+          },
+          "source": {
+            "default": "manual",
+            "description": "Which surface produced this insight",
+            "type": "string",
+            "enum": [
+              "explore_opportunity",
+              "prepare_interview",
+              "evaluate_offer",
+              "rejection",
+              "ingest_document",
+              "manual"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "summary"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "save_career_section",
+      "title": "Save Career KB Section",
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated — ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "section": {
+            "type": "string",
+            "enum": [
+              "profile",
+              "experience",
+              "skills",
+              "education",
+              "projects",
+              "testimonials"
+            ],
+            "description": "Which part of the Career KB to write. 'profile' is a single object; every other section is a list."
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The complete contents for this section — an object for 'profile', an array for every other section. Send it as structured JSON, not as a stringified blob. Shapes (? marks optional):\n\nprofile: one object: { name, summary, email?, phone?, location?, linkedIn?, portfolio?, targetRoles?: [string], targetIndustries?: [string], salaryMin?: number, salaryMax?: number }\nexperience: array of { role, company, startDate: 'YYYY-MM', endDate: 'YYYY-MM' | 'present', summary?, industry?, location?, tags?: [string], achievements: [{ metric, context, impact, keywords?: [string] }] } — achievements are OBJECTS, not strings: metric is the quantified outcome ('cut onboarding from 6 weeks to 9 days'), context is the situation, impact is why it mattered\nskills: array of { name, category ('Technical' | 'Leadership' | 'Domain' | …), proficiency?: 1-5, yearsUsed?: number, lastUsed?: 'YYYY' | 'current' }\neducation: array of { degree, institution, date: 'YYYY' | 'YYYY-MM', honors?, relevantCoursework?: [string], certifications?: [string] }\nprojects: array of { name, role, description, technologies?: [string], metrics?: [string], outcomes?: [string], url? }\ntestimonials: array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), quote, date?, context? }"
+          }
+        },
+        "required": [
+          "section",
+          "data"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "harvest_evidence",
+      "title": "Harvest Evidence From a Project",
+      "description": "Read a local project's git history and report what you measurably did there — months active, files and file types touched, your share of commits, test ratio — each with the command that produced it. Use it when the user cannot remember what they shipped, is writing a résumé bullet for a project, or needs proof of a skill. It reports counts and asks the questions a commit log cannot answer; it never invents achievements and never writes to the Career KB.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "description": "Absolute path to the project directory (the git repository root)"
+          },
+          "since": {
+            "description": "ISO date (YYYY-MM-DD) to look back to. Defaults to two years ago.",
+            "type": "string"
+          },
+          "authorEmail": {
+            "description": "Email to attribute commits to. Defaults to that repository's own git user.email. Pass it when you commit there under a different address, or the counts will be zero.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectPath"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "check_setup",
+      "title": "Check Career Compass Setup",
+      "description": "Health-check this Career Compass install and report everything at once: whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding comes with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "checkForUpdates": {
+            "default": false,
+            "description": "Whether to ask the public npm registry which version is current. Off by default: pass true only when the user asks about updates or versions. This is the only outbound network call Career Compass ever makes: an unauthenticated GET for the package name, sending nothing about you or your data.",
+            "type": "boolean"
+          },
+          "dashboardPort": {
+            "default": 3141,
+            "description": "Which loopback port to check for a running dashboard. Matches `career-compass-mcp dashboard --port`; the default is 3141.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}
