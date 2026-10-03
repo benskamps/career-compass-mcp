@@ -17,26 +17,38 @@ There is no account, no cloud sync, and no telemetry.
   `npx -y career-compass-mcp@2.9.3`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
-- **One skill** (`skills/career-compass`) that teaches Claude the working order: set up
-  your Career KB first, save each section, then use it for fit checks, applications,
-  interviews, and offers.
+- **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
+  task, delivering an answer first and offering to save it after. Four more are commands
+  you can type: `/career-compass:start`, `/career-compass:fit-check`,
+  `/career-compass:interview-prep`, and `/career-compass:today`.
 
 ## Where it works
 
 The MCP server is a local program, so it runs in **Claude Code** and in **Cowork sessions
-that run on your computer**. In claude.ai chat on the web and mobile, the skill loads but
-the server does not, so the tools are unavailable there.
+that run on your computer**. There, Career Compass remembers your history and tracks your
+applications.
+
+In **claude.ai chat** on the web and mobile, the server does not run, but the skill still
+helps: paste a résumé and a posting, and Claude does the fit check, tailoring, interview
+prep, or offer review in the conversation. Nothing is saved between chats there.
 
 ## Getting started
 
-1. Install the plugin.
-2. Ask Claude: **"Run the Career Compass setup check."** This reports your data folder,
-   which Career KB sections are filled in, and anything to fix.
-3. Say: **"Set up my Career KB. Here's my résumé:"** and paste your résumé. Claude
-   extracts your history and asks you to approve each section as it is written to disk.
+Paste a job posting and your résumé, and ask **"How well do I fit this?"** You get a
+verdict, your strongest evidence, and the gaps to address. Claude then offers to save your
+résumé so the next fit check, cover letter, and interview prep start from it.
 
-Then try "How well do I fit this posting?", "Prep me for my panel interview at Acme on
-Friday", or "What needs attention in my pipeline today?".
+Or type a command:
+
+| Command | What it does |
+|---|---|
+| `/career-compass:start` | Checks the install and sets up your career history from a pasted résumé |
+| `/career-compass:fit-check` | Scores your fit for a pasted posting |
+| `/career-compass:interview-prep` | Likely questions, STAR stories from your real work, and questions to ask |
+| `/career-compass:today` | What needs attention in your pipeline today |
+
+You can also just ask: "Prep me for my panel interview at Acme on Friday", "I got an offer,
+is it good?", or "Run the Career Compass setup check."
 
 ## Tools
 
