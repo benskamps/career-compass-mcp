@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.9.5 — 2026-10-03
+
+### Changed
+
+- **Drafts stay true to your history.** Offline evals of résumés, cover letters, and interview
+  prep found drafts adding plausible details that the user never stated: an audience
+  ("non-technical stakeholders"), a domain ("a money-movement product"), a rounded-up number,
+  a backstory in the user's voice ("I didn't call it research at the time"), or the posting's
+  requirements restated as the user's own work. Every tool that drafts in your voice now
+  carries one truth rule. Missing facts become visible `[confirm: …]` placeholders rather
+  than invented ones, a letter carries at most two of them, and skills lists hold only
+  skills you named. The same rule applies in claude.ai chat, where the skill works without
+  the tools. Honesty in the eval suite rose from 57% to 89%, and task quality from 61% to 94%.
+- **Offer reviews cite only market data you gave.** Without it, they say where to get
+  benchmarks and reason from your own numbers. Equity gets no dollar value without the
+  valuation and share count.
+- **`generate_cover_letter` works without a posting.** Given a company (and optionally a
+  role or `applicationId`), it uses the posting and notes saved in your pipeline, or writes
+  from your history and offers to sharpen it once you paste the posting. Before, it stopped
+  and asked for the posting.
+- **Interview prep writes STAR stories out in full** from real items in your Career KB.
+- **The skill triggers on more interview work:** rehearsing a specific question, questions to
+  ask an interviewer, debriefs, and working out why final rounds keep failing.
+
 ## 2.9.4 — 2026-10-03
 
 ### Changed
