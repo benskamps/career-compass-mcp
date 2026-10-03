@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.9.4 — 2026-10-03
 
 ### Changed
 
@@ -15,7 +15,7 @@
   obvious first thing to type.
 - **The plugin's description leads with what it does for you** rather than how it stores data.
 
-## 2.9.3 — unreleased
+## 2.9.3 — 2026-09-26
 
 ### Fixed
 
