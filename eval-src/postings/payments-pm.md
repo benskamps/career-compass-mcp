@@ -3,7 +3,7 @@ id: payments-pm
 persona: senior-pm
 verdict: stretch or long shot
 strengths: 11 years in product, lending at Lumen Lending, and pricing work
-gaps: no record of managing product managers; no card-issuing or payments product experience; Reg E and Reg Z experience is not shown; the posting is silent on compensation
+gaps: no record of managing product managers; no card-issuing or payments product experience; Reg E and Reg Z experience is not shown
 ---
 Director of Product, Card Issuing, Meridian Bank (Seattle, WA, hybrid)
 Lead a team of 5 product managers building our card issuing and payments products.

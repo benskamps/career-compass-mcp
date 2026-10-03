@@ -2,7 +2,7 @@
   "name": "career-compass",
   "displayName": "Career Compass",
   "icon": "./.claude-plugin/icon.png",
-  "version": "2.9.4",
+  "version": "2.9.5",
   "description": "Job-search co-pilot. Paste a job posting to see how well you fit, then tailor your résumé, prep the interview, and weigh the offer. In Claude Code and Cowork it also remembers your career history and tracks every application, as plain YAML on your own computer.",
   "author": {
     "name": "Ben Schippers",

@@ -65,7 +65,7 @@ Using the complete Career KB above, generate a tailored resume:
 **Structure for ${format} format:**
 ${format === "standard" ? `1. Header (name, contact, LinkedIn)
 2. Professional Summary (3-4 sentences, bridging background to this role)
-3. Core Competencies (keyword-matched to posting)
+3. Core Competencies (only skills in the Career KB, in the posting's wording where it names the same skill)
 4. Professional Experience (reverse chronological, achievement-focused)
 5. ${includeProjects ? "Key Projects\n6. Education & Certifications" : "Education & Certifications"}` : ""}
 ${format === "federal" ? `1. Header with full contact info
@@ -92,10 +92,10 @@ ${format === "functional" ? `1. Header
 **Rules:**
 - Match the posting's language exactly where truthful
 - Lead each achievement with an action verb
-- Quantify every achievement possible (%, $, time, scale)
+- Keep every number the Career KB gives; never add a number it doesn't
 - ATS-safe: no tables, columns, headers/footers, graphics
 - Do not fabricate — only use data from the Career KB
-- Flag "[VERIFY]" next to any claim that needs confirmation
+- Mark anything that needs my confirmation with a [confirm: ...] placeholder
 - Industry-agnostic: use the posting's vocabulary, not my previous employer's
 
 Output the full resume text, then a "Keyword Match Report" showing which posting requirements are covered and which aren't.
@@ -188,7 +188,7 @@ Write a compelling cover letter. Structure:
 **Opening (1 paragraph):** Hook with a specific achievement of mine, or something the posting says about ${company}, that connects to why I'm applying. Don't open with "I am writing to apply" or any version of "I'm applying for the X role".
 
 **Body (2 paragraphs):**
-- Para 1: My most relevant experience, told as a brief story with a specific outcome
+- Para 1: My most relevant experience and its outcome, told plainly from the Career KB
 - Para 2: Why ${company} specifically, using only what the posting, my notes, or I have said about them. If that's nothing, make the case about the role and the problems it owns rather than inventing facts about the company
 
 **Closing (1 paragraph):** Confident call to action. Specific, not generic.
@@ -199,7 +199,7 @@ ${tone === "conversational" ? "Warm, direct, human — write like you talk" : ""
 ${tone === "enthusiastic" ? "High energy, genuine excitement, mission-driven" : ""}
 ${tone === "concise" ? "Every sentence earns its place. Max 250 words total." : ""}
 
-Keep it under 400 words. Make it feel human, not templated.
+Keep it under 400 words. Make it feel human, not templated, through plain specific language rather than invented story: each sentence about me is either a fact from the Career KB or a plain statement of what I would bring or want. No scenes, causes, surprises, or lessons the Career KB doesn't give ("when results were stuck", "I didn't call it that at the time"), no "I've always…", and no claims about how I work today unless I am working today.
 
 ${TRUTH_RULE}`,
         }],
