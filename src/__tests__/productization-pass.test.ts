@@ -133,8 +133,11 @@ describe("handleNextActions uses the user's calendar day", () => {
     const notYet = app({ id: "tmrw", company: "Zed", followUpDue: localDate(1) });
     const text = handleNextActions({ applications: [due, notYet], lastUpdated: new Date().toISOString() } as Pipeline)
       .content[0].text;
-    expect(text).toContain("ID: today");
-    expect(text).not.toContain("ID: tmrw");
+    const [dueNow, comingUp = ""] = text.split("## Coming up");
+    expect(dueNow).toContain("ID: today");
+    expect(dueNow).not.toContain("ID: tmrw");
+    expect(comingUp).toContain("Follow-up due tomorrow");
+    expect(comingUp).toContain("ID: tmrw");
   });
 
   it("names the soonest upcoming interview, not the first-listed one", () => {
@@ -148,8 +151,8 @@ describe("handleNextActions uses the user's calendar day", () => {
     });
     const text = handleNextActions({ applications: [a], lastUpdated: new Date().toISOString() } as Pipeline)
       .content[0].text;
-    expect(text).toContain(`panel on ${localDate(1)}`);
-    expect(text).not.toContain("phone_screen on");
+    expect(text).toContain(`panel tomorrow (${localDate(1)}`);
+    expect(text).not.toContain("phone screen");
   });
 
   it("skips ghosted applications, like the dashboard does", () => {

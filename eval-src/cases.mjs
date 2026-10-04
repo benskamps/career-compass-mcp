@@ -62,9 +62,10 @@ export const MEMORY_CASES = [
   },
   {
     id: "memory-today",
+    mocks: "kb-today",
     ask: "What needs my attention in my job search right now?",
     uses: "Brightpath|Veridian|Stratos|Lumen|Meridian",
-    expect: "a short, prioritized list drawn from Alex's saved pipeline, with the Brightpath Health offer and the active Veridian Health interview process near the top",
+    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step",
   },
   {
     id: "memory-cover-letter",
@@ -72,6 +73,21 @@ export const MEMORY_CASES = [
     ask: "Write a cover letter for the Head of Customer Success role at Meridian Logistics Group.",
     uses: "118%|1\\.2M|97\\.3|on-time|Brightline|Apex",
     expect: "a cover letter that pairs Alex's customer success record at Brightline (118% net revenue retention, $1.2M expansion) with the logistics operations work at Apex Logistics Partners",
+  },
+];
+
+// Daily-digest cases beyond memory-today. The pipeline is empty, so the job is a
+// one-line answer and a nudge to track the first role, not a wall of advice.
+export const TODAY_CASES = [
+  {
+    id: "today-empty-pipeline",
+    mocks: "empty-today",
+    ask: "What should I work on in my job search today?",
+    expect: `
+The user asked what to work on in their job search today. Their tracked pipeline is empty, which the assistant can see from its tools.
+
+PASS if the reply says plainly, near the top, that nothing is tracked yet; its main ask is for one concrete thing to start tracking (a job posting they are considering, or a role they have already applied to); and it stays short (no more than about 12 lines).
+FAIL if the reply invents applications, follow-ups or interviews; gives a long list of generic job-search tips in place of that ask; asks three or more separate questions; or adds anything to the pipeline the user did not provide.`,
   },
 ];
 

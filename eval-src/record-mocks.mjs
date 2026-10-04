@@ -48,6 +48,18 @@ const VARIANTS = {
       interview_arc: { company: "Veridian Health", role: "Director of Operations" },
     },
   },
+  // The daily digest, as of the day the sample pipeline was written: a panel
+  // tomorrow, a follow-up four days overdue, an offer clock running.
+  // CAREER_COMPASS_TODAY pins the clock so a re-record matches byte for byte.
+  "kb-today": {
+    state: "kb",
+    env: { CAREER_COMPASS_TODAY: "2026-06-16" },
+    calls: { pipeline_view: { action: "next_actions" } },
+  },
+  "empty-today": {
+    state: "empty",
+    calls: { pipeline_view: { action: "next_actions" } },
+  },
   "kb-meridian": {
     state: "kb",
     calls: {
@@ -105,12 +117,12 @@ function freshDataDir(state) {
 
 // One server per call, on a fresh copy of the data, so a write recorded for one
 // tool (pipeline_add, capture_insight) never leaks into another tool's mock.
-async function withServer(state, fn) {
+async function withServer(state, fn, env = {}) {
   const dataDir = freshDataDir(state);
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(repo, "build", "src", "index.js")],
-    env: { ...process.env, CAREER_DATA_PATH: dataDir },
+    env: { ...process.env, ...env, CAREER_DATA_PATH: dataDir },
     stderr: "ignore",
   });
   const client = new Client({ name: "eval-mock-recorder", version: "1.0.0" });
@@ -123,12 +135,12 @@ async function withServer(state, fn) {
   }
 }
 
-async function callToMock(state, name, args) {
+async function callToMock(state, name, args, env) {
   return withServer(state, async (client, dataDir) => {
     const result = await client.callTool({ name, arguments: args });
     const text = (result.content ?? []).filter((c) => c.type === "text").map((c) => c.text).join("\n\n");
     return toMock(text, dataDir, result.isError);
-  });
+  }, env);
 }
 
 function cleanDir(dir) {
@@ -156,10 +168,10 @@ async function record(state) {
   if (skipped.length) console.log(`  skipped: ${skipped.join(", ")}`);
 }
 
-async function recordVariant(name, { state, calls }) {
+async function recordVariant(name, { state, calls, env }) {
   const outDir = cleanDir(join(MOCKS, name, SERVER));
   for (const [tool, args] of Object.entries(calls)) {
-    writeFileSync(join(outDir, `${tool}.md`), await callToMock(state, tool, args));
+    writeFileSync(join(outDir, `${tool}.md`), await callToMock(state, tool, args, env));
   }
   console.log(`${name}: ${Object.keys(calls).length} tools recorded`);
 }

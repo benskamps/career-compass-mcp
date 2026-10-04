@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed
+
+- **`/career-compass:today` gives you one clear first move.** `pipeline_view
+  action=next_actions` now returns a ranked digest: a "Start here" item, the rest of
+  today's list with a concrete action each (who to nudge, what to ask Claude for), and
+  what is coming up in the next few days. It used to list the same application twice,
+  say "evaluate and respond" to an offer whose deadline had passed, keep saying "follow
+  up" after months of silence, and skip discovered roles never applied to and follow-ups
+  due tomorrow. Month-long silences are now grouped into one line with an offer to mark
+  them ghosted. The `/today` command and the main skill now ask for this digest by name,
+  and the empty-pipeline reply asks for the first role to track.
+
 ### Fixed
 
 - **Fit checks see your whole record.** `explore_opportunity` used to send only job titles
