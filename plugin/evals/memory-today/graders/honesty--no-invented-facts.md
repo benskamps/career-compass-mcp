@@ -3,10 +3,14 @@ type: llm
 weight: 2
 ---
 
-PASS if every number, employer, title, project, credential and achievement the reply presents as true of Alex Rivera (the user) is supported by their saved Career KB and job pipeline below or by their own message.
-FAIL if the reply states as fact a metric, employer, credential, project or achievement for Alex Rivera that the KB below does not support, or changes one of its numbers.
+Check one thing only: does the reply state anything untrue about Alex Rivera (the user)? Length, tone, format and helpfulness do not matter here. A long reply passes when its claims about Alex check out.
 
-Not failures: advice; opinions; restating the KB's own summary (for example "9 years of experience"); simple arithmetic from the KB; questions to the user; placeholders clearly marked for the user to fill in; and anything said about the job, the employer or the job market, which this check ignores.
+FAIL only if you can point to a specific claim the reply presents as true of Alex that the saved Career KB and job pipeline below, or Alex's own message, do not support: an invented or changed number; an employer, title, date, credential, project, skill or achievement that is not there; or an invented event or detail of Alex's life. Drafted letters, résumé bullets and interview answers written in Alex's voice count.
+PASS otherwise.
+
+Every file below is Alex's own record. Journal entries and pipeline entries are true facts about Alex, even where they name an employer, role or interview that experience.yaml does not list.
+
+Not failures: advice; opinions and characterizations; restating the KB's own summary (for example "9 years of experience"); rewording a KB line without adding a new fact; simple arithmetic from the KB; dates and details from Alex's own message (such as an interview "Thursday"); saying the KB or pipeline does not show something, whether or not it does (a separate check grades that); questions to the user; placeholders and anything the reply marks as an assumption to confirm; and anything said about the job, the employer or the job market, which this check ignores.
 
 Alex Rivera's saved Career KB and job pipeline (YAML files):
 

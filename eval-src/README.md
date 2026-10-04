@@ -37,11 +37,24 @@ share of its verdicts that passed.
 | task | Fit check, résumé, cover letter, interview prep, offer, recruiter email | LLM rubric per task |
 | honesty | Nothing untrue is stated about the user | LLM judge against the persona's résumé |
 | surface | Right behavior for Claude.ai vs Code and Cowork | Regex |
-| memory | A saved KB makes the answer specific without re-pasting | Regex plus LLM rubric |
+| memory | A saved KB makes the answer specific without re-pasting, and never says the KB lacks something it holds | Regex plus LLM rubrics |
 | trust | No write the user didn't ask for | `tool_used`, expected absent |
 
 LLM graders put the PASS and FAIL lines first and the reference material after. With the
 résumé first, the judge failed honest replies about half the time.
+
+The judge answers with one word and no reasoning, so the rubric does the thinking for it.
+Honesty graders fail only on a specific false claim about the user, and say plainly that
+length, tone, rewording and "the KB doesn't show X" are not failures. A reply that wrongly
+tells the user their KB lacks something is graded on the memory axis instead
+(`memory--no-false-gaps`).
+
+The judge is Opus. On 40 hand-audited replies from the 2.9.4 to 2.9.5 runs, replayed
+through `claude plugin eval`, the old setup (Sonnet judge, old rubric) agreed with the audit
+on 26; Sonnet with the new rubric on 26; Opus with the new rubric on 35, including all 10
+memory cases (old setup: 2). It caught 12 of the 15 real fabrications; the 3 it let
+through were advice nudging the user to claim something, a gray zone worth a closer rubric
+later. Opus costs more per judge call, so a full run costs more too.
 
 ## Run it
 
@@ -51,7 +64,7 @@ full baseline is about 900 agent runs plus the judge calls.
 ```bash
 npm ci && npm run build:mcp
 
-COMMON="--trust-plugin --no-publish --model claude-sonnet-5-5 --judge-model claude-sonnet-5-5 -j 6"
+COMMON="--trust-plugin --no-publish --model claude-sonnet-5-5 --judge-model claude-opus-5-5 -j 6"
 
 # Activation: trigger prompts, plugin only (a no-plugin arm can't fire the skill)
 claude plugin eval plugin --eval-dir evals-chat --tag trigger --ablation none --runs 3 $COMMON --json trigger.json
