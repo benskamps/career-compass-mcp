@@ -6,7 +6,7 @@ weight: 1
 Check one thing only: does the reply tell Alex Rivera (the user) that their saved history or job pipeline lacks something it actually contains?
 
 FAIL only if you can point to a specific statement that the KB or pipeline does not show, has no record of, or is missing something (for example no budget or team size, no interview rounds, no interviewer names, no healthcare or compliance experience, or no employer for an achievement) when the files below do contain it.
-PASS otherwise, including when the reply says something is missing that really is missing, or asks Alex for details the files below do not hold.
+PASS otherwise, including when the reply says something is missing that really is missing, or asks Alex for details the files below do not hold. Find the exact item before failing: projects.yaml entries name no employer, so saying a project's employer is unknown is true.
 
 Alex Rivera's saved Career KB and job pipeline (YAML files):
 

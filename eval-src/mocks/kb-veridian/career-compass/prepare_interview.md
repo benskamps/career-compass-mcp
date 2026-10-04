@@ -5,6 +5,16 @@
 **Interview type:** final
 
 
+**Application context** (pipeline entry `demo-001`):
+- Status: interviewing
+- Applied: 2026-06-01
+- Posting: https://veridianhealth.com/careers/director-operations
+- Salary range on file: USD 155,000–185,000
+- Rounds recorded: 2
+  - phone screen (2026-06-06), with Rachel Torres: Passed — advancing to panel
+  - panel (2026-06-17), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
+- Notes: [2026-06-01] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-06-06] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-06-13] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
+- Contacts: Rachel Torres (Talent Acquisition Partner), David Kim (Chief Operating Officer)
 
 
 ## Career Highlights (for STAR stories)
