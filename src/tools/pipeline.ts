@@ -7,6 +7,8 @@ import { embedUntrusted } from "../untrusted.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { isReadOnlyStore } from "../storage/read-only-error.js";
 import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
+import { buildTodayDigest } from "./today-digest.js";
+import { clockNow } from "../clock.js";
 import type {
   PipelineAddArgs,
   PipelineUpdateArgs,
@@ -261,72 +263,9 @@ ${apps.filter(a => a.priority === "high" && ACTIVE_STATUSES.includes(a.status)).
   };
 }
 
+/** Today's ranked digest. See today-digest.ts. */
 export function handleNextActions(pipeline: Pipeline, now: Date = new Date()): ToolResponse {
-  const actions: string[] = [];
-
-  // Compare CALENDAR DAYS in the user's own timezone, not timestamps.
-  // `new Date("2026-07-24")` is parsed as UTC midnight, while `Date.now()` is
-  // local — so west of UTC a follow-up due today came out negative, and east
-  // of UTC tomorrow's reminder fired a day early. A date-only field has no
-  // time in it; treating it as one is the bug.
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const days = (iso?: string): number => {
-    if (!iso) return NaN;
-    const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-    if (!y || !m || !d) return NaN;
-    return Math.round((new Date(y, m - 1, d).getTime() - midnight) / 86400000);
-  };
-
-  for (const app of pipeline.applications) {
-    // Same closed set the lite dashboard's deriveNextActions skips: a ghosted
-    // application is over, and nagging "follow up" on it is the wrong advice.
-    if (["rejected", "withdrawn", "accepted", "ghosted"].includes(app.status)) continue;
-
-    // `dateUpdated` is a full timestamp (toISOString), not a date-only field, so
-    // it gets timestamp arithmetic. Running it through the calendar-day helper
-    // took its UTC date against LOCAL midnight — between UTC midnight and local
-    // midnight every "applied Nd ago" came out one day short. Caught by the
-    // 7+-day test failing only in the evening, US time.
-    const updatedMs = Date.parse(app.dateUpdated);
-    const daysSinceUpdate = Number.isNaN(updatedMs) ? 0 : Math.floor((now.getTime() - updatedMs) / 86400000);
-
-    if (app.status === "applied" && daysSinceUpdate >= 7) {
-      actions.push(`📬 **Follow up** — ${app.company} / ${app.role} (applied ${daysSinceUpdate}d ago, ID: ${app.id})`);
-    }
-    if (app.status === "screening" && daysSinceUpdate >= 5) {
-      actions.push(`📞 **Check status** — ${app.company} / ${app.role} (in screening ${daysSinceUpdate}d, ID: ${app.id})`);
-    }
-    const followUpDays = days(app.followUpDue);
-    if (!Number.isNaN(followUpDays) && followUpDays <= 0) {
-      actions.push(`⚠️ **Overdue follow-up** — ${app.company} / ${app.role} (due ${app.followUpDue}, ID: ${app.id})`);
-    }
-    if (app.status === "interviewing") {
-      const upcomingRounds = app.interviewRounds
-        .map(r => ({ ...r, d: days(r.date) }))
-        .filter(r => !Number.isNaN(r.d) && r.d >= 0)
-        .sort((a, b) => a.d - b.d);
-      const nextInterview = upcomingRounds[0];
-      if (nextInterview) {
-        actions.push(`🎯 **Upcoming interview** — ${app.company} / ${app.role}: ${nextInterview.type} on ${nextInterview.date} (ID: ${app.id})`);
-      }
-    }
-    if (app.status === "offer") {
-      actions.push(`💰 **Pending offer** — ${app.company} / ${app.role} — evaluate and respond (ID: ${app.id})`);
-    }
-  }
-
-  return {
-    content: [{
-      type: "text",
-      text: actions.length > 0
-        ? `# Next Actions (${actions.length})\n\n${actions.join("\n")}`
-        // "Up to date" over an empty pipeline is reassurance where orientation
-        // was needed; say which of the two states this is.
-        : pipeline.applications.length === 0
-          ? "Nothing tracked yet, so there is nothing to act on. Add your first application with `pipeline_add` and follow-ups, interviews, and expiring offers will surface here."
-          : "✅ No immediate actions needed. Your pipeline is up to date.",
-    }],
-  };
+  return buildTodayDigest(pipeline, now);
 }
 
 // ─── Tool Registration ────────────────────────────────────────────────────────
@@ -349,7 +288,7 @@ export function registerPipelineTools(server: McpServer): void {
       description: "Read the job application pipeline: list applications, summarize stats, surface what needs attention, or fetch one application by id. Read-only — never modifies anything.",
       inputSchema: {
         action: z.enum(["list", "stats", "next_actions", "get"])
-          .describe("list = all applications (filterable); stats = funnel and response-rate summary; next_actions = what is overdue or due now; get = one application by id"),
+          .describe("list = all applications (filterable); stats = funnel and response-rate summary; next_actions = today's ranked digest: one start-here move, the rest of what is due, and what is coming up; get = one application by id"),
         id: z.string().optional().describe("Application id. Required when action=get."),
         filterStatus: ApplicationStatus.optional().describe("action=list only: show only applications in this status"),
         filterPriority: z.enum(["high", "medium", "low"]).optional().describe("action=list only: show only applications at this priority"),
@@ -388,7 +327,7 @@ export function registerPipelineTools(server: McpServer): void {
         case "stats":
           return handleStats(pipeline);
         case "next_actions":
-          return handleNextActions(pipeline);
+          return handleNextActions(pipeline, clockNow());
         default:
           return { content: [{ type: "text", text: `❌ Unknown action: ${args.action}` }], isError: true };
       }

@@ -101,7 +101,7 @@ user's voice: résumé bullets, cover letters, and interview answers.
 | Learn about a company | `research_company` |
 | Apply | `tailor_resume`, then `generate_cover_letter`; `format_for_ats` for a specific ATS. With a saved KB, `generate_cover_letter` works without a posting (it uses the pipeline's), so draft first and offer to sharpen it with the posting after |
 | Track an application | `pipeline_add` for a new one, `pipeline_update` to change status, notes, follow-ups, contacts, or interview rounds |
-| See what needs attention | `pipeline_view` |
+| See what needs attention | `pipeline_view` with `action: "next_actions"`: a ranked digest led by one "Start here" move. Lead with that move and offer to do its first step |
 | Make sense of a recruiter email | `classify_email`, then offer the pipeline update it suggests |
 | Prepare for an interview | `prepare_interview`; mid-process, `interview_arc` to project the next round |
 | Weigh an offer | `evaluate_offer` |

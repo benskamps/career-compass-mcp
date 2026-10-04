@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES } from "./cases.mjs";
+import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, TODAY_CASES } from "./cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -364,6 +364,20 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
     });
     cpSync(join(here, "mocks", "kb"), join(dir, "mocks"), { recursive: true });
     if (m.mocks) cpSync(join(here, "mocks", m.mocks), join(dir, "mocks"), { recursive: true });
+    n++;
+  }
+  for (const t of TODAY_CASES) {
+    const dir = writeCase(TOOLS_SUITE, t.id, {
+      description: "The daily digest with nothing tracked yet.",
+      prompt: t.ask, tags: ["task", "quality"],
+      graders: {
+        "task--today": { type: "llm", weight: 2, body: t.expect },
+        "trust--no-unasked-pipeline-add": noUnaskedWrite("pipeline_add"),
+        "activation--skill-fired": skillFired,
+      },
+    });
+    cpSync(join(here, "mocks", "empty"), join(dir, "mocks"), { recursive: true });
+    cpSync(join(here, "mocks", t.mocks), join(dir, "mocks"), { recursive: true });
     n++;
   }
   return n;

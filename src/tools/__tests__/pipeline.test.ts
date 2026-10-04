@@ -424,6 +424,8 @@ describe("handleNextActions", () => {
       id: "fu-001",
       status: "screening",
       followUpDue: "2026-01-01",
+      // Recent activity: a month of silence turns this into "Gone quiet" instead.
+      dateUpdated: new Date().toISOString(),
     });
     const pipeline = makePipeline([app]);
 
@@ -480,7 +482,8 @@ describe("handleNextActions", () => {
     const result = handleNextActions(pipeline);
     const text = result.content[0].text;
 
-    expect(text).toContain("No immediate actions needed");
+    expect(text).toContain("Nothing needs you today");
+    expect(text).toContain("all 3 tracked applications are closed");
   });
 
   it("flags screening apps stale for 5+ days", () => {

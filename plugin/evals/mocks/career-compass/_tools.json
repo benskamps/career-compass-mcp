@@ -247,7 +247,7 @@
               "next_actions",
               "get"
             ],
-            "description": "list = all applications (filterable); stats = funnel and response-rate summary; next_actions = what is overdue or due now; get = one application by id"
+            "description": "list = all applications (filterable); stats = funnel and response-rate summary; next_actions = today's ranked digest: one start-here move, the rest of what is due, and what is coming up; get = one application by id"
           },
           "id": {
             "description": "Application id. Required when action=get.",
