@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Fit checks see your whole record.** `explore_opportunity` used to send only job titles
+  and skills, so the fit check told users with a saved budget, team size or healthcare
+  certificate that their KB showed none of them. It now gets each role's scope, every
+  achievement tagged with its employer, and your degrees, coursework and certifications.
+- **Interview prep finds your application by company.** `prepare_interview` and
+  `interview_arc` read the pipeline only when given an application id. Asking about "my
+  Veridian final" reported "0 rounds recorded" for a process with two rounds on file. Both
+  tools now match the company name and show the rounds, interviewers, posting link and
+  saved pay range.
+- **Cover letters know which job each result came from.** `generate_cover_letter` now
+  tags each achievement with its role and employer.
+
 ## 2.9.5 — 2026-10-03
 
 ### Changed

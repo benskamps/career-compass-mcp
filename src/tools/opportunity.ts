@@ -7,6 +7,7 @@ import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
 import { TRUTH_RULE } from "./truth-rule.js";
 import type { CareerData } from "../schemas/career-schema.js";
+import { formatRoles, formatAchievements, formatCredentials } from "./career-context.js";
 
 export function registerOpportunityTools(server: McpServer): void {
 
@@ -248,14 +249,22 @@ function buildPreferenceContract(profile: CareerData["profile"]): string {
 
 function buildCareerSummary(career: Awaited<ReturnType<typeof loadCareerData>>): string {
   if (!career) return "No career data available.";
-  const { profile, experience, skills } = career;
+  const { profile, skills } = career;
 
-  const topSkills = skills.slice(0, 10).map(s => s.name).join(", ");
-  const recentRoles = experience.slice(0, 3).map(e => `${e.role} at ${e.company}`).join("; ");
+  const topSkills = skills.slice(0, 15).map(s => s.name).join(", ");
 
   return `**Name:** ${profile.name}
 **Summary:** ${profile.summary}
-**Recent roles:** ${recentRoles || "None listed"}
+
+**Roles and scope:**
+${formatRoles(career)}
+
+**Evidence (achievements by role):**
+${formatAchievements(career)}
+
+**Education and certifications:**
+${formatCredentials(career)}
+
 **Key skills:** ${topSkills || "None listed"}
 **Target roles:** ${profile.targetRoles.join(", ") || "Not specified"}
 **Target industries:** ${profile.targetIndustries.join(", ") || "Not specified"}

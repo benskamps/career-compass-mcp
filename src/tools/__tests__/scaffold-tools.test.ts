@@ -205,6 +205,18 @@ describe("format_for_ats", () => {
 // ─── interview.ts ──────────────────────────────────────────────────────────────
 
 describe("prepare_interview", () => {
+  it("finds the application by company when no id is given", async () => {
+    usePopulated();
+    const text = await callText(client, "prepare_interview", {
+      company: "Veridian Health",
+      interviewType: "final",
+    });
+    expect(text).toContain("pipeline entry `demo-001`");
+    expect(text).toContain("Rounds recorded: 2");
+    expect(text).toContain("phone screen (2026-06-06), with Rachel Torres: Passed");
+    expect(text).toContain("Salary range on file: USD 155,000–185,000");
+  });
+
   it("merges pipeline context for an applicationId into the prep brief", async () => {
     usePopulated();
     const text = await callText(client, "prepare_interview", {
@@ -217,7 +229,8 @@ describe("prepare_interview", () => {
     expect(text).toContain("Veridian Health");
     // …plus the assembled application context block.
     expect(text).toContain("Status: interviewing");
-    expect(text).toContain("Rounds completed: 2");
+    expect(text).toContain("Rounds recorded: 2");
+    expect(text).toContain("panel (2026-06-17), with David Kim, Head of Clinical Ops, VP Engineering");
     expect(text).toContain("Rachel Torres (Talent Acquisition Partner)");
     // KB highlights still present.
     expect(text).toContain("Alex Rivera");

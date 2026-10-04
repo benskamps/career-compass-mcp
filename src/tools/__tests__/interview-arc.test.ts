@@ -213,6 +213,17 @@ describe("the paths where there is nothing to work with", () => {
     expect(text).toContain("given that the next round is a phone screen");
   });
 
+  it("finds the pipeline entry by company name when no id is given", async () => {
+    // Users say "my Veridian final", so the model passes a company, not demo-001.
+    // Before, that path never read the pipeline and reported 0 rounds on file.
+    const { isError, text } = await callResult({ company: "veridian health" });
+    expect(isError).toBe(false);
+    expect(text).toContain("**Rounds recorded:** 2");
+    expect(text).toContain("Rachel Torres");
+    expect(text).toContain("David Kim");
+    expect(text).toContain("https://veridianhealth.com/careers/director-operations");
+  });
+
   it("works from freeform notes alone, with no pipeline entry", async () => {
     const { isError, text } = await callResult({
       company: "Acme Health",

@@ -6,6 +6,7 @@ import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
 import { TRUTH_RULE } from "./truth-rule.js";
+import { formatRoles, formatAchievements } from "./career-context.js";
 
 export function registerResumeTools(server: McpServer): void {
 
@@ -168,8 +169,11 @@ ${TRUTH_RULE}`,
 ## Career KB Summary
 **Name:** ${career.profile.name}
 **Summary:** ${career.profile.summary}
-**Top achievements:**
-${career.experience.flatMap(e => e.achievements.slice(0, 2).map(a => `- ${a.metric}: ${a.impact}`)).slice(0, 8).join("\n")}
+**Roles and scope:**
+${formatRoles(career)}
+
+**Top achievements (by role):**
+${formatAchievements(career, 2, 8)}
 
 ${posting ? `## Job Posting\n${embedUntrusted("job posting", posting)}` : `## Job Posting\nNone available. Write the letter from the role${role ? ` (${role})` : ""}, the company name, and my history. Do not ask me for the posting first: deliver the letter, then say in one line that pasting the posting would let you sharpen it.`}
 ${appContext}

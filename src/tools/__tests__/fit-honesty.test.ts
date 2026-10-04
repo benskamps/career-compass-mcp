@@ -84,6 +84,18 @@ describe("explore_opportunity carries the preference contract", () => {
     await rm(dataDir, { recursive: true, force: true });
   });
 
+  it("puts the evidence in the prompt: scope, achievements by employer, credentials", async () => {
+    // With only titles and skills, the model told Alex "your KB doesn't show a
+    // budget or team size" and "nothing shows compliance work", all of it on file.
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("$8M in annual program budgets and a team of 6 PMs");
+    expect(text).toContain("a team of 42");
+    expect(text).toContain("**Senior Program Manager @ MedFlow Health Systems**: Reduced average patient onboarding time");
+    expect(text).toContain("eliminated $2.1M in compliance penalties");
+    expect(text).toContain("Certificate in Healthcare Operations Management");
+    expect(text).toContain("Clinical Workflow Design");
+  });
+
   it("puts the salary band in the prompt, with both ends and the currency", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
     // Alex Rivera's profile.yaml: salaryMin 140000, salaryMax 180000, USD.

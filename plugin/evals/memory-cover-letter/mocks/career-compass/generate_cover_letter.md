@@ -4,13 +4,18 @@
 **Name:** Alex Rivera
 **Summary:** Operations and program manager with 9 years of experience driving cross-functional initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous problems into structured execution plans and building high-trust relationships with both technical and non-technical stakeholders.
 
-**Top achievements:**
-- Reduced average patient onboarding time from 47 days to 11 days: Enabled 3x faster revenue recognition and eliminated $2.1M in compliance penalties over 18 months
-- Launched real-time capacity dashboard adopted by 94% of clinical staff within 60 days: Reduced emergency diversion incidents by 34% across 6 facilities
-- Grew on-time delivery rate from 81% to 97.3% in 14 months: Retained 3 major retail accounts worth $6.8M annually that were at risk of churning
-- Reduced headcount costs 18% while increasing throughput 31%: Avoided layoffs by restructuring shifts; saved $1.4M annually
-- Maintained 118% net revenue retention across portfolio for 8 consecutive quarters: Recognized as top CS rep company-wide; accounts became pilot group for new product line
-- Identified and closed $1.2M in expansion revenue through QBR process redesign: Redesigned to ROI-focused format; 100% executive attendance within 2 quarters
+**Roles and scope:**
+- **Senior Program Manager @ MedFlow Health Systems** (2021-03 to present): Led enterprise-scale digital health initiatives across 14 hospital systems, managing $8M in annual program budgets and a team of 6 PMs.
+- **Operations Manager @ Apex Logistics Partners** (2018-06 to 2021-02): Managed end-to-end operations for a regional 3PL serving 120+ retail clients, overseeing warehouse operations, carrier relationships, and a team of 42.
+- **Customer Success Manager @ Brightline Software (acquired by Salesforce)** (2016-01 to 2018-05): Owned post-sale relationship for enterprise accounts in the $100K–$500K ARR range, driving adoption, expansion, and retention across a 22-account portfolio.
+
+**Top achievements (by role):**
+- **Senior Program Manager @ MedFlow Health Systems**: Reduced average patient onboarding time from 47 days to 11 days → Enabled 3x faster revenue recognition and eliminated $2.1M in compliance penalties over 18 months
+- **Senior Program Manager @ MedFlow Health Systems**: Launched real-time capacity dashboard adopted by 94% of clinical staff within 60 days → Reduced emergency diversion incidents by 34% across 6 facilities
+- **Operations Manager @ Apex Logistics Partners**: Grew on-time delivery rate from 81% to 97.3% in 14 months → Retained 3 major retail accounts worth $6.8M annually that were at risk of churning
+- **Operations Manager @ Apex Logistics Partners**: Reduced headcount costs 18% while increasing throughput 31% → Avoided layoffs by restructuring shifts; saved $1.4M annually
+- **Customer Success Manager @ Brightline Software (acquired by Salesforce)**: Maintained 118% net revenue retention across portfolio for 8 consecutive quarters → Recognized as top CS rep company-wide; accounts became pilot group for new product line
+- **Customer Success Manager @ Brightline Software (acquired by Salesforce)**: Identified and closed $1.2M in expansion revenue through QBR process redesign → Redesigned to ROI-focused format; 100% executive attendance within 2 quarters
 
 ## Job Posting
 None available. Write the letter from the role (Head of Customer Success), the company name, and my history. Do not ask me for the posting first: deliver the letter, then say in one line that pasting the posting would let you sharpen it.
