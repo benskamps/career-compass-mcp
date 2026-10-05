@@ -2,14 +2,34 @@
 
 ![Career Compass icon](.claude-plugin/icon.png)
 
-**A local-first career co-pilot for Claude.**
+**Honest fit checks for any job posting, and drafts built on your real work.**
 
-Career Compass keeps your whole career history as plain YAML files on your own computer,
-then uses it to tailor résumés to a posting, score how well you fit a role, write cover
-letters, track every application from first look to offer, prep you for each interview
-with STAR stories drawn from your real work, and weigh offers against your own targets.
+Paste a job posting and your résumé, and ask **"Do I fit this?"** You get a straight
+verdict (strong, stretch, or long shot), each of the posting's must-haves matched to real
+evidence from your background, and the top two gaps with how to address them in your
+application. You'll know whether to apply and what to fix first. No setup, no account.
 
-There is no account, no cloud sync, and no telemetry.
+**It won't make things up.** Résumés, cover letters, and interview answers are written
+from what you've actually done. When a detail is missing, like a number or a team size,
+the draft shows a `[confirm: …]` placeholder for you to fill in instead of inventing one.
+Offer reviews use only market data you provide, and say where to find more.
+
+Then it carries the whole search:
+
+- **Tailor your résumé** to one posting, plus an ATS-friendly version.
+- **Write the cover letter** for a specific role, from your real experience.
+- **Prep the interview:** likely questions for that round, STAR stories written out in
+  full from your own work, and sharp questions to ask them.
+- **Weigh an offer** against your own targets, and get the two or three points worth
+  negotiating, with wording.
+- **Handle the rest:** recruiter emails, rejections, interview debriefs, and working out
+  why final rounds keep slipping away.
+
+In Claude Code and Cowork it also remembers you. Your career history and every
+application live as plain YAML files on your own computer. Each fit check reads your whole
+record, "prep me for my Veridian final" finds that application with its rounds and
+interviewers, and `/career-compass:today` gives you one "start here" move. There is no
+cloud sync and no telemetry.
 
 ## What this plugin installs
 
@@ -34,8 +54,8 @@ prep, or offer review in the conversation. Nothing is saved between chats there.
 
 ## Getting started
 
-Paste a job posting and your résumé, and ask **"How well do I fit this?"** You get a
-verdict, your strongest evidence, and the gaps to address. Claude then offers to save your
+Paste a job posting and your résumé, and ask **"Do I fit this?"** You get a verdict,
+your evidence for each must-have, and the top gaps to address. Claude then offers to save your
 résumé so the next fit check, cover letter, and interview prep start from it.
 
 Or type a command:
@@ -45,7 +65,7 @@ Or type a command:
 | `/career-compass:start` | Checks the install and sets up your career history from a pasted résumé |
 | `/career-compass:fit-check` | Scores your fit for a pasted posting |
 | `/career-compass:interview-prep` | Likely questions, STAR stories from your real work, and questions to ask |
-| `/career-compass:today` | What needs attention in your pipeline today |
+| `/career-compass:today` | One "start here" move, then the rest of today's list |
 
 You can also just ask: "Prep me for my panel interview at Acme on Friday", "I got an offer,
 is it good?", or "Run the Career Compass setup check."
