@@ -1,6 +1,9 @@
 # Changelog
 
-## 2.9.6 — 2026-10-05
+## 2.9.7 — 2026-10-05
+
+2.9.6 was never published (its tag pointed at the commit before the version bump); these
+changes ship as 2.9.7. The plugin card also leads with the honest fit check now.
 
 ### Changed
 

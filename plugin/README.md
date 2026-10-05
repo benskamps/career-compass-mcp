@@ -34,7 +34,7 @@ cloud sync and no telemetry.
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.9.6`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.9.7`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
@@ -96,7 +96,7 @@ and writes nothing.
 
 The plugin makes two kinds of network request, and neither carries your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.6` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.7` and its
   dependencies from the public npm registry.
 - **Update check, only when you ask:** the `check_setup` tool can ask the public npm
   registry for the latest published version. It is off by default; Claude turns it on when
