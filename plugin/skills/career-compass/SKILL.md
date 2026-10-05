@@ -144,4 +144,4 @@ record it with `pipeline_update` instead of leaving the pipeline stale.
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.9.5 dashboard`.
+`npx -y career-compass-mcp@2.9.6 dashboard`.

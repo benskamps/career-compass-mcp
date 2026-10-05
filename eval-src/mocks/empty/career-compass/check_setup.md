@@ -1,6 +1,6 @@
 # Career Compass — Setup Check
 
-ℹ️ **Version** — v2.9.5 installed. Not compared against npm — the update check is off unless you ask for it.
+ℹ️ **Version** — v2.9.6 installed. Not compared against npm — the update check is off unless you ask for it.
    → Say "check Career Compass for updates" to run this with checkForUpdates: true (one request to the public npm registry).
 ✅ **Data directory** — ~/.career-compass exists and is writable.
 ℹ️ **Git backup** — ~/.career-compass is not a git repository.
@@ -13,13 +13,13 @@
    → Paste in your resume and say "save this to my Career KB" — Claude extracts the structure and writes it with `save_career_section`.
 ℹ️ **Pipeline** — No applications tracked yet.
    → Add the first one with `pipeline_add`, then watch it move:
-     PowerShell:  $env:CAREER_DATA_PATH="~/.career-compass"; npx -y career-compass-mcp@2.9.5 dashboard
-     bash/zsh:    CAREER_DATA_PATH="~/.career-compass" npx -y career-compass-mcp@2.9.5 dashboard
+     PowerShell:  $env:CAREER_DATA_PATH="~/.career-compass"; npx -y career-compass-mcp@2.9.6 dashboard
+     bash/zsh:    CAREER_DATA_PATH="~/.career-compass" npx -y career-compass-mcp@2.9.6 dashboard
 ✅ **Temp files** — No leftover .tmp files.
 ✅ **Write claim** — No other process is writing this folder.
 ✅ **Dashboard** — Not running on port 3141 (nothing is listening). That's normal — it only runs while you have it open.
    → Open it on the folder above:
-     PowerShell:  $env:CAREER_DATA_PATH="~/.career-compass"; npx -y career-compass-mcp@2.9.5 dashboard
-     bash/zsh:    CAREER_DATA_PATH="~/.career-compass" npx -y career-compass-mcp@2.9.5 dashboard
+     PowerShell:  $env:CAREER_DATA_PATH="~/.career-compass"; npx -y career-compass-mcp@2.9.6 dashboard
+     bash/zsh:    CAREER_DATA_PATH="~/.career-compass" npx -y career-compass-mcp@2.9.6 dashboard
 
 **Getting started.** The install itself is fine — there's just no career data in it yet. Paste your resume into this conversation and ask me to save it; I'll extract the structure and write it with `save_career_section`. After that, add a role you're chasing with `pipeline_add`, and everything else here has something to work with.
