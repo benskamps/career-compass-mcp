@@ -1,7 +1,8 @@
 # Privacy Policy — Career Compass MCP
 
-**Last updated:** 2026-09-26
-**Applies to:** the `career-compass-mcp` MCP server and its bundled local dashboard, all versions.
+**Last updated:** 2026-10-05
+**Applies to:** the `career-compass-mcp` MCP server, its bundled local dashboard, and the
+Career Compass plugin's skills in every Claude app, all versions.
 
 ---
 
@@ -15,6 +16,10 @@ data never reaches us in the first place.
 There is exactly one outbound network request in the whole package, and only when you ask
 for it: the `check_setup` tool asks the public npm registry whether a newer version has
 been released. It sends nothing about you. Details under [Update checks](#update-checks).
+
+In claude.ai chat (web, desktop and mobile) only the plugin's skills load, as instructions
+to Claude. The server does not run there, so Career Compass stores nothing and sends
+nothing. Details under [In claude.ai chat](#in-claudeai-chat).
 
 ---
 
@@ -87,7 +92,7 @@ reaches the network.
 ## Who else sees it
 
 Career Compass is an MCP server, so it answers a client you connect it to — normally Claude
-Desktop or Claude Code. When you ask Claude to tailor a resume or prep an interview, the
+Code, or Cowork on your computer. When you ask Claude to tailor a resume or prep an interview, the
 relevant parts of your career data are passed to that client, and from there to the model
 provider under **their** privacy policy, not this one:
 
@@ -101,6 +106,20 @@ npm registry about a version number and carries nothing else.
 The bundled local dashboard (`career-compass-mcp dashboard`) serves pages from
 `127.0.0.1` on your own machine, renders them with no external assets, and makes no
 network calls.
+
+## In claude.ai chat
+
+The Career Compass plugin is also offered in claude.ai chat on the web, desktop and mobile.
+There, only its skills load: plain-text instructions that tell Claude how to do a fit
+check, tailor a résumé, or prep an interview from what you paste into the conversation. The
+MCP server above does not run in chat, so:
+
+- nothing is written to your computer or anywhere else by Career Compass, and nothing
+  carries over between chats;
+- Career Compass makes no network requests, not even the update check;
+- what you paste, and Claude's replies, are part of your Claude conversation, handled by
+  Anthropic under its privacy policy (https://www.anthropic.com/legal/privacy) exactly as
+  any other chat is. We never see it.
 
 ## Untrusted text
 
