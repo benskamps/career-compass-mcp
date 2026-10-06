@@ -10,6 +10,7 @@ import { registerDoctorTools, type DoctorDeps } from "./tools/doctor.js";
 import { registerEvidenceTools } from "./tools/evidence.js";
 import { registerPrompts } from "./prompts/index.js";
 import { PKG_VERSION } from "./version.js";
+import { SERVER_INSTRUCTIONS } from "./server-instructions.js";
 
 export interface ServerOptions {
   /**
@@ -30,6 +31,8 @@ export function createServer(options: ServerOptions = {}): McpServer {
     // Resolved from package.json — never hardcode. A literal here drifts the
     // moment the package is bumped, and the client has no way to notice.
     version: PKG_VERSION,
+  }, {
+    instructions: SERVER_INSTRUCTIONS,
   });
 
   // Resources — Career KB + Pipeline

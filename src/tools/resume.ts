@@ -21,7 +21,11 @@ export function registerResumeTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Generate a tailored, ATS-optimized resume matched to a specific job posting using your Career KB.",
+      description: "Write a résumé tailored to one job posting from the user's saved Career KB: the posting's vocabulary, the most " +
+        "relevant real achievements first, nothing invented, and [confirm: ...] placeholders where a fact is missing. " +
+        "Returns the résumé text first, then a keyword match report. Needs a saved Career KB; when the user has only " +
+        "pasted a résumé, tailor from that directly. Use format_for_ats afterwards for a specific applicant system's " +
+        "fields. Writes nothing.",
       inputSchema: {
         posting: z.string().describe("Full job posting text"),
         format: z.enum(["standard", "federal", "academic", "functional"]).default("standard").describe("Resume format"),
@@ -118,7 +122,9 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Write a compelling, personalized cover letter using your Career KB. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role.",
+      description: "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the " +
+        "role. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and " +
+        "notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing.",
       inputSchema: {
         posting: z.string().optional().describe("Full job posting text. Optional: without it, the cached posting from the pipeline is used, or the letter is written from the role and your history"),
         company: z.string().describe("Company name"),
@@ -222,7 +228,10 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others.",
+      description: "Reformat résumé text the user already has for one applicant tracking system (Workday, Greenhouse, Lever, " +
+        "LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): plain-text sections ready to paste field by field, with " +
+        "typical length limits flagged. Reformats only, never rewrites content; use tailor_resume to change what the " +
+        "résumé says. Writes nothing.",
       inputSchema: {
         resumeContent: z.string().describe("The resume text to format"),
         targetSystem: z.enum(["workday", "greenhouse", "lever", "linkedin", "icims", "taleo", "smartrecruiters", "generic"]).describe("Target ATS system"),

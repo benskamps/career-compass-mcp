@@ -91,6 +91,23 @@ describe("MCP server E2E (in-memory transport)", () => {
     });
   });
 
+  it("sends server instructions that name only real tools and every writing tool", async () => {
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toContain("Routing:");
+    const { tools } = await client.listTools();
+    const names = new Set(tools.map((t) => t.name));
+    // Every snake_case identifier that looks like a tool name must be one.
+    const mentioned = instructions.match(/\b[a-z]+(?:_[a-z]+)+\b/g) ?? [];
+    for (const m of mentioned.filter((m) => m !== "next_actions")) {
+      expect(names, `instructions mention unknown tool ${m}`).toContain(m);
+    }
+    // The writes rule has to list every tool that can change files.
+    const writesLine = instructions.split("\n").find((l) => l.startsWith("- Writes:")) ?? "";
+    for (const t of tools.filter((t) => t.annotations?.readOnlyHint === false)) {
+      expect(writesLine, `writes rule omits ${t.name}`).toContain(t.name);
+    }
+  });
+
   it("registers every tool, including the three tool families", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();

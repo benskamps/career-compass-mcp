@@ -3,7 +3,7 @@
     {
       "name": "explore_opportunity",
       "title": "Explore Opportunity",
-      "description": "Analyze a job posting against your Career KB and your stated preferences — salary band, remote/relocation, notice period. Returns an honest fit verdict (checked against the job board's own label, if you supply it), matched strengths, gaps, talking points, and a 'day in the life' brief.",
+      "description": "Judge how well the user fits one job posting, using their saved Career KB and stated preferences (salary floor, remote or relocation, notice period). Returns a verdict (Strong fit, Stretch, or Long shot) with a score, requirement-by-requirement evidence, the top gaps and how to address them, and talking points; if the user pastes the job board's own match label, it agrees or disagrees with it explicitly. Use it whenever the user pastes a posting and asks whether to apply. With an empty Career KB it says so, so judge from a pasted résumé instead. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -77,7 +77,7 @@
     {
       "name": "tailor_resume",
       "title": "Tailor Resume",
-      "description": "Generate a tailored, ATS-optimized resume matched to a specific job posting using your Career KB.",
+      "description": "Write a résumé tailored to one job posting from the user's saved Career KB: the posting's vocabulary, the most relevant real achievements first, nothing invented, and [confirm: ...] placeholders where a fact is missing. Returns the résumé text first, then a keyword match report. Needs a saved Career KB; when the user has only pasted a résumé, tailor from that directly. Use format_for_ats afterwards for a specific applicant system's fields. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -131,7 +131,7 @@
     {
       "name": "generate_cover_letter",
       "title": "Generate Cover Letter",
-      "description": "Write a compelling, personalized cover letter using your Career KB. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role.",
+      "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -189,7 +189,7 @@
     {
       "name": "format_for_ats",
       "title": "Format for ATS",
-      "description": "Format resume and application content for specific ATS systems: Workday, Greenhouse, Lever, LinkedIn, and others.",
+      "description": "Reformat résumé text the user already has for one applicant tracking system (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): plain-text sections ready to paste field by field, with typical length limits flagged. Reformats only, never rewrites content; use tailor_resume to change what the résumé says. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -559,7 +559,7 @@
     {
       "name": "interview_arc",
       "title": "Project Interview Arc",
-      "description": "Mid-process projection: reconstructs the interview arc so far — rounds completed, what each surfaced, threads left open — then projects what the NEXT round will probe, without repeating ground already covered.",
+      "description": "For a user already partway through one company's interviews: reconstruct the process so far (rounds done, what each surfaced, threads left open) from the pipeline, the journal, and their notes, then project what the next round will probe and how to prepare without repeating covered ground. Use prepare_interview instead for a first interview. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -667,7 +667,7 @@
     {
       "name": "ingest_document",
       "title": "Ingest Career Document",
-      "description": "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements for your Career KB. Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section.",
+      "description": "Extract achievements, skills, and quotes from a career document the user pasted (performance review, award email, project summary, recommendation) as Career KB YAML for them to review, copying only what the document states and marking missing metrics [confirm: ...]. Extraction only: writing the reviewed YAML is a separate, explicit save_career_section call.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -779,7 +779,7 @@
     {
       "name": "capture_insight",
       "title": "Capture Career Insight",
-      "description": "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
+      "description": "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and résumés read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, or an offer decision, and save only what the user said, with their OK.",
       "inputSchema": {
         "type": "object",
         "properties": {

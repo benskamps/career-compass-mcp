@@ -125,8 +125,10 @@ export function registerCareerKBTools(server: McpServer): void {
         openWorldHint: false,
       },
       description:
-        "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements for your Career KB. " +
-        "Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section.",
+        "Extract achievements, skills, and quotes from a career document the user pasted (performance review, award " +
+        "email, project summary, recommendation) as Career KB YAML for them to review, copying only what the document " +
+        "states and marking missing metrics [confirm: ...]. Extraction only: writing the reviewed YAML is a separate, " +
+        "explicit save_career_section call.",
       inputSchema: {
         content: z.string().describe("Full document text to ingest"),
         documentType: z.enum(["performance_review", "award", "project_summary", "recommendation", "email", "self_review", "other"]).describe("Type of document"),
@@ -351,7 +353,10 @@ ${statusUpdated
         openWorldHint: false,
       },
       description:
-        "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
+        "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or " +
+        "wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and résumés " +
+        "read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, " +
+        "or an offer decision, and save only what the user said, with their OK.",
       inputSchema: {
         type: z.enum([
           "fit_signal",
