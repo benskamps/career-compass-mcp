@@ -40,6 +40,18 @@ export const CHAT_TASKS = [
       "Engineer role with Harborline Insurance. It's a 6-month contract-to-hire at $70/hr W2, fully remote. " +
       "They need someone who knows React, TypeScript and accessibility. Are you free for a quick call Thursday? " +
       "Thanks, Megan (Talent Partner, Brightpath Staffing)\"" },
+  { persona: "career-switcher", task: "rejection",
+    ask: "Just got this. How do I reply without sounding bitter?\n\n\"Hi Dana, thank you for interviewing for the UX " +
+      "Researcher role at Fernway. The team enjoyed meeting you, but we've decided to move forward with a candidate " +
+      "whose experience more closely matches our needs. We wish you the best. Kind regards, Tom Lindqvist, Recruiting\"" },
+  { persona: "senior-pm", task: "research",
+    ask: "I have a first-round interview with Tessellate Pay next week for a Director of Product role. What should I know about them going in?" },
+  { persona: "laid-off-engineer", task: "today",
+    ask: "What should I focus on today? Here's where things stand:\n" +
+      "- Corvid Labs, Senior Backend Engineer: applied 3 weeks ago, nothing since\n" +
+      "- Halyard, Staff Engineer: system design round tomorrow at 10am\n" +
+      "- Pinecrest Data, Backend Engineer: recruiter screen done last Tuesday, they said they'd be in touch within a week\n" +
+      "- Northgate, Platform Engineer: haven't applied yet, posting closes Friday" },
 ];
 
 // Cases in the tools suite where the Career KB already holds Alex Rivera's history
