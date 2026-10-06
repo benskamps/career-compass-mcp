@@ -5,7 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
-import { MARKET_DATA_RULE, TRUTH_RULE } from "./truth-rule.js";
+import { COMPANY_FACTS_RULE, MARKET_DATA_RULE, TRUTH_RULE } from "./truth-rule.js";
 import type { Application, CareerData, InterviewRound, JournalEntry, Pipeline } from "../schemas/career-schema.js";
 
 export function registerInterviewTools(server: McpServer): void {
@@ -21,7 +21,11 @@ export function registerInterviewTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics — tailored to interview type.",
+      description:
+        "Prep the user for one upcoming interview: an opening pitch, STAR stories built from their real Career KB, likely " +
+        "questions for that round, questions to ask, and the concerns to get ahead of. Finds the application by id or " +
+        "company name and uses its posting, rounds, and contacts. For a later round in a process already under way, " +
+        "call interview_arc too so the prep doesn't repeat ground covered. Writes nothing.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
         company: z.string().optional().describe("Company name (if no application ID)"),
@@ -87,9 +91,9 @@ export function registerInterviewTools(server: McpServer): void {
 **Company:** ${company ?? "Not specified"}
 **Role:** ${role ?? "Not specified"}
 **Interview type:** ${interviewType}
-${interviewerInfo ? `**Interviewer:** ${interviewerInfo}` : ""}
+${interviewerInfo ? `**Interviewer:**\n${embedUntrusted("interviewer info", interviewerInfo)}` : ""}
 ${appContext}
-${focusAreas ? `**Focus areas:** ${focusAreas}` : ""}
+${focusAreas ? `**Focus areas:**\n${embedUntrusted("focus areas", focusAreas)}` : ""}
 
 ## Career Highlights (for STAR stories)
 ${achievements.map(a => `- **${a.role} @ ${a.company}**: ${a.metric} — ${a.context} → ${a.impact}`).join("\n")}
@@ -108,13 +112,15 @@ Generate complete interview prep tailored to a ${interviewType.replace("_", " ")
 ### 1. Opening Pitch (60-90 seconds)
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
-### 2. STAR Stories (5-8 stories)
+### 2. STAR Stories
 Build each one from a real achievement in the Career KB, written out in full. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
-- **Result:** Quantified outcome
+- **Result:** The outcome as the Career KB records it, numbers copied exactly. If it records none, write [confirm: result?] rather than a number
 - **Best used for:** Which question types this answers
+
+Write 3-5 stories by default, the ones that best match the likely questions; more only if the KB has more strong ones.
 
 Match stories to the likely question themes for ${interviewType}:
 ${interviewType === "behavioral" ? "- Leadership, conflict, failure, ambiguity, collaboration, influence, growth" : ""}
@@ -122,21 +128,26 @@ ${interviewType === "technical" ? "- System design, problem-solving approach, de
 ${interviewType === "phone_screen" ? "- Background, motivation, salary expectations, availability, logistics" : ""}
 ${interviewType === "panel" ? "- Cross-functional influence, stakeholder management, communication style" : ""}
 ${interviewType === "final" ? "- Vision, leadership, company fit, long-term goals, strategic thinking" : ""}
+${interviewType === "negotiation" ? "- Compensation expectations, competing processes, start date, what would make me say yes. Use only numbers I have given" : ""}
 
-### 3. Likely Questions (10-15)
+### 3. Likely Questions (8-12)
 Questions specific to ${company ?? "this company"} and ${role ?? "this role"}, with suggested answer angles from my background.
 
-### 4. Questions to Ask (7-10)
+### 4. Questions to Ask (5-7)
 Thoughtful questions that demonstrate genuine insight about the role, team, and company. Not generic.
 
 ### 5. Company & Role Alignment
-How my background specifically connects to ${company ?? "their"} mission, product, and current challenges.
+How my background connects to what the posting and my notes say about ${company ?? "the company"} and this role. Don't describe their mission, product, or challenges beyond those sources unless you looked them up here.
 
 ### 6. Bridge Topics
-Surprising connections between my experience and their world — things that will make me memorable.
+Non-obvious connections between real items in my history and their world, things that will make me memorable. Each one names the Career KB item it rests on.
 
 ### 7. Watch-outs & Reframes
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
+
+Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+${COMPANY_FACTS_RULE}
 
 ${TRUTH_RULE}`,
         }],
@@ -298,7 +309,10 @@ what makes the next projection in this process, and the next process, sharper.`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts.",
+      description:
+        "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their " +
+        "current pay, stated targets, other offers, and any market data they supply, then what to negotiate and the exact " +
+        "words. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
         company: z.string().optional().describe("Company making the offer. Used to pull the matching application for context."),
@@ -343,7 +357,7 @@ Break down every component with annualized values:
 - Base salary
 - Target bonus (% and $ amount)
 - Equity (grant, vesting schedule, cliff; a dollar value only if the valuation or price per share and the share count are known, otherwise list exactly what to ask for)
-- Benefits (health, 401k match, PTO, etc. — assign approximate $ values)
+- Benefits (health, 401k match, PTO, etc.): list what the offer states; put a dollar value only on what it states in dollars
 - **Total Year 1 comp**
 - **Total Year 4 comp** (fully vested)
 
@@ -358,10 +372,10 @@ ${marketData ? "- Compare against the market data above, citing it\n- How does t
 - How does leverage from ${otherOffers ? "competing offers" : "my position"} play in?
 
 ### 4. Counter Script
-Exact words for the negotiation call:
-> "Thank you so much for the offer — I'm genuinely excited about the opportunity at ${company ?? "the company"}. I've done some research on market rates for this role, and I was hoping we could discuss the compensation a bit. Based on [X], I was hoping we could get to [specific number]. Is there flexibility there?"
+Exact words for the negotiation call, built on a reason that is true for me: ${marketData ? "the market data above" : "my current pay, my stated targets, or another offer, whichever I actually have. No market data was given, so the script must not claim I researched market rates"}${otherOffers ? ", and the competing offer, stated only as specifically as I described it" : ""}. Example shape:
+> "Thank you for the offer. I'm excited about the role at ${company ?? "the company"}. Based on [the true reason], I was hoping we could get to [specific number]. Is there flexibility there?"
 
-Provide 2-3 variations depending on their response.
+Provide 2-3 variations depending on their response. Fill the brackets from my data, or leave them as [confirm: ...] placeholders.
 
 ### 5. Alternative Asks
 If base is firm, what else to ask for:
@@ -374,8 +388,8 @@ If base is firm, what else to ask for:
 - Equipment/home office budget
 
 ### 6. Decision Framework
-Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk
-Overall recommendation: Accept / Negotiate / Decline?
+Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
+Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.
 
 ${MARKET_DATA_RULE}
 

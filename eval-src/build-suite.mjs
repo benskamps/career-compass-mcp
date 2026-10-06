@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -378,6 +378,20 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
     });
     cpSync(join(here, "mocks", "empty"), join(dir, "mocks"), { recursive: true });
     cpSync(join(here, "mocks", t.mocks), join(dir, "mocks"), { recursive: true });
+    n++;
+  }
+  for (const c of SWEEP_CASES) {
+    const dir = writeCase(TOOLS_SUITE, c.id, {
+      description: "A surface the other cases never reach, on Alex Rivera's saved KB.",
+      prompt: c.ask, tags: ["sweep", "quality"],
+      graders: {
+        [c.check]: { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": kbTruth,
+        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        "activation--skill-fired": skillFired,
+      },
+    });
+    cpSync(join(here, "mocks", "kb"), join(dir, "mocks"), { recursive: true });
     n++;
   }
   return n;

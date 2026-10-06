@@ -486,13 +486,15 @@ Generate complete interview prep tailored to a phone screen at this company:
 ### 1. Opening Pitch (60-90 seconds)
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
-### 2. STAR Stories (5-8 stories)
+### 2. STAR Stories
 Build each one from a real achievement in the Career KB, written out in full. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
-- **Result:** Quantified outcome
+- **Result:** The outcome as the Career KB records it, numbers copied exactly. If it records none, write [confirm: result?] rather than a number
 - **Best used for:** Which question types this answers
+
+Write 3-5 stories by default, the ones that best match the likely questions; more only if the KB has more strong ones.
 
 Match stories to the likely question themes for phone_screen:
 
@@ -501,20 +503,25 @@ Match stories to the likely question themes for phone_screen:
 
 
 
-### 3. Likely Questions (10-15)
+
+### 3. Likely Questions (8-12)
 Questions specific to this company and this role, with suggested answer angles from my background.
 
-### 4. Questions to Ask (7-10)
+### 4. Questions to Ask (5-7)
 Thoughtful questions that demonstrate genuine insight about the role, team, and company. Not generic.
 
 ### 5. Company & Role Alignment
-How my background specifically connects to their mission, product, and current challenges.
+How my background connects to what the posting and my notes say about the company and this role. Don't describe their mission, product, or challenges beyond those sources unless you looked them up here.
 
 ### 6. Bridge Topics
-Surprising connections between my experience and their world — things that will make me memorable.
+Non-obvious connections between real items in my history and their world, things that will make me memorable. Each one names the Career KB item it rests on.
 
 ### 7. Watch-outs & Reframes
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
+
+Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+**Company facts rule:** State a fact about the company (funding, headcount, revenue, leadership, culture, reviews, tech stack, interview stages, recent news) only if it comes from the posting, my notes, or a source you looked up in this conversation, and name that source. If you can't look things up here, say so in one line, then give the brief as what to check and where (their careers page, recent press, LinkedIn, Glassdoor or Blind, people I know there) instead of filling it in from memory. Mark anything older or unsure as "unverified". Never invent interview stages, questions, or employee sentiment.
 
 **Truth rule (applies to everything you write about me):**
 - Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".

@@ -309,10 +309,10 @@ Reformat the resume content above following the ${targetSystem} rules exactly. P
 1. **Formatted version** — ready to paste into ${targetSystem} fields
 2. **Field-by-field breakdown** — if form-based, show exactly what goes in each field
 3. **Character count warnings** — flag any sections that may exceed limits
-4. **ATS keyword density** — top 10 keywords from the posting and whether they appear in the formatted output
+4. **ATS keyword check** — only if the posting text is in this conversation: its top 10 keywords and whether each appears in the formatted output. Otherwise skip this item and say paste the posting to get it
 5. **Copy-paste ready sections** — formatted so each section can be directly pasted
 
-Flag any content that doesn't translate well to this system and suggest alternatives.`,
+Flag any content that doesn't translate well to this system and suggest alternatives. Reformat only: keep every fact, date, and number exactly as given, and add nothing. The system rules above are general guidance; field limits vary by employer, so call them typical, not exact.`,
         }],
       };
     }

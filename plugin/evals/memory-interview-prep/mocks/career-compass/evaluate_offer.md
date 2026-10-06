@@ -26,7 +26,7 @@ Break down every component with annualized values:
 - Base salary
 - Target bonus (% and $ amount)
 - Equity (grant, vesting schedule, cliff; a dollar value only if the valuation or price per share and the share count are known, otherwise list exactly what to ask for)
-- Benefits (health, 401k match, PTO, etc. — assign approximate $ values)
+- Benefits (health, 401k match, PTO, etc.): list what the offer states; put a dollar value only on what it states in dollars
 - **Total Year 1 comp**
 - **Total Year 4 comp** (fully vested)
 
@@ -42,10 +42,10 @@ Compare to market rate for this role at this company type's stage/size:
 - How does leverage from my position play in?
 
 ### 4. Counter Script
-Exact words for the negotiation call:
-> "Thank you so much for the offer — I'm genuinely excited about the opportunity at the company. I've done some research on market rates for this role, and I was hoping we could discuss the compensation a bit. Based on [X], I was hoping we could get to [specific number]. Is there flexibility there?"
+Exact words for the negotiation call, built on a reason that is true for me: my current pay, my stated targets, or another offer, whichever I actually have. No market data was given, so the script must not claim I researched market rates. Example shape:
+> "Thank you for the offer. I'm excited about the role at the company. Based on [the true reason], I was hoping we could get to [specific number]. Is there flexibility there?"
 
-Provide 2-3 variations depending on their response.
+Provide 2-3 variations depending on their response. Fill the brackets from my data, or leave them as [confirm: ...] placeholders.
 
 ### 5. Alternative Asks
 If base is firm, what else to ask for:
@@ -58,8 +58,8 @@ If base is firm, what else to ask for:
 - Equipment/home office budget
 
 ### 6. Decision Framework
-Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk
-Overall recommendation: Accept / Negotiate / Decline?
+Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
+Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.
 
 **Market data rule:** Only cite salary, bonus, or equity benchmarks that appear in the market data above or that I gave you. If there are none, say so plainly, tell me where to get them (Levels.fyi, Glassdoor, Carta's equity benchmarks, a recruiter), and reason from my own numbers and stated targets instead. Never put a dollar value on equity without the company's valuation or price per share and the total share count.
 

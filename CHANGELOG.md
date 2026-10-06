@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Company research no longer fills gaps from memory.** `research_company` told Claude
+  to "use web search" even where there is none, so briefs could state funding, review
+  scores and interview stages that came from nowhere. It now cites a source for each
+  company fact, or, without search, turns the brief into what to check and where. It
+  also stopped printing "Open to remote" for users who never answered that question.
+- **Offer scripts no longer put words in your mouth.** `evaluate_offer`'s counter script
+  opened with "I've done some research on market rates" on every offer. The script now
+  rests on a reason that is true for you (your data, your targets, another offer), and
+  benefits get a dollar value only when the offer states one.
+- **Interview prep, document extraction, rejection replies, recruiter-email replies and
+  ATS formatting** now carry the same truth rule as the drafting tools: results copied
+  exactly or marked `[confirm: …]`, no invented metrics or proficiency ratings when
+  extracting a review, no invented interview details in a rejection reply, and the ATS
+  keyword check runs only when the posting is in the conversation. Interview prep opens
+  with a three-line summary and defaults to 3-5 STAR stories instead of 5-8.
+- **The six MCP prompts** (`resume-tailor`, `interview-coach`, `negotiation-coach`, and
+  the rest) predated the truth rule. The three that draft now carry it, and
+  `negotiation-coach` no longer asks for a market comparison when you gave no data.
+- Tool descriptions for `research_company`, `evaluate_offer`, `prepare_interview`,
+  `classify_email` and `generate_rejection_response` now say when to use each one and
+  what it writes.
+
 ## 2.9.6 — 2026-10-05
 
 ### Changed

@@ -5,7 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
-import { TRUTH_RULE } from "./truth-rule.js";
+import { COMPANY_FACTS_RULE, TRUTH_RULE } from "./truth-rule.js";
 import type { CareerData } from "../schemas/career-schema.js";
 import { formatRoles, formatAchievements, formatCredentials } from "./career-context.js";
 
@@ -136,7 +136,12 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals.",
+      description:
+        "Set up a research brief on a company the user is applying to or interviewing with: what it does, stage, culture, " +
+        "interview process, and how it fits the user's target roles. The server does not browse; it returns the brief's " +
+        "outline plus the user's targets, and you fill it from web search when you have it, citing sources. Without web " +
+        "search, the brief becomes a checklist of what to look up and where. Use explore_opportunity instead to judge fit " +
+        "for a specific posting.",
       inputSchema: {
         company: z.string().describe("Company name"),
         role: z.string().optional().describe("The role you're targeting"),
@@ -160,12 +165,16 @@ ${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
 **My target criteria (from Career KB):**
 ${profile ? `- Target roles: ${profile.targetRoles.join(", ") || "Not specified"}
 - Target industries: ${profile.targetIndustries.join(", ") || "Not specified"}
-- Remote preference: ${(profile.openToRemote ?? true) ? "Open to remote" : "Prefers onsite"}` : "Career KB not loaded"}
+- Open to remote: ${profile.openToRemote === undefined ? "not set" : profile.openToRemote ? "yes" : "no"}` : "Career KB not loaded"}
 
 ---
 
 **Instructions for Claude:**
-Use web search to build a comprehensive company brief covering:
+If you have web search, use it for this brief and cite where each fact came from. If you
+don't, say so in one line and turn each section below into what to check and where, plus
+the questions to ask in the interview, instead of answering from memory. Lead with the two
+or three things that matter most for this role, then the sections. Skip a section rather
+than pad it.
 
 ### 1. Company Overview
 - What they do (product/service, customer, business model)
@@ -193,7 +202,10 @@ Use web search to build a comprehensive company brief covering:
 - Risks: stability, runway, market position
 
 ### 6. Conversation Starters
-5 things I can mention in interviews that show I've done my homework.`,
+Up to 5 things I can mention in interviews that show I've done my homework, each tied to a
+fact you sourced above.
+
+${COMPANY_FACTS_RULE}`,
         }],
       };
     }
