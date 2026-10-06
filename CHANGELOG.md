@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.9.7 — 2026-10-06
 
 ### Changed
 
