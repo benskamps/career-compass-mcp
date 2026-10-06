@@ -501,7 +501,7 @@ Using the complete Career KB above, generate a tailored resume:
 - Mark anything that needs my confirmation with a [confirm: ...] placeholder
 - Industry-agnostic: use the posting's vocabulary, not my previous employer's
 
-Output the full resume text, then a "Keyword Match Report" showing which posting requirements are covered and which aren't.
+Output the full resume text first, ready to copy, then a short "Keyword Match Report" showing which posting requirements are covered and which aren't, then any [confirm: ...] questions in one list.
 
 **Truth rule (applies to everything you write about me):**
 - Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".

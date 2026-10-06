@@ -99,7 +99,7 @@ ${format === "functional" ? `1. Header
 - Mark anything that needs my confirmation with a [confirm: ...] placeholder
 - Industry-agnostic: use the posting's vocabulary, not my previous employer's
 
-Output the full resume text, then a "Keyword Match Report" showing which posting requirements are covered and which aren't.
+Output the full resume text first, ready to copy, then a short "Keyword Match Report" showing which posting requirements are covered and which aren't, then any [confirm: ...] questions in one list.
 
 ${TRUTH_RULE}`,
         }],

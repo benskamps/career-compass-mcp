@@ -35,3 +35,18 @@ export function formatCredentials(career: CareerData): string {
     return parts.join("\n");
   }).join("\n") || "- None listed";
 }
+
+/** Projects with what the user did and what came of it, as stored. */
+export function formatProjects(career: CareerData, max = 6): string {
+  return career.projects.slice(0, max).map(p => {
+    const facts = [...p.metrics, ...p.outcomes].join("; ");
+    return `- **${p.name}** (${p.role}): ${p.description.replace(/\s+/g, " ").trim()}${facts ? ` Results: ${facts}` : ""}`;
+  }).join("\n") || "- None listed";
+}
+
+/** What other people said, verbatim, with who said it. */
+export function formatTestimonials(career: CareerData, max = 5): string {
+  return career.testimonials.slice(0, max).map(t =>
+    `- ${t.source} (${t.relationship}): "${t.quote}"${t.context ? ` (on ${t.context})` : ""}`,
+  ).join("\n") || "- None recorded";
+}

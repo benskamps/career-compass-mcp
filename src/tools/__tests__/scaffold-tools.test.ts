@@ -255,6 +255,21 @@ describe("prepare_interview", () => {
   });
 });
 
+describe("prepare_interview context", () => {
+  // Prep used to inline the whole Career KB as JSON: phone, email and salary
+  // floor included, about 10 KB of tokens the prep never used. It now gets the
+  // same compact, employer-tagged context the other tools use.
+  it("carries the evidence but not contact details or the salary floor", async () => {
+    usePopulated();
+    const text = await callText(client, "prepare_interview", { company: "Veridian Health", interviewType: "panel" });
+    expect(text).toContain("Alex Rivera");
+    expect(text).toContain("## Roles and scope");
+    expect(text).not.toContain("alex.rivera@email.com");
+    expect(text).not.toContain("555-0142");
+    expect(text).not.toContain("salaryMin");
+  });
+});
+
 describe("evaluate_offer", () => {
   it("merges company/role from the pipeline application (read-only)", async () => {
     usePopulated();

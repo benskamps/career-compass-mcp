@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed
+
+- **Answers come first.** Fit checks open with one line in the same words the skill
+  uses (Strong fit, Stretch, or Long shot), the score and the biggest reason. Offer
+  reviews open with the recommendation and the first thing to negotiate, résumés with
+  the résumé itself. "Day in the life" runs only when asked. The `daily-review` prompt
+  now leads with the digest's single start-here move, like `/career-compass:today`.
+- **Interview prep sends less about you.** `prepare_interview` used to paste the whole
+  Career KB as JSON, including your phone, email and salary floor. It now gets your
+  roles, achievements, projects, credentials, skills and testimonials, the same compact
+  form the other tools use, at about 40% fewer tokens.
+
 ### Fixed
 
 - **Company research no longer fills gaps from memory.** `research_company` told Claude

@@ -177,7 +177,7 @@ Start by calling \`pipeline_view\` with action \`next_actions\` (overdue follow-
 ${focus ? `\n**Weight this today:**\n${embedUntrusted("user focus", focus)}\n` : ""}
 Then give me:
 
-1. **Do first** — the 1–3 highest-leverage moves for today, each with why-now and the concrete next step
+1. **Start here** — the digest's single start-here move, why now, and its concrete first step; offer to do that step with me
 2. **Overdue** — anything past its follow-up date, oldest first (name the company, role, and how many days)
 3. **On the horizon** — interviews in the next few days and any offer clocks running down
 4. **Quiet wins** — anything I can close or advance in five minutes

@@ -5,7 +5,8 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
-import { COMPANY_FACTS_RULE, MARKET_DATA_RULE, TRUTH_RULE } from "./truth-rule.js";
+import { COMPANY_FACTS_RULE, MARKET_DATA_RULE, RESPONSE_SHAPE, TRUTH_RULE } from "./truth-rule.js";
+import { formatCredentials, formatProjects, formatRoles, formatTestimonials } from "./career-context.js";
 import type { Application, CareerData, InterviewRound, JournalEntry, Pipeline } from "../schemas/career-schema.js";
 
 export function registerInterviewTools(server: McpServer): void {
@@ -98,8 +99,23 @@ ${focusAreas ? `**Focus areas:**\n${embedUntrusted("focus areas", focusAreas)}` 
 ## Career Highlights (for STAR stories)
 ${achievements.map(a => `- **${a.role} @ ${a.company}**: ${a.metric} — ${a.context} → ${a.impact}`).join("\n")}
 
-## Full Career KB
-${JSON.stringify(career, null, 2)}
+## Candidate
+${career.profile.name}${career.profile.summary ? `: ${career.profile.summary.replace(/\s+/g, " ").trim()}` : ""}
+
+## Roles and scope
+${formatRoles(career, 8)}
+
+## Projects
+${formatProjects(career)}
+
+## Education and certifications
+${formatCredentials(career)}
+
+## Skills
+${career.skills.map(s => s.name).join(", ") || "None listed"}
+
+## What others have said
+${formatTestimonials(career)}
 
 ${formatSignalDigest(career.journal)}
 ${postingText ? `## Job Posting\n${embedUntrusted("cached job posting", postingText)}` : ""}
@@ -146,6 +162,8 @@ Non-obvious connections between real items in my history and their world, things
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
 
 Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+${RESPONSE_SHAPE}
 
 ${COMPANY_FACTS_RULE}
 
@@ -391,6 +409,8 @@ If base is firm, what else to ask for:
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
 Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.
 
+${RESPONSE_SHAPE}
+
 ${MARKET_DATA_RULE}
 
 ${TRUTH_RULE}`,
@@ -507,7 +527,7 @@ function buildTimeline(rounds: InterviewRound[], journal: JournalEntry[]): strin
 /**
  * Compact career context for the arc projection.
  *
- * Deliberately not the `JSON.stringify(career)` dump `prepare_interview` uses:
+ * Deliberately not a `JSON.stringify(career)` dump (prepare_interview used one until 2.9.7):
  * projecting the next round needs the evidence (achievements, skills, targets),
  * not the legal name, phone number and salary floor. Less to leak, and a
  * shorter, better-attended prompt.
