@@ -13,6 +13,10 @@
   Career KB as JSON, including your phone, email and salary floor. It now gets your
   roles, achievements, projects, credentials, skills and testimonials, the same compact
   form the other tools use, at about 40% fewer tokens.
+- **First replies end shorter.** After a fit check, the skill now asks at most two
+  questions and makes one offer of the next step, instead of a list of questions and a
+  menu. When only a posting is pasted, the main ask is the résumé. When nothing is
+  tracked yet, "what should I work on today" asks for one role to track.
 
 ### Fixed
 
