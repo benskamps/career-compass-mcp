@@ -28,6 +28,7 @@ Write a rejection response that achieves: **keep_door_open**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
 
 
 **For goal: keep_door_open:**
@@ -40,3 +41,5 @@ Express appreciation, mention you'd welcome future opportunities, leave a positi
 1. **Recommended response** (ready to send)
 2. **Alternative version** (different angle)
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
+
+Lead with the recommended response, ready to copy; keep any commentary to one line after the drafts.

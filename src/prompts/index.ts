@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { embedUntrusted } from "../untrusted.js";
+import { COMPANY_FACTS_RULE, MARKET_DATA_RULE, TRUTH_RULE } from "../tools/truth-rule.js";
 
 export function registerPrompts(server: McpServer): void {
 
@@ -39,8 +40,11 @@ ${notes ? `**Special instructions:**\n${embedUntrusted("user notes", notes)}` : 
 - Be truthful — only include things from my actual career history
 - Surface transferable skills even if the industry differs
 - Flag any gaps honestly but frame positively
+- Mark anything that needs my confirmation with a [confirm: ...] placeholder
 
-Start by reading career://full, then produce the complete resume.`,
+Start by reading career://full, then produce the complete resume.
+
+${TRUTH_RULE}`,
         },
       }],
     })
@@ -70,21 +74,25 @@ Start by reading career://full, then produce the complete resume.`,
 **Company:** ${company}
 **Role:** ${role}
 **Interview type:** ${interviewType}
-${interviewerInfo ? `**Interviewer:** ${interviewerInfo}` : ""}
+${interviewerInfo ? `**Interviewer:**\n${embedUntrusted("interviewer info", interviewerInfo)}` : ""}
 ${applicationId ? `**Application ID:** ${applicationId} (read career://pipeline/${applicationId} for context)` : ""}
 ${notes ? `**Additional context:**\n${embedUntrusted("user notes", notes)}` : ""}
 
 Please read career://full for my background, then provide:
 
 1. **Opening pitch** — A 90-second "tell me about yourself" tailored to this role
-2. **STAR stories** — 5-7 stories from my experience matched to likely questions for this role/interview type
+2. **STAR stories** — 3-5 stories from my real experience, written out in full, matched to likely questions for this role/interview type; results copied exactly, with [confirm: ...] where the KB has no number
 3. **Likely questions** — Top 10 questions for this company/role, with suggested angles from my background
-4. **Company intelligence** — What I should know about their product, culture, and current priorities
+4. **Company intelligence** — What I should know about their product, culture, and current priorities, from sources you can name (see the company facts rule)
 5. **Questions to ask them** — 5 thoughtful questions that show genuine interest and insight
 6. **Bridge topics** — Where my background unexpectedly connects to their world
 7. **Watch-outs** — Any gaps or concerns to prepare for, with reframe strategies
 
-Be specific. Don't give generic advice — connect everything back to my actual career history.`,
+Be specific. Don't give generic advice — connect everything back to my actual career history.
+
+${COMPANY_FACTS_RULE}
+
+${TRUTH_RULE}`,
         },
       }],
     })
@@ -119,19 +127,23 @@ ${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
 ${embedUntrusted("offer details", offerDetails)}
 
 ${marketData ? `**My market research:**\n${embedUntrusted("market data", marketData)}` : ""}
-${priorities ? `**My priorities:** ${priorities}` : ""}
+${priorities ? `**My priorities:**\n${embedUntrusted("priorities", priorities)}` : ""}
 
 Please provide:
 
 1. **Offer analysis** — Break down total compensation (base + bonus + equity + benefits), annualized
-2. **Market comparison** — How this compares to market for this role/level/location
+2. **Market comparison** — ${marketData ? "How this compares to the market research above, citing it" : "No market research was given, so don't state benchmarks; say where to get them and compare against my priorities instead"}
 3. **Negotiation strategy** — What to push on, in what order, and why
-4. **Opening script** — Exact words to use when countering
+4. **Opening script** — Exact words to use when countering, resting only on reasons that are true for me
 5. **Concession plan** — What to give up if they push back, and what to hold firm on
 6. **Alternative asks** — Non-salary items to request if base is fixed (signing bonus, equity cliff, remote days, title)
 7. **Roleplay** — Play the hiring manager responding to my counter, then coach me through it
 
-Then ask me if I want to do a full negotiation roleplay.`,
+Then ask me if I want to do a full negotiation roleplay.
+
+${MARKET_DATA_RULE}
+
+${TRUTH_RULE}`,
         },
       }],
     })
@@ -165,7 +177,7 @@ Start by calling \`pipeline_view\` with action \`next_actions\` (overdue follow-
 ${focus ? `\n**Weight this today:**\n${embedUntrusted("user focus", focus)}\n` : ""}
 Then give me:
 
-1. **Do first** — the 1–3 highest-leverage moves for today, each with why-now and the concrete next step
+1. **Start here** — the digest's single start-here move, why now, and its concrete first step; offer to do that step with me
 2. **Overdue** — anything past its follow-up date, oldest first (name the company, role, and how many days)
 3. **On the horizon** — interviews in the next few days and any offer clocks running down
 4. **Quiet wins** — anything I can close or advance in five minutes
@@ -279,7 +291,7 @@ ${resumeText ? `**Here's my existing résumé — extract what you can:**\n${emb
 **Rules:**
 - Save each section as we go — don't wait until the end
 - Ask clarifying questions to pull out quantified achievements (numbers, percentages, timelines)
-- If I give vague descriptions, push me for the metric and the impact
+- If I give vague descriptions, push me for the metric and the impact, but never fill one in for me: save only what I confirm
 - After we finish, run \`check_setup\` to confirm everything landed
 
 Let's start with my profile.`,

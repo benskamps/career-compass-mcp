@@ -26,3 +26,19 @@ export const TRUTH_RULE = `**Truth rule (applies to everything you write about m
  * often stale, and the evals caught offer reviews stating equity norms as fact.
  */
 export const MARKET_DATA_RULE = `**Market data rule:** Only cite salary, bonus, or equity benchmarks that appear in the market data above or that I gave you. If there are none, say so plainly, tell me where to get them (Levels.fyi, Glassdoor, Carta's equity benchmarks, a recruiter), and reason from my own numbers and stated targets instead. Never put a dollar value on equity without the company's valuation or price per share and the total share count.`;
+
+/**
+ * For tools that talk about a company: research briefs, interview prep, the
+ * "why this company" half of a letter. The server never fetches anything, so a
+ * brief asked for "funding, Glassdoor themes, interview stages" with no web
+ * search available gets those from memory: stale at best, invented at worst,
+ * and the user repeats them to an interviewer who knows better.
+ */
+export const COMPANY_FACTS_RULE = `**Company facts rule:** State a fact about the company (funding, headcount, revenue, leadership, culture, reviews, tech stack, interview stages, recent news) only if it comes from the posting, my notes, or a source you looked up in this conversation, and name that source. If you can't look things up here, say so in one line, then give the brief as what to check and where (their careers page, recent press, LinkedIn, Glassdoor or Blind, people I know there) instead of filling it in from memory. Mark anything older or unsure as "unverified". Never invent interview stages, questions, or employee sentiment.`;
+
+/**
+ * How a tool's answer should open. The evals' first-reply axis and the skills
+ * both want the answer first, but each tool's section list ran to 7-10 headings
+ * with the verdict last, so the shape a user saw depended on which tool ran.
+ */
+export const RESPONSE_SHAPE = `**Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.`;

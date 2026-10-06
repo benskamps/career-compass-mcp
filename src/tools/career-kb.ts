@@ -159,10 +159,16 @@ ${embedUntrusted("uploaded document", content)}
 ---
 
 **Instructions for Claude:**
-Extract structured career data from this document. Produce output in two formats:
+Extract structured career data from this document. Extract only what it says: copy numbers
+and wording exactly, and never fill a field the document doesn't support. A metric the
+document doesn't give is \`"[confirm: metric?]"\`, not an estimate. Leave proficiency out
+unless the document rates the skill. A recommendation's quote must be verbatim.
+
+Produce output in two formats:
 
 ### 1. Human-Readable Summary
-What are the key achievements, skills, and attributes this document reveals?
+What are the key achievements, skills, and attributes this document states? Then list the
+two or three vaguest claims as questions to ask me (team size, a number, my exact part).
 
 ### 2. Career KB YAML Block
 Extract into YAML format ready to add to the Career KB:
@@ -173,9 +179,9 @@ experience_entry:
   role: "${associatedRole ?? "Unknown"}"
   company: "${associatedCompany ?? "Unknown"}"
   achievements:
-    - metric: "[quantified outcome]"
-      context: "[situation or task]"
-      impact: "[why it mattered]"
+    - metric: "[the outcome, exactly as the document states it]"
+      context: "[situation or task, from the document]"
+      impact: "[why it mattered, only if the document says]"
       keywords: []
     # ... additional achievements
 
@@ -192,7 +198,7 @@ List any skills surfaced by this document that may not be in the Career KB:
 skills:
   - name: "[skill]"
     category: "[Technical/Leadership/Domain/etc]"
-    proficiency: [1-5]
+    # proficiency: only if the document rates it
 \`\`\`
 
 ### 4. Keywords Extracted
@@ -227,9 +233,10 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
       // drafting tool. Passing applicationId also writes the pipeline, and the
       // description is where that has to be said.
       description:
-        "Craft a graceful rejection response that keeps the door open, maintains relationships, and " +
-        "positions you for future opportunities. If you pass applicationId, this also sets that " +
-        "application's status to `rejected` in your pipeline — it does not only write a draft.",
+        "Draft a short reply to a rejection the user received: keep the door open, ask for feedback, or decline " +
+        "politely, plus an alternative and a LinkedIn note. If you pass applicationId, this also sets that " +
+        "application's status to `rejected` in your pipeline — it does not only write a draft. Leave applicationId " +
+        "out when the user only wants the words.",
       inputSchema: {
         // Optional. Not completable — see the note in pipeline.ts and
         // src/completions.ts: MCP completions do not reach tool arguments.
@@ -304,7 +311,8 @@ Write a rejection response that achieves: **${responseGoal}**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
-${hadGoodRapport ? "- Reference the positive experience you had — make it personal" : ""}
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
+${hadGoodRapport ? "- Reference the positive experience, using a specific detail only if the message or I gave one; otherwise keep it general" : ""}
 
 **For goal: ${responseGoal}:**
 ${responseGoal === "keep_door_open" ? "Express appreciation, mention you'd welcome future opportunities, leave a positive final impression" : ""}
@@ -316,6 +324,8 @@ ${responseGoal === "express_continued_interest" ? "Mention the company is still 
 1. **Recommended response** (ready to send)
 2. **Alternative version** (different angle)
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
+
+Lead with the recommended response, ready to copy; keep any commentary to one line after the drafts.
 
 ${statusUpdated
   ? `

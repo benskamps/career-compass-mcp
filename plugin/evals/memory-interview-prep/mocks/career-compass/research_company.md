@@ -6,12 +6,16 @@
 **My target criteria (from Career KB):**
 - Target roles: Program Manager, Director of Operations, Head of Customer Success, Chief of Staff
 - Target industries: Healthcare Technology, SaaS, Logistics, Fintech
-- Remote preference: Open to remote
+- Open to remote: yes
 
 ---
 
 **Instructions for Claude:**
-Use web search to build a comprehensive company brief covering:
+If you have web search, use it for this brief and cite where each fact came from. If you
+don't, say so in one line and turn each section below into what to check and where, plus
+the questions to ask in the interview, instead of answering from memory. Lead with the two
+or three things that matter most for this role, then the sections. Skip a section rather
+than pad it.
 
 ### 1. Company Overview
 - What they do (product/service, customer, business model)
@@ -39,4 +43,7 @@ Use web search to build a comprehensive company brief covering:
 - Risks: stability, runway, market position
 
 ### 6. Conversation Starters
-5 things I can mention in interviews that show I've done my homework.
+Up to 5 things I can mention in interviews that show I've done my homework, each tied to a
+fact you sourced above.
+
+**Company facts rule:** State a fact about the company (funding, headcount, revenue, leadership, culture, reviews, tech stack, interview stages, recent news) only if it comes from the posting, my notes, or a source you looked up in this conversation, and name that source. If you can't look things up here, say so in one line, then give the brief as what to check and where (their careers page, recent press, LinkedIn, Glassdoor or Blind, people I know there) instead of filling it in from memory. Mark anything older or unsure as "unverified". Never invent interview stages, questions, or employee sentiment.

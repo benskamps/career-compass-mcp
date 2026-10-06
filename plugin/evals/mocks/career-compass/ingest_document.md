@@ -20,10 +20,16 @@ END_UNTRUSTED_0E7A1C55>>>
 ---
 
 **Instructions for Claude:**
-Extract structured career data from this document. Produce output in two formats:
+Extract structured career data from this document. Extract only what it says: copy numbers
+and wording exactly, and never fill a field the document doesn't support. A metric the
+document doesn't give is `"[confirm: metric?]"`, not an estimate. Leave proficiency out
+unless the document rates the skill. A recommendation's quote must be verbatim.
+
+Produce output in two formats:
 
 ### 1. Human-Readable Summary
-What are the key achievements, skills, and attributes this document reveals?
+What are the key achievements, skills, and attributes this document states? Then list the
+two or three vaguest claims as questions to ask me (team size, a number, my exact part).
 
 ### 2. Career KB YAML Block
 Extract into YAML format ready to add to the Career KB:
@@ -34,9 +40,9 @@ experience_entry:
   role: "Unknown"
   company: "Unknown"
   achievements:
-    - metric: "[quantified outcome]"
-      context: "[situation or task]"
-      impact: "[why it mattered]"
+    - metric: "[the outcome, exactly as the document states it]"
+      context: "[situation or task, from the document]"
+      impact: "[why it mattered, only if the document says]"
       keywords: []
     # ... additional achievements
 
@@ -53,7 +59,7 @@ List any skills surfaced by this document that may not be in the Career KB:
 skills:
   - name: "[skill]"
     category: "[Technical/Leadership/Domain/etc]"
-    proficiency: [1-5]
+    # proficiency: only if the document rates it
 ```
 
 ### 4. Keywords Extracted

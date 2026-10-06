@@ -5,7 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
-import { TRUTH_RULE } from "./truth-rule.js";
+import { COMPANY_FACTS_RULE, RESPONSE_SHAPE, TRUTH_RULE } from "./truth-rule.js";
 import type { CareerData } from "../schemas/career-schema.js";
 import { formatRoles, formatAchievements, formatCredentials } from "./career-context.js";
 
@@ -76,8 +76,10 @@ default, do not reason as if the answer were "no", and do not let it move the fi
 either direction. Name what is missing and ask for it. Inventing a preference and then
 ruling a job out on it is the exact failure this tool exists to prevent.
 
+**Open your reply with one line:** the verdict in exactly these words, **Strong fit**, **Stretch**, or **Long shot**, then the score and the single biggest reason. The user decides from that line; everything below is the evidence.
+
 ### 1. Fit Score (X/10)
-Overall match with a one-line rationale. Score against the *whole* contract: a role that
+Overall match with a one-line rationale. Strong fit is roughly 8-10, stretch 5-7, long shot below 5. Score against the *whole* contract: a role that
 matches on skills but misses the salary floor or the location constraint is not an 8.
 
 ### 2. Compensation Check
@@ -111,13 +113,15 @@ ${sourceFitLabel
 5 things to lead with in conversations about this role, framing the background in their language.
 
 ### 8. Day in the Life
-Based on the posting, describe the first 90 days and a typical week in this role. What problems would they own? What would success look like?
+Only if the user asked what the job would be like: the first 90 days and a typical week, from what the posting says. Otherwise skip this section.
 
 ### 9. Red Flags / Questions
 Anything in the posting that warrants clarification or concern.
 
 ### 10. Verdict
 Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
+
+${RESPONSE_SHAPE}
 
 ${TRUTH_RULE}`,
         }],
@@ -136,7 +140,12 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals.",
+      description:
+        "Set up a research brief on a company the user is applying to or interviewing with: what it does, stage, culture, " +
+        "interview process, and how it fits the user's target roles. The server does not browse; it returns the brief's " +
+        "outline plus the user's targets, and you fill it from web search when you have it, citing sources. Without web " +
+        "search, the brief becomes a checklist of what to look up and where. Use explore_opportunity instead to judge fit " +
+        "for a specific posting.",
       inputSchema: {
         company: z.string().describe("Company name"),
         role: z.string().optional().describe("The role you're targeting"),
@@ -160,12 +169,16 @@ ${applicationId ? `**Application:** career://pipeline/${applicationId}` : ""}
 **My target criteria (from Career KB):**
 ${profile ? `- Target roles: ${profile.targetRoles.join(", ") || "Not specified"}
 - Target industries: ${profile.targetIndustries.join(", ") || "Not specified"}
-- Remote preference: ${(profile.openToRemote ?? true) ? "Open to remote" : "Prefers onsite"}` : "Career KB not loaded"}
+- Open to remote: ${profile.openToRemote === undefined ? "not set" : profile.openToRemote ? "yes" : "no"}` : "Career KB not loaded"}
 
 ---
 
 **Instructions for Claude:**
-Use web search to build a comprehensive company brief covering:
+If you have web search, use it for this brief and cite where each fact came from. If you
+don't, say so in one line and turn each section below into what to check and where, plus
+the questions to ask in the interview, instead of answering from memory. Lead with the two
+or three things that matter most for this role, then the sections. Skip a section rather
+than pad it.
 
 ### 1. Company Overview
 - What they do (product/service, customer, business model)
@@ -193,7 +206,10 @@ Use web search to build a comprehensive company brief covering:
 - Risks: stability, runway, market position
 
 ### 6. Conversation Starters
-5 things I can mention in interviews that show I've done my homework.`,
+Up to 5 things I can mention in interviews that show I've done my homework, each tied to a
+fact you sourced above.
+
+${COMPANY_FACTS_RULE}`,
         }],
       };
     }

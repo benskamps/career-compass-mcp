@@ -131,6 +131,18 @@ describe("research_company", () => {
     expect(text).toContain("Program Manager"); // profile.targetRoles inlined
   });
 
+  // The server never browses. Asked for funding, review themes and interview
+  // stages with no search available, a model answers from memory, so the brief
+  // has to say what to do then, and the user's unanswered remote question must
+  // read "not set", never a default "open to remote".
+  it("carries the company facts rule and a fallback for when nothing can be looked up", async () => {
+    useEmpty();
+    const text = await callText(client, "research_company", { company: "Acme" });
+    expect(text).toContain("Company facts rule");
+    expect(text).toMatch(/If you\s+don't, say so/);
+    expect(text).not.toContain("Use web search to build a comprehensive company brief");
+  });
+
   it("degrades to 'Career KB not loaded' (not an error) when the KB is absent", async () => {
     useEmpty();
     const text = await callText(client, "research_company", { company: "Acme" });
@@ -243,6 +255,21 @@ describe("prepare_interview", () => {
   });
 });
 
+describe("prepare_interview context", () => {
+  // Prep used to inline the whole Career KB as JSON: phone, email and salary
+  // floor included, about 10 KB of tokens the prep never used. It now gets the
+  // same compact, employer-tagged context the other tools use.
+  it("carries the evidence but not contact details or the salary floor", async () => {
+    usePopulated();
+    const text = await callText(client, "prepare_interview", { company: "Veridian Health", interviewType: "panel" });
+    expect(text).toContain("Alex Rivera");
+    expect(text).toContain("## Roles and scope");
+    expect(text).not.toContain("alex.rivera@email.com");
+    expect(text).not.toContain("555-0142");
+    expect(text).not.toContain("salaryMin");
+  });
+});
+
 describe("evaluate_offer", () => {
   it("merges company/role from the pipeline application (read-only)", async () => {
     usePopulated();
@@ -252,6 +279,21 @@ describe("evaluate_offer", () => {
     });
     expect(text).toContain("Offer Evaluation: Director of Operations at Veridian Health");
     expect(text).toContain("Base $170k");
+  });
+
+  // The old counter script opened "I've done some research on market rates" on
+  // every offer, so a user with no research was handed a false sentence to say.
+  it("never scripts a market-research claim the user did not make", async () => {
+    usePopulated();
+    const bare = await callText(client, "evaluate_offer", { offerDetails: "Base $142k, 10% bonus." });
+    expect(bare).not.toMatch(/done some research on market rates/i);
+    expect(bare).toContain("must not claim I researched market rates");
+    expect(bare).not.toMatch(/assign approximate \$ values/i);
+    const withData = await callText(client, "evaluate_offer", {
+      offerDetails: "Base $142k.",
+      marketData: "Levels.fyi: $150-165k for this level.",
+    });
+    expect(withData).toContain("the market data above");
   });
 });
 

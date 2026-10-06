@@ -39,6 +39,15 @@ first. Do not make them build a KB before they see anything.
    with `save_career_section`; the user approves each write.
 4. If they applied or plan to, offer `pipeline_add` so the role is tracked.
 
+Keep the end of a first reply short: after the answer, ask at most two questions (the ones
+that would change the verdict or the draft most) and make one offer of the next step, not a
+menu of everything you could do.
+
+If they pasted only a posting, there is no verdict to give yet, so the résumé is the ask:
+"Paste your résumé (or LinkedIn experience) and I'll give you a verdict." You can add a
+short read of what the posting screens for. Besides the résumé, ask one short question at
+most, and no numbered list of questions.
+
 When the user arrives with no specific ask ("what does this do?", "get me started"), give
 three things they can try right now, in their words:
 
@@ -101,7 +110,7 @@ user's voice: résumé bullets, cover letters, and interview answers.
 | Learn about a company | `research_company` |
 | Apply | `tailor_resume`, then `generate_cover_letter`; `format_for_ats` for a specific ATS. With a saved KB, `generate_cover_letter` works without a posting (it uses the pipeline's), so draft first and offer to sharpen it with the posting after |
 | Track an application | `pipeline_add` for a new one, `pipeline_update` to change status, notes, follow-ups, contacts, or interview rounds |
-| See what needs attention | `pipeline_view` with `action: "next_actions"`: a ranked digest led by one "Start here" move. Lead with that move and offer to do its first step |
+| See what needs attention | `pipeline_view` with `action: "next_actions"`: a ranked digest led by one "Start here" move. Lead with that move and offer to do its first step. If nothing is tracked, say so in one line and ask for one role to track (a posting they're weighing or an application already sent). That is the whole reply: no feature list and no second question |
 | Make sense of a recruiter email | `classify_email`, then offer the pipeline update it suggests |
 | Prepare for an interview | `prepare_interview`; mid-process, `interview_arc` to project the next round |
 | Weigh an offer | `evaluate_offer` |
@@ -144,4 +153,4 @@ record it with `pipeline_update` instead of leaving the pipeline stale.
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.9.6 dashboard`.
+`npx -y career-compass-mcp@2.9.7 dashboard`.

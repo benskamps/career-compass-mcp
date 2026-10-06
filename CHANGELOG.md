@@ -1,5 +1,47 @@
 # Changelog
 
+## 2.9.7 — 2026-10-06
+
+### Changed
+
+- **Answers come first.** Fit checks open with one line in the same words the skill
+  uses (Strong fit, Stretch, or Long shot), the score and the biggest reason. Offer
+  reviews open with the recommendation and the first thing to negotiate, résumés with
+  the résumé itself. "Day in the life" runs only when asked. The `daily-review` prompt
+  now leads with the digest's single start-here move, like `/career-compass:today`.
+- **Interview prep sends less about you.** `prepare_interview` used to paste the whole
+  Career KB as JSON, including your phone, email and salary floor. It now gets your
+  roles, achievements, projects, credentials, skills and testimonials, the same compact
+  form the other tools use, at about 40% fewer tokens.
+- **First replies end shorter.** After a fit check, the skill now asks at most two
+  questions and makes one offer of the next step, instead of a list of questions and a
+  menu. When only a posting is pasted, the main ask is the résumé. When nothing is
+  tracked yet, "what should I work on today" asks for one role to track.
+
+### Fixed
+
+- **Company research no longer fills gaps from memory.** `research_company` told Claude
+  to "use web search" even where there is none, so briefs could state funding, review
+  scores and interview stages that came from nowhere. It now cites a source for each
+  company fact, or, without search, turns the brief into what to check and where. It
+  also stopped printing "Open to remote" for users who never answered that question.
+- **Offer scripts no longer put words in your mouth.** `evaluate_offer`'s counter script
+  opened with "I've done some research on market rates" on every offer. The script now
+  rests on a reason that is true for you (your data, your targets, another offer), and
+  benefits get a dollar value only when the offer states one.
+- **Interview prep, document extraction, rejection replies, recruiter-email replies and
+  ATS formatting** now carry the same truth rule as the drafting tools: results copied
+  exactly or marked `[confirm: …]`, no invented metrics or proficiency ratings when
+  extracting a review, no invented interview details in a rejection reply, and the ATS
+  keyword check runs only when the posting is in the conversation. Interview prep opens
+  with a three-line summary and defaults to 3-5 STAR stories instead of 5-8.
+- **The six MCP prompts** (`resume-tailor`, `interview-coach`, `negotiation-coach`, and
+  the rest) predated the truth rule. The three that draft now carry it, and
+  `negotiation-coach` no longer asks for a market comparison when you gave no data.
+- Tool descriptions for `research_company`, `evaluate_offer`, `prepare_interview`,
+  `classify_email` and `generate_rejection_response` now say when to use each one and
+  what it writes.
+
 ## 2.9.6 — 2026-10-05
 
 ### Changed

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "career-compass-mcp",
   "display_name": "Career Compass",
-  "version": "2.9.6",
+  "version": "2.9.7",
   "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
   "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, score your fit, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The whole package makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and only happens when you ask for it (checkForUpdates is off by default). Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (pipeline KPIs, a kanban board by stage with a per-card detail drawer, a company/role filter, a next-actions panel for overdue follow-ups and upcoming interviews, and a stage-distribution chart) that re-reads your YAML on every request.",
   "author": {
@@ -40,7 +40,7 @@
     },
     {
       "name": "research_company",
-      "description": "Build an intelligence brief on a company: product, funding, culture, tech stack, interview process, and strategic fit with your goals."
+      "description": "Set up a research brief on a company the user is applying to or interviewing with: what it does, stage, culture, interview process, and how it fits the user's target roles. The server does not browse; it returns the brief's outline plus the user's targets, and you fill it from web search when you have it, citing sources. Without web search, the brief becomes a checklist of what to look up and where. Use explore_opportunity instead to judge fit for a specific posting."
     },
     {
       "name": "tailor_resume",
@@ -68,11 +68,11 @@
     },
     {
       "name": "classify_email",
-      "description": "Classify a job-search-related email and extract structured data: type, company, role, contact, next action, and urgency."
+      "description": "Read a job-search email the user pasted (recruiter outreach, interview invite, assessment, rejection, offer) and extract its type, company, role, contact, dates, urgency, and next action, matched against applications already in the pipeline, with a short reply draft. Writes nothing: any pipeline change it suggests goes through pipeline_update after the user agrees."
     },
     {
       "name": "prepare_interview",
-      "description": "Generate comprehensive interview prep: STAR stories, likely questions, company alignment, and bridge topics \u2014 tailored to interview type."
+      "description": "Prep the user for one upcoming interview: an opening pitch, STAR stories built from their real Career KB, likely questions for that round, questions to ask, and the concerns to get ahead of. Finds the application by id or company name and uses its posting, rounds, and contacts. For a later round in a process already under way, call interview_arc too so the prep doesn't repeat ground covered. Writes nothing."
     },
     {
       "name": "interview_arc",
@@ -80,7 +80,7 @@
     },
     {
       "name": "evaluate_offer",
-      "description": "Analyze a job offer: break down total compensation, compare to market, build negotiation strategy, and draft counter scripts."
+      "description": "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their current pay, stated targets, other offers, and any market data they supply, then what to negotiate and the exact words. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing."
     },
     {
       "name": "ingest_document",
@@ -88,7 +88,7 @@
     },
     {
       "name": "generate_rejection_response",
-      "description": "Craft a graceful rejection response that keeps the door open, maintains relationships, and positions you for future opportunities. If you pass applicationId, this also sets that application's status to `rejected` in your pipeline \u2014 it does not only write a draft."
+      "description": "Draft a short reply to a rejection the user received: keep the door open, ask for feedback, or decline politely, plus an alternative and a LinkedIn note. If you pass applicationId, this also sets that application's status to `rejected` in your pipeline \u2014 it does not only write a draft. Leave applicationId out when the user only wants the words."
     },
     {
       "name": "capture_insight",
