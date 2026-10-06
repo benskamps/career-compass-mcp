@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -392,6 +392,21 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
       },
     });
     cpSync(join(here, "mocks", "kb"), join(dir, "mocks"), { recursive: true });
+    n++;
+  }
+  for (const c of ROUTING_CASES) {
+    const dir = writeCase(TOOLS_SUITE, c.id, {
+      description: `Routing: the ask should reach ${c.tool}, on Alex Rivera's saved KB.`,
+      prompt: c.ask, tags: ["routing", "quality"],
+      graders: {
+        "task--right-tool": { type: "tool_used", tool: `${MCP}${c.tool}`, min: 1 },
+        "task--routed-result": { type: "llm", weight: 2, body: `PASS if the reply gives ${c.expect}. FAIL otherwise.` },
+        "honesty--no-invented-facts": kbTruth,
+        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        "activation--skill-fired": skillFired,
+      },
+    });
+    cpSync(join(here, "mocks", c.mocks ?? "kb"), join(dir, "mocks"), { recursive: true });
     n++;
   }
   return n;
