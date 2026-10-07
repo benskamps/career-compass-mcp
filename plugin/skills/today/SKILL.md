@@ -2,6 +2,9 @@
 name: today
 description: See what needs attention in your job search today, such as follow-ups due, upcoming interviews, and stale applications, in priority order.
 disable-model-invocation: true
+# Read-only tools only (readOnlyHint: true); pipeline changes still ask every time.
+allowed-tools:
+  - mcp__plugin_career-compass_career-compass__pipeline_view
 ---
 
 The user wants today's job-search digest: the one thing to do first, then the rest.
@@ -17,9 +20,13 @@ The user wants today's job-search digest: the one thing to do first, then the re
   the exact `pipeline_update` and make it only after the user says yes.
 - If nothing is due, say so in one line, name the next thing coming up, and suggest one
   forward move such as tracking a new role. Don't invent work.
-- If the pipeline is empty, say so in one line, then ask for a job posting they're
-  considering or a role they've already applied to, and offer to track it with
-  `pipeline_add`. Nothing else.
+- If the pipeline is empty, say so in one line and ask: "Tell me the last three places you
+  applied, one line each." When they answer, show the `pipeline_add` calls as one batch,
+  make them after one yes, then give the first digest (`pipeline_view` `next_actions`) in
+  the same reply. Since these were their first applications, end with the career-compass
+  skill's one-time morning briefing offer.
+- If the search has ended in an accepted offer, offer the career-compass skill's landing
+  mode (this week's wins) instead of tracking new roles.
 - If the tools are not available, explain in one sentence that tracking needs Career
   Compass running in Claude Code or Cowork on their computer. Then offer to build today's
   list anyway from what they paste: each application's company, role, date applied and

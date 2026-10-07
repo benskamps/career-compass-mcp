@@ -2,7 +2,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { join } from "path";
-import { loadCareerData, saveCareerSection, mutateCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS } from "../storage/file-store.js";
+import { saveCareerSection, mutateCareerSection, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS, restoreCareerSection, isBackupRestoreError, type CareerSection } from "../storage/file-store.js";
 import { diffSection, losesData, describeDiff, type SectionDiff } from "./section-diff.js";
 import { Profile, Experience, Skill, Education, Project, Testimonial, NarrativeEntry, Story, Person } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
@@ -372,7 +372,8 @@ ${statusUpdated
         "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or " +
         "wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and résumés " +
         "read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, " +
-        "or an offer decision, and save only what the user said, with their OK.",
+        "or an offer decision, and save only with the user's OK. Set origin to user_said for what they said, or " +
+        "inferred for your own reading, which drafts then treat as a hypothesis.",
       inputSchema: {
         type: z.enum([
           "fit_signal",
@@ -398,9 +399,13 @@ ${statusUpdated
           "ingest_document",
           "manual",
         ]).default("manual").describe("Which surface produced this insight"),
+        origin: z.enum(["user_said", "inferred"]).optional().describe(
+          "user_said: the user stated this. inferred: it is your own reading of what they said or did. Inferred " +
+            "entries are kept, but later drafts treat them as hypotheses and never state them as facts about the user.",
+        ),
       },
     },
-    async ({ type, summary, detail, applicationId, company, role, signals, sentiment, source }) => {
+    async ({ type, summary, detail, applicationId, company, role, signals, sentiment, source, origin }) => {
       const entry: JournalEntry = {
         id: randomUUID().slice(0, 8),
         date: new Date().toISOString(),
@@ -413,6 +418,9 @@ ${statusUpdated
         signals,
         sentiment,
         source,
+        // Only stored when given: an entry with no origin is a legacy one, and
+        // stamping "user_said" on it here would claim something nobody checked.
+        ...(origin ? { origin } : {}),
       };
 
       let total: number;
@@ -467,6 +475,7 @@ ${statusUpdated
         role,
         applicationId && `\`${applicationId}\``,
         sentiment && `sentiment: ${sentiment}`,
+        origin === "inferred" && "kept as your inference: a hypothesis, never stated as fact in drafts",
       ].filter(Boolean).join(" · ");
 
       return {
@@ -502,7 +511,9 @@ ${statusUpdated
         "ingest_document and the resume tools only read and extract. Replaces the whole section, " +
         "so send the complete list you want stored, not just new entries. A save that would drop " +
         "stored entries or achievements is refused and names them, unless `replace` is true. " +
-        "The previous version is kept as a timestamped .bak next to it.",
+        "The previous version is kept as a timestamped .bak next to it. To undo a bad save, pass " +
+        "`restoreFrom` with a backup name that check_setup lists instead of `data`: the current file is " +
+        "backed up first, then that backup is put back. Writes to disk either way; use it only with the user's OK.",
       // Claude Code asks before every call to a tool marked this way, in every
       // permission mode. The skill promises "the user approves each write"; for
       // the one tool that replaces a whole section, that should hold in auto mode too.
@@ -521,11 +532,16 @@ ${statusUpdated
           z.record(z.string(), z.unknown()),
           z.array(z.unknown()),
           z.string(),
-        ]).describe(
+        ]).optional().describe(
           "The complete contents for this section — an object for 'profile', an array for every " +
-            "other section. Send it as structured JSON, not as a stringified blob. " +
-            "Shapes (? marks optional):\n\n" +
+            "other section. Send it as structured JSON, not as a stringified blob. Required unless " +
+            "`restoreFrom` is given. Shapes (? marks optional):\n\n" +
             SECTION_SHAPE_HELP,
+        ),
+        restoreFrom: z.string().optional().describe(
+          "Restore this section from one of its own backups instead of writing `data`: the exact backup file " +
+            "name as check_setup lists it, e.g. 'experience.yaml.2026-10-07T14-03-11-482Z.bak'. The current " +
+            "file is backed up first. Leave `data` out when you use this.",
         ),
         replace: z.boolean().optional().describe(
           "Set true only when the user has confirmed that entries should be removed, or that an " +
@@ -534,7 +550,32 @@ ${statusUpdated
         ),
       },
     },
-    async ({ section, data, replace }) => {
+    async ({ section, data, replace, restoreFrom }) => {
+      if (restoreFrom !== undefined) {
+        if (data !== undefined) {
+          return {
+            isError: true,
+            content: [{
+              type: "text",
+              text: "❌ Send either `data` (to write the section) or `restoreFrom` (to put a backup back), not both. Nothing was written.",
+            }],
+          };
+        }
+        return restoreSection(section, restoreFrom);
+      }
+      if (data === undefined) {
+        return {
+          isError: true,
+          content: [{
+            type: "text",
+            text:
+              `❌ \`data\` is missing, so nothing was written. Send the complete contents of \`${section}\`, ` +
+              `or pass \`restoreFrom\` with a backup name from check_setup to restore one.\n\n` +
+              `Expected \`${section}\`: ${SECTION_SHAPES[section]}`,
+          }],
+        };
+      }
+
       // Validate against the same schema the loader enforces, BEFORE touching
       // disk. Writing first and validating on read would let one bad write make
       // the whole KB unloadable — loadCareerData fails closed on a corrupt
@@ -643,6 +684,7 @@ ${statusUpdated
           type: "text",
           text:
             `✅ Saved **${section}** (${count} ${count === 1 ? "entry" : "entries"}) to \`${file}\`.${receipt}\n` +
+            whatSavingBought(section, parsed.data) +
             `The previous version is kept as a .bak next to it.\n\n` +
             `It's plain YAML — open it, edit it, or delete it any time. Nothing left your machine.`,
         }],
@@ -653,3 +695,69 @@ ${statusUpdated
 
 /** Thrown inside the section lock to abort a save that would lose data. */
 class SaveRefused extends Error {}
+
+/**
+ * The one line that says what an experience save made possible.
+ *
+ * "Saved experience (4 entries)" reads as filing. The point of saving is that
+ * the next fit check can quote real outcomes, and the ones with numbers are what
+ * a screener weighs — so say how many there now are. A metric "contains a
+ * number" when it has a digit; "cut onboarding from six weeks" does not count,
+ * which is honest: it's the version a reader skims past.
+ */
+export function whatSavingBought(section: string, data: unknown): string {
+  if (section !== "experience" || !Array.isArray(data)) return "";
+  const all = (data as Array<{ achievements?: Array<{ metric?: unknown }> }>)
+    .flatMap((e) => (Array.isArray(e.achievements) ? e.achievements : []));
+  const withNumbers = all.filter((a) => typeof a.metric === "string" && /\d/.test(a.metric)).length;
+  return `Next fit check can cite ${all.length} ${all.length === 1 ? "achievement" : "achievements"}, ${withNumbers} with numbers.\n`;
+}
+
+/**
+ * `save_career_section` with `restoreFrom`: put one of the section's own backups
+ * back. Restore used to be "open the folder and copy the .bak over the file",
+ * which no one who needs it can do. A parameter on the existing write tool, not a
+ * new tool: it is the same write, behind the same confirmation.
+ */
+async function restoreSection(section: CareerSection, backupName: string) {
+  const file = join(getDataDir(), "career", `${section}.yaml`);
+  let result: Awaited<ReturnType<typeof restoreCareerSection>>;
+  try {
+    result = await restoreCareerSection(section, backupName.trim());
+  } catch (error) {
+    if (isBackupRestoreError(error)) {
+      return {
+        isError: true,
+        content: [{
+          type: "text" as const,
+          text: `❌ Not restored: ${error.message} Your ${section}.yaml is untouched. Run check_setup to see the backups by time and entry count.`,
+        }],
+      };
+    }
+    if (isWriteClaimUnavailable(error) || isReadOnlyStore(error) || isCorruptDataError(error)) {
+      return { isError: true, content: [{ type: "text" as const, text: `❌ ${(error as Error).message}` }] };
+    }
+    return {
+      isError: true,
+      content: [{ type: "text" as const, text: `❌ Could not restore ${section}: ${(error as Error).message}` }],
+    };
+  }
+
+  const diff = result.previousUnreadable ? null : diffSection(section, result.previous, result.restored);
+  const count = Array.isArray(result.restored) ? result.restored.length : 1;
+  const before = result.previousUnreadable
+    ? "The file it replaced couldn't be read; "
+    : result.previous === null
+      ? "There was no current file; "
+      : "";
+  return {
+    content: [{
+      type: "text" as const,
+      text:
+        `✅ Restored **${section}** from \`${backupName.trim()}\` (${count} ${count === 1 ? "entry" : "entries"}) to \`${file}\`.` +
+        `${diff ? `\n${describeDiff(diff)}.` : ""}\n` +
+        whatSavingBought(section, result.restored) +
+        `${before}${before ? "it" : "The version it replaced"} is kept as a new .bak next to it, so this restore can be undone the same way.`,
+    }],
+  };
+}

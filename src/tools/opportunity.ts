@@ -26,29 +26,36 @@ export function registerOpportunityTools(server: McpServer): void {
         "remote or relocation, notice period). Returns a verdict (Strong fit, Stretch, or Long shot) with a score, " +
         "requirement-by-requirement evidence, the top gaps and how to address them, and talking points; if the user " +
         "pastes the job board's own match label, it agrees or disagrees with it explicitly. Use it whenever the user " +
-        "pastes a posting and asks whether to apply. With an empty Career KB it says so, so judge from a pasted résumé " +
-        "instead. Writes nothing.",
+        "pastes a posting and asks whether to apply. Before anything is saved, pass the résumé they pasted as `resume` " +
+        "and the verdict works from that. Writes nothing.",
       inputSchema: {
         posting: z.string().describe("Full job posting text, or paste the raw text from a job board"),
-        company: z.string().optional().describe("Company name (if not in posting)"),
+        company: z.string().optional().describe("Company name (if not in posting). Journal notes about this company are shown first."),
         notes: z.string().optional().describe("Any additional context about this opportunity"),
         sourceFitLabel: z.string().optional().describe("The fit label the job board showed, e.g. 'LinkedIn: strong match' or 'Indeed: 62% match' — the analysis will explicitly agree or disagree with it"),
+        resume: z.string().optional().describe(
+          "The résumé or background text the user pasted in this conversation. Used only when no Career KB with " +
+            "experience is saved yet, so a first fit check works before anything is saved.",
+        ),
       },
     },
-    async ({ posting, company, notes, sourceFitLabel }) => {
+    async ({ posting, company, notes, sourceFitLabel, resume }) => {
       const read = await guardedRead(() => loadCareerData());
       if (!read.ok) return read.response;
       const career = read.value;
-      if (!career) {
+      const fromPasted = workFromPastedResume(career, resume);
+      if (!career && !fromPasted) {
         return {
           content: [{
             type: "text",
-            text: noCareerDataMessage(),
+            text: noCareerDataMessage({ resumeParam: "resume" }),
           }],
         };
       }
 
-      const careerSummary = buildCareerSummary(career);
+      const careerSummary = fromPasted
+        ? buildPastedSummary(career, resume!)
+        : buildCareerSummary(career);
 
       return {
         content: [{
@@ -57,8 +64,8 @@ export function registerOpportunityTools(server: McpServer): void {
 
 ## Career Context
 ${careerSummary}
-
-${formatSignalDigest(career.journal)}
+${resume?.trim() && !fromPasted ? `\n${KB_OVER_PASTED}\n` : ""}
+${formatSignalDigest(career?.journal, 6, company)}
 ## Job Posting
 ${embedUntrusted("job posting", posting)}
 ${company ? `\n**Company:** ${company}` : ""}
@@ -127,7 +134,7 @@ Anything in the posting that warrants clarification or concern.
 Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
 
 ${RESPONSE_SHAPE}
-
+${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
 ${TRUTH_RULE}`,
         }],
       };
@@ -267,6 +274,59 @@ function buildPreferenceContract(profile: CareerData["profile"]): string {
 **Notice period:** ${profile.noticePeriod || "not set"}
 **Target company size:** ${profile.targetCompanySize.join(", ") || "not set"}`;
 }
+
+/**
+ * Should this call work from the résumé text the user pasted?
+ *
+ * Only when there is no saved KB to work from: no profile at all, or a profile
+ * with no experience. A saved KB with history is the source of record; a pasted
+ * résumé alongside it is not allowed to quietly override what the user saved.
+ */
+export function workFromPastedResume(career: CareerData | null, resume: string | undefined): boolean {
+  if (!resume?.trim()) return false;
+  return !career || career.experience.length === 0;
+}
+
+/**
+ * The closing instruction when a tool worked from pasted text: say so in one
+ * line, and end with the save as the one offer. The first fit check is where a
+ * new user sees value; asking them to save first was setup before value.
+ */
+export const PASTED_RESUME_CLOSE =
+  "**Worked from pasted text:** there is no saved Career KB yet, so this used the résumé pasted in this " +
+  "conversation. Say so in one short line, and make your one closing offer this: save that background to the " +
+  "Career KB with save_career_section (with the user's OK), so the next fit check, résumé and interview prep " +
+  "start from it.";
+
+/** When a résumé was passed but a saved KB with history exists, the KB wins, and the model is told so. */
+export const KB_OVER_PASTED =
+  "_A résumé was also passed in; this uses the saved Career KB. If the pasted one shows something the KB " +
+  "lacks, mention it and offer to add it with save_career_section._";
+
+/**
+ * Career context from pasted résumé text.
+ *
+ * Fenced like every other pasted span. A résumé is the user's own content, but
+ * it arrives the same way a posting does — a block of text copied from a file
+ * or a site the model didn't write — and `format_for_ats` already fences its
+ * résumé input. Treating it as data costs nothing and keeps a stray "ignore the
+ * above" in a copied template inert.
+ */
+function buildPastedSummary(career: CareerData | null, resume: string): string {
+  return `**Source:** no saved Career KB yet${career ? " (a profile is saved, but no work history)" : ""}. This check works from the résumé the user pasted:
+
+${embedUntrusted("pasted résumé", resume)}
+
+**Preference contract — the hard constraints this fit must be checked against:**
+${career ? buildPreferenceContract(career.profile) : NO_PREFERENCES}`;
+}
+
+/** The preference contract when nothing about it has been saved. */
+const NO_PREFERENCES = `**Salary band:** not set
+**Open to remote:** not set
+**Open to relocation:** not set
+**Notice period:** not set
+**Target company size:** not set`;
 
 function buildCareerSummary(career: Awaited<ReturnType<typeof loadCareerData>>): string {
   if (!career) return "No career data available.";

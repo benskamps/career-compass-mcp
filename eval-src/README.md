@@ -99,6 +99,12 @@ right (what standalone npm users and tool-search sessions see):
 `claude plugin eval plugin-mcp-only --tag quality --runs 3 $COMMON --json tools-mcp-only.json`.
 
 For one case while iterating: `claude plugin eval plugin --case <name> --runs 1 --ablation none`.
+
+**Quoting results.** A number that goes into a release decision quotes n and an interval
+(for example "11 of 12, 95% CI 65–99%") and comes from at least 3 runs per case, as above.
+A single run is for iterating: quote it as "n of m, 1 run", never as a percentage that
+settles anything. And trigger tuning is paused as a growth lever until the directory's own
+numbers say activation is the problem; activation already sits in the high 90s offline.
 The Actions tab has an **Evals** workflow that runs all three and uploads the results.
 
 ## Change the suite

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Career Compass after a layoff</title>
+<meta name="description" content="After a layoff, paste a job posting and your resume and get an honest fit verdict, the evidence for each must-have and the gaps to address, without padding your history.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://benskamps.github.io/career-compass-mcp/for/laid-off/">
+<meta property="og:title" content="Career Compass after a layoff">
+<meta property="og:description" content="After a layoff, paste a job posting and your resume and get an honest fit verdict, the evidence for each must-have and the gaps to address, without padding your history.">
+<meta property="og:image" content="https://benskamps.github.io/career-compass-mcp/how-it-works/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://benskamps.github.io/career-compass-mcp/how-it-works/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b2218'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c2603c'/%3E%3Cpath d='M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z' fill='%232b2218'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+<style>
+/* ── Paper & ink, tuned to Career Compass's own clay accent ───────────────
+   Serif (Fraunces) is the human voice; mono (JetBrains Mono) labels every
+   datum. Zero JS: this is a document, not an instrument. ─────────────────── */
+:root{
+  --paper:#f6f2ea; --paper-deep:#ece4d3; --ink:#2b2218; --ink-soft:#5a4a39; --rule:#d9cdb8;
+  --clay:#c2603c; --clay-deep:#8a3b1f; --sage:#5a6b3c; --steel:#7c8fa1; --brass:#a2894f;
+  --measure:72ch;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);background:var(--paper);font-family:Fraunces,Georgia,serif;font-weight:400;font-size:17.5px;line-height:1.58;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 60% 30% at 12% -4%, rgba(194,96,60,.10), transparent 70%),
+    radial-gradient(ellipse 50% 28% at 96% 104%, rgba(162,137,79,.10), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(43,34,24,.018) 0 1px, transparent 1px 3px);}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--clay-deep)}
+.crumbs{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:22px}.crumbs a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 72px}
+hr.rule{border:0;border-top:1px solid var(--rule);margin:48px 0}
+
+/* masthead */
+.mast{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.mast .kicker{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.mast h1{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(40px,7vw,86px);line-height:.98;letter-spacing:-.015em;margin:0}
+.mast h1 em{font-style:normal;color:var(--clay)}
+.mast .dek{font-style:italic;color:var(--ink-soft);font-size:20px;max-width:56ch;margin:16px 0 0}
+.mast .plate-meta{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:right;line-height:1.9}
+
+/* figures */
+figure.plate{margin:28px 0 0}
+figure.plate img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;background:var(--paper-deep)}
+figure.plate figcaption{display:flex;gap:12px;align-items:baseline;margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.plate figcaption b{color:var(--clay-deep);font-weight:600}
+
+/* section heads */
+section{margin-top:56px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:22px}
+.sec-head h2{font-family:Fraunces,serif;font-style:italic;font-weight:400;font-size:clamp(28px,3.6vw,40px);line-height:1.08;margin:6px 0 0;letter-spacing:-.01em}
+.sec-head .num{font-family:"JetBrains Mono",monospace;font-size:44px;font-weight:300;color:var(--clay);line-height:1;letter-spacing:-.04em}
+.lede{font-size:20px;font-style:italic;color:var(--ink-soft);max-width:var(--measure);margin:0 0 22px}
+p{max-width:var(--measure)}
+
+/* the five steps — a rail */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;counter-reset:step}
+.steps li{position:relative;padding:18px 16px 16px;border:1px solid var(--rule);border-radius:8px;background:rgba(255,255,255,.4);transition:background .2s}
+.steps li:hover{background:rgba(255,255,255,.8)}
+.steps li::before{counter-increment:step;content:counter(step,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--clay-deep)}
+.steps li::after{content:"";position:absolute;top:50%;right:-14px;width:14px;border-top:1px dashed var(--brass)}
+.steps li:last-child::after{display:none}
+.steps h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;margin:6px 0 6px;line-height:1.15}
+.steps p{font-size:14.5px;line-height:1.5;margin:0;color:var(--ink-soft)}
+.steps .tools{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-soft);line-height:1.8}
+.steps .tools code{color:var(--ink);background:var(--paper-deep);padding:1px 5px;border-radius:3px}
+.you-say{margin-top:18px;border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0}
+.you-say .eyebrow{display:block;margin-bottom:4px}
+.you-say q{font-style:italic;font-size:18px}
+.you-say q::before,.you-say q::after{color:var(--clay)}
+
+/* two-column zoom */
+.zoom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.card{border:1px solid var(--rule);border-radius:10px;background:rgba(255,255,255,.4);padding:20px 22px}
+.card .eyebrow{display:block;margin-bottom:8px}
+.card h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:24px;margin:0 0 10px;line-height:1.1}
+.card ul{margin:10px 0 0;padding-left:0;list-style:none}
+.card li{padding:7px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.card li:first-child{border-top:0}
+.card li b{font-weight:600}
+.card .kv{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase;margin-right:8px}
+.fact-shape{margin-top:14px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.7;background:var(--paper-deep);border-radius:8px;padding:12px 14px;color:var(--ink);overflow-x:auto}
+.fact-shape .k{color:var(--clay-deep)}.fact-shape .c{color:var(--ink-soft)}
+.arrow-note{grid-column:1/-1;text-align:center;font-style:italic;color:var(--ink-soft);font-size:17px;padding:4px 0 0}
+.arrow-note b{color:var(--clay-deep);font-weight:600}
+
+/* interview prep — the two columns of asking */
+.ask{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start}
+.pack{list-style:none;margin:0;padding:0;counter-reset:pack}
+.pack li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px dashed var(--rule)}
+.pack li:first-child{border-top:0}
+.pack li::before{counter-increment:pack;content:counter(pack);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--clay-deep);padding-top:3px;letter-spacing:.1em}
+.pack h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:18px;margin:0 0 3px;line-height:1.15}
+.pack p{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.45}
+.pack li.ask-half{background:linear-gradient(90deg, rgba(194,96,60,.08), transparent 70%);border-radius:8px;padding-left:10px;margin-left:-10px;border-top-color:transparent}
+.pack li.ask-half + li{border-top-color:transparent}
+.tips h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:22px;margin:0 0 8px}
+.tips li{padding:8px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.tips li:first-child{border-top:0}
+.tips li b{font-weight:600;color:var(--clay-deep)}
+
+/* honesty strip */
+.honesty{margin-top:34px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.honesty div{border-top:2px solid var(--sage);padding-top:10px;font-size:15px;line-height:1.45}
+.honesty .eyebrow{display:block;color:var(--sage);margin-bottom:4px}
+
+/* colophon */
+.colophon{margin-top:64px;border-top:2px solid var(--ink);padding-top:14px;display:grid;grid-template-columns:1fr auto;gap:16px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);line-height:1.9}
+.colophon a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}
+
+@media (max-width:900px){
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}.steps li::after{display:none}
+  .zoom,.ask,.honesty{grid-template-columns:minmax(0,1fr)}
+  .mast{grid-template-columns:1fr}.mast .plate-meta{text-align:left}
+  .colophon{grid-template-columns:1fr}
+}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+@media print{body{background:#fff}.steps li,.card{background:#fff}}
+/* ── dashboard chapter ── */
+figure.shot{margin:22px 0 0}
+figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;box-shadow:0 1px 2px rgba(43,34,24,.06),0 6px 20px rgba(43,34,24,.06)}
+figure.shot figcaption{margin-top:8px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+figure.shot figcaption .chip{display:inline-block;border:1px solid var(--rule);border-radius:999px;padding:1px 8px;margin-right:8px;color:var(--ink)}
+figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
+.loop{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:st}
+.loop li{position:relative;padding:18px 16px 16px;border:1px solid var(--rule);border-radius:8px;background:rgba(255,255,255,.4)}
+.loop li::before{counter-increment:st;content:counter(st,decimal-leading-zero);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;color:var(--clay-deep)}
+.loop li::after{content:"";position:absolute;top:50%;right:-14px;width:14px;border-top:1px dashed var(--brass)}
+.loop li:last-child::after{display:none}
+.loop h3{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;margin:6px 0 6px;line-height:1.15}
+.loop p{font-size:14.5px;line-height:1.5;margin:0;color:var(--ink-soft)}
+.trust{margin-top:34px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.trust div{border-top:2px solid var(--sage);padding-top:10px;font-size:15px;line-height:1.45}
+.trust .eyebrow{display:block;color:var(--sage);margin-bottom:4px}
+.cmd{margin-top:18px;border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0}
+.cmd .eyebrow{display:block;margin-bottom:6px}
+.cmd code{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--ink)}
+.cmd small{display:block;color:var(--ink-soft);font-size:14px;margin-top:4px}
+@media (max-width:900px){.loop{grid-template-columns:repeat(2,minmax(0,1fr))}.loop li::after{display:none}.trust{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.loop{grid-template-columns:minmax(0,1fr)}}
+@media print{.loop li{background:#fff}}
+/* in-page contents */
+.toc{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.toc a{color:var(--clay-deep);text-decoration:none;border-bottom:1px solid var(--rule)}.toc a:hover{border-bottom-color:var(--clay)}
+.part{margin-top:72px;border-top:2px solid var(--ink);padding-top:10px}.part .eyebrow{display:block}
+.part h2.big{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(34px,5.5vw,64px);line-height:1;letter-spacing:-.015em;margin:6px 0 0}
+.part h2.big em{font-style:normal;color:var(--clay)}
+.part .dek{font-style:italic;color:var(--ink-soft);font-size:19px;max-width:60ch;margin:14px 0 0}
+/* ── front door: the sample reply, the [confirm] bullet, install ── */
+a{color:var(--clay-deep)}
+.sample-tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sage);border:1px solid var(--sage);border-radius:999px;padding:2px 9px}
+.reply{margin:28px 0 0;border:1px solid var(--rule);border-radius:12px;background:rgba(255,255,255,.62);padding:22px 26px 20px;box-shadow:0 1px 2px rgba(43,34,24,.05),0 10px 30px rgba(43,34,24,.06)}
+.reply .who{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px}
+.reply .user{font-style:italic;color:var(--ink-soft);margin:0 0 16px;padding-bottom:14px;border-bottom:1px dashed var(--rule)}
+.verdict-line{font-size:21px;line-height:1.35;margin:0 0 14px}
+.verdict{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--brass);color:#fff;border-radius:5px;padding:3px 9px;margin-right:8px;vertical-align:2px}
+.reply h4{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--clay-deep);margin:16px 0 6px}
+.evidence{list-style:none;margin:0;padding:0}
+.evidence li{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr);gap:14px;padding:8px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.evidence li:first-child{border-top:0}
+.evidence .req{font-weight:600}
+.evidence .ok{color:var(--sage);font-family:"JetBrains Mono",monospace;font-size:12px;margin-right:6px}
+.gaps{margin:0;padding-left:22px}
+.gaps li{padding:5px 0;font-size:15.5px;line-height:1.45}
+.reply .offer{margin:14px 0 0;color:var(--ink-soft);font-style:italic}
+.reply-caption{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.bullet-card{margin:22px 0 0;border:1px solid var(--rule);border-radius:12px;background:rgba(255,255,255,.62);padding:20px 26px}
+.bullet-card .draft{font-size:18px;line-height:1.55;margin:6px 0 0}
+.confirm{font-family:"JetBrains Mono",monospace;font-size:.82em;background:rgba(194,96,60,.12);color:var(--clay-deep);border:1px dashed var(--clay);border-radius:5px;padding:1px 6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.duo{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+.duo .bullet-card{margin-top:28px}
+.get-it{margin-top:34px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;align-items:start}
+.get-it .how{border:2px solid var(--ink);border-radius:12px;padding:18px 22px;background:rgba(255,255,255,.5)}
+.get-it .how h2{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:26px;margin:4px 0 8px;line-height:1.1}
+.get-it .how ol{margin:0;padding-left:20px;font-size:16px}
+.get-it .how li{padding:3px 0}
+.kbd{font-family:"JetBrains Mono",monospace;font-size:.85em;background:var(--paper-deep);border-radius:4px;padding:1px 6px}
+.surfaces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.surfaces div{border-top:2px solid var(--steel);padding-top:8px;font-size:15px;line-height:1.45}
+.surfaces .eyebrow{display:block;color:var(--ink-soft);margin-bottom:3px}
+.cmds{margin:18px 0 0;font-size:15px}
+.cmds code{font-family:"JetBrains Mono",monospace;font-size:13px;background:var(--paper-deep);padding:1px 5px;border-radius:3px}
+.cmds p{margin:0 0 6px}
+.mono-block{font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.65;background:var(--paper-deep);border-radius:8px;padding:14px 16px;overflow-x:auto;white-space:pre;color:var(--ink)}
+.mono-block .k{color:var(--clay-deep)}.mono-block .c{color:var(--ink-soft)}
+.segments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:8px}
+.segments a{display:block;border:1px solid var(--rule);border-radius:8px;padding:14px 16px;background:rgba(255,255,255,.4);color:var(--ink);text-decoration:none}
+.segments a:hover{background:rgba(255,255,255,.8)}
+.segments b{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;display:block;margin-bottom:4px}
+.segments span{font-size:14.5px;color:var(--ink-soft)}
+.prompt-quote{border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0;font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.6}
+@media (max-width:900px){
+  .duo,.get-it,.segments{grid-template-columns:minmax(0,1fr)}
+  .evidence li{grid-template-columns:minmax(0,1fr);gap:2px}
+}
+@media (max-width:560px){.surfaces{grid-template-columns:minmax(0,1fr)}.reply,.bullet-card{padding:16px 16px}}
+.seg-p{font-size:19px;max-width:var(--measure);margin:26px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="crumbs" aria-label="Breadcrumb"><a href="../../how-it-works/">← Career Compass, how it works</a> &nbsp;·&nbsp; <a href="../../privacy/">privacy</a></nav>
+<header class="mast">
+  <div>
+    <div class="kicker"><span class="eyebrow">Career Compass · after a layoff</span></div>
+    <h1>Laid off? <em>Know where you really fit.</em></h1>
+  </div>
+  <div class="plate-meta">free · MIT · no account<br>a Claude plugin</div>
+</header>
+
+<p class="seg-p">After a layoff the temptation is to apply everywhere and tell every posting what it wants to hear. Career Compass does the opposite: paste a posting and your résumé, and it tells you whether the role is a strong fit, a stretch or a long shot, which of your achievements answer each requirement, and what an interviewer will probe. It won't explain the layoff for you or invent a reason you left; it asks, once, how you want to tell that part, and keeps your answer.</p>
+
+<figure style="margin:0">
+  <div class="reply" role="img" aria-label="Example fit-check reply on fictional sample data">
+    <p class="who">You</p>
+    <p class="user">[pastes a Staff Backend Engineer, Payments Platform posting] Do I fit this?</p>
+    <p class="who">Claude</p>
+    <p class="verdict-line"><span class="verdict">Stretch</span>strong on payments and Go, but Kubernetes isn't on your résumé.</p>
+    <h4>Must-haves, with your evidence</h4>
+    <ul class="evidence">
+        <li><span class="req">8+ years of backend systems</span><span><span class="ok">✓</span>9 years building backend services in Go and Java.</span></li>
+        <li><span class="req">Payments and idempotency</span><span><span class="ok">✓</span>Designed the payments idempotency layer that cut duplicate charges from about 300 a month to under 5.</span></li>
+        <li><span class="req">Leading cross-team initiatives</span><span><span class="ok">✓</span>Partly: led the checkout rewrite from a Java monolith to Go (p99 from 1.8s to 240ms) and mentored 3 engineers.</span></li>
+    </ul>
+    <h4>Top two gaps</h4>
+    <ol class="gaps">
+        <li><b>Kubernetes in production.</b> It isn't on your résumé. If you ran services on it, say where; if not, say so and point to the AWS and Terraform work.</li>
+        <li><b>Staff-level scope.</b> The rewrite shows technical leadership on one team. Name any work that spanned teams, or expect to be asked.</li>
+    </ol>
+  </div>
+  <figcaption class="reply-caption"><span class="sample-tag">Example on sample data</span> &nbsp;Marcus Webb, a fictional senior backend engineer from the test set · the posting is made up · shortened</figcaption>
+</figure>
+
+<div class="get-it">
+  <div class="how">
+    <span class="eyebrow">Get it in the Claude directory</span>
+    <h2>Two clicks, no setup</h2>
+    <ol>
+      <li>In the Claude app or on claude.ai, open <span class="kbd">Customize → Plugins</span>.</li>
+      <li>Search for <b>Career Compass</b> and add it.</li>
+      <li>Paste a job posting and your résumé, and ask <q>Do I fit this?</q></li>
+    </ol>
+  </div>
+  <div class="surfaces">
+    <div><span class="eyebrow">claude.ai chat · web, desktop, mobile</span>Skills only. Claude works from what you paste. Nothing is saved between chats.</div>
+    <div><span class="eyebrow">Cowork and Claude Code</span>Also keeps your history and applications as plain text on your own computer. Needs <b>Node.js 22 or newer</b>.</div>
+  </div>
+</div>
+
+<footer class="colophon">
+  <div><a href="../../how-it-works/">How Career Compass works</a> · <a href="../laid-off/">laid off</a> · <a href="../career-switchers/">career switchers</a> · <a href="../new-grads/">new grads</a> · <a href="../../privacy/">privacy</a><br>The example uses a fictional person from the project's test set · no outcome figures are quoted because none are measured</div>
+  <div><a href="https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml">What did a fit check get wrong?</a></div>
+</footer>
+
+</div>
+</body>
+</html>

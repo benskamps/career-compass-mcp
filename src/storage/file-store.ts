@@ -503,7 +503,171 @@ export async function mutateCareerSection<S extends CareerSection>(
   );
 }
 
+// ─── Backups: list and restore ────────────────────────────────────────────────
 
+/** One timestamped `.bak` of a data file, as `check_setup` lists it. */
+export interface BackupInfo {
+  /** The bare file name, which is also what `restoreFrom` accepts. */
+  name: string;
+  /** When it was taken, as an ISO timestamp recovered from the name. */
+  takenAt: string;
+  /** Entries in it (1 for the profile), or null when it doesn't parse. */
+  entries: number | null;
+}
+
+/** `experience.yaml.2026-10-07T02-36-52-123Z.bak` → `2026-10-07T02:36:52.123Z`. */
+function backupTimestamp(name: string): string {
+  const m = /\.(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})(?:-(\d+))?Z\.bak$/.exec(name);
+  if (!m) return "";
+  return `${m[1]}T${m[2]}:${m[3]}:${m[4]}${m[5] ? `.${m[5]}` : ""}Z`;
+}
+
+/** Names of our backups of one file in `dir`, newest first. Never throws. */
+async function backupNames(dir: string, base: string): Promise<string[]> {
+  try {
+    const pattern = backupPattern(base);
+    return (await readdir(dir)).filter((n) => pattern.test(n)).sort().reverse();
+  } catch {
+    return [];
+  }
+}
+
+/** Entry count of a section-shaped YAML document, or null when it doesn't parse. */
+function countEntries(raw: string, section: string): number | null {
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(raw);
+  } catch {
+    return null;
+  }
+  if (parsed === null || parsed === undefined) return 0;
+  if (Array.isArray(parsed)) return parsed.length;
+  const wrapped = (parsed as Record<string, unknown>)[section];
+  return Array.isArray(wrapped) ? wrapped.length : 1;
+}
+
+/**
+ * The recent backups of every Career KB section file, newest first, at most
+ * `max` per file. Files with no backups are left out. The journal is not listed:
+ * it is append-only and `restoreFrom` can't put it back, so listing it would
+ * offer a restore that doesn't exist.
+ *
+ * Backups were written on every save from the start, but nothing ever told the
+ * user they existed or which one held what — ".bak exists" is not recovery a
+ * job seeker can do. This is what `check_setup` lists, with an entry count so
+ * "the one from before it went from 4 roles to 1" can be found by eye.
+ */
+export async function listCareerBackups(
+  max = BACKUP_RETENTION,
+): Promise<Array<{ file: string; section: string; backups: BackupInfo[] }>> {
+  const dir = careerDir();
+  const out: Array<{ file: string; section: string; backups: BackupInfo[] }> = [];
+  for (const section of CAREER_SECTIONS) {
+    const file = `${section}.yaml`;
+    const names = (await backupNames(dir, file)).slice(0, max);
+    if (names.length === 0) continue;
+    const backups = await Promise.all(names.map(async (name) => {
+      let entries: number | null = null;
+      try {
+        entries = countEntries(await readFile(join(dir, name), "utf-8"), section);
+      } catch {
+        // Pruned or locked between readdir and read: report it as unreadable.
+      }
+      return { name, takenAt: backupTimestamp(name), entries };
+    }));
+    out.push({ file, section, backups });
+  }
+  return out;
+}
+
+/** Thrown when a restore names a file that isn't a valid backup of the section. */
+export class BackupRestoreError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BackupRestoreError";
+  }
+}
+
+export function isBackupRestoreError(e: unknown): e is BackupRestoreError {
+  return e instanceof BackupRestoreError;
+}
+
+/**
+ * Swap one of a section's own backups back in, under the same lock and claim as
+ * every other write.
+ *
+ * `backupName` comes from the model, so it is never joined into a path until it
+ * has been found, character for character, in the listing of this section's own
+ * backups. `../profile.yaml`, an absolute path, another section's backup, or a
+ * `.bak` a user made by hand all fail that check: the only files that can be
+ * restored are the ones {@link atomicWriteYaml} wrote for this section.
+ *
+ * The backup is validated with the section schema before anything is written,
+ * so restoring a broken copy cannot turn a working KB into an unloadable one.
+ * The write itself goes through {@link atomicWriteYaml}, which backs up the
+ * current file first, so a restore is itself undoable. A current file that
+ * can't be read is not a reason to refuse: getting away from it is usually why
+ * the user is restoring.
+ */
+export async function restoreCareerSection<S extends CareerSection>(
+  section: S,
+  backupName: string,
+): Promise<{
+  previous: CareerSectionValueMap[S] | null;
+  previousUnreadable: boolean;
+  restored: CareerSectionValueMap[S];
+}> {
+  if (!(CAREER_SECTIONS as readonly string[]).includes(section)) {
+    throw new Error(
+      `Unknown career section "${section}". Expected one of: ${CAREER_SECTIONS.join(", ")}.`,
+    );
+  }
+  const dir = careerDir();
+  const path = join(dir, `${section}.yaml`);
+  return withDataLock(path, () =>
+    withStoreWriteClaim(async () => {
+      const names = await backupNames(dir, `${section}.yaml`);
+      if (!names.includes(backupName)) {
+        throw new BackupRestoreError(
+          names.length
+            ? `"${backupName}" is not one of the backups of ${section}.yaml. Its backups are: ${names.join(", ")}.`
+            : `${section}.yaml has no backups to restore.`,
+        );
+      }
+
+      let candidate: unknown;
+      try {
+        const parsed = parseYaml(await readFile(join(dir, backupName), "utf-8"));
+        candidate =
+          section === "profile" || Array.isArray(parsed)
+            ? parsed
+            : ((parsed as Record<string, unknown> | null)?.[section] ?? []);
+      } catch {
+        throw new BackupRestoreError(`${backupName} is not valid YAML, so it can't be restored.`);
+      }
+      const checked = CAREER_SECTION_SCHEMA[section].safeParse(candidate);
+      if (!checked.success) {
+        const issue = checked.error.issues[0];
+        throw new BackupRestoreError(
+          `${backupName} doesn't match the shape of ${section} (${issue.path.join(".") || "(root)"}: ${issue.message}), so it can't be restored.`,
+        );
+      }
+
+      let previous: CareerSectionValueMap[S] | null = null;
+      let previousUnreadable = false;
+      try {
+        previous = await readCareerSection(section);
+      } catch (error) {
+        if (!isCorruptDataError(error)) throw error;
+        previousUnreadable = true;
+      }
+
+      const restored = checked.data as CareerSectionValueMap[S];
+      await atomicWriteYaml(path, restored);
+      return { previous, previousUnreadable, restored };
+    }),
+  );
+}
 
 // ─── Career journal (append-only signals) ──────────────────────────────────────
 

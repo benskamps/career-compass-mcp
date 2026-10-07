@@ -255,20 +255,14 @@ describe("résumé and opportunity tools guard the Career KB read", () => {
   );
 });
 
-// ─── Phase 2: the 7th prompt, and pages that match the tool ──────────────────
+// ─── Prompts, and pages that match the tool ──────────────────────────────────
 
 describe("prompts", () => {
-  it("setup-career-kb embeds a pasted résumé and names the writer tool", async () => {
+  it("the retired prompts are gone: /start, /today and /interview-prep own those jobs", async () => {
     const { client, server } = await connect();
     try {
-      const { messages } = await client.getPrompt({
-        name: "setup-career-kb",
-        arguments: { resumeText: "Alex Rivera — Director of Operations" },
-      });
-      const text = (messages[0].content as { text: string }).text;
-      expect(text).toContain("Alex Rivera");
-      expect(text).toContain("save_career_section");
-      expect(text).toContain("check_setup");
+      const names = (await client.listPrompts()).prompts.map((p) => p.name);
+      for (const retired of ["setup-career-kb", "daily-review", "interview-coach"]) expect(names).not.toContain(retired);
     } finally {
       await client.close();
       await server.close();
@@ -347,6 +341,9 @@ const gitAvailable = (() => {
 
 describe.skipIf(!gitAvailable)("check_setup git finding", () => {
   it("warns with the init command outside a repo, confirms inside one", async () => {
+    // A populated install: a fresh one gets the three-line form, with no git tip.
+    mkdirSync(path.join(dataDir, "career"), { recursive: true });
+    writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: Alex Rivera\nsummary: Ops.\n", "utf-8");
     const { client, server } = await connect();
     try {
       const before = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));

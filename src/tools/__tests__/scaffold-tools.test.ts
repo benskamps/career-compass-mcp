@@ -112,7 +112,7 @@ describe("explore_opportunity", () => {
   it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "explore_opportunity", { posting: "x" });
-    expect(text).toContain("No career data yet");
+    expect(text).toContain("No saved Career KB yet");
   });
 });
 
@@ -171,7 +171,7 @@ describe("tailor_resume", () => {
   it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "tailor_resume", { posting: "x" });
-    expect(text).toContain("No career data yet");
+    expect(text).toContain("No saved Career KB yet");
   });
 });
 
@@ -197,7 +197,7 @@ describe("generate_cover_letter", () => {
       posting: "x",
       company: "Acme",
     });
-    expect(text).toContain("No career data yet");
+    expect(text).toContain("No saved Career KB yet");
   });
 });
 
@@ -209,7 +209,8 @@ describe("format_for_ats", () => {
       targetSystem: "workday",
     });
     expect(text).toContain("ATS Formatting: WORKDAY");
-    expect(text).toContain("Workday formatting rules");
+    expect(text).toContain("Parsing hygiene");
+    expect(text).toContain("Workday usually asks you to re-enter each role");
     expect(text).toContain("Jane Doe — Operations Leader");
   });
 });
@@ -251,7 +252,7 @@ describe("prepare_interview", () => {
   it("tells the user the KB is empty, naming the real data directory", async () => {
     useEmpty();
     const text = await callText(client, "prepare_interview", { interviewType: "behavioral" });
-    expect(text).toContain("No career data yet");
+    expect(text).toContain("No saved Career KB yet");
   });
 });
 

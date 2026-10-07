@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
+import { spawnSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import { REGISTRY_URL } from "../tools/doctor.js";
+import { BACKUP_RETENTION } from "../storage/file-store.js";
 
 /**
  * Privacy-claim truth: the shipped copy must not deny a request the code makes.
@@ -75,6 +77,31 @@ const SURFACES: { name: string; text: string }[] = [
 /** The surfaces that carry a privacy *paragraph*, as opposed to a one-liner. */
 const POLICY_SURFACES = SURFACES.filter((s) => s.name !== "manifest.json description");
 
+/** The full policy, in every form it is published. */
+const FULL_POLICIES = SURFACES.filter((s) => /PRIVACY\.md|docs\/privacy/.test(s.name));
+
+/** HTML copies carry `<code>` tags and entities; compare on plain text. */
+function plain(text: string): string {
+  return text.replace(/<[^>]+>/g, "").replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+}
+
+/** Does this surface say what `--ask-claude` starts, who receives it, and who pays? */
+export function describesAskClaude(text: string): boolean {
+  const t = plain(text);
+  return /--ask-claude\b/.test(t) && /Anthropic/.test(t) && /billing|billed/i.test(t) && /--ask-claude-writes/.test(t);
+}
+
+/** Does this surface say that only the newest N backups are kept? */
+export function statesBackupRetention(text: string, n: number): boolean {
+  const t = plain(text);
+  return new RegExp(`newest ${n} \`?\\.bak\`? files per data file`, "i").test(t) && /deleted automatically/i.test(t);
+}
+
+/** The old absolute: one request for the whole package, which the printed npx command contradicts. */
+export function claimsSingleRequestForPackage(text: string): boolean {
+  return /exactly one outbound network request/i.test(plain(text));
+}
+
 describe("privacy claims match the code", () => {
   it("the package really does make one outbound request (else this suite is theatre)", () => {
     // If the registry check is ever removed, the absolutes below become true
@@ -101,9 +128,69 @@ describe("privacy claims match the code", () => {
     ).toBe(true);
   });
 
+  // ── What the policy itself has to say ──────────────────────────────────────
+  // The full policy (PRIVACY.md and its published copies) is what the directory
+  // listing links to, so it has to cover the things the package starts or deletes
+  // on its own, not only the one request the server makes.
+
+  it.each(FULL_POLICIES)("$name says --ask-claude sends KB content to Anthropic and bills the user", ({ text }) => {
+    expect(
+      describesAskClaude(text),
+      "the dashboard's --ask-claude runs Claude Code, which sends what it reads to Anthropic " +
+        "under the user's account and billing. The policy has to say so, and that writes need " +
+        "--ask-claude-writes.",
+    ).toBe(true);
+  });
+
+  it.each(FULL_POLICIES)("$name states the backup retention count the code uses", ({ text }) => {
+    expect(
+      statesBackupRetention(text, BACKUP_RETENTION),
+      `file-store keeps only the newest ${BACKUP_RETENTION} .bak files per data file and deletes ` +
+        `the rest. "Files stay until you delete them" is not the whole truth without that.`,
+    ).toBe(true);
+  });
+
+  it.each(FULL_POLICIES)("$name does not count the whole package as one request", ({ text }) => {
+    // The npx command check_setup prints for the dashboard is a second request,
+    // run by the user. "Exactly one ... in the whole package" denied it.
+    expect(claimsSingleRequestForPackage(text)).toBe(false);
+  });
+
+  it.each(FULL_POLICIES)("$name says any schedule is the user's own, local and read-only", ({ text }) => {
+    expect(/schedule[\s\S]{0,120}you create[\s\S]{0,120}locally[\s\S]{0,60}only\s+reads/i.test(text)).toBe(true);
+  });
+
+  it("docs/privacy.md is PRIVACY.md plus front matter", () => {
+    const published = read("docs/privacy.md").replace(/^---\n[\s\S]*?\n---\n\n/, "");
+    expect(published).toBe(read("PRIVACY.md"));
+  });
+
+  it("the published HTML pages are rendered from docs/privacy.md", () => {
+    // Both HTML copies used to be hand-edited and fell a section behind the
+    // markdown on the very URL the directory listing links to.
+    const run = spawnSync(process.execPath, [path.join(repoRoot, "docs/privacy/build.mjs"), "--check"], {
+      encoding: "utf-8",
+    });
+    expect(run.status, `${run.stderr}\nRun: node docs/privacy/build.mjs`).toBe(0);
+  });
+
   // ── Negative controls ──────────────────────────────────────────────────────
   // Both detectors above pass on the current tree. These prove they can fail:
   // without them, a typo in either regex would make the suite green forever.
+
+  it("negative control: the 2.9.7 'exactly one outbound network request' sentence is caught", () => {
+    expect(
+      claimsSingleRequestForPackage(
+        "There is exactly one outbound network request in the whole package, and only when you ask for it",
+      ),
+    ).toBe(true);
+  });
+
+  it("negative control: a policy silent on backups and --ask-claude fails both checks", () => {
+    const silent = "Your files stay on your disk until you delete them. The dashboard makes no network calls.";
+    expect(statesBackupRetention(silent, BACKUP_RETENTION)).toBe(false);
+    expect(describesAskClaude(silent)).toBe(false);
+  });
 
   it("negative control: the sentence that actually shipped in 2.3.0 is caught", () => {
     const shipped =
