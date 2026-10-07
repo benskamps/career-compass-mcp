@@ -17,7 +17,7 @@
 // Usage: npm run build:mcp && node eval-src/record-mocks.mjs
 // Output: eval-src/mocks/<state>/career-compass/*.md and _tools.json
 
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,6 +60,15 @@ const VARIANTS = {
     state: "empty",
     calls: { pipeline_view: { action: "next_actions" } },
   },
+  // The Veridian debrief is older than five newer journal entries about other
+  // companies, so a digest that only took the latest entries would lose it.
+  "kb-veridian-crowded": {
+    state: "kb",
+    seed: (dir) => appendFileSync(join(dir, "career", "journal.yaml"), CROWDING_ENTRIES),
+    calls: {
+      prepare_interview: { company: "Veridian Health", role: "Director of Operations", interviewType: "final" },
+    },
+  },
   "kb-meridian": {
     state: "kb",
     calls: {
@@ -67,6 +76,18 @@ const VARIANTS = {
     },
   },
 };
+
+const CROWDING_ENTRIES = ["Lumen Digital", "Stratos Cloud", "Northwind Care", "Harborview Digital Health", "Quillfeather Health", "Cascade Health Partners"]
+  .map((company, i) => `
+- id: crowd00${i}
+  date: "2026-06-1${i}T09:00:00.000Z"
+  type: note
+  company: ${company}
+  summary: Read up on ${company} before applying; nothing decided yet.
+  signals: []
+  source: manual
+  origin: user_said
+`).join("");
 
 function sample(schema, field) {
   if (!schema) return `__IN_${field}__`;
@@ -117,8 +138,9 @@ function freshDataDir(state) {
 
 // One server per call, on a fresh copy of the data, so a write recorded for one
 // tool (pipeline_add, capture_insight) never leaks into another tool's mock.
-async function withServer(state, fn, env = {}) {
+async function withServer(state, fn, env = {}, seed) {
   const dataDir = freshDataDir(state);
+  seed?.(dataDir);
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(repo, "build", "src", "index.js")],
@@ -135,12 +157,12 @@ async function withServer(state, fn, env = {}) {
   }
 }
 
-async function callToMock(state, name, args, env) {
+async function callToMock(state, name, args, env, seed) {
   return withServer(state, async (client, dataDir) => {
     const result = await client.callTool({ name, arguments: args });
     const text = (result.content ?? []).filter((c) => c.type === "text").map((c) => c.text).join("\n\n");
     return toMock(text, dataDir, result.isError);
-  }, env);
+  }, env, seed);
 }
 
 function cleanDir(dir) {
@@ -168,10 +190,10 @@ async function record(state) {
   if (skipped.length) console.log(`  skipped: ${skipped.join(", ")}`);
 }
 
-async function recordVariant(name, { state, calls, env }) {
+async function recordVariant(name, { state, calls, env, seed }) {
   const outDir = cleanDir(join(MOCKS, name, SERVER));
   for (const [tool, args] of Object.entries(calls)) {
-    writeFileSync(join(outDir, `${tool}.md`), await callToMock(state, tool, args, env));
+    writeFileSync(join(outDir, `${tool}.md`), await callToMock(state, tool, args, env, seed));
   }
   console.log(`${name}: ${Object.keys(calls).length} tools recorded`);
 }

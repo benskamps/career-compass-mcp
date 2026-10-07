@@ -40,6 +40,8 @@
     "visuals": "node scripts/visual-harness.mjs",
     "eval:mocks": "npm run build:mcp && node eval-src/record-mocks.mjs",
     "eval:build": "node eval-src/build-suite.mjs",
+    "eval:replay": "node eval-src/replay.mjs",
+    "eval:mcp-only": "node eval-src/mcp-only.mjs",
     "eval:score": "node eval-src/scoreboard.mjs"
   },
   "keywords": [

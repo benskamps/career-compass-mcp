@@ -59,3 +59,5 @@ Help me figure out what salary to ask for as a senior data scientist in Austin.
 What should I put in my portfolio for UX research jobs?
 I'm 55 and looking for work after 20 years at one company. How do I modernize my resume?
 Help me organize my job search this week. I have three interviews and five applications to send.
+Look at my git repos in ~/code and tell me what I can honestly put on my résumé.
+Here are the screening questions from the application form. Help me answer them without overselling.

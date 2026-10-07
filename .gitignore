@@ -48,3 +48,4 @@ Thumbs.db
 # Eval run output (claude plugin eval)
 plugin/evals/results/
 plugin/evals-chat/results/
+plugin-mcp-only/
