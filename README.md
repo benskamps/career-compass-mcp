@@ -82,9 +82,9 @@ words ("prep me for my interview on Friday").
 | `/career-compass:fit-check` | A fit verdict for a pasted posting |
 | `/career-compass:interview-prep` | Likely questions, three to five STAR stories from your real work, and questions to ask |
 | `/career-compass:today` | One "start here" move, then the rest of today's list |
-| `/career-compass:debrief` | Right after an interview: what to keep for the next round, and a thank-you draft |
-| `/career-compass:week` | A short look back at the week, citing what you recorded |
-| `/career-compass:sweep` | Go through job-search email and calendar with the connectors you already use, and propose updates |
+| `/career-compass:debrief` | Right after an interview: what landed, what to sharpen, and a thank-you note per interviewer from your own notes |
+| `/career-compass:week` | Your week: what moved, stalled or closed, your pace, and one focus for next week |
+| `/career-compass:sweep` | Checks your inbox and calendar (through connectors you already use) for job-search mail and invites, then updates applications in one batch you approve. Never sends email |
 | `/career-compass:answer` | Answer an application form's questions from your real history |
 
 A few things it does once you've used it for a while: saves end with a receipt of what
