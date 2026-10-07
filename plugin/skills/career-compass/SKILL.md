@@ -26,17 +26,13 @@ save it.**
 **Tools available** (Claude Code, or Cowork on the user's computer): use them as described
 below.
 
-**This is claude.ai chat** (web, desktop, or mobile; no Career Compass tools listed): still
-help. Do the task directly from what the user pastes, using the same method the tools use
-(see "Doing the work without the tools"). Then say once, in one sentence, that Career
-Compass can also remember their history and track applications in Claude Code or Cowork on
-their computer, which needs Node.js 22 or newer. Do not repeat that note in later replies,
-and never present your own work as a tool's output.
-
-**Claude Code or Cowork, but the tools failed** (a Career Compass tool errored or none are
-listed): do the task the same way, then say in one sentence that the Career Compass server
-didn't start, and that the usual cause is Node.js older than 22 (`node --version` in a
-terminal shows it).
+**Tools not available** (claude.ai chat on the web, desktop, or mobile, or the server
+failed to start): still help. Do the task directly from what the user pastes, using the
+same method the tools use (see "Doing the work without the tools"). Then add one sentence,
+once: Career Compass can also remember their history and track applications in Claude Code
+or Cowork on their computer, with Node.js 22 or newer; if they are already there, the
+server didn't start, and `node --version` shows whether Node is the cause. Do not repeat
+that note in later replies, and never present your own work as a tool's output.
 
 ## First contact: value before setup
 
@@ -222,7 +218,9 @@ Use what the user pasted, and say what you could not check.
 - **What to work on today:** you can't see a pipeline here, so ask them to paste or list
   their applications (company, role, stage, last contact). Then rank them and lead with
   one start-here move: an interview soonest, an offer deadline, or a follow-up gone quiet
-  for more than a week.
+  for more than a week. Offer to do that first step (the prep, the follow-up draft) rather
+  than doing it inline, give each other item one line, and keep the reply under about 12
+  lines.
 - **Debrief:** what happened, what landed, what to sharpen (honestly), then a short
   thank-you per interviewer built only from their own notes, and a reminder to follow up
   tomorrow.
