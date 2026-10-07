@@ -7,6 +7,7 @@ import { diffSection, losesData, describeDiff, type SectionDiff } from "./sectio
 import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
+import { TRUTH_RULE } from "./truth-rule.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { isReadOnlyStore } from "../storage/read-only-error.js";
 
@@ -126,8 +127,10 @@ export function registerCareerKBTools(server: McpServer): void {
         openWorldHint: false,
       },
       description:
-        "Paste any career document — performance review, award email, project summary, LinkedIn recommendation — and extract structured achievements for your Career KB. " +
-        "Extraction only: it reads what you paste and returns YAML for review. Writing that YAML to disk is a separate, explicit step with save_career_section.",
+        "Extract achievements, skills, and quotes from a career document the user pasted (performance review, award " +
+        "email, project summary, recommendation) as Career KB YAML for them to review, copying only what the document " +
+        "states and marking missing metrics [confirm: ...]. Extraction only: writing the reviewed YAML is a separate, " +
+        "explicit save_career_section call.",
       inputSchema: {
         content: z.string().describe("Full document text to ingest"),
         documentType: z.enum(["performance_review", "award", "project_summary", "recommendation", "email", "self_review", "other"]).describe("Type of document"),
@@ -163,7 +166,11 @@ ${embedUntrusted("uploaded document", content)}
 Extract structured career data from this document. Extract only what it says: copy numbers
 and wording exactly, and never fill a field the document doesn't support. A metric the
 document doesn't give is \`"[confirm: metric?]"\`, not an estimate. Leave proficiency out
-unless the document rates the skill. A recommendation's quote must be verbatim.
+unless the document rates the skill. A recommendation's quote must be verbatim. Describe
+what the user did in the document's own terms: "made a real difference" is not "improved
+workflows", and "bringing stakeholders along" is not "buy-in across groups". The person
+the document names is the user (people go by nicknames); don't compare it with an account
+or system name.
 
 Produce output in two formats:
 
@@ -312,7 +319,7 @@ Write a rejection response that achieves: **${responseGoal}**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
-- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews, and don't say how the process felt to me ("I enjoyed", "I'm disappointed") or what it involved unless I said so; leave a [confirm: ...] slot instead
 ${hadGoodRapport ? "- Reference the positive experience, using a specific detail only if the message or I gave one; otherwise keep it general" : ""}
 
 **For goal: ${responseGoal}:**
@@ -327,6 +334,8 @@ ${responseGoal === "express_continued_interest" ? "Mention the company is still 
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
 
 Lead with the recommended response, ready to copy; keep any commentary to one line after the drafts.
+
+${TRUTH_RULE}
 
 ${statusUpdated
   ? `
@@ -352,7 +361,10 @@ ${statusUpdated
         openWorldHint: false,
       },
       description:
-        "Record a durable career signal to your journal — what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, fresh proof of a skill. Append-only; over time these compound into the real shape of your career and enrich future resume, interview, and fit work.",
+        "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or " +
+        "wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and résumés " +
+        "read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, " +
+        "or an offer decision, and save only what the user said, with their OK.",
       inputSchema: {
         type: z.enum([
           "fit_signal",

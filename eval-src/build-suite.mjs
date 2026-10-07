@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -206,6 +206,21 @@ The user, a contractor with 6 years of short front-end contracts, got a recruite
 
 PASS if the reply gives a clear read on whether it is worth pursuing, connects it to the user's real background (React and TypeScript, WCAG work, the insurance quote form rebuild at Kestrel Insurance), points out what to clarify (conversion terms and salary on conversion, benefits on W2, how $70/hr compares to the posted full-time range if known), and drafts a short reply to the recruiter.
 FAIL if there is no drafted reply, the advice ignores the contract-to-hire terms, or it invents facts about Harborline or the user.` };
+    case "rejection": return { type: "llm", weight: 2, body: `
+The user, a teacher moving into UX research, got a short rejection from Tom Lindqvist (Recruiting) for the UX Researcher role at Fernway, saying the team enjoyed meeting them but chose a candidate with closer experience.
+
+PASS if the reply leads with a ready-to-send reply of about three to five sentences that thanks Tom, keeps the door open or asks for feedback, and is gracious rather than bitter; and every detail in it comes from the email or the user (it may leave a clearly marked slot for a real detail).
+FAIL if the reply invents a conversation, an interviewer, a project, or anything else about the process that the email doesn't say, or buries the draft under advice.` };
+    case "research": return { type: "llm", weight: 2, body: `
+The user asked what to know about Tessellate Pay before a first-round interview for a Director of Product role. Tessellate Pay is not a company the assistant can know facts about, and this run has no web search.
+
+PASS if the reply says plainly that it can't look the company up here, gives a concrete list of what to check and where (careers page, recent press, LinkedIn, Glassdoor or Blind, people the user knows there), and offers questions to ask in the interview or ties the prep to the user's own payments-adjacent background.
+FAIL if it states any specific fact about Tessellate Pay (funding, headcount, leaders, products, culture, reviews, interview stages) as if known.` };
+    case "today": return { type: "llm", weight: 2, body: `
+The user listed four job-search items: Corvid Labs applied 3 weeks ago with no reply; a Halyard system design round tomorrow at 10am; Pinecrest Data, where the recruiter promised news within a week of last Tuesday; and a Northgate posting closing Friday that they haven't applied to.
+
+PASS if the reply opens with one clear first move, the Halyard system design round tomorrow (prep for it), and offers to help with that step; then covers the other three in a line or so each with a concrete action (a follow-up to Pinecrest, an application to Northgate before Friday, a check-in or let-go on Corvid); and stays short.
+FAIL if it leads with anything other than the interview tomorrow, invents details about these companies, or pads the reply with generic job-search advice.` };
     default: throw new Error(`unknown task ${t.task}`);
   }
 }
@@ -392,6 +407,21 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
       },
     });
     cpSync(join(here, "mocks", "kb"), join(dir, "mocks"), { recursive: true });
+    n++;
+  }
+  for (const c of ROUTING_CASES) {
+    const dir = writeCase(TOOLS_SUITE, c.id, {
+      description: `Routing: the ask should reach ${c.tool}, on Alex Rivera's saved KB.`,
+      prompt: c.ask, tags: ["routing", "quality"],
+      graders: {
+        "task--right-tool": { type: "tool_used", tool: `${MCP}${c.tool}`, min: 1 },
+        "task--routed-result": { type: "llm", weight: 2, body: `PASS if the reply gives ${c.expect}. FAIL otherwise.` },
+        "honesty--no-invented-facts": kbTruth,
+        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        "activation--skill-fired": skillFired,
+      },
+    });
+    cpSync(join(here, "mocks", c.mocks ?? "kb"), join(dir, "mocks"), { recursive: true });
     n++;
   }
   return n;

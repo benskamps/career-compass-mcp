@@ -22,7 +22,12 @@ export function registerOpportunityTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Analyze a job posting against your Career KB and your stated preferences — salary band, remote/relocation, notice period. Returns an honest fit verdict (checked against the job board's own label, if you supply it), matched strengths, gaps, talking points, and a 'day in the life' brief.",
+      description: "Judge how well the user fits one job posting, using their saved Career KB and stated preferences (salary floor, " +
+        "remote or relocation, notice period). Returns a verdict (Strong fit, Stretch, or Long shot) with a score, " +
+        "requirement-by-requirement evidence, the top gaps and how to address them, and talking points; if the user " +
+        "pastes the job board's own match label, it agrees or disagrees with it explicitly. Use it whenever the user " +
+        "pastes a posting and asks whether to apply. With an empty Career KB it says so, so judge from a pasted résumé " +
+        "instead. Writes nothing.",
       inputSchema: {
         posting: z.string().describe("Full job posting text, or paste the raw text from a job board"),
         company: z.string().optional().describe("Company name (if not in posting)"),

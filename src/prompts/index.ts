@@ -285,7 +285,7 @@ ${resumeText ? `**Here's my existing résumé — extract what you can:**\n${emb
 
 1. **Profile** — name, summary, target roles, target industries, email, location. Save with \`save_career_section\` (section: profile)
 2. **Experience** — for each job: \`role\` (the job title), \`company\`, \`startDate\` and \`endDate\` as \`YYYY-MM\` (use \`'present'\` for a current job), and \`achievements\` as \`{ metric, context, impact }\` objects — not plain strings. Save with \`save_career_section\` (section: experience)
-3. **Skills** — technical, leadership, and domain skills with proficiency levels. Save with \`save_career_section\` (section: skills)
+3. **Skills** — technical, leadership, and domain skills, with a proficiency level only if I give one. Save with \`save_career_section\` (section: skills)
 4. **First pipeline entry** — do I have a job I'm eyeing or already applied to? If so, add it with \`pipeline_add\`
 
 **Rules:**

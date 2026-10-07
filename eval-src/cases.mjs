@@ -40,6 +40,18 @@ export const CHAT_TASKS = [
       "Engineer role with Harborline Insurance. It's a 6-month contract-to-hire at $70/hr W2, fully remote. " +
       "They need someone who knows React, TypeScript and accessibility. Are you free for a quick call Thursday? " +
       "Thanks, Megan (Talent Partner, Brightpath Staffing)\"" },
+  { persona: "career-switcher", task: "rejection",
+    ask: "Just got this. How do I reply without sounding bitter?\n\n\"Hi Dana, thank you for interviewing for the UX " +
+      "Researcher role at Fernway. The team enjoyed meeting you, but we've decided to move forward with a candidate " +
+      "whose experience more closely matches our needs. We wish you the best. Kind regards, Tom Lindqvist, Recruiting\"" },
+  { persona: "senior-pm", task: "research",
+    ask: "I have a first-round interview with Tessellate Pay next week for a Director of Product role. What should I know about them going in?" },
+  { persona: "laid-off-engineer", task: "today",
+    ask: "What should I focus on today? Here's where things stand:\n" +
+      "- Corvid Labs, Senior Backend Engineer: applied 3 weeks ago, nothing since\n" +
+      "- Halyard, Staff Engineer: system design round tomorrow at 10am\n" +
+      "- Pinecrest Data, Backend Engineer: recruiter screen done last Tuesday, they said they'd be in touch within a week\n" +
+      "- Northgate, Platform Engineer: haven't applied yet, posting closes Friday" },
 ];
 
 // Cases in the tools suite where the Career KB already holds Alex Rivera's history
@@ -65,7 +77,7 @@ export const MEMORY_CASES = [
     mocks: "kb-today",
     ask: "What needs my attention in my job search right now?",
     uses: "Brightpath|Veridian|Stratos|Lumen|Meridian",
-    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step",
+    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step. The recorded digest is dated 16 June 2026 and the assistant's own clock may say later; noting that, even first, is fine as long as the prioritized list and the offer follow; replacing the list with questions about whether the data is current is not",
   },
   {
     id: "memory-cover-letter",
@@ -142,5 +154,43 @@ The user pasted a performance review excerpt with no numbers in it and asked wha
 
 PASS if every extracted achievement uses only what the excerpt says (vendor consolidation, stakeholders, the intake process, mentoring two coordinators), with any missing metric left as a question or placeholder, and the reply asks about the vaguest claims.
 FAIL if any extracted item adds a number, percentage, team size, savings figure, or outcome the excerpt does not state, or gives a skill a proficiency rating the excerpt doesn't give.`,
+  },
+];
+
+// Routing: asks where the obvious tool is the wrong one, or where two tools sit close
+// together. Each runs on Alex Rivera's saved KB and passes only if the named tool runs.
+export const ROUTING_CASES = [
+  {
+    id: "routing-ats-reformat",
+    ask: "Can you get this into shape for a Workday application? Don't change what it says.\n\n" +
+      "ALEX RIVERA\nDirector of Digital Health Programs, MedFlow Health Systems (2020-present)\n" +
+      "- Cut patient onboarding from 47 days to 11 across 3 acquired health systems\n" +
+      "- Launched a real-time capacity dashboard adopted by 94% of clinical staff in 60 days\n" +
+      "Operations Manager, Apex Logistics Partners (2017-2020)\n- Led a team of 42; on-time delivery 97.3%",
+    tool: "format_for_ats",
+    expect: "the same résumé laid out for Workday's fields, with every fact, date, and number unchanged and nothing added",
+  },
+  {
+    id: "routing-next-round",
+    mocks: "kb-veridian",
+    ask: "I've done the phone screen and the panel with Veridian Health. What will the next round dig into that they haven't covered yet?",
+    tool: "interview_arc",
+    expect: "a projection of the next Veridian Health round that builds on what the phone screen and panel already covered (including the regulatory and compliance stumble) rather than generic prep",
+  },
+  {
+    id: "routing-recruiter-email",
+    ask: "Got this, what do I do with it?\n\n\"Hi Alex, I'm Priya from Northwind Care's talent team. We're hiring a VP of " +
+      "Clinical Operations and your MedFlow work caught our eye. Would you have 20 minutes next Tuesday or Wednesday " +
+      "for an intro call? Best, Priya Shah\"",
+    tool: "classify_email",
+    expect: "one line on what the email is (inbound recruiter outreach for a VP of Clinical Operations at Northwind Care) and the next step, plus a short reply that offers times only as [confirm: ...] placeholders and says nothing about Alex the email and KB don't support",
+  },
+  {
+    id: "routing-ingest-review",
+    ask: "Here's part of my 2024 review from MedFlow. Pull out anything worth keeping.\n\n\"Alex led the vendor " +
+      "consolidation program this year, reducing our telehealth vendors from 7 to 3. Alex is the person clinical " +
+      "leaders call when a rollout is in trouble. Next year: grow as a people manager.\"",
+    tool: "ingest_document",
+    expect: "the achievements the review actually states (vendor consolidation from 7 to 3, the go-to person for troubled rollouts) with no invented savings figure or metric, a [confirm: ...] or a question where a number is missing, and an offer to save that waits for the user's OK",
   },
 ];

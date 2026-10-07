@@ -12,6 +12,19 @@
   thank-you from what you tell it and to keep what you learned for the next round,
   instead of telling you to chase a timeline.
 
+### Changed
+
+- **Claude picks the right tool more often.** Seven tool descriptions that read like
+  feature blurbs now say what each does, when to use it instead of its neighbour, and
+  what it writes. The server also sends instructions: which tool fits which ask, the
+  truth rule, which tools write to disk, and answer-first replies.
+- **First replies follow one rule.** The answer, at most one question, one offer of the
+  next step. When only a posting is pasted, the résumé is the only ask. Claude talks
+  about your job search, not "your Career KB is empty".
+- **Works better in claude.ai chat.** The skill now covers recruiter emails, rejection
+  replies, company research and "what should I work on today" without tools, and tells
+  chat apart from a server that failed to start in Claude Code or Cowork.
+
 ### Fixed
 
 - **Saving your history can't quietly drop entries.** `save_career_section` now compares
@@ -29,6 +42,12 @@
 - **Résumé tailoring sends less about you.** `tailor_resume` used to paste the whole
   Career KB, including your salary floor, preferences and journal. It now sends your
   contact header, roles with every achievement, skills, education and projects.
+- **The truth rule now reaches every drafting tool.** The rejection reply, the recruiter
+  reply draft, `interview_arc` and `format_for_ats` carried a one-line substitute that
+  missed "never invent my inner life"; a rejection draft could say "I'm disappointed".
+  They now append the full rule, and a test fails if a drafting tool drops it.
+- `setup-career-kb` no longer asks for skill proficiency levels you didn't give.
+
 
 ## 2.9.7 — 2026-10-06
 
@@ -60,7 +79,9 @@
   rests on a reason that is true for you (your data, your targets, another offer), and
   benefits get a dollar value only when the offer states one.
 - **Interview prep, document extraction, rejection replies, recruiter-email replies and
-  ATS formatting** now carry the same truth rule as the drafting tools: results copied
+  ATS formatting** now follow the same truth-rule wording as the drafting tools
+  (correction: only interview prep carried the full rule block in 2.9.7; the others got
+  a one-line version, fixed in the next release): results copied
   exactly or marked `[confirm: …]`, no invented metrics or proficiency ratings when
   extracting a review, no invented interview details in a rejection reply, and the ATS
   keyword check runs only when the posting is in the conversation. Interview prep opens

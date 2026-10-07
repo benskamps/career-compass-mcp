@@ -9,8 +9,8 @@ The user wants a fit check on the job posting below.
 
 - If no posting is included, ask them to paste it and stop.
 - If the Career Compass tools are available, use `explore_opportunity` with the posting. If
-  `check_setup` or the tool shows the Career KB is empty, ask them to paste a résumé first,
-  do the fit check, then offer to save the résumé with `save_career_section`.
+  it says there is no saved history yet, ask them to paste a résumé first (that is the
+  only question), do the fit check, then offer to save the résumé with `save_career_section`.
 - If the tools are not available, follow "Doing the work without the tools" in the
   career-compass skill.
 

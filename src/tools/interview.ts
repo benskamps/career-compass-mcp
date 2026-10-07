@@ -196,7 +196,10 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Mid-process projection: reconstructs the interview arc so far — rounds completed, what each surfaced, threads left open — then projects what the NEXT round will probe, without repeating ground already covered.",
+      description: "For a user already partway through one company's interviews: reconstruct the process so far (rounds done, what " +
+        "each surfaced, threads left open) from the pipeline, the journal, and their notes, then project what the next " +
+        "round will probe and how to prepare without repeating covered ground. Use prepare_interview instead for a first " +
+        "interview. Writes nothing.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID — pulls the rounds, posting, and linked journal entries for this process"),
         company: z.string().optional().describe("Company name (if no application ID, or to match journal entries)"),
@@ -322,7 +325,9 @@ that would most change their read of you if it landed.
 
 After the round happens, capture what they actually asked with \`capture_insight\`
 (\`type: "interview_insight"\`${applicationId ? `, \`applicationId: "${applicationId}"\`` : ""}) — including where this projection was wrong. That is
-what makes the next projection in this process, and the next process, sharper.`,
+what makes the next projection in this process, and the next process, sharper.
+
+${TRUTH_RULE}`,
         }],
       };
     }
