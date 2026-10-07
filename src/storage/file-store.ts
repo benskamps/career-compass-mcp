@@ -14,6 +14,9 @@ import {
   Education,
   Project,
   Testimonial,
+  NarrativeEntry,
+  Story,
+  Person,
 } from "../schemas/career-schema.js";
 import { freshenSampleDates, isBundledSampleDir } from "../sample-data.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
@@ -285,7 +288,7 @@ export async function loadCareerData(): Promise<CareerData | null> {
   // Load each section and merge
   const raw: Record<string, unknown> = {};
 
-  const sections = ["profile", "experience", "skills", "education", "projects", "testimonials", "journal"];
+  const sections = ["profile", "experience", "skills", "education", "projects", "testimonials", "journal", "narrative", "stories", "people"];
   await Promise.all(sections.map(async (section) => {
     const path = join(dir, `${section}.yaml`);
     if (!existsSync(path)) {
@@ -339,7 +342,7 @@ export async function unreadableCareerSections(): Promise<string[]> {
   const dir = careerDir();
   if (!existsSync(join(dir, "profile.yaml"))) return [];
   const bad: string[] = [];
-  for (const section of ["experience", "skills", "education", "projects", "testimonials", "journal"]) {
+  for (const section of ["experience", "skills", "education", "projects", "testimonials", "journal", "narrative", "stories", "people"]) {
     const path = join(dir, `${section}.yaml`);
     if (!existsSync(path)) continue;
     try {
@@ -354,6 +357,7 @@ export async function unreadableCareerSections(): Promise<string[]> {
 /** The only section names that may become a filename. */
 export const CAREER_SECTIONS = [
   "profile", "experience", "skills", "education", "projects", "testimonials",
+  "narrative", "stories", "people",
 ] as const;
 export type CareerSection = (typeof CAREER_SECTIONS)[number];
 
@@ -392,6 +396,9 @@ export interface CareerSectionValueMap {
   education: Education[];
   projects: Project[];
   testimonials: Testimonial[];
+  narrative: NarrativeEntry[];
+  stories: Story[];
+  people: Person[];
 }
 
 /** Fail-closed validation schema for each section, keyed by name. */
@@ -402,6 +409,9 @@ const CAREER_SECTION_SCHEMA: { readonly [K in CareerSection]: z.ZodType<CareerSe
   education: z.array(Education),
   projects: z.array(Project),
   testimonials: z.array(Testimonial),
+  narrative: z.array(NarrativeEntry),
+  stories: z.array(Story),
+  people: z.array(Person),
 };
 
 /**

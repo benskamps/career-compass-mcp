@@ -4,7 +4,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { join } from "path";
 import { loadCareerData, saveCareerSection, mutateCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS } from "../storage/file-store.js";
 import { diffSection, losesData, describeDiff, type SectionDiff } from "./section-diff.js";
-import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
+import { Profile, Experience, Skill, Education, Project, Testimonial, NarrativeEntry, Story, Person } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
 import { TRUTH_RULE } from "./truth-rule.js";
@@ -21,6 +21,9 @@ const CAREER_SECTION_SCHEMA = {
   education: z.array(Education),
   projects: z.array(Project),
   testimonials: z.array(Testimonial),
+  narrative: z.array(NarrativeEntry),
+  stories: z.array(Story),
+  people: z.array(Person),
 } as const;
 
 /**
@@ -60,6 +63,15 @@ const SECTION_SHAPES: Record<keyof typeof CAREER_SECTION_SCHEMA, string> = {
   testimonials:
     "array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), " +
     "quote, date?, context? }",
+  narrative:
+    "array of { topic: 'why_looking' | 'why_left' | 'gap' | 'switch' | 'work_authorization' | " +
+    "'notice_period' | 'optimizing_for' | 'other', text (the user's own words), updated?: 'YYYY-MM-DD' }",
+  stories:
+    "array of { title, situation?, task?, action?, result?, text?, sourceCompany?, sourceRole?, " +
+    "themes?: [string], usedWith?: [{ applicationId?, company?, round?, interviewer?, date? }] }",
+  people:
+    "array of { name, howWeKnow?, company?, role?, lastContact?: 'YYYY-MM-DD', offered?, " +
+    "applicationIds?: [string], reconnectEveryDays?: number, notes? }",
 };
 
 /** The shapes as one block, for the `data` parameter description. */

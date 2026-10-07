@@ -9,7 +9,8 @@
        git -C "~/.career-compass" add -A
        git -C "~/.career-compass" commit -m "initial career kb"
      That gives you free backup and a diff history for all your career data.
-✅ **Career KB** — All sections populated: profile (1), experience (3), skills (12), education (2), projects (3), testimonials (3), journal (5).
+⚠️ **Career KB** — Populated: profile (1), experience (3), skills (12), education (2), projects (3), testimonials (3), journal (5). Still empty: narrative, stories, people.
+   → Fill the gaps with `save_career_section` — every filled section sharpens resume tailoring and interview prep.
 ✅ **Pipeline** — Parses cleanly — 8 applications, 6 still active.
 ✅ **Temp files** — No leftover .tmp files.
 ✅ **Write claim** — No other process is writing this folder.
@@ -18,4 +19,4 @@
      PowerShell:  $env:CAREER_DATA_PATH="~/.career-compass"; npx -y career-compass-mcp@2.9.7 dashboard
      bash/zsh:    CAREER_DATA_PATH="~/.career-compass" npx -y career-compass-mcp@2.9.7 dashboard
 
-**Everything checks out.**
+**Nothing is broken.** 1 thing above would make Career Compass work better.

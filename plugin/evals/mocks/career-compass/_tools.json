@@ -917,7 +917,10 @@
               "skills",
               "education",
               "projects",
-              "testimonials"
+              "testimonials",
+              "narrative",
+              "stories",
+              "people"
             ],
             "description": "Which part of the Career KB to write. 'profile' is a single object; every other section is a list."
           },
@@ -938,7 +941,7 @@
                 "type": "string"
               }
             ],
-            "description": "The complete contents for this section — an object for 'profile', an array for every other section. Send it as structured JSON, not as a stringified blob. Shapes (? marks optional):\n\nprofile: one object: { name, summary, email?, phone?, location?, linkedIn?, portfolio?, targetRoles?: [string], targetIndustries?: [string], salaryMin?: number, salaryMax?: number }\nexperience: array of { role, company, startDate: 'YYYY-MM', endDate: 'YYYY-MM' | 'present', summary?, industry?, location?, tags?: [string], achievements: [{ metric, context, impact, keywords?: [string] }] } — achievements are OBJECTS, not strings: metric is the quantified outcome ('cut onboarding from 6 weeks to 9 days'), context is the situation, impact is why it mattered\nskills: array of { name, category ('Technical' | 'Leadership' | 'Domain' | …), proficiency?: 1-5, yearsUsed?: number, lastUsed?: 'YYYY' | 'current' }\neducation: array of { degree, institution, date: 'YYYY' | 'YYYY-MM', honors?, relevantCoursework?: [string], certifications?: [string] }\nprojects: array of { name, role, description, technologies?: [string], metrics?: [string], outcomes?: [string], url? }\ntestimonials: array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), quote, date?, context? }"
+            "description": "The complete contents for this section — an object for 'profile', an array for every other section. Send it as structured JSON, not as a stringified blob. Shapes (? marks optional):\n\nprofile: one object: { name, summary, email?, phone?, location?, linkedIn?, portfolio?, targetRoles?: [string], targetIndustries?: [string], salaryMin?: number, salaryMax?: number }\nexperience: array of { role, company, startDate: 'YYYY-MM', endDate: 'YYYY-MM' | 'present', summary?, industry?, location?, tags?: [string], achievements: [{ metric, context, impact, keywords?: [string] }] } — achievements are OBJECTS, not strings: metric is the quantified outcome ('cut onboarding from 6 weeks to 9 days'), context is the situation, impact is why it mattered\nskills: array of { name, category ('Technical' | 'Leadership' | 'Domain' | …), proficiency?: 1-5, yearsUsed?: number, lastUsed?: 'YYYY' | 'current' }\neducation: array of { degree, institution, date: 'YYYY' | 'YYYY-MM', honors?, relevantCoursework?: [string], certifications?: [string] }\nprojects: array of { name, role, description, technologies?: [string], metrics?: [string], outcomes?: [string], url? }\ntestimonials: array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), quote, date?, context? }\nnarrative: array of { topic: 'why_looking' | 'why_left' | 'gap' | 'switch' | 'work_authorization' | 'notice_period' | 'optimizing_for' | 'other', text (the user's own words), updated?: 'YYYY-MM-DD' }\nstories: array of { title, situation?, task?, action?, result?, text?, sourceCompany?, sourceRole?, themes?: [string], usedWith?: [{ applicationId?, company?, round?, interviewer?, date? }] }\npeople: array of { name, howWeKnow?, company?, role?, lastContact?: 'YYYY-MM-DD', offered?, applicationIds?: [string], reconnectEveryDays?: number, notes? }"
           },
           "replace": {
             "description": "Set true only when the user has confirmed that entries should be removed, or that an unreadable section file should be overwritten. Without it, a save that would drop stored entries is refused and the refusal lists them.",
