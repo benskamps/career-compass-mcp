@@ -91,7 +91,7 @@ and writes nothing.
 
 The plugin makes two kinds of network request, and neither carries your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.8` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.9.9` and its
   dependencies from the public npm registry.
 - **Update check, only when you ask:** the `check_setup` tool can ask the public npm
   registry for the latest published version. It is off by default; Claude turns it on when
@@ -106,7 +106,7 @@ covering collection, storage, sharing, retention, and contact details, is at
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.9.8`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.9.9`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
@@ -114,14 +114,14 @@ covering collection, storage, sharing, retention, and contact details, is at
   commands above.
 
 <details>
-<summary><b>The eighteen tools</b></summary>
+<summary><b>The nineteen tools</b></summary>
 
 Read tools only read your files; write tools ask before changing them.
 
 | Area | Tools |
 |------|-------|
 | Find and assess a role | `explore_opportunity`, `research_company` |
-| Apply | `tailor_resume`, `generate_cover_letter`, `format_for_ats` |
+| Apply | `tailor_resume`, `generate_cover_letter`, `format_for_ats`, `answer_application` |
 | Track the pipeline | `pipeline_view`, `pipeline_add` (write), `pipeline_update` (write), `classify_email` |
 | Interview and decide | `prepare_interview`, `interview_arc`, `evaluate_offer`, `generate_rejection_response` (write) |
 | Feed the knowledge base | `save_career_section` (write), `ingest_document`, `capture_insight` (write), `harvest_evidence` |

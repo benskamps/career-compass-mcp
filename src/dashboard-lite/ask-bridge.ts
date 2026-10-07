@@ -106,7 +106,7 @@ export const READ_ONLY_NOTE =
  * on it.
  */
 export const READ_ONLY_TOOLS = [
-  "check_setup", "classify_email", "evaluate_offer", "explore_opportunity", "format_for_ats",
+  "answer_application", "check_setup", "classify_email", "evaluate_offer", "explore_opportunity", "format_for_ats",
   "generate_cover_letter", "harvest_evidence", "ingest_document", "interview_arc", "pipeline_view",
   "prepare_interview", "research_company", "tailor_resume",
 ] as const;

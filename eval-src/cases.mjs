@@ -1,3 +1,5 @@
+import { longDate } from "./eval-date.mjs";
+
 // What each eval case asks, in one place. build-suite.mjs turns this into the
 // prompt.md and graders/*.md files that `claude plugin eval` reads.
 //
@@ -77,7 +79,7 @@ export const MEMORY_CASES = [
     mocks: "kb-today",
     ask: "What needs my attention in my job search right now?",
     uses: "Brightpath|Veridian|Stratos|Lumen|Meridian",
-    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step. The recorded digest is dated 16 June 2026 and the assistant's own clock may say later; noting that, even first, is fine as long as the prioritized list and the offer follow; replacing the list with questions about whether the data is current is not",
+    expect: `a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its ${longDate("2026-06-27")} deadline, each with a concrete action, and offers to do the first step`,
   },
   {
     id: "memory-cover-letter",
@@ -256,8 +258,10 @@ FAIL if it tells the user to switch to Claude Code or Cowork (they are already t
 export const FEATURE_CASES = [
   {
     id: "offer-record",
+    mocks: "kb-brightpath",
     ask: "Got the Brightpath Health offer today: $165,000 base, and they need an answer by Friday.",
     check: "task--offer-record",
+    tool: "evaluate_offer",
     writes: ["pipeline_update", "save_career_section", "capture_insight"],
     expect: `
 The user reported an offer from Brightpath Health ($165,000 base, answer due Friday). It is in their saved pipeline.
@@ -284,6 +288,7 @@ FAIL if it changes or claims to have changed anything without asking, invents na
       "3. Are you legally authorized to work in the United States?\n" +
       "4. What is your desired salary?",
     check: "task--application-answers",
+    tool: "answer_application",
     writes: ["save_career_section", "pipeline_add", "pipeline_update"],
     expect: `
 The user asked for answers to four application form questions. Their saved history does not mention Epic EHR, work authorization, or anything about Northwind Care beyond its name and the role.
@@ -337,7 +342,7 @@ FAIL if the prep ignores that earlier stumble, or invents interview details the 
 The user asked to track their first application (Lumen Digital, Head of Operations, applied yesterday). Nothing was tracked before.
 
 PASS if the assistant adds it (or proposes the exact entry), confirms what was tracked, and may offer, once and as an option, a weekday morning briefing they can set up in their own app. Not offering the briefing is also a pass if the rest is right.
-FAIL if it offers the briefing more than once, pushes it as required, claims it set up any schedule itself, or invents details of the application.`,
+FAIL if it offers the briefing more than once, pushes it as required, claims it set up any schedule itself, or invents details of the application. Not inventions: a date worked out from "yesterday", "company site" for "careers page", and the id the tracker returned.`,
   },
 ];
 

@@ -1,5 +1,50 @@
 # Changelog
 
+## 2.9.9 — 2026-10-07
+
+The 2.9.8 features existed but often never reached anyone in Claude Code, where Claude
+usually calls a tool directly without loading the skill. This release puts each behavior
+where Claude actually meets it.
+
+### Added
+
+- **`answer_application`.** Paste an application form's questions and it answers each
+  from your saved history within its limit. Work authorization, relocation, salary and
+  start date come only from what you saved or said; anything else is a placeholder, and
+  a "years with X" your history can't support is flagged, never inflated. Before, the
+  answer method needed a resource some hosts don't expose, so Claude couldn't read your
+  history and asked you to paste it.
+- **`pipeline_add` takes the date you applied.** "I applied yesterday" is recorded as
+  yesterday, not today.
+
+### Changed
+
+- **Your first tracked application offers the morning briefing.** The offer now comes
+  from `pipeline_add` itself, once, so it appears whether or not the skill loaded.
+- **Telling Claude about an offer offers to record it.** `evaluate_offer` shows any offer
+  already on file for that application, says when yours differs, and offers the exact
+  `pipeline_update` (or `pipeline_add` for a company not yet tracked), so the deadline
+  leads your daily list.
+- **Offers are weighed against your saved target.** `evaluate_offer` now reads your
+  profile's salary target, target roles and what you're optimizing for, instead of
+  saying it doesn't know them.
+- **The pipeline list names who helped.** Referrers and contacts appear under the list,
+  so a close-out thanks them by name.
+- **"I accepted the offer" starts the close-out.** The skill and the server's routing now
+  cover it: congratulations, then thank-yous to the people on file, withdrawals from the
+  other live applications, and marking it accepted, each after your OK.
+- **Cold openers get one first step.** "Get me started", "I don't know where to start"
+  and "what does this do?" get a few warm lines and one thing to paste, not a menu.
+- **Shorter recruiter-email replies.** One line on what it is and what to do, the reply
+  draft, and one offer to update the tracker.
+- **An empty tracker asks for one role**, not your last three applications.
+
+### Evals
+
+- The Alex Rivera mocks are recorded on a calendar shifted to the run date
+  (`eval-src/eval-date.mjs`), so a June sample no longer reads as stale data to a model
+  whose clock says October.
+
 ## 2.9.8 — 2026-10-07
 
 ### Added

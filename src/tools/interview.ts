@@ -379,7 +379,7 @@ ${TRUTH_RULE}`,
         "current pay, stated targets, other offers (including live offers already recorded in their pipeline, side by " +
         "side), and any market data they supply, then what to negotiate and the exact words. Use it when the user has an " +
         "offer in hand. Benchmarks come only from data the user gives; the server never fetches salary data. Writes " +
-        "nothing; when the offer's deadline isn't recorded it suggests saving it with pipeline_update.",
+        "nothing; it ends by offering to record the offer and its deadline with pipeline_update, for the user's OK.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
         company: z.string().optional().describe("Company making the offer. Used to pull the matching application for context."),
@@ -404,11 +404,27 @@ ${TRUTH_RULE}`,
       const app = pipeline ? findApplication(pipeline, applicationId, company, role) : undefined;
       if (app) { company = company ?? app.company; role = role ?? app.role; }
       const recorded = pipeline ? otherRecordedOffers(pipeline, app?.id) : [];
-      const deadlineOffer = app && !app.offer?.expiresDate
-        ? `\nEnd your reply with one offer: if the offer letter or the user gives a deadline, save it with \`pipeline_update\` ` +
-          `(applicationId \`${app.id}\`, \`offerExpiresDate\` as YYYY-MM-DD) so it shows up in their daily digest. Ask first; ` +
-          `write it only with their OK, and never guess a date.\n`
+      // The user's own targets: an offer is weighed against what they said they
+      // want before anything else. Best-effort; the review works without them.
+      const careerRead = await guardedRead(() => loadCareerData());
+      const targets = careerRead.ok && careerRead.value ? offerTargets(careerRead.value) : "";
+      // Recording the offer is what puts its deadline at the top of the daily
+      // digest. This used to fire only for a matched application with no
+      // deadline saved, so a new offer from a company with an older record (or
+      // none) was weighed and never recorded. The model sees what is on file and
+      // compares it with what the user just said.
+      const onFile = app?.offer
+        ? `\n## Offer already on record for this application (\`${app.id}\`, status ${app.status})\n${offersTable([app])}\n`
         : "";
+      const deadlineOffer = app
+        ? `\nEnd your reply with one offer: record this offer on application \`${app.id}\` with \`pipeline_update\` ` +
+          `(\`status: "offer"\`, \`offerBaseSalary\` and any other figure exactly as stated, \`offerExpiresDate\` as YYYY-MM-DD ` +
+          `for a deadline they gave, such as "Friday"), so the deadline leads their daily digest. ` +
+          `${app.offer ? "If what is on record above already matches what they told you, skip this offer. If it differs, say so in one line and offer to update it. " : ""}` +
+          `Show the exact fields, ask first, write only with their OK, and never guess a date or a figure.\n`
+        : `\nEnd your reply with one offer: track this offer so its deadline leads their daily digest, with \`pipeline_add\` ` +
+          `(company, role, \`status: "offer"\`) and then \`pipeline_update\` with the offer figures and \`offerExpiresDate\` ` +
+          `exactly as stated. Ask first and write only with their OK.\n`;
 
       return {
         content: [{
@@ -423,7 +439,7 @@ ${currentComp ? `**Current comp:** ${currentComp}` : ""}
 ${marketData ? `**Market data:**\n${embedUntrusted("market data", marketData)}` : ""}
 ${priorities ? `**My priorities:** ${priorities}` : ""}
 ${otherOffers ? `**Other offers/processes:** ${otherOffers}` : ""}
-${recorded.length ? `\n## Other Offers on Record (from the pipeline)\n${offersTable(recorded)}\n` : ""}
+${targets}${onFile}${recorded.length ? `\n## Other Offers on Record (from the pipeline)\n${offersTable(recorded)}\n` : ""}
 ---
 
 **Instructions for Claude:**
@@ -439,7 +455,8 @@ Break down every component with annualized values:
 
 ### 2. Market Comparison
 Compare to market rate for ${role ?? "this role"} at ${company ?? "this company type"}'s stage/size${location ? ` in ${location}` : ""}:
-${marketData ? "- Compare against the market data above, citing it\n- How does this offer rank against it?" : "- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)\n- Compare instead against my current pay, my stated targets, and any other offers"}
+${marketData ? "- Compare against the market data above, citing it\n- How does this offer rank against it?" : "- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)\n- Compare instead against my current pay, my saved targets above, and any other offers"}
+${targets ? "- Lead the comparison with my saved salary target: say plainly whether the base is below, inside, or above it" : ""}
 
 ### 3. Negotiation Strategy
 - What should I push on first?
@@ -643,4 +660,28 @@ function buildArcCareerContext(career: CareerData): string {
 
 **Evidence available for answers:**
 ${achievements.join("\n") || "- None recorded yet"}`;
+}
+
+/**
+ * What the user said they want, from the Career KB, for weighing an offer.
+ * evaluate_offer used to read only the pipeline, so every review said "I
+ * don't have your target" to a user whose profile held one. "" when nothing
+ * relevant is saved.
+ */
+export function offerTargets(career: CareerData): string {
+  const p = career.profile;
+  const fmt = (n: number) => n.toLocaleString("en-US");
+  const lines: string[] = [];
+  if (p.salaryMin !== undefined || p.salaryMax !== undefined) {
+    const band = p.salaryMin !== undefined && p.salaryMax !== undefined ? `${fmt(p.salaryMin)}–${fmt(p.salaryMax)}`
+      : p.salaryMin !== undefined ? `at least ${fmt(p.salaryMin)}` : `up to ${fmt(p.salaryMax!)}`;
+    lines.push(`- Salary target: ${p.salaryCurrency} ${band} base`);
+  }
+  if (p.targetRoles.length) lines.push(`- Target roles: ${p.targetRoles.join(", ")}`);
+  if (p.openToRemote !== undefined) lines.push(`- Open to remote: ${p.openToRemote ? "yes" : "no"}`);
+  if (p.noticePeriod) lines.push(`- Notice period: ${p.noticePeriod}`);
+  for (const n of career.narrative.filter((e) => e.topic === "optimizing_for" || e.topic === "why_looking")) {
+    lines.push(`- ${n.topic === "optimizing_for" ? "Optimizing for" : "Why I'm looking"}: "${n.text.replace(/\s+/g, " ").trim()}"`);
+  }
+  return lines.length ? `\n## My targets (from the Career KB)\n${lines.join("\n")}\n` : "";
 }

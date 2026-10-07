@@ -481,20 +481,28 @@ describe("C15 · evaluate_offer compares recorded offers and offers to save the 
     expect(text).toContain("## Other Offers on Record");
     expect(text).toContain("| Globex (`g1`) | VP Ops | negotiating | USD 195,000 | USD 20,000 |  |  | 2026-10-20 |");
     expect(text).not.toContain("Initech");
-    expect(text).not.toMatch(/\| Acme \(`a1`\)/);
+    const others = text.slice(text.indexOf("## Other Offers on Record"), text.indexOf("---", text.indexOf("## Other Offers on Record")));
+    expect(others).not.toMatch(/\| Acme \(`a1`\)/);
     expect(text).toMatch(/side by side/);
   });
 
-  it("offers to save a missing deadline with pipeline_update, with the user's OK", async () => {
+  it("offers to record the offer and its deadline with pipeline_update, with the user's OK", async () => {
     const { text } = await call("evaluate_offer", { company: "Acme", offerDetails: "Base 180k" });
-    expect(text).toMatch(/pipeline_update.*applicationId `a1`.*offerExpiresDate/s);
+    expect(text).toMatch(/application `a1` with `pipeline_update`.*offerExpiresDate/s);
     expect(text).toMatch(/only with their OK/);
   });
 
-  it("doesn't ask for a deadline already recorded", async () => {
+  it("shows the offer already on record and skips the offer when it matches", async () => {
     const { text } = await call("evaluate_offer", { applicationId: "g1", offerDetails: "Base 195k" });
-    expect(text).not.toContain("offerExpiresDate");
+    expect(text).toContain("## Offer already on record for this application (`g1`, status negotiating)");
+    expect(text).toMatch(/already matches what they told you, skip this offer/);
     expect(text).toContain("| Acme (`a1`)");
+  });
+
+  it("offers to track an offer from a company not in the pipeline", async () => {
+    const { text } = await call("evaluate_offer", { company: "Hooli", offerDetails: "Base 170k, answer by Friday" });
+    expect(text).toMatch(/`pipeline_add`.*`status: "offer"`.*offerExpiresDate/s);
+    expect(text).toMatch(/only with their OK/);
   });
 });
 
@@ -549,5 +557,33 @@ describe("C30 · the experience save receipt says what saving bought", () => {
     expect(text).toContain("Next fit check can cite 2 achievements, 2 with numbers.");
     const skills = await call("save_career_section", { section: "skills", data: [{ name: "Ops", category: "Domain" }] });
     expect(skills.text).not.toContain("Next fit check");
+  });
+});
+
+// ─── 2.9.9 · behaviors carried by the tools ───────────────────────────────────
+
+describe("2.9.9 · the tools carry the close-out, offer and first-application behaviors", () => {
+  it("the pipeline list names the people on file, so a close-out can thank them", async () => {
+    await pipeline([app({ id: "b1", company: "Brightpath", referral: "Samantha Osei", contacts: [{ name: "Diane Hartley", title: "HRBP" }] })]);
+    const { text } = await call("pipeline_view", { action: "list" });
+    expect(text).toContain("**People on file**");
+    expect(text).toContain("- Brightpath (`b1`): Samantha Osei (referred you); Diane Hartley, HRBP");
+  });
+
+  it("evaluate_offer weighs the offer against the saved salary target", async () => {
+    await saveCareerSection("profile", { ...PROFILE, salaryMin: 140000, salaryMax: 180000, targetRoles: ["Director of Operations"] });
+    const { text } = await call("evaluate_offer", { company: "Hooli", offerDetails: "Base 165k" });
+    expect(text).toContain("- Salary target: USD 140,000–180,000 base");
+    expect(text).toMatch(/Lead the comparison with my saved salary target/);
+  });
+
+  it("pipeline_add records the date given and offers the briefing only on the first application", async () => {
+    const first = await call("pipeline_add", { company: "Lumen", role: "Head of Ops", dateApplied: "2026-10-06" });
+    expect(first.text).toContain("Applied: 2026-10-06");
+    expect(first.text).toContain("first tracked application");
+    const second = await call("pipeline_add", { company: "Stratos", role: "PD" });
+    expect(second.text).not.toContain("first tracked application");
+    const bad = await call("pipeline_add", { company: "X", role: "Y", dateApplied: "yesterday" });
+    expect(bad.isError).toBe(true);
   });
 });

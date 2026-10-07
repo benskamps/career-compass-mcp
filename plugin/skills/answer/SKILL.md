@@ -3,14 +3,18 @@ name: answer
 description: Answer a job application form's questions from your real history, each within its character limit, without inflating years or guessing your eligibility answers.
 argument-hint: "[paste the form's questions, with any character limits]"
 disable-model-invocation: true
+# Read-only (readOnlyHint: true); saving a narrative answer still asks.
+allowed-tools:
+  - mcp__plugin_career-compass_career-compass__answer_application
 ---
 
 The user wants answers to an application form's questions. The questions are below.
 
 - If no questions are included, ask them to paste them, with character limits if shown,
   and stop.
-- **Source.** With the Career Compass tools, answer from the Career KB (`career://full`,
-  including `narrative` and `stories`); if it's empty, ask for a résumé. Without the tools
+- **Source.** With the Career Compass tools, call `answer_application` with the questions
+  (and the company and role); it returns the Career KB, what's on file for eligibility,
+  and the saved narrative. If the KB is empty, ask for a résumé and pass it as `resume`. Without the tools
   (claude.ai chat), answer from the résumé they paste.
 - **Each answer** in their voice, from facts in their history only, within its character
   limit. Show the count after it, like "(412/500)".

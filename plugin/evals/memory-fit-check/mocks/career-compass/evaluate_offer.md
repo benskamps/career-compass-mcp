@@ -17,10 +17,16 @@ END_UNTRUSTED_0E7A1C55>>>
 
 
 
+## My targets (from the Career KB)
+- Salary target: USD 140,000–180,000 base
+- Target roles: Program Manager, Director of Operations, Head of Customer Success, Chief of Staff
+- Open to remote: yes
+- Notice period: 3 weeks
+
 ## Other Offers on Record (from the pipeline)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
-| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-07-21 | 2026-06-27 |
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-11 | 2026-10-18 |
 
 ---
 
@@ -40,7 +46,8 @@ Break down every component with annualized values:
 ### 2. Market Comparison
 Compare to market rate for this role at this company type's stage/size:
 - No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)
-- Compare instead against my current pay, my stated targets, and any other offers
+- Compare instead against my current pay, my saved targets above, and any other offers
+- Lead the comparison with my saved salary target: say plainly whether the base is below, inside, or above it
 
 ### 3. Negotiation Strategy
 - What should I push on first?
@@ -69,6 +76,8 @@ Score this offer on: compensation, growth, culture fit, role scope, company traj
 Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.
 
 **Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.
+
+End your reply with one offer: track this offer so its deadline leads their daily digest, with `pipeline_add` (company, role, `status: "offer"`) and then `pipeline_update` with the offer figures and `offerExpiresDate` exactly as stated. Ask first and write only with their OK.
 
 **Market data rule:** Only cite salary, bonus, or equity benchmarks that appear in the market data above or that I gave you. If there are none, say so plainly, tell me where to get them (Levels.fyi, Glassdoor, Carta's equity benchmarks, a recruiter), and reason from my own numbers and stated targets instead. Never put a dollar value on equity without the company's valuation or price per share and the total share count.
 

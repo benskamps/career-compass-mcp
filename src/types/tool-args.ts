@@ -16,6 +16,8 @@ export type PipelineAddArgs = {
   excitement?: number;
   salaryMin?: number;
   salaryMax?: number;
+  /** YYYY-MM-DD the user applied (or found the role, for `discovered`). Defaults to today. */
+  dateApplied?: string;
   /** Add even when the same company and role are already tracked. */
   allowDuplicate?: boolean;
 };

@@ -17,12 +17,13 @@
 // Usage: npm run build:mcp && node eval-src/record-mocks.mjs
 // Output: eval-src/mocks/<state>/career-compass/*.md and _tools.json
 
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { EVAL_TODAY, shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -36,6 +37,8 @@ const OVERRIDES = {
   save_career_section: { section: "profile", data: { name: "__IN_name__", summary: "__IN_summary__" } },
   pipeline_update: { id: "__IN_id__" },
   interview_arc: { company: "__IN_company__" },
+  // A real date reaches the date path; toMock turns it back into the input.
+  pipeline_add: { dateApplied: "2001-02-03" },
 };
 
 // Recordings with fixed, realistic inputs, for cases whose answer depends on which
@@ -48,12 +51,10 @@ const VARIANTS = {
       interview_arc: { company: "Veridian Health", role: "Director of Operations" },
     },
   },
-  // The daily digest, as of the day the sample pipeline was written: a panel
-  // tomorrow, a follow-up four days overdue, an offer clock running.
-  // CAREER_COMPASS_TODAY pins the clock so a re-record matches byte for byte.
+  // The daily digest, with the sample shifted to EVAL_TODAY: a panel tomorrow,
+  // a follow-up four days overdue, an offer clock running.
   "kb-today": {
     state: "kb",
-    env: { CAREER_COMPASS_TODAY: "2026-06-16" },
     calls: { pipeline_view: { action: "next_actions" } },
   },
   "empty-today": {
@@ -69,6 +70,14 @@ const VARIANTS = {
       prepare_interview: { company: "Veridian Health", role: "Director of Operations", interviewType: "final" },
     },
   },
+  // An offer from a company already in the pipeline, so the offer review sees
+  // that application and its older recorded offer.
+  "kb-brightpath": {
+    state: "kb",
+    calls: {
+      evaluate_offer: { company: "Brightpath Health", offerDetails: "__IN_offerDetails__" },
+    },
+  },
   "kb-meridian": {
     state: "kb",
     calls: {
@@ -78,7 +87,7 @@ const VARIANTS = {
 };
 
 const CROWDING_ENTRIES = ["Lumen Digital", "Stratos Cloud", "Northwind Care", "Harborview Digital Health", "Quillfeather Health", "Cascade Health Partners"]
-  .map((company, i) => `
+  .map((company, i) => shiftDates(`
 - id: crowd00${i}
   date: "2026-06-1${i}T09:00:00.000Z"
   type: note
@@ -87,7 +96,7 @@ const CROWDING_ENTRIES = ["Lumen Digital", "Stratos Cloud", "Northwind Care", "H
   signals: []
   source: manual
   origin: user_said
-`).join("");
+`)).join("");
 
 function sample(schema, field) {
   if (!schema) return `__IN_${field}__`;
@@ -122,8 +131,9 @@ function toMock(text, dataDir, isError) {
     // re-record is byte-identical when the server hasn't changed.
     .replace(/UNTRUSTED_[0-9A-F]{8}/g, "UNTRUSTED_0E7A1C55")
     // Dated output would make every re-record a diff.
-    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/g, "2026-10-05T12:00:00.000Z")
-    .replaceAll(new Date().toISOString().slice(0, 10), "2026-10-05")
+    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/g, `${EVAL_TODAY}T12:00:00.000Z`)
+    .replaceAll(new Date().toISOString().slice(0, 10), EVAL_TODAY)
+    .replaceAll("2001-02-03", "{{input.dateApplied}}")
     // pipeline_add mints a random id for the new application.
     .replace(/ID: `[0-9a-f]{8}`/g, "ID: `5eed0001`");
   const front = isError ? "---\nerror: true\n---\n\n" : "";
@@ -132,8 +142,20 @@ function toMock(text, dataDir, isError) {
 
 function freshDataDir(state) {
   const dir = mkdtempSync(join(tmpdir(), `cc-eval-${state}-`));
-  if (state === "kb") cpSync(join(repo, "data", "example"), dir, { recursive: true });
+  if (state === "kb") {
+    cpSync(join(repo, "data", "example"), dir, { recursive: true });
+    shiftTree(dir);
+  }
   return dir;
+}
+
+// The sample, moved to EVAL_TODAY (see eval-date.mjs).
+function shiftTree(dir) {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) shiftTree(full);
+    else if (entry.endsWith(".yaml")) writeFileSync(full, shiftDates(readFileSync(full, "utf-8")));
+  }
 }
 
 // One server per call, on a fresh copy of the data, so a write recorded for one
@@ -144,7 +166,7 @@ async function withServer(state, fn, env = {}, seed) {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(repo, "build", "src", "index.js")],
-    env: { ...process.env, ...env, CAREER_DATA_PATH: dataDir },
+    env: { ...process.env, CAREER_COMPASS_TODAY: EVAL_TODAY, ...env, CAREER_DATA_PATH: dataDir },
     stderr: "ignore",
   });
   const client = new Client({ name: "eval-mock-recorder", version: "1.0.0" });

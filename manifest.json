@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "career-compass-mcp",
   "display_name": "Career Compass",
-  "version": "2.9.8",
+  "version": "2.9.9",
   "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
   "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, give an honest fit verdict, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The server itself makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and only happens when you ask for it (checkForUpdates is off by default). Commands you run yourself, such as npx career-compass-mcp dashboard, download the package from npm. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (pipeline KPIs, a kanban board by stage with a per-card detail drawer, a company/role filter, a next-actions panel for overdue follow-ups and upcoming interviews, and a stage-distribution chart) that re-reads your YAML on every request.",
   "author": {
@@ -51,6 +51,10 @@
       "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing."
     },
     {
+      "name": "answer_application",
+      "description": "Answer the questions on a job application form (why this company, years of experience with X, work authorization, salary expectation, start date, short essays) from the user's saved Career KB, each within its character or word limit. Eligibility answers come only from what the user saved or said; anything else is a [confirm: ...] placeholder, and a \"years with X\" the history can't support is flagged, never inflated. Use it whenever the user pastes application or screening questions. Before anything is saved, pass the r\u00e9sum\u00e9 they pasted as `resume`. Writes nothing."
+    },
+    {
       "name": "format_for_ats",
       "description": "Reformat r\u00e9sum\u00e9 text the user already has into clean, parse-safe plain text for an applicant tracking system (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): standard headings, consistent dates, sections ready to paste field by field, and long sections flagged (limits vary by employer). Use it when the user is about to paste a r\u00e9sum\u00e9 into an application form. Reformats only, never rewrites content; use tailor_resume to change what the r\u00e9sum\u00e9 says. Writes nothing."
     },
@@ -60,7 +64,7 @@
     },
     {
       "name": "pipeline_add",
-      "description": "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board."
+      "description": "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board. On the very first application, the result carries Career Compass's one-time offer of a morning briefing; pass it on as one optional line."
     },
     {
       "name": "pipeline_update",
@@ -80,7 +84,7 @@
     },
     {
       "name": "evaluate_offer",
-      "description": "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their current pay, stated targets, other offers (including live offers already recorded in their pipeline, side by side), and any market data they supply, then what to negotiate and the exact words. Use it when the user has an offer in hand. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing; when the offer's deadline isn't recorded it suggests saving it with pipeline_update."
+      "description": "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their current pay, stated targets, other offers (including live offers already recorded in their pipeline, side by side), and any market data they supply, then what to negotiate and the exact words. Use it when the user has an offer in hand. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing; it ends by offering to record the offer and its deadline with pipeline_update, for the user's OK."
     },
     {
       "name": "ingest_document",
