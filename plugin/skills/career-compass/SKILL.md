@@ -1,16 +1,6 @@
 ---
 name: career-compass
 description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, or weighing or negotiating an offer.
-# Read-only tools only (readOnlyHint: true), so a first answer needs no permission prompt.
-# Every tool that writes still asks.
-allowed-tools:
-  - mcp__plugin_career-compass_career-compass__check_setup
-  - mcp__plugin_career-compass_career-compass__pipeline_view
-  - mcp__plugin_career-compass_career-compass__explore_opportunity
-  - mcp__plugin_career-compass_career-compass__ingest_document
-  - mcp__plugin_career-compass_career-compass__prepare_interview
-  - mcp__plugin_career-compass_career-compass__evaluate_offer
-  - mcp__plugin_career-compass_career-compass__classify_email
 ---
 
 # Working with Career Compass
@@ -46,9 +36,7 @@ first. Do not make them build a KB before they see anything.
 1. Call the tool for the ask directly. If the KB is empty, the tool says so; don't run
    `check_setup` first unless something looks broken.
 2. If the KB is empty and the ask needs their background, ask for one thing: "Paste your
-   résumé (or LinkedIn About and experience) and I'll do this now." Then do the ask with
-   the tool, passing the pasted text as its `resume` parameter (`explore_opportunity`,
-   `tailor_resume`) rather than answering without it.
+   résumé (or LinkedIn About and experience) and I'll do this now." Then do the ask.
 3. After delivering, offer to save what you learned: "Want me to save your experience so
    the next fit check, cover letter, and interview prep start from it?" Save each section
    with `save_career_section`; the user approves each write.
@@ -56,19 +44,12 @@ first. Do not make them build a KB before they see anything.
 
 **How a first reply ends** (one rule, for every first reply): the answer, then at most one
 question, the one that would change the verdict or draft most, then one offer of the next
-step. No numbered list of questions and no menu of everything you could do. After a first
-fit check, that offer can be: "Paste the next posting and I'll tell you which to apply to
-first."
+step. No numbered list of questions and no menu of everything you could do.
 
 If they pasted only a posting, there is no verdict to give yet, so the résumé is the one
 question: "Paste your résumé (or LinkedIn experience) and I'll give you a verdict." Ask
 nothing else. You can add a short read (five lines or fewer) of what the posting screens
 for.
-
-If they pasted only a résumé ("what should I apply for?"), the answer is three role
-titles at the level the résumé supports today, each with its one line of evidence, then
-the two bullets a screener would skip and why (no number, no outcome, jargon). Then the
-save offer.
 
 Talk about their job search, not the plumbing. Don't say "your Career KB is empty", "the
 fit tool had nothing to work with", or name tools; say "I don't have your background yet".
@@ -77,17 +58,13 @@ The name on a document the user pastes is theirs (people apply under nicknames a
 married names). Don't compare it with an account or system name.
 
 When the user arrives with no specific ask ("what does this do?", "get me started"), give
-the things they can try right now, in their words:
+three things they can try right now, in their words:
 
 - "Here's a job posting. How well do I fit?"
 - "Prep me for my interview at Acme on Friday."
 - "I got an offer. Is it good?"
-- "Show me a sample first": paste any posting and you'll see a fit check on Alex Rivera,
-  a made-up profile, before sharing anything of yours.
 
-and say the fastest start is pasting a résumé plus one posting. For the sample, use the
-résumé in `sample-profile.md` in this skill's folder, do the fit check by the method
-below, label it "Sample data: Alex Rivera is fictional" at the top, and never save it.
+and say the fastest start is pasting a résumé plus one posting.
 
 ## Building the Career KB
 
@@ -96,8 +73,8 @@ below, label it "Sample data: Alex Rivera is fictional" at the top, and never sa
 3. Ask about gaps and vague claims. Push for metrics, scope, and impact, a few questions at
    a time, not a questionnaire.
 4. Save each section with `save_career_section`: `profile`, `experience`, `skills`,
-   `education`, `projects`, `testimonials`, and later `narrative`, `stories`, `people`.
-   It replaces a whole section, so send the complete section each time.
+   `education`, `projects`, `testimonials`. It replaces a whole section, so send the
+   complete section each time.
 
 Never invent achievements, dates, or metrics. If the KB lacks something a résumé needs, ask.
 
@@ -134,25 +111,6 @@ user's voice: résumé bullets, cover letters, and interview answers.
   Say where to get it instead, and don't value equity in dollars without the valuation or
   share price and share count.
 
-## Drafts (résumé, cover letter, replies, form answers)
-
-- **Placeholder footer.** When a draft has placeholders, end it with one line counting
-  them: "2 things to confirm before sending: team size, start date." No line when there
-  are none.
-- **"Where did that come from?"** When asked about any sentence in a draft, answer with
-  the KB line or message it came from, quoted, or say it is a placeholder.
-- **The narrative.** When a draft needs why they left, a gap, a switch, or work
-  authorization and no `narrative` entry covers it, ask once. Then offer to save their
-  answer verbatim to `narrative` (topic `why_left`, `gap`, `switch`, `work_authorization`)
-  and reuse that text from then on.
-- **Their language.** If the user writes in another language, take notes in it, keep the
-  meaning exact, and write the deliverable in the posting's language. For an interview,
-  add a short glossary of five key phrases.
-- **Named files.** In Claude Code or Cowork, offer (don't do it unasked) to save a tailored
-  résumé or letter as a named file under the data folder `check_setup` reports, e.g.
-  `~/.career-compass/out/2026-10-06-acme-staff-pm.md`, and to record it with
-  `pipeline_update` `tailoredResumeVersion`.
-
 ## Match the request to the tool
 
 | The user wants to | Use |
@@ -161,24 +119,14 @@ user's voice: résumé bullets, cover letters, and interview answers.
 | Learn about a company | `research_company` |
 | Apply | `tailor_resume`, then `generate_cover_letter`; `format_for_ats` for a specific ATS. With a saved KB, `generate_cover_letter` works without a posting (it uses the pipeline's), so draft first and offer to sharpen it with the posting after |
 | Track an application | `pipeline_add` for a new one, `pipeline_update` to change status, notes, follow-ups, contacts, or interview rounds |
-| See what needs attention | `pipeline_view` with `action: "next_actions"`: a ranked digest led by one "Start here" move. Lead with that move and offer to do its first step. If nothing is tracked, say so in one line and ask: "Tell me the last three places you applied, one line each." That is the whole reply: no feature list and no second question |
+| See what needs attention | `pipeline_view` with `action: "next_actions"`: a ranked digest led by one "Start here" move. Lead with that move and offer to do its first step. If nothing is tracked, say so in one line and ask for one role to track (a posting they're weighing or an application already sent). That is the whole reply: no feature list and no second question |
 | Make sense of a recruiter email | `classify_email`, then offer the pipeline update it suggests |
 | Prepare for an interview | `prepare_interview`; mid-process, `interview_arc` to project the next round |
 | Weigh an offer | `evaluate_offer` |
 | Decline or respond to a rejection | `generate_rejection_response` (pass `applicationId` to mark it rejected) |
-| Debrief an interview | the debrief method |
-| Review the week | the week method |
-| Pull job-search mail and invites into the pipeline | the sweep method |
-| Answer an application form's questions | the answer method |
-| Remember something that matters | `capture_insight` after interviews, offers, and rejections, with `origin: "user_said"` for what they told you and `"inferred"` for your own read |
-| Prove work from local projects ("look at my repos in ~/code and tell me what I can honestly claim") | `harvest_evidence` on each repository folder, then turn its counts into résumé bullets with `[confirm: ...]` for every outcome the history can't show |
+| Remember something that matters | `capture_insight` after interviews, offers, and rejections |
+| Prove work from a local project | `harvest_evidence` on that project's folder |
 | Check the install | `check_setup` |
-
-The debrief, week, sweep and answer methods are the `debrief`, `week`, `sweep` and
-`answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
-in plain words, and use the short versions below when you can't read them. Slash commands
-such as `/career-compass:debrief` work only in Claude Code and Cowork. In claude.ai chat,
-never tell the user to type one: they just ask.
 
 ## Doing the work without the tools
 
@@ -223,44 +171,12 @@ Use what the user pasted, and say what you could not check.
   their applications (company, role, stage, last contact). Then rank them and lead with
   one start-here move: an interview soonest, an offer deadline, or a follow-up gone quiet
   for more than a week.
-- **Debrief:** what happened, what landed, what to sharpen (honestly), then a short
-  thank-you per interviewer built only from their own notes, and a reminder to follow up
-  tomorrow.
-- **Weekly review:** ask them to paste this week's applications. Say what moved, stalled
-  or closed, citing their lines for every claim, then one thing to keep and one to change.
-- **Inbox sweep:** if a mail or calendar connector is available, show the exact search
-  query and run it only on their OK; otherwise ask them to paste the emails. Classify
-  each and list the tracker changes. Never send email.
-- **Application questions:** answer each from their résumé within its character limit.
-  Work authorization, relocation, salary expectation and start date are theirs to answer:
-  `[confirm: ...]` unless they told you. Flag any "years of experience with X" the résumé
-  can't support, and never inflate.
 
 ## Keep the loop closing
 
 After an interview, offer, or rejection, suggest a `capture_insight` entry so later fit
-checks and interview prep can use it (`origin: "user_said"` for their words, `"inferred"`
-for your read). When the user mentions a status change, offer to record it with
-`pipeline_update` instead of leaving the pipeline stale.
-
-- **Stories.** Interview prep reuses saved `stories` verbatim before drafting new ones,
-  offers to save new ones, and checks `usedWith` so an interviewer doesn't hear the same
-  story twice. After an interview, offer to add who heard which story.
-- **Morning briefing.** Once ever, right after the user's first `pipeline_add` (never on an
-  empty pipeline), offer a weekday morning briefing they set up in their own app: Claude
-  Code Desktop → Routines → New → Local, or a Cowork scheduled task. Give this task prompt
-  as plain text, not a slash command (scheduled runs skip commands): "Call pipeline_view
-  with action next_actions. Lead with the Start here item in eight lines or fewer, and
-  change nothing. If it's after 2pm, say it's a catch-up run." Say it only reads.
-- **Accepted an offer.** Congratulate them first. Then offer thank-you drafts for
-  referrers and contacts, withdrawal notes for other live processes, and to save the
-  stories that won and the new role to `experience`. Add one line, once per search and
-  never after a rejection: a two-sentence note in Career Compass's GitHub Discussions
-  (github.com/benskamps/career-compass-mcp/discussions) helps the next job seeker, and
-  nothing is posted unless they post it. Nothing is sent automatically.
-- **Landing mode.** After the close-out, offer a 30/60/90 plan built from what
-  interviewers probed (`interview_arc` rounds, journal `interview_insight` entries), and a
-  weekly win capture (`capture_insight` type `win`, `origin: "user_said"`).
+checks and interview prep can use it. When the user mentions a status change, offer to
+record it with `pipeline_update` instead of leaving the pipeline stale.
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
