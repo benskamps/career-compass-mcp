@@ -28,7 +28,7 @@ Write a rejection response that achieves: **keep_door_open**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
-- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews, and don't say how the process felt to me ("I enjoyed", "I'm disappointed") or what it involved unless I said so; leave a [confirm: ...] slot instead
 
 
 **For goal: keep_door_open:**

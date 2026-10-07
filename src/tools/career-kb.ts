@@ -178,7 +178,11 @@ ${embedUntrusted("uploaded document", content)}
 Extract structured career data from this document. Extract only what it says: copy numbers
 and wording exactly, and never fill a field the document doesn't support. A metric the
 document doesn't give is \`"[confirm: metric?]"\`, not an estimate. Leave proficiency out
-unless the document rates the skill. A recommendation's quote must be verbatim.
+unless the document rates the skill. A recommendation's quote must be verbatim. Describe
+what the user did in the document's own terms: "made a real difference" is not "improved
+workflows", and "bringing stakeholders along" is not "buy-in across groups". The person
+the document names is the user (people go by nicknames); don't compare it with an account
+or system name.
 
 Produce output in two formats:
 
@@ -327,7 +331,7 @@ Write a rejection response that achieves: **${responseGoal}**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
-- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews, and don't say how the process felt to me ("I enjoyed", "I'm disappointed") or what it involved unless I said so; leave a [confirm: ...] slot instead
 ${hadGoodRapport ? "- Reference the positive experience, using a specific detail only if the message or I gave one; otherwise keep it general" : ""}
 
 **For goal: ${responseGoal}:**
