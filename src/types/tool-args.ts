@@ -31,6 +31,15 @@ export type PipelineUpdateArgs = {
   contactEmail?: string;
   interviewType?: "phone_screen" | "behavioral" | "technical" | "panel" | "final" | "offer_call" | "other";
   interviewDate?: string;
+  interviewers?: string[];
+  roundOutcome?: string;
+  offerBaseSalary?: number;
+  offerBonus?: number;
+  offerEquity?: string;
+  offerCurrency?: string;
+  offerStartDate?: string;
+  offerExpiresDate?: string;
+  offerNotes?: string;
 };
 
 export type PipelineGetArgs = { action: "get"; id: string };

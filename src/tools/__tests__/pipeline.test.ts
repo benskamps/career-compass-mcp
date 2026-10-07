@@ -161,7 +161,8 @@ describe("handleUpdate", () => {
 
     const result = await handleUpdate(args, pipeline);
 
-    expect(result.content[0].text).toContain("not found");
+    expect(result.content[0].text).toContain("No application with id");
+    expect(result.content[0].text).toContain("pipeline_view");
   });
 
   it("appends a note with date prefix", async () => {
@@ -256,7 +257,8 @@ describe("handleGet", () => {
 
     const result = handleGet(args, pipeline);
 
-    expect(result.content[0].text).toContain("not found");
+    expect(result.content[0].text).toContain("No application with id");
+    expect(result.content[0].text).toContain("pipeline_view");
   });
 });
 

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **Offers and interview outcomes can be recorded.** `pipeline_update` takes the offer's
+  base, bonus, equity, start date and answer deadline, and an outcome for an interview
+  round. Before, no tool could write an offer, so `/career-compass:today` never showed a
+  real offer deadline unless you edited the YAML by hand.
+- **The day after an interview, `/today` leads with a debrief.** It offers to draft a
+  thank-you from what you tell it and to keep what you learned for the next round,
+  instead of telling you to chase a timeline.
+
 ### Changed
 
 - **Claude picks the right tool more often.** Seven tool descriptions that read like
@@ -17,11 +27,27 @@
 
 ### Fixed
 
+- **Saving your history can't quietly drop entries.** `save_career_section` now compares
+  the save with what's stored. A save that would remove roles, entries or achievements is
+  refused and names them, unless the call says `replace: true`. Every save ends with a
+  one-line receipt (`3 → 4 entries · added: … · removed: none`). Claude Code asks before
+  every save, in every permission mode.
+- **A typo in a KB file no longer looks like an empty history.** If, say, experience.yaml
+  can't be parsed, the fit, résumé, cover letter, interview and research tools say so at
+  the top of their answer, and saving over that file is refused unless you choose to.
+- **Failures are reported as failures.** Corrupt or locked data files, not-found ids and
+  git errors now come back marked as errors, and not-found messages name the call that
+  finds the right id. `prepare_interview` refuses an id that doesn't exist instead of
+  quietly prepping without the application.
+- **Résumé tailoring sends less about you.** `tailor_resume` used to paste the whole
+  Career KB, including your salary floor, preferences and journal. It now sends your
+  contact header, roles with every achievement, skills, education and projects.
 - **The truth rule now reaches every drafting tool.** The rejection reply, the recruiter
   reply draft, `interview_arc` and `format_for_ats` carried a one-line substitute that
   missed "never invent my inner life"; a rejection draft could say "I'm disappointed".
   They now append the full rule, and a test fails if a drafting tool drops it.
 - `setup-career-kb` no longer asks for skill proficiency levels you didn't give.
+
 
 ## 2.9.7 — 2026-10-06
 

@@ -6,7 +6,8 @@ import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
 import { TRUTH_RULE } from "./truth-rule.js";
-import { formatRoles, formatAchievements } from "./career-context.js";
+import { formatRoles, formatAchievements, formatCredentials, formatProjects } from "./career-context.js";
+import type { CareerData } from "../schemas/career-schema.js";
 
 export function registerResumeTools(server: McpServer): void {
 
@@ -49,8 +50,8 @@ export function registerResumeTools(server: McpServer): void {
           type: "text",
           text: `# Resume Tailoring Request
 
-## Full Career KB
-${JSON.stringify(career, null, 2)}
+## Career KB
+${formatResumeSource(career)}
 
 ${formatSignalDigest(career.journal)}
 ## Job Posting
@@ -65,7 +66,7 @@ ${focusAreas ? `- **Emphasis areas:** ${focusAreas}` : ""}
 ---
 
 **Instructions for Claude:**
-Using the complete Career KB above, generate a tailored resume:
+Using the Career KB above, generate a tailored resume:
 
 **Structure for ${format} format:**
 ${format === "standard" ? `1. Header (name, contact, LinkedIn)
@@ -328,4 +329,53 @@ ${TRUTH_RULE}`,
       };
     }
   );
+}
+
+/** Roles shown in full to tailor_resume; older ones are named as omitted. */
+const RESUME_MAX_ROLES = 10;
+
+/**
+ * Everything a résumé can be built from, and nothing it can't.
+ *
+ * This used to be `JSON.stringify(career, null, 2)`: the whole KB, including the
+ * salary floor, work preferences and the raw append-only journal, then the
+ * journal digest again. It was 20.6k characters on a three-role sample and grew
+ * with every captured insight, past the size where Claude Code warns. Interview
+ * prep got the same diet in 2.9.7. Every achievement is still here in full,
+ * because choosing the right ones for the posting is the résumé's whole job.
+ */
+export function formatResumeSource(career: CareerData): string {
+  const p = career.profile;
+  const contact = [p.email, p.phone, p.location, p.linkedIn, p.portfolio].filter(Boolean).join(" · ");
+  const roles = career.experience.slice(0, RESUME_MAX_ROLES).map((e) => {
+    const head = `### ${e.role} @ ${e.company} (${e.startDate} to ${e.endDate})${e.location ? `, ${e.location}` : ""}`;
+    const summary = e.summary?.replace(/\s+/g, " ").trim();
+    const wins = e.achievements.map((a) =>
+      `- ${a.metric}${a.context ? ` (context: ${a.context})` : ""}${a.impact ? ` → ${a.impact}` : ""}` +
+      `${a.keywords.length ? ` [keywords: ${a.keywords.join(", ")}]` : ""}`);
+    return [head, summary, ...wins].filter(Boolean).join("\n");
+  });
+  const older = career.experience.length - RESUME_MAX_ROLES;
+  const skills = career.skills.map((k) => {
+    const facts = [k.category, k.proficiency !== undefined ? `self-rated ${k.proficiency}/5` : "", k.yearsUsed !== undefined ? `${k.yearsUsed} yrs` : ""]
+      .filter(Boolean).join(", ");
+    return `${k.name}${facts ? ` (${facts})` : ""}`;
+  });
+  return [
+    `**Name:** ${p.name}${contact ? `\n**Contact:** ${contact}` : ""}`,
+    p.summary ? `**Summary on file:** ${p.summary.replace(/\s+/g, " ").trim()}` : "",
+    p.targetRoles.length ? `**Target roles:** ${p.targetRoles.join(", ")}` : "",
+    "",
+    "**Experience** (newest first, as stored)",
+    roles.join("\n\n") || "- None listed",
+    older > 0 ? `\n(${older} earlier role${older === 1 ? "" : "s"} not shown; ask the user before using them.)` : "",
+    "",
+    `**Skills:** ${skills.join("; ") || "none listed"}`,
+    "",
+    "**Education and certifications**",
+    formatCredentials(career),
+    "",
+    "**Projects**",
+    formatProjects(career, 8),
+  ].filter((line, i, all) => !(line === "" && all[i - 1] === "")).join("\n");
 }
