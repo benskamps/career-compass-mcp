@@ -1,0 +1,52 @@
+name: What did your first fit check get wrong?
+description: A fit check, résumé draft or interview prep said something wrong or unhelpful. Two minutes, no personal data.
+title: "Fit check got it wrong: "
+labels: ["feedback", "fit-check"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Career Compass has no telemetry, so this form is how I find out what went wrong.
+
+        **Please don't paste your résumé, the full posting, or anything that identifies you or an employer.** Describe it in general terms instead ("a senior data role at a fintech", "it said I had no SQL, but my résumé lists it"). This issue is public.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you using it?
+      options:
+        - claude.ai chat (web, desktop or mobile)
+        - Cowork
+        - Claude Code
+        - Another MCP app (Claude Desktop extension, Cursor, …)
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: what
+    attributes:
+      label: What went wrong?
+      options:
+        - The verdict was wrong (strong fit / stretch / long shot)
+        - It missed something I have, or said I lack something I have
+        - It said something about me that isn't true
+        - The gaps or advice weren't useful
+        - It asked too many questions, or the wrong one
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What did it say, and what should it have said?
+      description: In general terms, without personal details.
+      placeholder: |
+        It said: "Long shot: no people management."
+        It should have said: stretch. My résumé has "led a team of 4" in my last role.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version, if you know it
+      description: '"Run the Career Compass setup check" shows it in Claude Code and Cowork.'
+      placeholder: "2.9.7"

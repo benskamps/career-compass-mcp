@@ -60,3 +60,9 @@ how we'd know it worked (an eval case, a metric, or a check)
    acquisition or fundraising), user data stays on the user's disk, the truth rule.
 5. Record dissent: if a member objects to a top-5 item, say so next to it.
 6. Compare with the previous `runs/*.md`: which items landed, which axis scores moved.
+7. Numbers in a release decision quote n and an interval (for example "11 of 12, 95% CI
+   65–99%"), from at least 3 runs per case. A single-run percentage is a lead to follow
+   up, never a conclusion: quote it as "n of m, 1 run" or not at all.
+8. Trigger and description tuning is paused as a growth lever until the directory numbers
+   (installs, active accounts, per-skill use) say otherwise. Quality fixes to descriptions
+   still happen; they just don't count as growth work.
