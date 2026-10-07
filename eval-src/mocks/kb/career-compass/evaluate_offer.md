@@ -20,7 +20,7 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Other Offers on Record (from the pipeline)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
-| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-07-21 | 2026-06-27 |
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-11 | 2026-10-18 |
 
 ---
 
@@ -69,6 +69,8 @@ Score this offer on: compensation, growth, culture fit, role scope, company traj
 Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.
 
 **Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.
+
+End your reply with one offer: track this offer so its deadline leads their daily digest, with `pipeline_add` (company, role, `status: "offer"`) and then `pipeline_update` with the offer figures and `offerExpiresDate` exactly as stated. Ask first and write only with their OK.
 
 **Market data rule:** Only cite salary, bonus, or equity benchmarks that appear in the market data above or that I gave you. If there are none, say so plainly, tell me where to get them (Levels.fyi, Glassdoor, Carta's equity benchmarks, a recruiter), and reason from my own numbers and stated targets instead. Never put a dollar value on equity without the company's valuation or price per share and the total share count.
 

@@ -481,20 +481,28 @@ describe("C15 · evaluate_offer compares recorded offers and offers to save the 
     expect(text).toContain("## Other Offers on Record");
     expect(text).toContain("| Globex (`g1`) | VP Ops | negotiating | USD 195,000 | USD 20,000 |  |  | 2026-10-20 |");
     expect(text).not.toContain("Initech");
-    expect(text).not.toMatch(/\| Acme \(`a1`\)/);
+    const others = text.slice(text.indexOf("## Other Offers on Record"), text.indexOf("---", text.indexOf("## Other Offers on Record")));
+    expect(others).not.toMatch(/\| Acme \(`a1`\)/);
     expect(text).toMatch(/side by side/);
   });
 
-  it("offers to save a missing deadline with pipeline_update, with the user's OK", async () => {
+  it("offers to record the offer and its deadline with pipeline_update, with the user's OK", async () => {
     const { text } = await call("evaluate_offer", { company: "Acme", offerDetails: "Base 180k" });
-    expect(text).toMatch(/pipeline_update.*applicationId `a1`.*offerExpiresDate/s);
+    expect(text).toMatch(/application `a1` with `pipeline_update`.*offerExpiresDate/s);
     expect(text).toMatch(/only with their OK/);
   });
 
-  it("doesn't ask for a deadline already recorded", async () => {
+  it("shows the offer already on record and skips the offer when it matches", async () => {
     const { text } = await call("evaluate_offer", { applicationId: "g1", offerDetails: "Base 195k" });
-    expect(text).not.toContain("offerExpiresDate");
+    expect(text).toContain("## Offer already on record for this application (`g1`, status negotiating)");
+    expect(text).toMatch(/already matches what they told you, skip this offer/);
     expect(text).toContain("| Acme (`a1`)");
+  });
+
+  it("offers to track an offer from a company not in the pipeline", async () => {
+    const { text } = await call("evaluate_offer", { company: "Hooli", offerDetails: "Base 170k, answer by Friday" });
+    expect(text).toMatch(/`pipeline_add`.*`status: "offer"`.*offerExpiresDate/s);
+    expect(text).toMatch(/only with their OK/);
   });
 });
 

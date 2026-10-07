@@ -54,6 +54,7 @@ const ARGS: Record<string, Record<string, unknown>> = {
   research_company: { company: "Acme Health", role: "Director of Operations" },
   tailor_resume: { posting: POSTING },
   generate_cover_letter: { posting: POSTING, company: "Acme Health" },
+  answer_application: { questions: "1. Why Acme Health? (100 words)\n2. Desired salary?", company: "Acme Health" },
   format_for_ats: { resumeContent: "Alex Rivera\n• Cut supply cost 18%", targetSystem: "greenhouse" },
   classify_email: { emailContent: "Thanks for applying. Can you do Thursday at 2pm?" },
   prepare_interview: { interviewType: "panel", company: "Acme Health", role: "Director" },

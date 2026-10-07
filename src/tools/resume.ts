@@ -238,6 +238,93 @@ ${TRUTH_RULE}`,
   );
 
   server.registerTool(
+    "answer_application",
+    {
+      title: "Answer Application Questions",
+      // Reads the Career KB and returns the material to answer from. Writes nothing.
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      description: "Answer the questions on a job application form (why this company, years of experience with X, work " +
+        "authorization, salary expectation, start date, short essays) from the user's saved Career KB, each within its " +
+        "character or word limit. Eligibility answers come only from what the user saved or said; anything else is a " +
+        "[confirm: ...] placeholder, and a \"years with X\" the history can't support is flagged, never inflated. Use it " +
+        "whenever the user pastes application or screening questions. Before anything is saved, pass the résumé they " +
+        "pasted as `resume`. Writes nothing.",
+      inputSchema: {
+        questions: z.string().describe("The form's questions exactly as the user pasted them, with any character or word limits"),
+        company: z.string().optional().describe("Company the application is for"),
+        role: z.string().optional().describe("Role applied for"),
+        posting: z.string().optional().describe("The job posting, if the user pasted it. Without it, the pipeline's cached posting is used when there is one"),
+        resume: z.string().optional().describe(
+          "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is saved yet.",
+        ),
+      },
+    },
+    async ({ questions, company, role, posting, resume }) => {
+      const read = await guardedRead(() => loadCareerData());
+      if (!read.ok) return read.response;
+      const career = read.value;
+      const fromPasted = workFromPastedResume(career, resume);
+      if (!career && !fromPasted) {
+        return { content: [{ type: "text", text: noCareerDataMessage({ resumeParam: "resume" }) }] };
+      }
+
+      // The pipeline adds the cached posting and any notes about this company.
+      // Best-effort: the form can be answered without it.
+      let appContext = "";
+      if (company) {
+        const pipeRead = await guardedRead(() => loadPipeline());
+        if (pipeRead.ok) {
+          const lc = (t: string) => t.trim().toLowerCase();
+          const app = pipeRead.value.applications.find(a =>
+            lc(a.company) === lc(company) && (!role || lc(a.role) === lc(role)));
+          if (app) {
+            role = role ?? app.role;
+            posting = posting ?? app.postingText;
+            appContext = `\n## From Your Pipeline\n- **${app.role} at ${app.company}** (\`${app.id}\`, ${app.status})` +
+              `${app.notes.length ? `\n- **Notes:** ${embedUntrusted("application notes", app.notes.join("; "))}` : ""}\n`;
+          }
+        }
+      }
+
+      const source = fromPasted
+        ? `No saved Career KB with work history yet, so answer from the résumé the user pasted:\n\n${embedUntrusted("pasted résumé", resume!)}`
+        : `${formatResumeSource(career!)}\n\n${eligibilityOnFile(career!)}\n\n${narrativeBlock(career!)}`;
+
+      return {
+        content: [{
+          type: "text",
+          text: `# Application Questions${company ? `: ${role ? `${role} at ` : ""}${company}` : ""}
+
+## The questions
+${embedUntrusted("application questions", questions)}
+
+## Career KB
+${source}
+${appContext}${posting ? `\n## Job Posting\n${embedUntrusted("job posting", posting)}\n` : ""}
+---
+
+**Instructions for Claude:**
+Answer every question, in order, in my voice. Under each answer show its length against the limit, like "(84/100 words)" or "(412/500 characters)".
+
+- **From my history only.** Each answer uses facts from the Career KB above or from what I said in this conversation. Copy numbers exactly.
+- **"Why this company" and other company questions:** build them on my real experience. Say something about ${company ?? "the company"} only if the posting, my notes, or I said it; otherwise leave a [confirm: what draws you to ${company ?? "them"}?] placeholder rather than inventing a mission, product, or value.
+- **"Years of experience with X":** count only roles whose text above names X. If none do, say plainly that my history doesn't show X and leave the number as [confirm: ...]. Never round up, and never answer yes to a requirement my history doesn't show.
+- **Eligibility is mine to answer:** work authorization or sponsorship, relocation, salary expectation, start date or notice. Use only what "Eligibility on file" or my saved narrative says, quoted as saved and noted as my call; otherwise a [confirm: ...] placeholder. Never guess.
+- After the answers, one line counting the placeholders: "3 things to confirm before submitting: work authorization, salary, Epic years." No line when there are none.
+- Then one offer: when I fill in a narrative answer (work authorization, why I'm leaving, a gap), save it verbatim to \`narrative\` with save_career_section so the next form reuses it. Write nothing without my OK.
+${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
+${TRUTH_RULE}`,
+        }],
+      };
+    }
+  );
+
+  server.registerTool(
     "format_for_ats",
     {
       title: "Format for ATS",
@@ -377,4 +464,26 @@ export function formatResumeSource(career: CareerData): string {
     "**Projects**",
     formatProjects(career, 8),
   ].filter((line, i, all) => !(line === "" && all[i - 1] === "")).join("\n");
+}
+
+/**
+ * The eligibility facts a form asks for, exactly as saved, and the ones that
+ * are not on file. A form's salary or relocation answer must come from the
+ * user, so the model is shown precisely what they have said and nothing else.
+ */
+export function eligibilityOnFile(career: CareerData): string {
+  const p = career.profile;
+  const salary = p.salaryMin !== undefined || p.salaryMax !== undefined
+    ? `${p.salaryCurrency} ${[p.salaryMin, p.salaryMax].filter((n) => n !== undefined).map((n) => n!.toLocaleString("en-US")).join("–")} (saved target)`
+    : undefined;
+  const rows: Array<[string, string | undefined]> = [
+    ["Location", p.location],
+    ["Salary target", salary],
+    ["Open to relocation", p.openToRelocation === undefined ? undefined : p.openToRelocation ? "yes" : "no"],
+    ["Open to remote", p.openToRemote === undefined ? undefined : p.openToRemote ? "yes" : "no"],
+    ["Notice period", p.noticePeriod],
+  ];
+  const lines = rows.map(([k, v]) => `- ${k}: ${v ?? "not on file"}`);
+  return `## Eligibility on file\n${lines.join("\n")}\n- Work authorization: ${
+    career.narrative.some((n) => n.topic === "work_authorization") ? "see the saved narrative below" : "not on file"}`;
 }

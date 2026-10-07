@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -124,7 +125,7 @@ function kbText() {
     return readdirSync(dir).filter((f) => f.endsWith(".yaml")).sort().map((f) => join(dir, f));
   });
   return files
-    .map((f) => `--- ${f.split("/").slice(-2).join("/")}\n${readFileSync(f, "utf-8").replace(/^#.*\n/gm, "").trim()}`)
+    .map((f) => `--- ${f.split("/").slice(-2).join("/")}\n${shiftDates(readFileSync(f, "utf-8")).replace(/^#.*\n/gm, "").trim()}`)
     .join("\n\n");
 }
 
@@ -480,6 +481,7 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
   }
   for (const c of FEATURE_CASES) {
     const extra = {};
+    if (c.tool) extra["task--right-tool"] = { type: "tool_used", tool: `${MCP}${c.tool}`, min: 1 };
     if (c.id === "save-keeps-history") {
       // An experience save that leaves out the other roles would drop them.
       extra["trust--save-keeps-other-roles"] = {

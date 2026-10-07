@@ -30,6 +30,7 @@ const EXPECTED_TOOLS = [
   "tailor_resume",
   "generate_cover_letter",
   "format_for_ats",
+  "answer_application",
   "pipeline_view",
   "pipeline_add",
   "pipeline_update",

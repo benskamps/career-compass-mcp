@@ -146,7 +146,7 @@ Desktop, Cursor, other MCP clients, or Claude Code without the plugin. If you in
 plugin, skip it. Running the command below as well would register a second copy of every
 tool, so `install` detects the plugin and leaves Claude Code alone.
 
-The package has 18 tools, 4 prompts, 9 resources and a local dashboard. To see the
+The package has 19 tools, 4 prompts, 9 resources and a local dashboard. To see the
 dashboard on the bundled sample first, with no install and no data of your own:
 
 ```bash
@@ -390,13 +390,14 @@ prompt in most clients; **Write** tools ask before touching your files.
 | `tailor_resume` | Read | Writes a résumé tailored to one posting from your KB — standard, federal, academic, or functional — using the posting's words only where your history says the same thing |
 | `generate_cover_letter` | Read | Writes a cover letter with your actual achievements woven in, in a tone you pick — professional, conversational, enthusiastic, or concise |
 | `format_for_ats` | Read | Reformats résumé text you already have into plain sections an applicant tracking system can parse, ready to paste field by field (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic). Reformats only; it never rewrites what you did |
+| `answer_application` | Read | Answers an application form's questions from your KB, each within its limit. Work authorization, salary and start date come only from what you saved or said, and a "years with X" your history can't support is flagged, never inflated |
 
 ### Track the pipeline
 
 | Tool | Access | What it does |
 |------|--------|-------------|
 | `pipeline_view` | Read | Lists applications, funnel stats, what needs attention, or one application by id |
-| `pipeline_add` | Write | Adds one application. Optional starting `status` (defaults to `applied`); unknown statuses are rejected with a did-you-mean suggestion |
+| `pipeline_add` | Write | Adds one application, dated the day you applied (`dateApplied`, defaults to today). Optional starting `status` (defaults to `applied`); unknown statuses are rejected with a did-you-mean suggestion |
 | `pipeline_update` | Write | Updates one application — status, notes, follow-up date, a contact, an interview round and how it went, or an offer's terms and answer deadline |
 | `classify_email` | Read | Classifies a job-search email and extracts contacts, dates, and suggested pipeline updates |
 
