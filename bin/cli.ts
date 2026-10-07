@@ -236,8 +236,9 @@ function findPort(preferred: number): Promise<number> {
 }
 
 function ensureDataDirs(dir: string): void {
-  mkdirSync(join(dir, "career"), { recursive: true });
-  mkdirSync(join(dir, "pipeline"), { recursive: true });
+  // Owner-only, matching the MCP server's own writes (file-store.ts).
+  mkdirSync(join(dir, "career"), { recursive: true, mode: 0o700 });
+  mkdirSync(join(dir, "pipeline"), { recursive: true, mode: 0o700 });
 }
 
 /**

@@ -69,6 +69,10 @@ export function createLiteDashboardServer(options: LiteServerOptions = {}): Serv
         "content-type": "text/html; charset=utf-8",
         // Never cache: the whole point is a live read of local data.
         "cache-control": "no-store, must-revalidate",
+        // No framing: another site could iframe localhost (its Host passes the
+        // guard) and trick clicks on the Ask Claude buttons.
+        "x-frame-options": "DENY",
+        "content-security-policy": "frame-ancestors 'none'",
       });
       res.end(html);
     } catch (err) {

@@ -7,6 +7,7 @@ vi.mock("fs/promises", () => ({
   mkdir: vi.fn(),
   rename: vi.fn(),
   copyFile: vi.fn(),
+  chmod: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("fs", () => ({
@@ -114,13 +115,13 @@ describe("savePipelineUnlocked", () => {
 
     expect(mockMkdir).toHaveBeenCalledWith(
       expect.stringContaining("pipeline"),
-      { recursive: true }
+      { recursive: true, mode: 0o700 }
     );
     // Writes to a temp file, never directly to the destination.
     expect(mockWriteFile).toHaveBeenCalledWith(
       expect.stringContaining(".tmp"),
       "mocked-yaml-output",
-      "utf-8"
+      { encoding: "utf-8", mode: 0o600 }
     );
     // Then atomically renames temp → applications.yaml.
     expect(mockRename).toHaveBeenCalledWith(
@@ -167,12 +168,12 @@ describe("saveCareerSection", () => {
 
     expect(mockMkdir).toHaveBeenCalledWith(
       expect.stringContaining("career"),
-      { recursive: true }
+      { recursive: true, mode: 0o700 }
     );
     expect(mockWriteFile).toHaveBeenCalledWith(
       expect.stringContaining(".tmp"),
       "mocked-yaml-output",
-      "utf-8"
+      { encoding: "utf-8", mode: 0o600 }
     );
     expect(mockRename).toHaveBeenCalledWith(
       expect.stringContaining(".tmp"),

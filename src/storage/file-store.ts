@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, rename, copyFile, readdir, rm } from "fs/promises";
+import { readFile, writeFile, mkdir, rename, copyFile, readdir, rm, chmod } from "fs/promises";
 import { existsSync } from "fs";
 import { join, dirname, basename, resolve } from "path";
 import { homedir } from "os";
@@ -229,6 +229,9 @@ function withStoreWriteClaim<T>(fn: () => Promise<T>): Promise<T> {
  *    destination. rename() is atomic on the same filesystem, so a reader never
  *    observes a half-written file.
  */
+const PRIVATE_DIR_MODE = 0o700;
+const PRIVATE_FILE_MODE = 0o600;
+
 async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
   // The bundled sample lives inside the installed package and is read at a
   // shifted date (see sample-data.ts). Writing to it would bake one session's
@@ -238,18 +241,21 @@ async function atomicWriteYaml(filePath: string, data: unknown): Promise<void> {
     throw new ReadOnlyStoreError(filePath);
   }
   const dir = dirname(filePath);
-  await mkdir(dir, { recursive: true });
+  // Owner-only: salaries, offers and contacts should not be readable by other
+  // accounts on a shared machine. Modes only apply to what this call creates.
+  await mkdir(dir, { recursive: true, mode: PRIVATE_DIR_MODE });
 
   if (existsSync(filePath)) {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const backupPath = join(dir, `${basename(filePath)}.${stamp}.bak`);
     await copyFile(filePath, backupPath);
+    await chmod(backupPath, PRIVATE_FILE_MODE).catch(() => { /* best effort (e.g. FAT/SMB) */ });
     await pruneBackups(dir, basename(filePath));
   }
 
   const tmpPath = join(dir, `.${basename(filePath)}.${randomUUID()}.tmp`);
   const serialized = stringifyYaml(data, { lineWidth: 120 });
-  await writeFile(tmpPath, serialized, "utf-8");
+  await writeFile(tmpPath, serialized, { encoding: "utf-8", mode: PRIVATE_FILE_MODE });
   await renameWithRetry(tmpPath, filePath);
 }
 
@@ -797,6 +803,6 @@ export async function mutatePipeline<T>(
 // ─── Initialization ───────────────────────────────────────────────────────────
 
 export async function ensureDataDirs(): Promise<void> {
-  await mkdir(careerDir(), { recursive: true });
-  await mkdir(pipelineDir(), { recursive: true });
+  await mkdir(careerDir(), { recursive: true, mode: PRIVATE_DIR_MODE });
+  await mkdir(pipelineDir(), { recursive: true, mode: PRIVATE_DIR_MODE });
 }
