@@ -95,6 +95,28 @@ function candidates(app: Application, now: Date): Item[] {
     out.push({ app, score: next.d <= 1 ? 100 : next.d <= 7 ? 70 : 15, line, action });
   }
 
+  // The day or two after an interview. Before this, past rounds were dropped
+  // and a quiet process got "Check status": a timeline chase on the one day a
+  // thank-you note and a debrief are the moves. The debrief is also how the
+  // Career KB learns what interviewers probe, through capture_insight.
+  const past = (app.interviewRounds ?? [])
+    .map((r) => ({ ...r, d: days(r.date) }))
+    .filter((r) => !Number.isNaN(r.d) && r.d < 0)
+    .sort((a, b) => b.d - a.d);
+  const lastRound = past[0];
+  const justInterviewed = Boolean(lastRound) && lastRound.d >= -2 &&
+    ["screening", "interviewing"].includes(app.status) && !lastRound.outcome;
+  if (justInterviewed) {
+    out.push({
+      app,
+      score: 85,
+      line: `🗒️ **Debrief** — ${label(app)}: ${roundName(lastRound.type)} ${when(lastRound.d)} (ID: ${app.id})`,
+      action: "Send a short thank-you today; tell me one thing you talked about and I'll draft it. Then tell me how it went, and I'll keep what's useful for your next round.",
+    });
+  }
+  // A round in the last week is the next step; chasing a timeline that soon reads as anxious.
+  const recentRound = Boolean(lastRound) && lastRound.d >= -7;
+
   // Offers.
   if (app.status === "offer" || app.status === "negotiating") {
     const exp = days(app.offer?.expiresDate);
@@ -136,7 +158,7 @@ function candidates(app: Application, now: Date): Item[] {
     const limit = app.status === "screening" ? 5 : 7;
     if (quiet >= 30) {
       out.push({ app, score: 50, quiet, line: `🕸️ **Gone quiet** — ${label(app)}: ${app.status} ${quiet}d with no next step (ID: ${app.id})`, action: "Send one last nudge for a timeline, or say so and I'll mark it ghosted." });
-    } else if (quiet >= limit && !waiting) {
+    } else if (quiet >= limit && !waiting && !recentRound) {
       out.push({ app, score: 60, line: `📞 **Check status** — ${label(app)}: in ${app.status} ${quiet}d with no next step booked (ID: ${app.id})`, action: who ? `Ask ${who} for a timeline. I can draft it.` : "Ask the recruiter for a timeline. I can draft it." });
     }
   }

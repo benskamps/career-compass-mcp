@@ -64,7 +64,7 @@
     },
     {
       "name": "pipeline_update",
-      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched."
+      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, or record an offer and its answer deadline. Overwrites the fields you supply and leaves the rest untouched."
     },
     {
       "name": "classify_email",
@@ -96,7 +96,7 @@
     },
     {
       "name": "save_career_section",
-      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it."
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. A save that would drop stored entries or achievements is refused and names them, unless `replace` is true. The previous version is kept as a timestamped .bak next to it."
     },
     {
       "name": "harvest_evidence",

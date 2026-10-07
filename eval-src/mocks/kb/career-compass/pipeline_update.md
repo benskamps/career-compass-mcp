@@ -2,4 +2,4 @@
 error: true
 ---
 
-❌ Application {{input.id}} not found.
+❌ No application with id `{{input.id}}`. Run `pipeline_view` with action "list" to see ids, or match by company name there.

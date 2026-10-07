@@ -50,6 +50,18 @@ export function registerInterviewTools(server: McpServer): void {
         const pipeRead = await guardedRead(() => loadPipeline());
         if (!pipeRead.ok) return pipeRead.response;
         const app = findApplication(pipeRead.value, applicationId, company, role);
+        // A wrong id was ignored silently, so prep went ahead without the
+        // rounds and posting the user expected it to use. interview_arc already
+        // refuses here; do the same.
+        if (applicationId && !app) {
+          return {
+            isError: true,
+            content: [{
+              type: "text",
+              text: `❌ No application with id \`${applicationId}\`. Run \`pipeline_view\` with action "list" to find it, or pass \`company\` instead.`,
+            }],
+          };
+        }
         if (app) {
           company = company ?? app.company;
           role = role ?? app.role;

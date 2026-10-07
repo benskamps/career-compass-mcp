@@ -34,7 +34,7 @@ export async function guardedRead<T>(load: () => Promise<T>): Promise<GuardedRea
     if (isCorruptDataError(error) || isWriteClaimUnavailable(error) || isReadOnlyStore(error)) {
       return {
         ok: false,
-        response: { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] },
+        response: { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] },
       };
     }
     throw error;

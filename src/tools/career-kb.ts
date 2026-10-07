@@ -2,7 +2,8 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { join } from "path";
-import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS } from "../storage/file-store.js";
+import { loadCareerData, saveCareerSection, mutateCareerSection, loadPipeline, mutatePipeline, appendJournalEntry, isCorruptDataError, getDataDir, CAREER_SECTIONS } from "../storage/file-store.js";
+import { diffSection, losesData, describeDiff, type SectionDiff } from "./section-diff.js";
 import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
@@ -280,7 +281,7 @@ you don't already have it. The previous version is kept as a timestamped \`.bak\
           });
         } catch (error) {
           if (isCorruptDataError(error) || isWriteClaimUnavailable(error) || isReadOnlyStore(error)) {
-            return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+            return { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
           }
           throw error;
         }
@@ -479,8 +480,13 @@ ${statusUpdated
       description:
         "Write one section of the Career KB to disk. This is how the Career KB gets populated — " +
         "ingest_document and the resume tools only read and extract. Replaces the whole section, " +
-        "so send the complete list you want stored, not just new entries. The previous version is " +
-        "kept as a timestamped .bak next to it.",
+        "so send the complete list you want stored, not just new entries. A save that would drop " +
+        "stored entries or achievements is refused and names them, unless `replace` is true. " +
+        "The previous version is kept as a timestamped .bak next to it.",
+      // Claude Code asks before every call to a tool marked this way, in every
+      // permission mode. The skill promises "the user approves each write"; for
+      // the one tool that replaces a whole section, that should hold in auto mode too.
+      _meta: { "anthropic/requiresUserInteraction": true },
       inputSchema: {
         section: z.enum(CAREER_SECTIONS).describe(
           "Which part of the Career KB to write. 'profile' is a single object; every other section is a list.",
@@ -501,9 +507,14 @@ ${statusUpdated
             "Shapes (? marks optional):\n\n" +
             SECTION_SHAPE_HELP,
         ),
+        replace: z.boolean().optional().describe(
+          "Set true only when the user has confirmed that entries should be removed, or that an " +
+            "unreadable section file should be overwritten. Without it, a save that would drop stored " +
+            "entries is refused and the refusal lists them.",
+        ),
       },
     },
-    async ({ section, data }) => {
+    async ({ section, data, replace }) => {
       // Validate against the same schema the loader enforces, BEFORE touching
       // disk. Writing first and validating on read would let one bad write make
       // the whole KB unloadable — loadCareerData fails closed on a corrupt
@@ -546,25 +557,79 @@ ${statusUpdated
         };
       }
 
+      const file = join(getDataDir(), "career", `${section}.yaml`);
+      let diff: SectionDiff | null = null;
+      let refused: SectionDiff | null = null;
       try {
-        await saveCareerSection(section, parsed.data);
+        // Read, compare and write under one lock (mutateCareerSection), so the
+        // comparison is against what is really on disk. An unreadable file
+        // throws CorruptDataError here and nothing is written.
+        await mutateCareerSection(section, (current) => {
+          diff = diffSection(section, current, parsed.data);
+          if (!replace && losesData(diff)) {
+            refused = diff;
+            throw new SaveRefused();
+          }
+          return parsed.data as never;
+        });
       } catch (error) {
-        return {
-          isError: true,
-          content: [{ type: "text", text: `❌ Could not write ${section}: ${(error as Error).message}` }],
-        };
+        if (error instanceof SaveRefused && refused) {
+          const r: SectionDiff = refused;
+          return {
+            isError: true,
+            content: [{
+              type: "text",
+              text:
+                `❌ Not saved: this would remove what's already stored in **${section}** ` +
+                `(${describeDiff(r)}). Your ${section}.yaml is untouched.\n\n` +
+                `If you meant to add or edit, send the full list including the existing entries ` +
+                `(the receipt above lists them; the \`career://${section}\` resource has them in full). If the user confirmed the removal, ` +
+                `call again with \`replace: true\`.`,
+            }],
+          };
+        }
+        if (isCorruptDataError(error) && replace) {
+          // The user chose to overwrite a file that can't be read. The broken
+          // copy is kept as a .bak by the write itself.
+          try {
+            await saveCareerSection(section, parsed.data);
+          } catch (inner) {
+            return { isError: true, content: [{ type: "text", text: `❌ Could not write ${section}: ${(inner as Error).message}` }] };
+          }
+        } else if (isCorruptDataError(error)) {
+          return {
+            isError: true,
+            content: [{
+              type: "text",
+              text:
+                `❌ Not saved: \`${file}\` exists but can't be read, so saving now would replace ` +
+                `whatever is in it without either of us seeing it. Ask the user to fix the file or ` +
+                `restore its newest .bak. If they'd rather overwrite it, call again with \`replace: true\` ` +
+                `(the broken file is kept as a .bak).`,
+            }],
+          };
+        } else {
+          return {
+            isError: true,
+            content: [{ type: "text", text: `❌ Could not write ${section}: ${(error as Error).message}` }],
+          };
+        }
       }
 
       const count = Array.isArray(parsed.data) ? parsed.data.length : 1;
+      const receipt = diff ? `\n${describeDiff(diff)}.` : "";
       return {
         content: [{
           type: "text",
           text:
-            `✅ Saved **${section}** (${count} ${count === 1 ? "entry" : "entries"}) to ` +
-            `\`${join(getDataDir(), "career", `${section}.yaml`)}\`.\n\n` +
+            `✅ Saved **${section}** (${count} ${count === 1 ? "entry" : "entries"}) to \`${file}\`.${receipt}\n` +
+            `The previous version is kept as a .bak next to it.\n\n` +
             `It's plain YAML — open it, edit it, or delete it any time. Nothing left your machine.`,
         }],
       };
     }
   );
 }
+
+/** Thrown inside the section lock to abort a save that would lose data. */
+class SaveRefused extends Error {}
