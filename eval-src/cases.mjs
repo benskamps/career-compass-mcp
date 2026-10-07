@@ -77,7 +77,7 @@ export const MEMORY_CASES = [
     mocks: "kb-today",
     ask: "What needs my attention in my job search right now?",
     uses: "Brightpath|Veridian|Stratos|Lumen|Meridian",
-    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step. The recorded digest is dated 16 June 2026 and the assistant's own clock may say later; noting that in one line is fine, but replacing the prioritized list with questions about whether the data is current is not",
+    expect: "a short, prioritized list drawn from Alex's saved pipeline that opens with one clear first move (prep for the Veridian Health panel, which is tomorrow), then covers the overdue Meridian Logistics Group follow-up and the Brightpath Health offer before its 27 June deadline, each with a concrete action, and offers to do the first step. The recorded digest is dated 16 June 2026 and the assistant's own clock may say later; noting that, even first, is fine as long as the prioritized list and the offer follow; replacing the list with questions about whether the data is current is not",
   },
   {
     id: "memory-cover-letter",

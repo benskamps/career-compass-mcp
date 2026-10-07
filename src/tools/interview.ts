@@ -313,7 +313,9 @@ that would most change their read of you if it landed.
 
 After the round happens, capture what they actually asked with \`capture_insight\`
 (\`type: "interview_insight"\`${applicationId ? `, \`applicationId: "${applicationId}"\`` : ""}) — including where this projection was wrong. That is
-what makes the next projection in this process, and the next process, sharper.`,
+what makes the next projection in this process, and the next process, sharper.
+
+${TRUTH_RULE}`,
         }],
       };
     }

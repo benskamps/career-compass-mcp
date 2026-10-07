@@ -6,6 +6,7 @@ import { loadCareerData, saveCareerSection, loadPipeline, mutatePipeline, append
 import { Profile, Experience, Skill, Education, Project, Testimonial } from "../schemas/career-schema.js";
 import type { JournalEntry } from "../schemas/career-schema.js";
 import { embedUntrusted } from "../untrusted.js";
+import { TRUTH_RULE } from "./truth-rule.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { isReadOnlyStore } from "../storage/read-only-error.js";
 
@@ -328,6 +329,8 @@ ${responseGoal === "express_continued_interest" ? "Mention the company is still 
 3. **LinkedIn connection note** (if you haven't connected yet — 300 chars)
 
 Lead with the recommended response, ready to copy; keep any commentary to one line after the drafts.
+
+${TRUTH_RULE}
 
 ${statusUpdated
   ? `

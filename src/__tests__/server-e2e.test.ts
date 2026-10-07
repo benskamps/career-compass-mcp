@@ -94,6 +94,8 @@ describe("MCP server E2E (in-memory transport)", () => {
   it("sends server instructions that name only real tools and every writing tool", async () => {
     const instructions = client.getInstructions() ?? "";
     expect(instructions).toContain("Routing:");
+    // Some hosts truncate server instructions past 2 KB; keep it whole.
+    expect(instructions.length).toBeLessThanOrEqual(2048);
     const { tools } = await client.listTools();
     const names = new Set(tools.map((t) => t.name));
     // Every snake_case identifier that looks like a tool name must be one.

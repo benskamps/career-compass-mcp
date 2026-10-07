@@ -56,7 +56,7 @@
     },
     {
       "name": "pipeline_view",
-      "description": "Read the job application pipeline: list applications, summarize stats, surface what needs attention, or fetch one application by id. Read-only \u2014 never modifies anything."
+      "description": "Read the job application pipeline. action \"next_actions\" answers \"what should I work on?\" with a ranked digest led by one start-here move; \"list\" shows applications (filter by status or priority); \"stats\" gives funnel and response rates; \"get\" fetches one application by id. Read-only: never modifies anything."
     },
     {
       "name": "pipeline_add",
