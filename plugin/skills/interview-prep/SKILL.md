@@ -15,7 +15,9 @@ The user wants to prepare for an interview. Details they gave are below.
 - If the tools are not available, follow "Doing the work without the tools" in the
   career-compass skill, asking for a résumé if you have nothing of theirs.
 
-Never invent stories. Draw every STAR story from their real history, and ask when you need a
-detail. After the interview, offer a quick debrief with `capture_insight`.
+Never invent stories. Use their saved `stories` first, word for word, skipping any that
+`usedWith` shows this interviewer has already heard; draw new STAR stories only from their
+real history, ask when you need a detail, and offer to save the new ones. After the
+interview, offer a debrief (the debrief skill; in chat, they just ask).
 
 $ARGUMENTS
