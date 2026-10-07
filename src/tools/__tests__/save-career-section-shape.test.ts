@@ -7,8 +7,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../../server.js";
 import { SECTION_SHAPE_HELP } from "../career-kb.js";
+import { CAREER_SECTIONS } from "../../storage/file-store.js";
 import {
-  Profile, Experience, Skill, Education, Project, Testimonial,
+  Profile, Experience, Skill, Education, Project, Testimonial, NarrativeEntry, Story, Person,
 } from "../../schemas/career-schema.js";
 
 /**
@@ -136,6 +137,9 @@ describe("the advertised shapes cannot drift from the schemas", () => {
     education: Education,
     projects: Project,
     testimonials: Testimonial,
+    narrative: NarrativeEntry,
+    stories: Story,
+    people: Person,
   } as const;
 
   it("names every required field of every section", () => {
@@ -159,7 +163,13 @@ describe("the advertised shapes cannot drift from the schemas", () => {
     expect(SECTION_SHAPE_HELP).not.toContain("aFieldNoSchemaHas");
   });
 
-  it("lists all six sections", () => {
+  it("guards every section the tool accepts", () => {
+    // A new section added to CAREER_SECTIONS without a line here would escape
+    // the required-field check above.
+    expect(Object.keys(SCHEMAS).sort()).toEqual([...CAREER_SECTIONS].sort());
+  });
+
+  it("lists every section", () => {
     for (const section of Object.keys(SCHEMAS)) {
       expect(SECTION_SHAPE_HELP).toContain(`${section}:`);
     }

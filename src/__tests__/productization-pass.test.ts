@@ -341,6 +341,9 @@ const gitAvailable = (() => {
 
 describe.skipIf(!gitAvailable)("check_setup git finding", () => {
   it("warns with the init command outside a repo, confirms inside one", async () => {
+    // A populated install: a fresh one gets the three-line form, with no git tip.
+    mkdirSync(path.join(dataDir, "career"), { recursive: true });
+    writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: Alex Rivera\nsummary: Ops.\n", "utf-8");
     const { client, server } = await connect();
     try {
       const before = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));

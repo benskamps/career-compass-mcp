@@ -6,7 +6,8 @@ import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
 import { TRUTH_RULE } from "./truth-rule.js";
-import { formatRoles, formatAchievements, formatCredentials, formatProjects } from "./career-context.js";
+import { formatRoles, formatAchievements, formatCredentials, formatProjects, narrativeBlock } from "./career-context.js";
+import { KB_OVER_PASTED, PASTED_RESUME_CLOSE, workFromPastedResume } from "./opportunity.js";
 import type { CareerData } from "../schemas/career-schema.js";
 
 export function registerResumeTools(server: McpServer): void {
@@ -24,26 +25,38 @@ export function registerResumeTools(server: McpServer): void {
       },
       description: "Write a résumé tailored to one job posting from the user's saved Career KB: the posting's vocabulary, the most " +
         "relevant real achievements first, nothing invented, and [confirm: ...] placeholders where a fact is missing. " +
-        "Returns the résumé text first, then a keyword match report. Needs a saved Career KB; when the user has only " +
-        "pasted a résumé, tailor from that directly. Use format_for_ats afterwards for a specific applicant system's " +
-        "fields. Writes nothing.",
+        "Returns the résumé text first, then a keyword match report. Use it when the user wants a résumé for a specific " +
+        "posting. Before anything is saved, pass the résumé they pasted as `resume` and it tailors from that. Use " +
+        "format_for_ats afterwards for a specific applicant system's fields. Writes nothing.",
       inputSchema: {
         posting: z.string().describe("Full job posting text"),
         format: z.enum(["standard", "federal", "academic", "functional"]).default("standard").describe("Resume format"),
         pages: z.number().min(1).max(4).default(2).describe("Target page count"),
         includeProjects: z.boolean().default(true).describe("Include projects section"),
         focusAreas: z.string().optional().describe("Specific areas to emphasize, e.g. 'leadership, data analysis'"),
+        company: z.string().optional().describe("Company the posting is for, if known. Journal notes about this company are shown first."),
+        resume: z.string().optional().describe(
+          "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is " +
+            "saved yet, so the first tailored résumé works before anything is saved.",
+        ),
       },
     },
-    async ({ posting, format, pages, includeProjects, focusAreas }) => {
+    async ({ posting, format, pages, includeProjects, focusAreas, company, resume }) => {
       const read = await guardedRead(() => loadCareerData());
       if (!read.ok) return read.response;
       const career = read.value;
-      if (!career) {
+      const fromPasted = workFromPastedResume(career, resume);
+      if (!career && !fromPasted) {
         return {
-          content: [{ type: "text", text: noCareerDataMessage() }],
+          content: [{ type: "text", text: noCareerDataMessage({ resumeParam: "resume" }) }],
         };
       }
+
+      // A pasted résumé is fenced like every other pasted span; see
+      // buildPastedSummary in opportunity.ts for why the user's own text is too.
+      const source = fromPasted
+        ? `No saved Career KB with work history yet, so this works from the résumé the user pasted:\n\n${embedUntrusted("pasted résumé", resume!)}`
+        : `${formatResumeSource(career!)}${resume?.trim() ? `\n\n${KB_OVER_PASTED}` : ""}`;
 
       return {
         content: [{
@@ -51,9 +64,9 @@ export function registerResumeTools(server: McpServer): void {
           text: `# Resume Tailoring Request
 
 ## Career KB
-${formatResumeSource(career)}
+${source}
 
-${formatSignalDigest(career.journal)}
+${formatSignalDigest(career?.journal, 6, company)}
 ## Job Posting
 ${embedUntrusted("job posting", posting)}
 
@@ -105,7 +118,7 @@ ${format === "functional" ? `1. Header
 - Industry-agnostic: use the posting's vocabulary, not my previous employer's
 
 Output the full resume text first, ready to copy, then a short "Keyword Match Report" showing which posting requirements are covered and which aren't, then any [confirm: ...] questions in one list.
-
+${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
 ${TRUTH_RULE}`,
         }],
       };
@@ -124,8 +137,10 @@ ${TRUTH_RULE}`,
         openWorldHint: false,
       },
       description: "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the " +
-        "role. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and " +
-        "notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing.",
+        "role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the " +
+        "user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached " +
+        "posting, role, and notes), or from just a company and role. Company claims come only from the posting or the " +
+        "user. Writes nothing.",
       inputSchema: {
         posting: z.string().optional().describe("Full job posting text. Optional: without it, the cached posting from the pipeline is used, or the letter is written from the role and your history"),
         company: z.string().describe("Company name"),
@@ -137,6 +152,7 @@ ${TRUTH_RULE}`,
       },
     },
     async ({ posting, company, role, applicationId, hiringManager, tone, angle }) => {
+      // Note: `company` also orders the journal digest below (that company first).
       const read = await guardedRead(() => loadCareerData());
       if (!read.ok) return read.response;
       const career = read.value;
@@ -182,6 +198,9 @@ ${formatRoles(career)}
 **Top achievements (by role):**
 ${formatAchievements(career, 2, 8)}
 
+${narrativeBlock(career)}
+
+${formatSignalDigest(career.journal, 4, company)}
 ${posting ? `## Job Posting\n${embedUntrusted("job posting", posting)}` : `## Job Posting\nNone available. Write the letter from the role${role ? ` (${role})` : ""}, the company name, and my history. Do not ask me for the posting first: deliver the letter, then say in one line that pasting the posting would let you sharpen it.`}
 ${appContext}
 
@@ -229,10 +248,11 @@ ${TRUTH_RULE}`,
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Reformat résumé text the user already has for one applicant tracking system (Workday, Greenhouse, Lever, " +
-        "LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): plain-text sections ready to paste field by field, with " +
-        "typical length limits flagged. Reformats only, never rewrites content; use tailor_resume to change what the " +
-        "résumé says. Writes nothing.",
+      description: "Reformat résumé text the user already has into clean, parse-safe plain text for an applicant tracking " +
+        "system (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): standard headings, " +
+        "consistent dates, sections ready to paste field by field, and long sections flagged (limits vary by employer). " +
+        "Use it when the user is about to paste a résumé into an application form. Reformats only, never rewrites " +
+        "content; use tailor_resume to change what the résumé says. Writes nothing.",
       inputSchema: {
         resumeContent: z.string().describe("The resume text to format"),
         targetSystem: z.enum(["workday", "greenhouse", "lever", "linkedin", "icims", "taleo", "smartrecruiters", "generic"]).describe("Target ATS system"),
@@ -240,71 +260,14 @@ ${TRUTH_RULE}`,
       },
     },
     async ({ resumeContent, targetSystem, postingUrl }) => {
-      const systemGuides: Record<string, string> = {
-        workday: `**Workday formatting rules:**
-- Plain text for work history fields (no markdown)
-- Each role entered separately via form fields: Job Title, Company, Start Date, End Date, Description
-- Description field: bullet points separated by line breaks, max ~2000 chars per role
-- Skills: enter each individually in the skills inventory
-- Education: separate fields for Degree, Major, School, Year
-- Keep each bullet under 150 characters for display
-- Dates format: MM/YYYY`,
-
-        greenhouse: `**Greenhouse formatting rules:**
-- Accepts PDF and DOCX — PDF preferred for layout preservation
-- LinkedIn URL field is separate — don't include in resume body
-- Cover letter is a separate rich text field
-- Custom questions vary by company — read each carefully
-- Work samples/portfolio links go in their designated field`,
-
-        lever: `**Lever formatting rules:**
-- PDF strongly preferred
-- One-page recommended for most roles
-- Apply via email application or form
-- Cover letter in the body text field — keep under 300 words
-- Social links (GitHub, LinkedIn, portfolio) in dedicated fields`,
-
-        linkedin: `**LinkedIn Easy Apply formatting rules:**
-- Resume PDF is attached — must be ATS-readable (no graphics)
-- Additional questions are auto-populated from profile — ensure profile matches resume
-- Character limits on text fields: ~2000 per experience entry
-- Skills should match LinkedIn's taxonomy exactly
-- Headline is pulled from your profile — update before applying`,
-
-        icims: `**iCIMS formatting rules:**
-- Plain text preferred in form fields
-- Work history entered field by field
-- Date format: MM/DD/YYYY
-- Can upload PDF/DOCX for resume attachment
-- Cover letter is a rich text field`,
-
-        taleo: `**Taleo formatting rules:**
-- Very finicky with PDF formatting — use plain DOCX
-- Enter work history manually even with resume upload
-- Dates: MM/YYYY
-- Character limits are strict — keep bullets under 100 chars
-- Multi-page forms — don't close the browser`,
-
-        smartrecruiters: `**SmartRecruiters formatting rules:**
-- Accepts PDF and DOCX
-- LinkedIn import available
-- Clean single-column layout recommended
-- Each section entered separately in profile`,
-
-        generic: `**Generic ATS formatting rules:**
-- Plain text, single column
-- Standard section headers (Experience, Education, Skills)
-- Dates: Month YYYY – Month YYYY
-- No tables, graphics, columns, headers/footers, text boxes
-- Standard fonts only (Arial, Calibri, Times New Roman)`,
-      };
-
       return {
         content: [{
           type: "text",
           text: `# ATS Formatting: ${targetSystem.toUpperCase()}
 
-${systemGuides[targetSystem]}
+${ATS_HYGIENE}
+
+**${ATS_SYSTEM_NAME[targetSystem]}:** ${ATS_SYSTEM_NOTES[targetSystem]}
 
 ## Resume Content to Format
 ${embedUntrusted("resume content", resumeContent)}
@@ -314,15 +277,15 @@ ${postingUrl ? `**Posting reference:** ${postingUrl}` : ""}
 ---
 
 **Instructions for Claude:**
-Reformat the resume content above following the ${targetSystem} rules exactly. Produce:
+Reformat the resume content above following the parsing hygiene and the ${ATS_SYSTEM_NAME[targetSystem]} note above. Produce:
 
 1. **Formatted version** — ready to paste into ${targetSystem} fields
 2. **Field-by-field breakdown** — if form-based, show exactly what goes in each field
-3. **Character count warnings** — flag any sections that may exceed limits
+3. **Length check** — flag any section long enough that a form field might cut it off, and say to check that form's limit; never state a character limit as fact
 4. **ATS keyword check** — only if the posting text is in this conversation: its top 10 keywords and whether each appears in the formatted output. Otherwise skip this item and say paste the posting to get it
 5. **Copy-paste ready sections** — formatted so each section can be directly pasted
 
-Flag any content that doesn't translate well to this system and suggest alternatives. Reformat only: keep every fact, date, and number exactly as given, and add nothing. The system rules above are general guidance; field limits vary by employer, so call them typical, not exact.
+Flag any content that doesn't translate well to plain text and suggest alternatives. Reformat only: keep every fact, date, and number exactly as given, and add nothing. Don't add vendor tips beyond the notes above: how each employer configures its system varies, and folklore about a vendor's parser stated as fact sends people chasing the wrong fix.
 
 ${TRUTH_RULE}`,
         }],
@@ -330,6 +293,42 @@ ${TRUTH_RULE}`,
     }
   );
 }
+
+/**
+ * What holds for every applicant tracking system.
+ *
+ * This used to be a page of per-vendor rules: "Taleo very finicky with PDF",
+ * "Lever: one page recommended", "match LinkedIn's taxonomy exactly", and fixed
+ * character limits stated as facts. None of it was sourced, much of it varies by
+ * how each employer configured the system, and a user told "keep bullets under
+ * 100 characters" for Taleo trims real evidence to obey a number nobody checked
+ * (council 2.9.7, trust and use-case notes). What survives is parsing hygiene
+ * that is true everywhere, plus one neutral note per system.
+ */
+export const ATS_HYGIENE = `**Parsing hygiene (true for every applicant system):**
+- Plain text, one column: no tables, columns, text boxes, graphics, or icons
+- Standard section headings: Experience, Education, Skills (plus Summary, Projects, Certifications if used)
+- One date format, used the same way for every role
+- Contact details in the body, not in a page header or footer
+- If you upload a PDF, use a text-based one (exported from a document, not scanned), so the text can be selected
+- Field length limits vary by employer; check the form rather than trusting a fixed number`;
+
+const ATS_SYSTEM_NAME: Record<string, string> = {
+  workday: "Workday", greenhouse: "Greenhouse", lever: "Lever", linkedin: "LinkedIn Easy Apply",
+  icims: "iCIMS", taleo: "Taleo", smartrecruiters: "SmartRecruiters", generic: "Any system",
+};
+
+/** One neutral, checkable note per system: how the form usually asks, not how its parser supposedly behaves. */
+export const ATS_SYSTEM_NOTES: Record<string, string> = {
+  workday: "Workday usually asks you to re-enter each role in its own form (title, company, dates, description), even after a résumé upload, so a per-role breakdown saves time.",
+  greenhouse: "Greenhouse usually takes a résumé upload plus separate fields for links and any custom questions the employer added; those questions differ by company.",
+  lever: "Lever usually takes a résumé upload, separate fields for links, and an optional additional-information box.",
+  linkedin: "Easy Apply attaches a résumé file and may pre-fill answers from your LinkedIn profile, so check the pre-filled answers match the résumé.",
+  icims: "iCIMS often asks for work history field by field after the upload; check what it pre-filled from the parse.",
+  taleo: "Taleo often asks for work history by hand across several pages, even after an upload; check each parsed field.",
+  smartrecruiters: "SmartRecruiters usually takes an upload and may offer a LinkedIn import; review whatever it imported.",
+  generic: "No system-specific notes; the hygiene above is what matters.",
+};
 
 /** Roles shown in full to tailor_resume; older ones are named as omitted. */
 const RESUME_MAX_ROLES = 10;
