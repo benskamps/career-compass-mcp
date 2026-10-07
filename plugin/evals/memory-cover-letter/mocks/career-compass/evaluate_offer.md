@@ -17,9 +17,16 @@ END_UNTRUSTED_0E7A1C55>>>
 
 
 
+## Other Offers on Record (from the pipeline)
+| Company | Role | Status | Base | Bonus | Equity | Start | Expires |
+|---|---|---|---|---|---|---|---|
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-07-21 | 2026-06-27 |
+
 ---
 
 **Instructions for Claude:**
+
+Put this offer side by side with the other offers on record above (base, bonus, equity, start, deadline), using only the figures recorded there; a blank cell is unknown, not zero. Weigh the deadlines: an offer that expires first may need an answer or an extension request before the others land.
 
 ### 1. Total Compensation Breakdown
 Break down every component with annualized values:
@@ -73,5 +80,6 @@ Overall recommendation: Accept / Negotiate / Decline? Put this recommendation an
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- Journal entries marked as Claude's inference are hypotheses: never state them as facts about me.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.

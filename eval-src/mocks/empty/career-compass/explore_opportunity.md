@@ -1,9 +1,5 @@
-**No career data yet.** Career Compass reads plain YAML from:
+**No saved Career KB yet** (nothing in `~/.career-compass/career`). This is the normal first-run state, not an error.
 
-    ~/.career-compass/career
-
-Nothing is there so far, which is why this tool has nothing to work with.
-The fastest way to start: paste in a resume and ask me to save it — I'll
-extract the structure and write it with `save_career_section`. You can also
-drop your own YAML into that folder directly; it's yours, and it never
-leaves this machine.
+- If the user pasted a résumé or described their background in this conversation, call this tool again with their pasted résumé text in `resume` and answer from that. Don't tell them the KB is empty or ask them to set anything up first.
+- After the answer, offer once to save their background with `save_career_section` so later fit checks, résumés and interview prep start from it. Save only with their OK.
+- If they have shared nothing about their background yet, ask for their résumé (pasted text is fine) in one line.
