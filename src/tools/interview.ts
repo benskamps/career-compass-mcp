@@ -404,6 +404,10 @@ ${TRUTH_RULE}`,
       const app = pipeline ? findApplication(pipeline, applicationId, company, role) : undefined;
       if (app) { company = company ?? app.company; role = role ?? app.role; }
       const recorded = pipeline ? otherRecordedOffers(pipeline, app?.id) : [];
+      // The user's own targets: an offer is weighed against what they said they
+      // want before anything else. Best-effort; the review works without them.
+      const careerRead = await guardedRead(() => loadCareerData());
+      const targets = careerRead.ok && careerRead.value ? offerTargets(careerRead.value) : "";
       // Recording the offer is what puts its deadline at the top of the daily
       // digest. This used to fire only for a matched application with no
       // deadline saved, so a new offer from a company with an older record (or
@@ -435,7 +439,7 @@ ${currentComp ? `**Current comp:** ${currentComp}` : ""}
 ${marketData ? `**Market data:**\n${embedUntrusted("market data", marketData)}` : ""}
 ${priorities ? `**My priorities:** ${priorities}` : ""}
 ${otherOffers ? `**Other offers/processes:** ${otherOffers}` : ""}
-${onFile}${recorded.length ? `\n## Other Offers on Record (from the pipeline)\n${offersTable(recorded)}\n` : ""}
+${targets}${onFile}${recorded.length ? `\n## Other Offers on Record (from the pipeline)\n${offersTable(recorded)}\n` : ""}
 ---
 
 **Instructions for Claude:**
@@ -451,7 +455,8 @@ Break down every component with annualized values:
 
 ### 2. Market Comparison
 Compare to market rate for ${role ?? "this role"} at ${company ?? "this company type"}'s stage/size${location ? ` in ${location}` : ""}:
-${marketData ? "- Compare against the market data above, citing it\n- How does this offer rank against it?" : "- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)\n- Compare instead against my current pay, my stated targets, and any other offers"}
+${marketData ? "- Compare against the market data above, citing it\n- How does this offer rank against it?" : "- No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)\n- Compare instead against my current pay, my saved targets above, and any other offers"}
+${targets ? "- Lead the comparison with my saved salary target: say plainly whether the base is below, inside, or above it" : ""}
 
 ### 3. Negotiation Strategy
 - What should I push on first?
@@ -655,4 +660,28 @@ function buildArcCareerContext(career: CareerData): string {
 
 **Evidence available for answers:**
 ${achievements.join("\n") || "- None recorded yet"}`;
+}
+
+/**
+ * What the user said they want, from the Career KB, for weighing an offer.
+ * evaluate_offer used to read only the pipeline, so every review said "I
+ * don't have your target" to a user whose profile held one. "" when nothing
+ * relevant is saved.
+ */
+export function offerTargets(career: CareerData): string {
+  const p = career.profile;
+  const fmt = (n: number) => n.toLocaleString("en-US");
+  const lines: string[] = [];
+  if (p.salaryMin !== undefined || p.salaryMax !== undefined) {
+    const band = p.salaryMin !== undefined && p.salaryMax !== undefined ? `${fmt(p.salaryMin)}–${fmt(p.salaryMax)}`
+      : p.salaryMin !== undefined ? `at least ${fmt(p.salaryMin)}` : `up to ${fmt(p.salaryMax!)}`;
+    lines.push(`- Salary target: ${p.salaryCurrency} ${band} base`);
+  }
+  if (p.targetRoles.length) lines.push(`- Target roles: ${p.targetRoles.join(", ")}`);
+  if (p.openToRemote !== undefined) lines.push(`- Open to remote: ${p.openToRemote ? "yes" : "no"}`);
+  if (p.noticePeriod) lines.push(`- Notice period: ${p.noticePeriod}`);
+  for (const n of career.narrative.filter((e) => e.topic === "optimizing_for" || e.topic === "why_looking")) {
+    lines.push(`- ${n.topic === "optimizing_for" ? "Optimizing for" : "Why I'm looking"}: "${n.text.replace(/\s+/g, " ").trim()}"`);
+  }
+  return lines.length ? `\n## My targets (from the Career KB)\n${lines.join("\n")}\n` : "";
 }

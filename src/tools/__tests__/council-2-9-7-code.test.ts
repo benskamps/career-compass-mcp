@@ -559,3 +559,31 @@ describe("C30 · the experience save receipt says what saving bought", () => {
     expect(skills.text).not.toContain("Next fit check");
   });
 });
+
+// ─── 2.9.9 · behaviors carried by the tools ───────────────────────────────────
+
+describe("2.9.9 · the tools carry the close-out, offer and first-application behaviors", () => {
+  it("the pipeline list names the people on file, so a close-out can thank them", async () => {
+    await pipeline([app({ id: "b1", company: "Brightpath", referral: "Samantha Osei", contacts: [{ name: "Diane Hartley", title: "HRBP" }] })]);
+    const { text } = await call("pipeline_view", { action: "list" });
+    expect(text).toContain("**People on file**");
+    expect(text).toContain("- Brightpath (`b1`): Samantha Osei (referred you); Diane Hartley, HRBP");
+  });
+
+  it("evaluate_offer weighs the offer against the saved salary target", async () => {
+    await saveCareerSection("profile", { ...PROFILE, salaryMin: 140000, salaryMax: 180000, targetRoles: ["Director of Operations"] });
+    const { text } = await call("evaluate_offer", { company: "Hooli", offerDetails: "Base 165k" });
+    expect(text).toContain("- Salary target: USD 140,000–180,000 base");
+    expect(text).toMatch(/Lead the comparison with my saved salary target/);
+  });
+
+  it("pipeline_add records the date given and offers the briefing only on the first application", async () => {
+    const first = await call("pipeline_add", { company: "Lumen", role: "Head of Ops", dateApplied: "2026-10-06" });
+    expect(first.text).toContain("Applied: 2026-10-06");
+    expect(first.text).toContain("first tracked application");
+    const second = await call("pipeline_add", { company: "Stratos", role: "PD" });
+    expect(second.text).not.toContain("first tracked application");
+    const bad = await call("pipeline_add", { company: "X", role: "Y", dateApplied: "yesterday" });
+    expect(bad.isError).toBe(true);
+  });
+});

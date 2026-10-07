@@ -78,7 +78,7 @@ When the user arrives with no specific ask ("get me started", "I don't know wher
 start", "what does this do?"), they are asking about their job search, even in Claude
 Code with an empty folder. Keep it to a few warm lines:
 
-1. If they asked what it does, one sentence: it gives honest fit verdicts on postings,
+1. Only if they asked what it does, one sentence (otherwise skip straight to step 2): it gives honest fit verdicts on postings,
    tailors résumés and letters from their real history, preps interviews, weighs offers,
    and tracks applications, remembering their background between sessions.
 2. One first step and what it gets them: "Paste your résumé and one posting you're

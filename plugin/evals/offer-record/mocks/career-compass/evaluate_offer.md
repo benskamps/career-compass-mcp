@@ -17,6 +17,12 @@ END_UNTRUSTED_0E7A1C55>>>
 
 
 
+## My targets (from the Career KB)
+- Salary target: USD 140,000–180,000 base
+- Target roles: Program Manager, Director of Operations, Head of Customer Success, Chief of Staff
+- Open to remote: yes
+- Notice period: 3 weeks
+
 ## Offer already on record for this application (`demo-006`, status offer)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
@@ -38,7 +44,8 @@ Break down every component with annualized values:
 ### 2. Market Comparison
 Compare to market rate for Sr. Program Manager at Brightpath Health's stage/size:
 - No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)
-- Compare instead against my current pay, my stated targets, and any other offers
+- Compare instead against my current pay, my saved targets above, and any other offers
+- Lead the comparison with my saved salary target: say plainly whether the base is below, inside, or above it
 
 ### 3. Negotiation Strategy
 - What should I push on first?

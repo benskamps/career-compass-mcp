@@ -33,7 +33,8 @@ Break down every component with annualized values:
 ### 2. Market Comparison
 Compare to market rate for this role at this company type's stage/size:
 - No market data was provided, so do not state benchmarks or norms. Say so in one line and name where to get it (Levels.fyi, Glassdoor, Carta, a trusted recruiter)
-- Compare instead against my current pay, my stated targets, and any other offers
+- Compare instead against my current pay, my saved targets above, and any other offers
+
 
 ### 3. Negotiation Strategy
 - What should I push on first?

@@ -10,3 +10,12 @@
 | demo-007 | Apex Consulting Group | Engagement Manager | withdrawn | low | 2026-10-02 |
 | demo-002 | Meridian Logistics Group | Head of Customer Success | applied | medium | 2026-09-30 |
 | demo-003 | Novare Capital Partners | Chief of Staff | rejected | high | 2026-09-29 |
+
+**People on file**
+- Brightpath Health (`demo-006`): Samantha Osei (former colleague, now Head of PMO at Brightpath) (referred you); Samantha Osei, Head of PMO; Carlos Mendez, VP of Product & Engineering; Diane Hartley, HR Business Partner
+- Stratos Cloud (`demo-005`): Priya Nair, Technical Recruiter
+- Lumen Digital (`demo-008`): Yvonne Park, Chief People Officer
+- Veridian Health (`demo-001`): Rachel Torres, Talent Acquisition Partner; David Kim, Chief Operating Officer
+- Apex Consulting Group (`demo-007`): Bradley Kowalski, Recruiting Manager
+- Meridian Logistics Group (`demo-002`): Marcus Chen (former Apex colleague) (referred you); Marcus Chen, VP of Sales
+- Novare Capital Partners (`demo-003`): Jennifer Wu, Head of People

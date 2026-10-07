@@ -64,7 +64,7 @@
     },
     {
       "name": "pipeline_add",
-      "description": "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board."
+      "description": "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board. On the very first application, the result carries Career Compass's one-time offer of a morning briefing; pass it on as one optional line."
     },
     {
       "name": "pipeline_update",

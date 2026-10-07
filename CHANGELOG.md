@@ -25,6 +25,11 @@ where Claude actually meets it.
   already on file for that application, says when yours differs, and offers the exact
   `pipeline_update` (or `pipeline_add` for a company not yet tracked), so the deadline
   leads your daily list.
+- **Offers are weighed against your saved target.** `evaluate_offer` now reads your
+  profile's salary target, target roles and what you're optimizing for, instead of
+  saying it doesn't know them.
+- **The pipeline list names who helped.** Referrers and contacts appear under the list,
+  so a close-out thanks them by name.
 - **"I accepted the offer" starts the close-out.** The skill and the server's routing now
   cover it: congratulations, then thank-yous to the people on file, withdrawals from the
   other live applications, and marking it accepted, each after your OK.
