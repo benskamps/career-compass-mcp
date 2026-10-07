@@ -153,16 +153,13 @@ describe("MCP server E2E (in-memory transport)", () => {
     expect(resources).toHaveLength(STATIC.length + applications.length);
   });
 
-  it("registers 7 prompts", async () => {
+  it("registers 4 prompts", async () => {
     const { prompts } = await client.listPrompts();
-    expect(prompts).toHaveLength(7);
+    expect(prompts).toHaveLength(4);
     expect(prompts.map((p) => p.name).sort()).toEqual([
-      "daily-review",
-      "interview-coach",
       "negotiation-coach",
       "post-interview-debrief",
       "resume-tailor",
-      "setup-career-kb",
       "weekly-retro",
     ]);
   });

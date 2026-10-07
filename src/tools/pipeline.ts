@@ -1,13 +1,14 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
-import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
+import { loadPipeline, loadCareerData, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
+import { Application, ApplicationStatus, CareerData, InterviewRound, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
+import { buildCalendar, CALENDAR_FILENAME } from "./pipeline-calendar.js";
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
 import { TRUTH_RULE } from "./truth-rule.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { isReadOnlyStore } from "../storage/read-only-error.js";
-import { ACTIVE_STATUSES, computeStats } from "../pipeline-stats.js";
+import { ACTIVE_STATUSES, computeStats, patternLines } from "../pipeline-stats.js";
 import { buildTodayDigest } from "./today-digest.js";
 import { clockNow } from "../clock.js";
 import type {
@@ -29,6 +30,9 @@ import type {
 const LIVE_STATUSES = STATUS_ORDER.slice(0, statusRank("accepted"));
 
 const STATUS_LIST = STATUS_ORDER.join(", ");
+
+/** Interview round types, from the schema, so classify_email proposes only values pipeline_update accepts. */
+const INTERVIEW_TYPES = InterviewRound.shape.type.options;
 
 type StatusCheck =
   | { ok: true; status: ApplicationStatus }
@@ -83,6 +87,81 @@ function transitionRefusal(from: ApplicationStatus, to: ApplicationStatus): stri
   return null;
 }
 
+// ─── Matching ─────────────────────────────────────────────────────────────────
+
+const COMPANY_SUFFIXES = /\b(inc|incorporated|llc|ltd|limited|corp|corporation|co|company|gmbh|plc|pbc)\b/g;
+
+/** "Acme, Inc." and "acme" are one company; "Sr. PM" and "sr pm" are one role. */
+export function normalizeName(s: string, kind: "company" | "role" = "role"): string {
+  let t = s.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/&/g, " and ");
+  t = t.replace(/[^\p{L}\p{N}]+/gu, " ");
+  if (kind === "company") t = t.replace(COMPANY_SUFFIXES, " ");
+  return t.replace(/\s+/g, " ").trim();
+}
+
+/** An application already tracked for this company and role, if any. */
+export function findDuplicate(apps: Application[], company: string, role: string): Application | undefined {
+  const c = normalizeName(company, "company");
+  const r = normalizeName(role);
+  if (!c || !r) return undefined;
+  return apps.find((a) => normalizeName(a.company, "company") === c && normalizeName(a.role) === r);
+}
+
+/** Levenshtein distance; inputs here are a few dozen characters at most. */
+function editDistance(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const up = prev[j];
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = up;
+    }
+  }
+  return prev[b.length];
+}
+
+/** 0..1, where 1 is identical. Containment counts high: "veridian" is in "veridian health". */
+function similarity(query: string, target: string): number {
+  if (!query || !target) return 0;
+  if (target === query) return 1;
+  if (target.startsWith(query) || target.includes(query)) return 0.9;
+  return 1 - editDistance(query, target) / Math.max(query.length, target.length);
+}
+
+/**
+ * The application a mistyped id most likely meant, or null.
+ *
+ * Checked against both the id (a typo, or a truncated paste) and the company
+ * (a model that passed the name where the id goes). Below half-similar it is a
+ * guess, and a guessed suggestion on the way to a destructive update is worse
+ * than none.
+ */
+export function closestApplication(apps: Application[], query: string): Application | null {
+  const q = query.trim().toLowerCase();
+  const qn = normalizeName(query, "company");
+  let best: { app: Application; score: number } | null = null;
+  for (const app of apps) {
+    const score = Math.max(similarity(q, app.id.toLowerCase()), similarity(qn, normalizeName(app.company, "company")));
+    if (!best || score > best.score) best = { app, score };
+  }
+  return best && best.score >= 0.5 ? best.app : null;
+}
+
+/** The not-found error, with the closest match by name when there is one. */
+export function notFound(id: string, pipeline: Pipeline): ToolResponse {
+  const near = closestApplication(pipeline.applications, id);
+  const recent = [...pipeline.applications]
+    .sort((a, b) => b.dateUpdated.localeCompare(a.dateUpdated))
+    .slice(0, 3)
+    .map((a) => `${a.company} (${a.id})`);
+  const text = near
+    ? `❌ No application \`${id}\` — did you mean ${near.company} (${near.id})? Nothing was changed.`
+    : `❌ No application with id \`${id}\`.${recent.length ? ` Most recently updated: ${recent.join(", ")}.` : ""} Run \`pipeline_view\` with action "list" to see ids, or match by company name there.`;
+  return { isError: true, content: [{ type: "text", text }] };
+}
+
 // ─── Extracted Handler Functions ──────────────────────────────────────────────
 
 export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Promise<ToolResponse> {
@@ -92,6 +171,23 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
   const checked = args.status ? parseStatus(args.status) : ({ ok: true, status: "applied" } as const);
   if (!checked.ok) return { isError: true, content: [{ type: "text", text: checked.message }] };
   const status = checked.status;
+
+  // A client retry, or "add both of these" sent twice, used to leave two rows
+  // for one application: two follow-up nags, and a response rate counting the
+  // same silence twice. A match writes nothing and points at the existing row.
+  // It is not an error — the pipeline already holds what was asked for — and a
+  // genuinely separate application (a re-application, another team) passes
+  // `allowDuplicate`.
+  const existing = args.allowDuplicate ? undefined : findDuplicate(pipeline.applications, args.company, args.role);
+  if (existing) {
+    return {
+      content: [{
+        type: "text",
+        text: `ℹ️ Already tracking **${existing.role}** at **${existing.company}** (ID: \`${existing.id}\`, status: ${existing.status}). Nothing was added.\n\n` +
+          `To change it, use \`pipeline_update\` with id \`${existing.id}\`. If this really is a separate application (a re-application, a different team), call \`pipeline_add\` again with \`allowDuplicate: true\`.`,
+      }],
+    };
+  }
 
   const id = randomUUID().slice(0, 8);
   const now = new Date().toISOString();
@@ -135,7 +231,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
 export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline): Promise<ToolResponse> {
   const idx = pipeline.applications.findIndex(a => a.id === args.id);
   // Returns normally: mutatePipeline skips the write because nothing changed.
-  if (idx === -1) return { isError: true, content: [{ type: "text", text: `❌ No application with id \`${args.id}\`. Run \`pipeline_view\` with action "list" to see ids, or match by company name there.` }] };
+  if (idx === -1) return notFound(args.id, pipeline);
 
   const app = pipeline.applications[idx];
 
@@ -179,6 +275,7 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   }
   if (args.followUpDue) app.followUpDue = args.followUpDue;
   if (args.priority) app.priority = args.priority;
+  if (args.tailoredResumeVersion?.trim()) app.tailoredResumeVersion = args.tailoredResumeVersion.trim();
   if (args.notes) app.notes = [...app.notes, `[${new Date().toISOString().slice(0, 10)}] ${args.notes}`];
   if (args.contactName) {
     app.contacts.push({ name: args.contactName, title: args.contactTitle, email: args.contactEmail });
@@ -223,6 +320,7 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   const lines = [`✅ Updated **${app.role}** at **${app.company}** (${app.id})`, `Status: ${app.status}`];
   if (offerTouched && app.offer) lines.push(describeOffer(app.offer));
   if (args.roundOutcome) lines.push(`Latest round outcome: ${args.roundOutcome}`);
+  if (args.tailoredResumeVersion?.trim()) lines.push(`Résumé sent: ${app.tailoredResumeVersion}`);
   return { content: [{ type: "text", text: lines.join("\n") }] };
 }
 
@@ -250,8 +348,17 @@ function describeOffer(offer: NonNullable<Application["offer"]>): string {
 
 export function handleGet(args: PipelineGetArgs, pipeline: Pipeline): ToolResponse {
   const app = pipeline.applications.find(a => a.id === args.id);
-  if (!app) return { isError: true, content: [{ type: "text", text: `❌ No application with id \`${args.id}\`. Run \`pipeline_view\` with action "list" to see ids, or match by company name there.` }] };
-  return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }] };
+  if (!app) return notFound(args.id, pipeline);
+  return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }], structuredContent: { action: "get", application: { ...app } } };
+}
+
+/** The row shape `list` returns as data: what the table shows, plus the dates a host might sort on. */
+function listRow(a: Application) {
+  return {
+    id: a.id, company: a.company, role: a.role, status: a.status, priority: a.priority, dateUpdated: a.dateUpdated,
+    ...(a.followUpDue ? { followUpDue: a.followUpDue } : {}),
+    ...(a.excitement !== undefined ? { excitement: a.excitement } : {}),
+  };
 }
 
 export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResponse {
@@ -287,7 +394,7 @@ export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResp
     const text = filtered
       ? `No applications match that filter${args.filterStatus ? ` (status: ${args.filterStatus})` : ""}${args.filterPriority ? ` (priority: ${args.filterPriority})` : ""}. ${pipeline.applications.length} tracked in total — drop the filter to see them all.`
       : `No applications tracked yet.\n\nAdd the first one with \`pipeline_add\` — or paste a job posting and say "track this" and I'll add it with a fit analysis. Pass \`status: discovered\` for a role you have only found, not applied to.`;
-    return { content: [{ type: "text", text }] };
+    return { content: [{ type: "text", text }], structuredContent: { action: "list", total: 0, applications: [] } };
   }
 
   const limited = apps.slice(0, args.limit ?? 20);
@@ -300,6 +407,7 @@ export function handleList(args: PipelineListArgs, pipeline: Pipeline): ToolResp
       type: "text",
       text: `# Applications (${apps.length} total, showing ${limited.length})\n\n| ID | Company | Role | Status | Priority | Updated |\n|---|---|---|---|---|---|\n${rows}`,
     }],
+    structuredContent: { action: "list", total: apps.length, applications: limited.map(listRow) },
   };
 }
 
@@ -317,6 +425,9 @@ export function handleStats(pipeline: Pipeline): ToolResponse {
     .sort((a, b) => b[1] - a[1])
     .map(([status, count]) => `- **${status}**: ${count}`)
     .join("\n");
+  // Only lines the data supports: each one returns null below its sample floor,
+  // so a thin pipeline gets no section rather than a confident-sounding guess.
+  const insights = patternLines(apps);
 
   return {
     content: [{
@@ -332,15 +443,69 @@ export function handleStats(pipeline: Pipeline): ToolResponse {
 ${statsText}
 
 ## High Priority Active
-${apps.filter(a => a.priority === "high" && ACTIVE_STATUSES.includes(a.status)).map(a => `- ${a.company} / ${a.role} (${a.status})`).join("\n") || "None"}`,
+${apps.filter(a => a.priority === "high" && ACTIVE_STATUSES.includes(a.status)).map(a => `- ${a.company} / ${a.role} (${a.status})`).join("\n") || "None"}${
+        insights.length ? `\n\n## What your own numbers say\n${insights.map((l) => `- ${l}`).join("\n")}` : ""}`,
     }],
+    structuredContent: { action: "stats", stats: { ...stats, byStatus, insights } },
   };
 }
 
 /** Today's ranked digest. See today-digest.ts. */
-export function handleNextActions(pipeline: Pipeline, now: Date = new Date()): ToolResponse {
-  return buildTodayDigest(pipeline, now);
+export function handleNextActions(pipeline: Pipeline, now: Date = new Date(), career?: CareerData | null): ToolResponse {
+  const digest = buildTodayDigest(pipeline, now, career);
+  return { ...digest, structuredContent: { action: "next_actions", digest: digest.structuredContent } };
 }
+
+/** The pipeline's upcoming dates as an .ics file. See pipeline-calendar.ts. */
+export function handleCalendar(pipeline: Pipeline, now: Date = new Date()): ToolResponse {
+  const { ics, events } = buildCalendar(pipeline, now);
+  const text = events === 0
+    ? `No upcoming interviews, follow-ups or offer deadlines with dates, so there is nothing to put on a calendar yet. Record a date with \`pipeline_update\` (interviewDate, followUpDue, offerExpiresDate) and export again.`
+    : `Save the text below as ${CALENDAR_FILENAME} and open it in your calendar app to add ${events} event${events === 1 ? "" : "s"} (interviews, follow-ups, offer deadlines); exporting again later updates them instead of adding duplicates.\n\n\`\`\`\n${ics}\`\`\``;
+  return {
+    content: [{ type: "text", text }],
+    structuredContent: { action: "calendar", calendar: { filename: CALENDAR_FILENAME, events, ics } },
+  };
+}
+
+// ─── pipeline_view output schema ──────────────────────────────────────────────
+
+const DigestItemShape = z.object({ applicationId: z.string().optional(), line: z.string(), action: z.string().optional() });
+
+/**
+ * What `pipeline_view` returns as data, alongside the same answer as text.
+ *
+ * One object for every action, with the action's own field set: a host can
+ * render the board or the digest without parsing markdown, and the text stays
+ * for clients that read only `content` (MCP 2025-06-18 asks for both).
+ */
+export const PIPELINE_VIEW_OUTPUT = {
+  action: z.enum(["list", "stats", "next_actions", "get", "calendar"]),
+  total: z.number().optional().describe("action=list: applications matching the filter, before the limit"),
+  applications: z.array(z.object({
+    id: z.string(), company: z.string(), role: z.string(), status: z.string(), priority: z.string(),
+    dateUpdated: z.string(), followUpDue: z.string().optional(), excitement: z.number().optional(),
+  })).optional().describe("action=list: the rows shown"),
+  application: z.record(z.string(), z.unknown()).optional().describe("action=get: the full application record"),
+  stats: z.object({
+    total: z.number(), sent: z.number(), active: z.number(), inConversation: z.number(), offers: z.number(),
+    ghosted: z.number(), responseRate: z.number(), ghostRate: z.number(),
+    byStatus: z.record(z.string(), z.number()),
+    insights: z.array(z.string()).describe("Pattern lines computed from the user's own data; empty below the sample floors"),
+  }).optional(),
+  digest: z.object({
+    date: z.string(),
+    headline: z.string().optional(),
+    startHere: DigestItemShape.nullable(),
+    alsoToday: z.array(DigestItemShape),
+    comingUp: z.array(DigestItemShape),
+    pattern: z.string().optional(),
+    footer: z.array(z.string()),
+  }).optional().describe("action=next_actions"),
+  calendar: z.object({
+    filename: z.string(), events: z.number(), ics: z.string().describe("RFC 5545 text, CRLF line endings"),
+  }).optional().describe("action=calendar"),
+};
 
 // ─── Tool Registration ────────────────────────────────────────────────────────
 
@@ -359,10 +524,10 @@ export function registerPipelineTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: false,
       },
-      description: "Read the job application pipeline. action \"next_actions\" answers \"what should I work on?\" with a ranked digest led by one start-here move; \"list\" shows applications (filter by status or priority); \"stats\" gives funnel and response rates; \"get\" fetches one application by id. Read-only: never modifies anything.",
+      description: "Read the job application pipeline. action \"next_actions\" answers \"what should I work on?\" with a ranked digest led by one start-here move; \"list\" shows applications (filter by status or priority); \"stats\" gives funnel and response rates, plus any pattern the user's own numbers support; \"get\" fetches one application by id; \"calendar\" returns upcoming interviews, follow-up dates and offer deadlines as .ics text for the user to save and open in their calendar. Read-only: never modifies anything, and the .ics is returned, not written.",
       inputSchema: {
-        action: z.enum(["list", "stats", "next_actions", "get"])
-          .describe("list = all applications (filterable); stats = funnel and response-rate summary; next_actions = today's ranked digest: one start-here move, the rest of what is due, and what is coming up; get = one application by id"),
+        action: z.enum(["list", "stats", "next_actions", "get", "calendar"])
+          .describe("list = all applications (filterable); stats = funnel and response-rate summary; next_actions = today's ranked digest: one start-here move, the rest of what is due, and what is coming up; get = one application by id; calendar = upcoming interview, follow-up and offer-deadline dates as an .ics file's text"),
         id: z.string().optional().describe("Application id. Required when action=get."),
         filterStatus: ApplicationStatus.optional().describe("action=list only: show only applications in this status"),
         filterPriority: z.enum(["high", "medium", "low"]).optional().describe("action=list only: show only applications at this priority"),
@@ -373,6 +538,7 @@ export function registerPipelineTools(server: McpServer): void {
         ),
         limit: z.number().int().min(1).max(500).optional().default(20).describe("action=list only: maximum applications to return (1-500)"),
       },
+      outputSchema: PIPELINE_VIEW_OUTPUT,
     },
     async (args) => {
       // Reads deliberately take no lock: the write path renames atomically, so a
@@ -400,8 +566,15 @@ export function registerPipelineTools(server: McpServer): void {
           return handleList(args as PipelineListArgs, pipeline);
         case "stats":
           return handleStats(pipeline);
-        case "next_actions":
-          return handleNextActions(pipeline, clockNow());
+        case "next_actions": {
+          // The KB adds the people ledger, the weekly pace and the interview
+          // notes landing mode builds on. It is optional: a digest must never
+          // fail because a profile is missing or a hand edit broke a file.
+          const career = await loadCareerData().catch(() => null);
+          return handleNextActions(pipeline, clockNow(), career);
+        }
+        case "calendar":
+          return handleCalendar(pipeline, clockNow());
         default:
           return { content: [{ type: "text", text: `❌ Unknown action: ${args.action}` }], isError: true };
       }
@@ -420,7 +593,7 @@ export function registerPipelineTools(server: McpServer): void {
         idempotentHint: false,
         openWorldHint: false,
       },
-      description: "Add one job application to the pipeline. Creates a new record; never modifies an existing one. Use pipeline_update to change an application already being tracked.",
+      description: "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board.",
       inputSchema: {
         company: z.string().describe("Company name"),
         role: z.string().describe("Role title as posted"),
@@ -437,6 +610,7 @@ export function registerPipelineTools(server: McpServer): void {
         excitement: z.number().min(1).max(10).optional().describe("How excited you are about the role, 1-10. Used later to compare excitement against outcomes."),
         salaryMin: z.number().optional().describe("Bottom of the posted or expected salary range, in whole currency units"),
         salaryMax: z.number().optional().describe("Top of the posted or expected salary range, in whole currency units"),
+        allowDuplicate: z.boolean().optional().describe("Set true only for a genuinely separate application to a company and role already tracked (a re-application, a different team). Without it, a match by company and role adds nothing and returns the existing id."),
       },
     },
     async (args) => {
@@ -468,11 +642,11 @@ export function registerPipelineTools(server: McpServer): void {
         idempotentHint: false,
         openWorldHint: false,
       },
-      description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, or record an offer and its answer deadline. Overwrites the fields you supply and leaves the rest untouched.",
+      description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, record an offer and its answer deadline, or note which résumé version was sent. Writes: overwrites the fields you supply and leaves the rest untouched. Use after the user confirms the change.",
       inputSchema: {
         // NOT completable: MCP has no `ref/tool`, so a completable tool argument
         // is never consulted. The completion lives on the
-        // `career://application/{id}` resource template instead — see
+        // `career://pipeline/{id}` resource template instead — see
         // src/completions.ts.
         id: z.string().describe("Application id, as returned by pipeline_add or pipeline_view"),
         status: z.string().optional().describe(
@@ -487,7 +661,7 @@ export function registerPipelineTools(server: McpServer): void {
         contactName: z.string().optional().describe("Name of a person met in this process, appended to the application's contacts"),
         contactTitle: z.string().optional().describe("That person's title"),
         contactEmail: z.string().optional().describe("That person's email"),
-        interviewType: z.enum(["phone_screen", "behavioral", "technical", "panel", "final", "offer_call", "other"]).optional().describe("Type of an interview round to append"),
+        interviewType: z.enum(INTERVIEW_TYPES).optional().describe("Type of an interview round to append"),
         interviewDate: z.string().optional().describe("ISO date of that interview round"),
         interviewers: z.array(z.string()).optional().describe("Names of the interviewers for the round being logged, or added to the latest round if no interviewType is given"),
         roundOutcome: z.string().optional().describe("How the round went, in the user's words (e.g. 'moved to final', 'rejected after panel'). Attaches to the round logged in this call, else to the latest round"),
@@ -498,6 +672,7 @@ export function registerPipelineTools(server: McpServer): void {
         offerStartDate: z.string().optional().describe("Proposed start date, YYYY-MM-DD"),
         offerExpiresDate: z.string().optional().describe("Date the company needs an answer by, YYYY-MM-DD. Puts the offer at the top of the daily digest as it nears"),
         offerNotes: z.string().optional().describe("Anything else the offer states (benefits, sign-on, conditions), in the offer's own terms"),
+        tailoredResumeVersion: z.string().optional().describe("Which résumé was sent for this application: its file name or the user's label for that version (e.g. 'resume-ops-director-v3.docx')"),
       },
     },
     async (args) => {
@@ -585,6 +760,9 @@ Classify this email and extract structured data:
 - Which application does this match? (match against known companies: ${companyList || "none"})
 - What status update should be made?
 - What follow-up action is needed and by when?
+- Write the change as a proposed \`pipeline_update\` call (application id + parameters) for the user to approve; do not run it. Use these exact parameter names:
+  - **Offer:** \`status: "offer"\`, \`offerBaseSalary\`, \`offerBonus\`, \`offerEquity\`, \`offerCurrency\`, \`offerStartDate\`, \`offerExpiresDate\` (dates as YYYY-MM-DD), \`offerNotes\` for anything else the offer states. Fill each from the email's own words; for one the email doesn't state, write \`[confirm: ...]\` instead of a value.
+  - **Interview invite:** \`status: "interviewing"\` (or \`"screening"\` for a recruiter screen), \`interviewType\` (one of ${INTERVIEW_TYPES.join(", ")}), \`interviewDate\` (YYYY-MM-DD), \`interviewers\` (only names the email gives). A date the email leaves open is \`[confirm: date]\`.
 
 ### Suggested Response Draft
 Write a brief, professional reply (3-5 sentences) appropriate for this email type. Say nothing about me, my availability, or my pay expectations that I haven't told you; use a [confirm: ...] placeholder instead.

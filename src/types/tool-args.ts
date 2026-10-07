@@ -16,6 +16,8 @@ export type PipelineAddArgs = {
   excitement?: number;
   salaryMin?: number;
   salaryMax?: number;
+  /** Add even when the same company and role are already tracked. */
+  allowDuplicate?: boolean;
 };
 
 export type PipelineUpdateArgs = {
@@ -40,6 +42,7 @@ export type PipelineUpdateArgs = {
   offerStartDate?: string;
   offerExpiresDate?: string;
   offerNotes?: string;
+  tailoredResumeVersion?: string;
 };
 
 export type PipelineGetArgs = { action: "get"; id: string };
@@ -54,6 +57,7 @@ export type PipelineListArgs = {
 
 export type PipelineStatsArgs = { action: "stats" };
 export type PipelineNextActionsArgs = { action: "next_actions" };
+export type PipelineCalendarArgs = { action: "calendar" };
 
 export type PipelineArgs =
   | PipelineAddArgs
@@ -61,11 +65,14 @@ export type PipelineArgs =
   | PipelineGetArgs
   | PipelineListArgs
   | PipelineStatsArgs
-  | PipelineNextActionsArgs;
+  | PipelineNextActionsArgs
+  | PipelineCalendarArgs;
 
 // ─── Tool Response ────────────────────────────────────────────────────────────
 
 export type ToolResponse = {
   isError?: boolean;
   content: Array<{ type: "text"; text: string }>;
+  /** The same answer as data, for tools that declare an outputSchema (MCP 2025-06-18). */
+  structuredContent?: Record<string, unknown>;
 };

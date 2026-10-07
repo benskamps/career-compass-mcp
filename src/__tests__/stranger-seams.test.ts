@@ -50,24 +50,9 @@ afterEach(() => {
   rmSync(dataDir, { recursive: true, force: true });
 });
 
-describe("S1 — the onboarding prompt uses the schema's own field names", () => {
-  it("setup-career-kb names role/startDate/endDate/'present' and object achievements, never 'title'", async () => {
-    const { client, server } = await connect();
-    try {
-      const { messages } = await client.getPrompt({ name: "setup-career-kb", arguments: {} });
-      const text = (messages[0].content as { text: string }).text;
-      const experienceLine = text.split("\n").find((l) => l.includes("**Experience**"))!;
-      expect(experienceLine).toContain("`role`");
-      expect(experienceLine).toContain("`startDate`");
-      expect(experienceLine).toContain("'present'");
-      expect(experienceLine).toContain("not plain strings");
-      expect(experienceLine).not.toContain("company, title"); // the wording that taught the wrong field
-    } finally {
-      await client.close();
-      await server.close();
-    }
-  });
-
+// The `setup-career-kb` prompt this guarded was retired (the /start skill owns
+// onboarding); the schema half of the seam still holds.
+describe("S1 — onboarding uses the schema's own field names", () => {
   it("an experience entry written the way the prompt describes it is accepted", async () => {
     const { client, server } = await connect();
     try {
