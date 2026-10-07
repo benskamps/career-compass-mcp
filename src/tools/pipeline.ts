@@ -134,7 +134,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
 export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline): Promise<ToolResponse> {
   const idx = pipeline.applications.findIndex(a => a.id === args.id);
   // Returns normally: mutatePipeline skips the write because nothing changed.
-  if (idx === -1) return { isError: true, content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
+  if (idx === -1) return { isError: true, content: [{ type: "text", text: `❌ No application with id \`${args.id}\`. Run \`pipeline_view\` with action "list" to see ids, or match by company name there.` }] };
 
   const app = pipeline.applications[idx];
 
@@ -149,6 +149,26 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   // Validate before applying anything. A rejected status must not leave a
   // half-applied update behind — the note would land, the status would not, and
   // the caller would be told only about the status.
+  const badDate = firstBadDate({
+    followUpDue: args.followUpDue,
+    interviewDate: args.interviewDate,
+    offerStartDate: args.offerStartDate,
+    offerExpiresDate: args.offerExpiresDate,
+  });
+  if (badDate) return { isError: true, content: [{ type: "text", text: badDate }] };
+  // An outcome with nothing to attach to would be dropped silently. Say so
+  // instead, and name the call that fixes it.
+  if (args.roundOutcome && !args.interviewType && app.interviewRounds.length === 0) {
+    return {
+      isError: true,
+      content: [{
+        type: "text",
+        text: `❌ ${app.company} has no interview rounds yet, so there is nothing to attach that outcome to. ` +
+          `Pass \`interviewType\` (and \`interviewDate\`) in the same call to log the round with its outcome.`,
+      }],
+    };
+  }
+
   if (args.status) {
     const checked = parseStatus(args.status);
     if (!checked.ok) return { isError: true, content: [{ type: "text", text: checked.message }] };
@@ -163,20 +183,73 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
     app.contacts.push({ name: args.contactName, title: args.contactTitle, email: args.contactEmail });
   }
   if (args.interviewType) {
-    app.interviewRounds.push({ type: args.interviewType, date: args.interviewDate, interviewers: [], notes: "" });
+    app.interviewRounds.push({
+      type: args.interviewType,
+      date: args.interviewDate,
+      interviewers: args.interviewers ?? [],
+      notes: "",
+    });
+  } else if (args.interviewers?.length && app.interviewRounds.length > 0) {
+    const last = app.interviewRounds[app.interviewRounds.length - 1];
+    last.interviewers = [...new Set([...last.interviewers, ...args.interviewers])];
+  }
+  // The outcome belongs to the round just logged, or else to the latest one.
+  if (args.roundOutcome) {
+    app.interviewRounds[app.interviewRounds.length - 1].outcome = args.roundOutcome;
+  }
+  const offerTouched = [
+    args.offerBaseSalary, args.offerBonus, args.offerEquity, args.offerCurrency,
+    args.offerStartDate, args.offerExpiresDate, args.offerNotes,
+  ].some((v) => v !== undefined);
+  if (offerTouched) {
+    // Merge, never replace: a deadline recorded today must not wipe the base
+    // salary recorded yesterday. Before this, no tool wrote `offer` at all, so
+    // the digest's offer-deadline items could only fire after a hand edit.
+    const offer = app.offer ?? { currency: "USD", benefits: [] };
+    if (args.offerBaseSalary !== undefined) offer.baseSalary = args.offerBaseSalary;
+    if (args.offerBonus !== undefined) offer.bonus = args.offerBonus;
+    if (args.offerEquity !== undefined) offer.equity = args.offerEquity;
+    if (args.offerCurrency !== undefined) offer.currency = args.offerCurrency;
+    if (args.offerStartDate !== undefined) offer.startDate = args.offerStartDate;
+    if (args.offerExpiresDate !== undefined) offer.expiresDate = args.offerExpiresDate;
+    if (args.offerNotes !== undefined) offer.notes = args.offerNotes;
+    app.offer = offer;
   }
   if (JSON.stringify({ ...app, dateUpdated: undefined }) !== before) {
     app.dateUpdated = new Date().toISOString();
   }
   pipeline.applications[idx] = app;
-  return {
-    content: [{ type: "text", text: `✅ Updated **${app.role}** at **${app.company}** (${app.id})\nStatus: ${app.status}` }],
-  };
+  const lines = [`✅ Updated **${app.role}** at **${app.company}** (${app.id})`, `Status: ${app.status}`];
+  if (offerTouched && app.offer) lines.push(describeOffer(app.offer));
+  if (args.roundOutcome) lines.push(`Latest round outcome: ${args.roundOutcome}`);
+  return { content: [{ type: "text", text: lines.join("\n") }] };
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** First supplied date that isn't YYYY-MM-DD, as a user-facing refusal. */
+function firstBadDate(dates: Record<string, string | undefined>): string | null {
+  for (const [field, value] of Object.entries(dates)) {
+    if (value !== undefined && (!ISO_DATE.test(value) || Number.isNaN(Date.parse(value)))) {
+      return `❌ \`${field}\` must be a date like 2026-10-17; got "${value}". Nothing was changed.`;
+    }
+  }
+  return null;
+}
+
+function describeOffer(offer: NonNullable<Application["offer"]>): string {
+  const parts: string[] = [];
+  if (offer.baseSalary !== undefined) parts.push(`base ${offer.baseSalary.toLocaleString("en-US")} ${offer.currency}`);
+  if (offer.bonus !== undefined) parts.push(`bonus ${offer.bonus.toLocaleString("en-US")}`);
+  if (offer.equity) parts.push(`equity ${offer.equity}`);
+  if (offer.startDate) parts.push(`start ${offer.startDate}`);
+  parts.push(offer.expiresDate ? `answer due ${offer.expiresDate}` : "no answer deadline recorded");
+  return `Offer: ${parts.join(" · ")}`;
 }
 
 export function handleGet(args: PipelineGetArgs, pipeline: Pipeline): ToolResponse {
   const app = pipeline.applications.find(a => a.id === args.id);
-  if (!app) return { isError: true, content: [{ type: "text", text: `❌ Application ${args.id} not found.` }] };
+  if (!app) return { isError: true, content: [{ type: "text", text: `❌ No application with id \`${args.id}\`. Run \`pipeline_view\` with action "list" to see ids, or match by company name there.` }] };
   return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }] };
 }
 
@@ -312,7 +385,7 @@ export function registerPipelineTools(server: McpServer): void {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
-          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+          return { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -375,7 +448,7 @@ export function registerPipelineTools(server: McpServer): void {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
-          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+          return { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -394,7 +467,7 @@ export function registerPipelineTools(server: McpServer): void {
         idempotentHint: false,
         openWorldHint: false,
       },
-      description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
+      description: "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, or record an offer and its answer deadline. Overwrites the fields you supply and leaves the rest untouched.",
       inputSchema: {
         // NOT completable: MCP has no `ref/tool`, so a completable tool argument
         // is never consulted. The completion lives on the
@@ -415,6 +488,15 @@ export function registerPipelineTools(server: McpServer): void {
         contactEmail: z.string().optional().describe("That person's email"),
         interviewType: z.enum(["phone_screen", "behavioral", "technical", "panel", "final", "offer_call", "other"]).optional().describe("Type of an interview round to append"),
         interviewDate: z.string().optional().describe("ISO date of that interview round"),
+        interviewers: z.array(z.string()).optional().describe("Names of the interviewers for the round being logged, or added to the latest round if no interviewType is given"),
+        roundOutcome: z.string().optional().describe("How the round went, in the user's words (e.g. 'moved to final', 'rejected after panel'). Attaches to the round logged in this call, else to the latest round"),
+        offerBaseSalary: z.number().optional().describe("Offered base salary per year, exactly as the offer states it"),
+        offerBonus: z.number().optional().describe("Offered annual target bonus, as an amount"),
+        offerEquity: z.string().optional().describe("Equity as the offer words it, e.g. '0.1% over 4 years'"),
+        offerCurrency: z.string().optional().describe("Currency of the offer amounts; defaults to USD"),
+        offerStartDate: z.string().optional().describe("Proposed start date, YYYY-MM-DD"),
+        offerExpiresDate: z.string().optional().describe("Date the company needs an answer by, YYYY-MM-DD. Puts the offer at the top of the daily digest as it nears"),
+        offerNotes: z.string().optional().describe("Anything else the offer states (benefits, sign-on, conditions), in the offer's own terms"),
       },
     },
     async (args) => {
@@ -425,7 +507,7 @@ export function registerPipelineTools(server: McpServer): void {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
-          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+          return { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }
@@ -462,7 +544,7 @@ export function registerPipelineTools(server: McpServer): void {
           // Both mean the same thing to the user: nothing was written, and here
           // is why. A raw throw here would surface as a transport error and lose
           // the one sentence that tells them what to do about it.
-          return { content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
+          return { isError: true, content: [{ type: "text", text: `❌ ${(error as Error).message}` }] };
         }
         throw error;
       }

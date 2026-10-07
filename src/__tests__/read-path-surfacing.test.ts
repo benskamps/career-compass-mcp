@@ -82,7 +82,10 @@ describe("read/write surfacing — negative controls", () => {
       })) as ToolResult;
       // The write claim throws before the mutator runs; the guard must convert it
       // into a graceful, named refusal rather than let it escape.
-      expect(result.isError, "a foreign claim escaped as a transport error").toBeFalsy();
+      // A handled store condition is a tool error (isError) carrying our own sentence;
+      // a thrown one reaches the client as the SDK's raw message, without the ❌ lead.
+      expect(result.isError).toBe(true);
+      expect(text(result).startsWith("❌"), "a foreign claim escaped as a transport error").toBe(true);
       expect(text(result)).toContain("Nothing was written");
     } finally {
       await client.close();
@@ -105,7 +108,10 @@ describe("read/write surfacing — negative controls", () => {
         name: "prepare_interview",
         arguments: { interviewType: "panel", company: "Acme Health" },
       })) as ToolResult;
-      expect(result.isError, "a corrupt profile escaped as a transport error").toBeFalsy();
+      // A handled store condition is a tool error (isError) carrying our own sentence;
+      // a thrown one reaches the client as the SDK's raw message, without the ❌ lead.
+      expect(result.isError).toBe(true);
+      expect(text(result).startsWith("❌"), "a corrupt profile escaped as a transport error").toBe(true);
       expect(text(result)).toContain("Refusing to continue");
     } finally {
       await client.close();
@@ -126,7 +132,10 @@ describe("read/write surfacing — negative controls", () => {
         name: "pipeline_add",
         arguments: { company: "Acme Health", role: "Director of Operations" },
       })) as ToolResult;
-      expect(result.isError, "a read-only-store write escaped as a transport error").toBeFalsy();
+      // A handled store condition is a tool error (isError) carrying our own sentence;
+      // a thrown one reaches the client as the SDK's raw message, without the ❌ lead.
+      expect(result.isError).toBe(true);
+      expect(text(result).startsWith("❌"), "a read-only-store write escaped as a transport error").toBe(true);
       expect(text(result)).toContain("read-only demo");
     } finally {
       await client.close();

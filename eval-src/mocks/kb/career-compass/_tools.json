@@ -391,7 +391,7 @@
     {
       "name": "pipeline_update",
       "title": "Update Application in Pipeline",
-      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, or log an interview round. Overwrites the fields you supply and leaves the rest untouched.",
+      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, or record an offer and its answer deadline. Overwrites the fields you supply and leaves the rest untouched.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -447,6 +447,45 @@
           },
           "interviewDate": {
             "description": "ISO date of that interview round",
+            "type": "string"
+          },
+          "interviewers": {
+            "description": "Names of the interviewers for the round being logged, or added to the latest round if no interviewType is given",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roundOutcome": {
+            "description": "How the round went, in the user's words (e.g. 'moved to final', 'rejected after panel'). Attaches to the round logged in this call, else to the latest round",
+            "type": "string"
+          },
+          "offerBaseSalary": {
+            "description": "Offered base salary per year, exactly as the offer states it",
+            "type": "number"
+          },
+          "offerBonus": {
+            "description": "Offered annual target bonus, as an amount",
+            "type": "number"
+          },
+          "offerEquity": {
+            "description": "Equity as the offer words it, e.g. '0.1% over 4 years'",
+            "type": "string"
+          },
+          "offerCurrency": {
+            "description": "Currency of the offer amounts; defaults to USD",
+            "type": "string"
+          },
+          "offerStartDate": {
+            "description": "Proposed start date, YYYY-MM-DD",
+            "type": "string"
+          },
+          "offerExpiresDate": {
+            "description": "Date the company needs an answer by, YYYY-MM-DD. Puts the offer at the top of the daily digest as it nears",
+            "type": "string"
+          },
+          "offerNotes": {
+            "description": "Anything else the offer states (benefits, sign-on, conditions), in the offer's own terms",
             "type": "string"
           }
         },
@@ -866,7 +905,7 @@
     {
       "name": "save_career_section",
       "title": "Save Career KB Section",
-      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated — ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. The previous version is kept as a timestamped .bak next to it.",
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated — ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. A save that would drop stored entries or achievements is refused and names them, unless `replace` is true. The previous version is kept as a timestamped .bak next to it.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -900,6 +939,10 @@
               }
             ],
             "description": "The complete contents for this section — an object for 'profile', an array for every other section. Send it as structured JSON, not as a stringified blob. Shapes (? marks optional):\n\nprofile: one object: { name, summary, email?, phone?, location?, linkedIn?, portfolio?, targetRoles?: [string], targetIndustries?: [string], salaryMin?: number, salaryMax?: number }\nexperience: array of { role, company, startDate: 'YYYY-MM', endDate: 'YYYY-MM' | 'present', summary?, industry?, location?, tags?: [string], achievements: [{ metric, context, impact, keywords?: [string] }] } — achievements are OBJECTS, not strings: metric is the quantified outcome ('cut onboarding from 6 weeks to 9 days'), context is the situation, impact is why it mattered\nskills: array of { name, category ('Technical' | 'Leadership' | 'Domain' | …), proficiency?: 1-5, yearsUsed?: number, lastUsed?: 'YYYY' | 'current' }\neducation: array of { degree, institution, date: 'YYYY' | 'YYYY-MM', honors?, relevantCoursework?: [string], certifications?: [string] }\nprojects: array of { name, role, description, technologies?: [string], metrics?: [string], outcomes?: [string], url? }\ntestimonials: array of { source (name and title), relationship ('Direct Manager' | 'Peer' | …), quote, date?, context? }"
+          },
+          "replace": {
+            "description": "Set true only when the user has confirmed that entries should be removed, or that an unreadable section file should be overwritten. Without it, a save that would drop stored entries is refused and the refusal lists them.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -916,6 +959,9 @@
       },
       "execution": {
         "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "anthropic/requiresUserInteraction": true
       }
     },
     {

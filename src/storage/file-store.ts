@@ -326,6 +326,31 @@ export async function loadCareerData(): Promise<CareerData | null> {
   }
 }
 
+/**
+ * Optional KB sections whose file exists but can't be parsed.
+ *
+ * {@link loadCareerData} loads such a section as an empty list so one typo in a
+ * hand-edited experience.yaml doesn't take the whole KB down. The cost was
+ * silence: every tool then reported "no experience" with confidence, and the
+ * natural next step, re-saving the section, overwrote the file. Tools that read
+ * the KB use this to say so instead.
+ */
+export async function unreadableCareerSections(): Promise<string[]> {
+  const dir = careerDir();
+  if (!existsSync(join(dir, "profile.yaml"))) return [];
+  const bad: string[] = [];
+  for (const section of ["experience", "skills", "education", "projects", "testimonials", "journal"]) {
+    const path = join(dir, `${section}.yaml`);
+    if (!existsSync(path)) continue;
+    try {
+      parseYaml(await readFile(path, "utf-8"));
+    } catch {
+      bad.push(section);
+    }
+  }
+  return bad;
+}
+
 /** The only section names that may become a filename. */
 export const CAREER_SECTIONS = [
   "profile", "experience", "skills", "education", "projects", "testimonials",
