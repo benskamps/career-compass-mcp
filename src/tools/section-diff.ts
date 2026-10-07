@@ -32,6 +32,10 @@ export function entryLabel(section: CareerSection, e: Entry): string {
       return `${str(e.role)} at ${str(e.company)}`;
     case "education":
       return `${str(e.degree)}, ${str(e.institution)}`;
+    case "narrative":
+      return str(e.topic);
+    case "stories":
+      return str(e.title);
     case "testimonials":
       return `${str(e.source)}${str(e.relationship) ? ` (${str(e.relationship)})` : ""}`;
     default:

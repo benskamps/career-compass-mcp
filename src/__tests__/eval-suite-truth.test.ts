@@ -20,7 +20,7 @@ import { fileURLToPath } from "url";
 
 const repoRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const evalSrc = path.join(repoRoot, "eval-src");
-const AXES = ["activation", "first-reply", "task", "honesty", "surface", "memory", "trust"];
+const AXES = ["activation", "first-reply", "task", "honesty", "surface", "memory", "trust", "retention", "voice"];
 
 function tree(dir: string): Map<string, string> {
   const out = new Map<string, string>();

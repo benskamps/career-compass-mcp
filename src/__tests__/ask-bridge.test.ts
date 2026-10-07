@@ -6,8 +6,11 @@ import type { Server } from "node:http";
 import { fileURLToPath } from "node:url";
 import {
   parseStreamLine, buildClaudeArgs, resolveClaudeCommand, isAllowedOrigin, writeMcpConfig,
-  CLAUDE_BIN_ENV, MAX_PROMPT_CHARS,
+  CLAUDE_BIN_ENV, MAX_PROMPT_CHARS, READ_ONLY_TOOLS, WRITE_TOOLS,
 } from "../dashboard-lite/ask-bridge.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createServer } from "../server.js";
 import { startLiteDashboard } from "../dashboard-lite/server.js";
 import { renderLiteDashboard } from "../dashboard-lite/render.js";
 import type { Pipeline } from "../schemas/career-schema.js";
@@ -51,10 +54,53 @@ describe("buildClaudeArgs", () => {
     expect(kv("--mcp-config")).toBe("C:/x/mcp.json");
     expect(kv("--setting-sources")).toBe("project");
     expect(a).toContain("--no-session-persistence");
-    expect(kv("--allowedTools")).toBe("mcp__career-compass");
+    // Never the bare server name: that would allow every tool, writers included.
+    expect(kv("--allowedTools")).not.toBe("mcp__career-compass");
+    expect(kv("--allowedTools").split(",").every((t) => t.startsWith("mcp__career-compass__"))).toBe(true);
     expect(kv("--disallowedTools")).toMatch(/\bBash\b/);
     expect(kv("--disallowedTools")).toMatch(/\bWrite\b/);
     expect(a).not.toContain("--dangerously-skip-permissions");
+  });
+});
+
+describe("--ask-claude is read-only unless --ask-claude-writes", () => {
+  const allowedOf = (a: string[]) => a[a.indexOf("--allowedTools") + 1].split(",").map((t) => t.replace(/^mcp__career-compass__/, ""));
+  const disallowedOf = (a: string[]) => a[a.indexOf("--disallowedTools") + 1].split(",");
+
+  async function liveAnnotations() {
+    const server = createServer();
+    const client = new Client({ name: "ask-bridge-test", version: "0.0.0" });
+    const [c, s] = InMemoryTransport.createLinkedPair();
+    await Promise.all([server.connect(s), client.connect(c)]);
+    try {
+      return (await client.listTools()).tools.map((t) => ({ name: t.name, readOnly: t.annotations?.readOnlyHint === true, destructive: t.annotations?.destructiveHint === true }));
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  }
+
+  it("the read-only list is exactly the registered tools whose readOnlyHint is true", async () => {
+    const tools = await liveAnnotations();
+    expect([...READ_ONLY_TOOLS].sort()).toEqual(tools.filter((t) => t.readOnly).map((t) => t.name).sort());
+    expect([...WRITE_TOOLS].sort()).toEqual(tools.filter((t) => !t.readOnly).map((t) => t.name).sort());
+  });
+
+  it("by default allows no write or destructive tool, and disallows each one by name", async () => {
+    const tools = await liveAnnotations();
+    const a = buildClaudeArgs("hi", "/x/mcp.json");
+    const allowed = allowedOf(a);
+    for (const t of tools.filter((x) => !x.readOnly || x.destructive)) {
+      expect(allowed, t.name).not.toContain(t.name);
+      expect(disallowedOf(a), t.name).toContain(`mcp__career-compass__${t.name}`);
+    }
+    expect(a[a.indexOf("--append-system-prompt") + 1]).toContain("read-only");
+  });
+
+  it("allows the writers only with allowWrites", () => {
+    const a = buildClaudeArgs("hi", "/x/mcp.json", { allowWrites: true });
+    expect(allowedOf(a)).toEqual(expect.arrayContaining([...READ_ONLY_TOOLS, ...WRITE_TOOLS]));
+    expect(disallowedOf(a).some((t) => t.startsWith("mcp__career-compass__"))).toBe(false);
   });
 });
 

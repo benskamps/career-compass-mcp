@@ -17,6 +17,19 @@
 - **Customer Success Manager @ Brightline Software (acquired by Salesforce)**: Maintained 118% net revenue retention across portfolio for 8 consecutive quarters → Recognized as top CS rep company-wide; accounts became pilot group for new product line
 - **Customer Success Manager @ Brightline Software (acquired by Salesforce)**: Identified and closed $1.2M in expansion revenue through QBR process redesign → Redesigned to ROI-focused format; 100% executive attendance within 2 quarters
 
+## My story (saved narrative)
+None saved yet. If the draft needs one of these topics and it isn't here (why I'm looking, why I left, a gap, a switch, work authorization, notice period), use a [confirm: ...] placeholder or ask me once, then offer to save my answer to `narrative` with save_career_section.
+
+## Recent Career Signals (from your journal — 4 of 5)
+Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
+
+- 2026-06-06 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-05-30 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-06-08 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-06-02 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+
+**Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
+
 ## Job Posting
 None available. Write the letter from the role, the company name, and my history. Do not ask me for the posting first: deliver the letter, then say in one line that pasting the posting would let you sharpen it.
 
@@ -56,6 +69,7 @@ Keep it under 400 words. Make it feel human, not templated, through plain specif
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- Journal entries marked as Claude's inference are hypotheses: never state them as facts about me.
 - The name on an email or document I paste is mine (people apply under nicknames and married names). Don't compare it with an account or system name.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.

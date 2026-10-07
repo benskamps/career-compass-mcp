@@ -3,8 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How Career Compass works</title>
-<meta name="description" content="Career Compass keeps the facts about you in one place, turns them into a résumé per posting, and builds your interview prep around the questions they will ask — and the ones you should ask back.">
+<title>Career Compass: honest job fit checks</title>
+<meta name="description" content="Paste a job posting and your resume to see how well you really fit: a verdict, your evidence for each must-have, and the top gaps. Drafts that never pad your history. A Claude plugin.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://benskamps.github.io/career-compass-mcp/how-it-works/">
+<meta property="og:title" content="Career Compass: paste a job posting, get an honest fit verdict">
+<meta property="og:description" content="A Claude plugin for job seekers: a straight verdict (strong fit, stretch, or long shot), evidence for each must-have, the top gaps, and résumé drafts that mark what they can't confirm instead of inventing it.">
+<meta property="og:image" content="https://benskamps.github.io/career-compass-mcp/how-it-works/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A sample Career Compass fit check on fictional data: Stretch, strong on operations at scale, no P&amp;L or payments experience yet.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Career Compass: paste a job posting, get an honest fit verdict">
+<meta name="twitter:description" content="A straight verdict, evidence for each must-have, the top gaps, and drafts that never pad your history.">
+<meta name="twitter:image" content="https://benskamps.github.io/career-compass-mcp/how-it-works/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b2218'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c2603c'/%3E%3Cpath d='M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z' fill='%232b2218'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,56 +158,162 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
 .part h2.big{font-family:Fraunces,serif;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:clamp(34px,5.5vw,64px);line-height:1;letter-spacing:-.015em;margin:6px 0 0}
 .part h2.big em{font-style:normal;color:var(--clay)}
 .part .dek{font-style:italic;color:var(--ink-soft);font-size:19px;max-width:60ch;margin:14px 0 0}
+/* ── front door: the sample reply, the [confirm] bullet, install ── */
+a{color:var(--clay-deep)}
+.sample-tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sage);border:1px solid var(--sage);border-radius:999px;padding:2px 9px}
+.reply{margin:28px 0 0;border:1px solid var(--rule);border-radius:12px;background:rgba(255,255,255,.62);padding:22px 26px 20px;box-shadow:0 1px 2px rgba(43,34,24,.05),0 10px 30px rgba(43,34,24,.06)}
+.reply .who{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px}
+.reply .user{font-style:italic;color:var(--ink-soft);margin:0 0 16px;padding-bottom:14px;border-bottom:1px dashed var(--rule)}
+.verdict-line{font-size:21px;line-height:1.35;margin:0 0 14px}
+.verdict{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--brass);color:#fff;border-radius:5px;padding:3px 9px;margin-right:8px;vertical-align:2px}
+.reply h4{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--clay-deep);margin:16px 0 6px}
+.evidence{list-style:none;margin:0;padding:0}
+.evidence li{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr);gap:14px;padding:8px 0;border-top:1px dashed var(--rule);font-size:15.5px;line-height:1.45}
+.evidence li:first-child{border-top:0}
+.evidence .req{font-weight:600}
+.evidence .ok{color:var(--sage);font-family:"JetBrains Mono",monospace;font-size:12px;margin-right:6px}
+.gaps{margin:0;padding-left:22px}
+.gaps li{padding:5px 0;font-size:15.5px;line-height:1.45}
+.reply .offer{margin:14px 0 0;color:var(--ink-soft);font-style:italic}
+.reply-caption{margin-top:10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.bullet-card{margin:22px 0 0;border:1px solid var(--rule);border-radius:12px;background:rgba(255,255,255,.62);padding:20px 26px}
+.bullet-card .draft{font-size:18px;line-height:1.55;margin:6px 0 0}
+.confirm{font-family:"JetBrains Mono",monospace;font-size:.82em;background:rgba(194,96,60,.12);color:var(--clay-deep);border:1px dashed var(--clay);border-radius:5px;padding:1px 6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.duo{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+.duo .bullet-card{margin-top:28px}
+.get-it{margin-top:34px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px;align-items:start}
+.get-it .how{border:2px solid var(--ink);border-radius:12px;padding:18px 22px;background:rgba(255,255,255,.5)}
+.get-it .how h2{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:26px;margin:4px 0 8px;line-height:1.1}
+.get-it .how ol{margin:0;padding-left:20px;font-size:16px}
+.get-it .how li{padding:3px 0}
+.kbd{font-family:"JetBrains Mono",monospace;font-size:.85em;background:var(--paper-deep);border-radius:4px;padding:1px 6px}
+.surfaces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.surfaces div{border-top:2px solid var(--steel);padding-top:8px;font-size:15px;line-height:1.45}
+.surfaces .eyebrow{display:block;color:var(--ink-soft);margin-bottom:3px}
+.cmds{margin:18px 0 0;font-size:15px}
+.cmds code{font-family:"JetBrains Mono",monospace;font-size:13px;background:var(--paper-deep);padding:1px 5px;border-radius:3px}
+.cmds p{margin:0 0 6px}
+.mono-block{font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.65;background:var(--paper-deep);border-radius:8px;padding:14px 16px;overflow-x:auto;white-space:pre;color:var(--ink)}
+.mono-block .k{color:var(--clay-deep)}.mono-block .c{color:var(--ink-soft)}
+.segments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:8px}
+.segments a{display:block;border:1px solid var(--rule);border-radius:8px;padding:14px 16px;background:rgba(255,255,255,.4);color:var(--ink);text-decoration:none}
+.segments a:hover{background:rgba(255,255,255,.8)}
+.segments b{font-family:Fraunces,serif;font-style:italic;font-weight:500;font-size:19px;display:block;margin-bottom:4px}
+.segments span{font-size:14.5px;color:var(--ink-soft)}
+.prompt-quote{border-left:3px solid var(--clay);padding:10px 16px;background:rgba(255,255,255,.45);border-radius:0 8px 8px 0;font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.6}
+@media (max-width:900px){
+  .duo,.get-it,.segments{grid-template-columns:minmax(0,1fr)}
+  .evidence li{grid-template-columns:minmax(0,1fr);gap:2px}
+}
+@media (max-width:560px){.surfaces{grid-template-columns:minmax(0,1fr)}.reply,.bullet-card{padding:16px 16px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<nav class="crumbs" aria-label="Breadcrumb">Career Compass &nbsp;·&nbsp; <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">source ↗</a> &nbsp;·&nbsp; <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm ↗</a></nav>
+<nav class="crumbs" aria-label="Breadcrumb">Career Compass &nbsp;·&nbsp; <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">source ↗</a> &nbsp;·&nbsp; <a href="../privacy/">privacy</a></nav>
 <header class="mast">
   <div>
-    <div class="kicker"><span class="eyebrow">Career Compass · how it works</span><span class="eyebrow" style="color:var(--ink-soft)">v2.9.7</span></div>
-    <h1>Show them how we <em>help you ask.</em></h1>
-    <p class="dek">Career Compass keeps the facts about you in one place, turns them into a résumé for each posting, and builds your interview prep around the questions they will ask — and the ones you should ask back.</p>
+    <div class="kicker"><span class="eyebrow">Career Compass · a Claude plugin</span><span class="eyebrow" style="color:var(--ink-soft)">v2.9.8</span></div>
+    <h1>Paste a job posting. <em>Get an honest fit verdict.</em></h1>
+    <p class="dek">Paste a job posting and your resume to see how well you really fit. Then tailor your résumé, write the cover letter, and prep the interview without padding your history.</p>
   </div>
-  <div class="plate-meta">local-first · plain text on your disk<br>18 tools · 7 prompts · 9 resources · 1 dashboard<br>runs inside Claude via MCP</div>
+  <div class="plate-meta">free · MIT · no account<br>works in claude.ai chat, Cowork, Claude Code<br>your files stay on your computer</div>
 </header>
 
-<figure class="plate">
-  <img src="p1-the-system-web.jpg" alt="Illustration: a desk with a brass compass, a wooden index-card box holding cream cards, a lamp, a laptop showing a five-column kanban board with clay-orange and sage cards, and a single typed page — connected by a dotted pencil path from the card box to the laptop to the page." loading="eager" decoding="async" width="1400" height="781">
-  <figcaption><b>Plate I</b> The whole loop on one desk: the facts (the card box) → the pipeline (the board) → the thing you send (the page).</figcaption>
-</figure>
-<nav class="toc" aria-label="Contents"><a href="#steps">01 five steps</a><a href="#facts">02 facts vs. the résumé</a><a href="#ask">03 how we help you ask</a><a href="#dashboard">04 the dashboard</a></nav>
+<!-- The first visual: one fit-check reply, built as HTML from the bundled sample. -->
+<div class="duo">
+  <figure style="margin:0">
+    <div class="reply" role="img" aria-label="Example fit-check reply on the fictional Alex Rivera sample">
+      <p class="who">You</p>
+      <p class="user">[pastes a VP of Operations posting from a payments company] Do I fit this?</p>
+      <p class="who">Claude</p>
+      <p class="verdict-line"><span class="verdict">Stretch</span>strong on operations at scale, but no P&amp;L or payments experience yet.</p>
+      <h4>Must-haves, with your evidence</h4>
+      <ul class="evidence">
+        <li><span class="req">8+ years leading operations teams</span><span><span class="ok">✓</span>Operations Manager at Apex Logistics, team of 42; Senior Program Manager at MedFlow, 6 PMs.</span></li>
+        <li><span class="req">Scaling a process across sites</span><span><span class="ok">✓</span>Patient onboarding cut from 47 days to 11 across 3 acquired health systems.</span></li>
+        <li><span class="req">Vendor and cost management</span><span><span class="ok">✓</span>Procurement cycle cut from 9 months to 6 weeks; headcount costs down 18% while throughput rose 31%.</span></li>
+      </ul>
+      <h4>Top two gaps</h4>
+      <ol class="gaps">
+        <li><b>P&amp;L ownership.</b> You ran $8M in program budgets, which isn't a P&amp;L. Say what that budget covered, and ask in the screen whether the role owns a P&amp;L from day one.</li>
+        <li><b>Payments.</b> Nothing in your history is payments or fintech. Lead with the healthcare compliance work as the closest thing, and don't claim more.</li>
+      </ol>
+      <p class="offer">Want me to tailor your résumé to this one, or track it?</p>
+    </div>
+    <figcaption class="reply-caption"><span class="sample-tag">Example on sample data</span> &nbsp;Alex Rivera is fictional and ships with the package · the posting is made up · shortened: the full reply adds talking points, red flags and questions to ask</figcaption>
+  </figure>
+
+  <figure style="margin:0">
+    <div class="bullet-card">
+      <span class="eyebrow">A drafted résumé bullet</span>
+      <p class="draft">Cut patient onboarding from 47 days to 11 after the acquisition of 3 regional health systems, leading a team of <span class="confirm">[confirm: team size]</span> and eliminating $2.1M in compliance penalties over 18 months.</p>
+    </div>
+    <figcaption class="reply-caption"><span class="sample-tag">Example on sample data</span> &nbsp;The record says what changed, not how many people did it, so the draft asks instead of guessing.</figcaption>
+    <p style="font-size:16px;margin-top:18px">Every sentence it writes about you comes from your history or from what you told it. When a stronger draft needs a fact it doesn't have, the gap stays visible in the draft. You fill it in or cut it.</p>
+  </figure>
+</div>
+
+<!-- Install, then what each surface gets. -->
+<div class="get-it" id="get-it">
+  <div class="how">
+    <span class="eyebrow">Get it in the Claude directory</span>
+    <h2>Two clicks, no setup</h2>
+    <ol>
+      <li>In the Claude app or on claude.ai, open <span class="kbd">Customize → Plugins</span>.</li>
+      <li>Search for <b>Career Compass</b> and add it.</li>
+      <li>Paste a job posting and your résumé, and ask <q>Do I fit this?</q></li>
+    </ol>
+  </div>
+  <div>
+    <div class="surfaces">
+      <div><span class="eyebrow">claude.ai chat · web, desktop, mobile</span>Skills only. Claude does the fit check, tailoring, interview prep or offer review from what you paste. Nothing is saved between chats.</div>
+      <div><span class="eyebrow">Cowork and Claude Code</span>Skills plus a small local server: your career history and every application are kept as plain text on your computer, so later answers start from them. Needs <b>Node.js 22 or newer</b>.</div>
+    </div>
+    <div class="cmds">
+      <p><b>Commands</b>, in Claude Code and Cowork. In claude.ai chat, just ask in plain words.</p>
+      <p><code>/career-compass:start</code> <code>:fit-check</code> <code>:interview-prep</code> <code>:today</code> <code>:debrief</code> <code>:week</code> <code>:sweep</code> <code>:answer</code></p>
+      <p style="color:var(--ink-soft)">Saves end with a receipt of what changed. You can record an offer and how each interview round went, and <code>:today</code> leads with a debrief the day after an interview.</p>
+    </div>
+  </div>
+</div>
+
+<nav class="toc" aria-label="Contents"><a href="#steps">01 five steps</a><a href="#facts">02 facts vs. the résumé</a><a href="#ask">03 how we help you ask</a><a href="#git">04 git history as evidence</a><a href="#morning-briefing">05 a morning briefing</a><a href="#for-you">who it's for</a><a href="#other-clients">for other MCP clients</a></nav>
 
 <!-- ─────────────────────────────── 1 ─────────────────────────────── -->
 <section id="steps">
   <div class="sec-head"><div><span class="eyebrow">Panel one</span><h2>How it works, in five steps</h2></div><span class="num">01</span></div>
-  <p class="lede">You talk to Claude. Claude uses the tools. The tools read and write a folder of plain text files that never leave your machine.</p>
+  <p class="lede">You talk to Claude. Claude uses the tools. In Cowork and Claude Code, the tools read and write a folder of plain text files on your own computer.</p>
 
-  <ol class="steps">
+  <figure class="plate">
+    <img src="p1-the-system-web.jpg" alt="Illustration: a desk with a brass compass, a wooden index-card box holding cream cards, a lamp, a laptop showing a five-column kanban board with clay-orange and sage cards, and a single typed page — connected by a dotted pencil path from the card box to the laptop to the page." loading="lazy" decoding="async" width="1400" height="781">
+    <figcaption><b>Plate I</b> The whole loop on one desk: the facts (the card box) → the pipeline (the board) → the thing you send (the page).</figcaption>
+  </figure>
+
+  <ol class="steps" style="margin-top:26px">
     <li>
       <h3>Install</h3>
-      <p>In Claude Code or Cowork, add the Career Compass plugin from the Claude directory. For Claude Desktop or Cursor, one command finds each app and wires it, backing up any file it touches. Any other app that speaks MCP takes one line of config. In claude.ai chat the plugin still helps with what you paste, but nothing is saved.</p>
-      <div class="tools"><code>npx -y career-compass-mcp install</code></div>
+      <p>Add Career Compass from the Claude directory (<a href="#get-it">above</a>). In claude.ai chat it helps with what you paste; in Cowork and Claude Code it also remembers. Other MCP apps: <a href="#other-clients">see below</a>.</p>
     </li>
     <li>
       <h3>Tell it who you are</h3>
-      <p>Paste your résumé, performance reviews, award emails. Claude pulls out the facts and asks for the numbers you left vague. You confirm each section before it is written.</p>
-      <div class="tools"><code>ingest_document</code> <code>save_career_section</code><br>prompt: <code>setup-career-kb</code></div>
+      <p>Paste your résumé, performance reviews, award emails. Claude pulls out the facts and asks for the numbers you left vague. You confirm each section before it is written, and each save tells you what changed.</p>
+      <div class="tools"><code>ingest_document</code> <code>save_career_section</code></div>
     </li>
     <li>
       <h3>Find and assess a role</h3>
-      <p>Paste a posting. You get an honest fit score checked against your whole preference contract — salary band, remote, relocation, notice period — never a flattering one.</p>
+      <p>Paste a posting. You get a verdict, strong fit, stretch, or long shot, checked against your whole preference contract (salary band, remote, relocation, notice period), never a flattering one.</p>
       <div class="tools"><code>explore_opportunity</code> <code>research_company</code></div>
     </li>
     <li>
       <h3>Apply and track</h3>
-      <p>A résumé tailored to that posting, a cover letter, an ATS-safe version — and one card on a pipeline that moves from <em>discovered</em> to <em>offer</em>. The local dashboard shows what needs attention today.</p>
+      <p>A résumé tailored to that posting, a cover letter, a version formatted for the applicant tracking system, and one card on a pipeline that moves from <em>discovered</em> to <em>offer</em>.</p>
       <div class="tools"><code>tailor_resume</code> <code>generate_cover_letter</code> <code>format_for_ats</code> <code>pipeline_*</code></div>
     </li>
     <li>
       <h3>Interview, decide, learn</h3>
-      <p>A prep package per round, a mid-process map of what has been covered and what has not, an offer broken down against your targets, and a journal that records what each step taught you.</p>
+      <p>Prep per round, a mid-process map of what has been covered, an offer broken down against your targets, and a journal of what each step taught you.</p>
       <div class="tools"><code>prepare_interview</code> <code>interview_arc</code> <code>evaluate_offer</code> <code>capture_insight</code></div>
     </li>
   </ol>
@@ -225,8 +343,8 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
       <ul>
         <li><span class="kv">shape</span> Structured, not prose. Each achievement is a <b>metric</b>, the <b>context</b> it happened in, and the <b>impact</b> it had.</li>
         <li><span class="kv">sections</span> profile · experience · skills · education · projects · testimonials — plus a dated journal of signals.</li>
-        <li><span class="kv">writes</span> Only <span class="mono">save_career_section</span> writes it. One section at a time, validated first, previous version kept as a <span class="mono">.bak</span>. Your client asks you to confirm.</li>
-        <li><span class="kv">grows</span> Every posting explored, interview debriefed, and offer weighed can add a dated signal back. It can also read a project's own change history and pull out what you measurably did there — months active, what you touched — so the numbers come from the record, not from memory.</li>
+        <li><span class="kv">writes</span> <span class="mono">save_career_section</span> writes one section at a time, validated first, previous version kept as a <span class="mono">.bak</span>. A save that would drop entries is refused unless you mean it. Your client asks you to confirm.</li>
+        <li><span class="kv">grows</span> Every posting explored, interview debriefed, and offer weighed can add a dated signal back. It can also read a project's git history and report what you measurably did there, so the numbers come from the record, not from memory.</li>
       </ul>
       <div class="fact-shape"><span class="k">achievements:</span><br>&nbsp;&nbsp;- <span class="k">metric:</span> cut onboarding from 6 weeks to 9 days<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">context:</span> 40-person support org, no runbooks<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">impact:</span> freed two leads for the Q3 launch<br><span class="c"># one fact. it will outlive every résumé it appears in.</span></div>
     </div>
@@ -235,9 +353,9 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
       <h3>The résumé you send</h3>
       <ul>
         <li><span class="kv">input</span> The KB and one posting. Nothing else.</li>
-        <li><span class="kv">output</span> The résumé text in the format you chose — standard, federal, academic, or functional; one to four pages — plus a <b>Keyword Match Report</b> naming which of the posting's terms it covered.</li>
+        <li><span class="kv">output</span> The résumé text in the format you chose — standard, federal, academic, or functional — plus a <b>Keyword Match Report</b> naming which of the posting's terms it covered and which it could not, honestly.</li>
         <li><span class="kv">writes</span> Nothing. A résumé is disposable; the facts are not. Edit a print and the drawer does not change. Add a fact to the drawer and every future print improves.</li>
-        <li><span class="kv">then</span> <span class="mono">generate_cover_letter</span> for the story, <span class="mono">format_for_ats</span> for the parser (Workday, Greenhouse, Lever and five more).</li>
+        <li><span class="kv">then</span> <span class="mono">generate_cover_letter</span> for the story, <span class="mono">format_for_ats</span> to lay it out for the form you paste it into.</li>
       </ul>
     </div>
     <p class="arrow-note">The habit this builds: <b>when something goes well at work, add the fact</b> — not "update my résumé." The résumé is an output.</p>
@@ -261,9 +379,9 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
       <span class="eyebrow">What <span class="mono">prepare_interview</span> hands you, per round</span>
       <ol class="pack" style="margin-top:8px">
         <li><div><h3>Opening pitch, 60–90 seconds</h3><p>"Tell me about yourself," bridged to this role and this company — not your life story.</p></div></li>
-        <li><div><h3>7–10 STAR stories from your facts</h3><p>Situation, Task, Action — <em>clear about your own part, without erasing the team</em> — and a Result with the number. Each tagged with the question type it answers. The themes shift by round: phone screen, behavioral, technical, panel, final.</p></div></li>
-        <li><div><h3>10–15 likely questions</h3><p>Specific to the company and role, each with an answer angle from your own background.</p></div></li>
-        <li class="ask-half"><div><h3>7–10 questions to ask them</h3><p>Thoughtful, not generic — built from the company research and the posting's own gaps. <b>This is the half that is usually improvised in the room. Here it is prepared before you walk in.</b></p></div></li>
+        <li><div><h3>Three to five STAR stories from your facts</h3><p>Situation, Task, Action — <em>clear about your own part, without erasing the team</em> — and a Result with the number, written out in full. A missing detail is marked <span class="confirm">[confirm: …]</span>, not invented. The themes shift by round: phone screen, behavioral, technical, panel, final.</p></div></li>
+        <li><div><h3>8–12 likely questions</h3><p>Specific to the company and role, each with an answer angle from your own background.</p></div></li>
+        <li class="ask-half"><div><h3>5–7 questions to ask them</h3><p>Thoughtful, not generic — built from the company research and the posting's own gaps. <b>This is the half that is usually improvised in the room. Here it is prepared before you walk in.</b></p></div></li>
         <li><div><h3>Company and role alignment</h3><p>How your background connects to their mission, product, and current problems.</p></div></li>
         <li><div><h3>Bridge topics</h3><p>The surprising connections between your experience and their world.</p></div></li>
         <li><div><h3>Watch-outs and reframes</h3><p>The concerns they are likely to raise about your background, each with an honest answer ready — so when the question comes, you are not improvising. Prepared, not volunteered.</p></div></li>
@@ -284,31 +402,97 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
 
   <div class="honesty">
     <div><span class="eyebrow">Who does what</span>Claude does the reasoning and the writing. The tools supply your facts and the structure. Neither invents a preference you did not state.</div>
-    <div><span class="eyebrow">Where your data is</span>Simple text files in a folder on your own computer, readable in any editor. No account, no cloud sync, no tracking. The one optional outbound request is a version check.</div>
-    <div><span class="eyebrow">What "honest" means here</span>The fit score is a verdict, not encouragement. A role that matches on skills but misses your floor is not an 8. The Keyword Match Report shows what a résumé did <em>not</em> cover.</div>
+    <div><span class="eyebrow">Where your data is</span>In Cowork and Claude Code, simple text files in a folder on your own computer, readable in any editor. No account, no cloud sync, no tracking. <a href="../privacy/">Privacy policy</a>.</div>
+    <div><span class="eyebrow">What "honest" means here</span>The verdict is a judgement, not encouragement: a role that matches on skills but misses your salary floor is a stretch at best, and it says why. The Keyword Match Report shows what a résumé did <em>not</em> cover.</div>
   </div>
 </section>
 
+<hr class="rule">
 
-<div class="part" id="part-two">
-  <span class="eyebrow">Part two · the dashboard</span>
-  <h2 class="big">The dashboard looks. <em>Claude does.</em></h2>
-  <p class="dek">A read-only view of the same files Claude reads and writes — redrawn every time you open it. Every button on it hands you the words to ask Claude for the change. Nothing on the page can edit your search; that is the point.</p>
+<!-- ─────────────────────────────── 4 ─────────────────────────────── -->
+<section id="git">
+  <div class="sec-head"><div><span class="eyebrow">Panel four · for developers</span><h2>Turn your git history into honest résumé evidence</h2></div><span class="num">04</span></div>
+  <p class="lede">If you write code, you already have a record of what you did. In Cowork or Claude Code, ask: “Look at my project in ~/code/billing-service and tell me what I can honestly claim on my résumé.”</p>
+
+  <div class="zoom">
+    <div>
+      <span class="eyebrow"><span class="mono">harvest_evidence</span> · what it reports</span>
+<div class="mono-block" style="margin-top:8px"><span class="k">## What is measurably true</span>
+- Committed to billing-service across 14 distinct
+  months, 2024-11 to 2025-12.
+  <span class="c">how: git log --no-merges --author=&lt;you&gt; …</span>
+- 212 of 530 non-merge commits in this window
+  are yours (40%).
+  <span class="c">how: git rev-list --count --no-merges, with and
+  without --author. Participation, NOT size.</span>
+
+<span class="k">## What this cannot tell you</span>
+- Did any of this ship to real users, and did
+  anything measurable change when it did?</div>
+      <p class="reply-caption"><span class="sample-tag">Example on made-up numbers</span></p>
+    </div>
+    <div>
+      <span class="eyebrow">After you answer its questions</span>
+      <div class="bullet-card" style="margin-top:8px">
+        <p class="draft">Built the invoicing service in billing-service over 14 months (212 commits), which <span class="confirm">[confirm: what changed for users once it shipped, and by how much?]</span></p>
+      </div>
+      <p style="font-size:16px;margin-top:14px">It reads that project's history on your computer, counts only your own commits, shows the command behind every number, and writes nothing. Counts are participation, not impact, so it asks what the log can't know before anything becomes a bullet.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ─────────────────────────────── 5 ─────────────────────────────── -->
+<section id="morning-briefing">
+  <div class="sec-head"><div><span class="eyebrow">Panel five · optional</span><h2>A morning briefing, on your own computer</h2></div><span class="num">05</span></div>
+  <p class="lede">Career Compass never runs on a timer. If you want today's list waiting for you, you set it up yourself, and it only reads.</p>
+  <ol class="loop">
+    <li><h3>Use a local task</h3><p>In the Claude Code desktop app, create a <b>local</b> scheduled task (<a href="https://code.claude.com/docs/en/desktop-scheduled-tasks" rel="noopener noreferrer">how</a>). It runs on your computer, so it can reach your data folder.</p></li>
+    <li><h3>Give it plain text</h3><p>Paste the prompt below. Not <span class="mono">/career-compass:today</span>: scheduled runs don't start commands that only run when you type them.</p></li>
+    <li><h3>It only reads</h3><p><span class="mono">pipeline_view</span> reads your pipeline and changes nothing. You get one “Start here” move and the rest of today in eight lines.</p></li>
+    <li><h3>Check before relying on it</h3><p>Cowork's scheduled tasks may run remotely, where your local data folder isn't available, so try one by hand first. Cloud routines and <span class="mono">/loop</span> don't fit.</p></li>
+  </ol>
+  <div class="prompt-quote" style="margin-top:18px">Call pipeline_view with action next_actions. Lead with the Start here item in eight lines or fewer, and change nothing. If it's after 2pm, say it's a catch-up run.</div>
+</section>
+
+<hr class="rule">
+
+<section id="for-you">
+  <div class="sec-head"><div><span class="eyebrow">Who it's for</span><h2>Start from where you are</h2></div><span class="num">→</span></div>
+  <div class="segments">
+    <a href="../for/laid-off/"><b>Laid off</b><span>Get back out quickly without overstating or apologizing for the gap.</span></a>
+    <a href="../for/career-switchers/"><b>Switching careers</b><span>See which of your experience really carries over, in the new field's words.</span></a>
+    <a href="../for/new-grads/"><b>New grads</b><span>Make coursework, projects and internships count, without inflating them.</span></a>
+  </div>
+  <p style="margin-top:18px">Did a fit check get something wrong? <a href="https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml" rel="noopener noreferrer">Tell me in a short form</a> (leave out anything personal). There is no telemetry, so that is the only way I find out.</p>
+</section>
+
+<div class="part" id="other-clients">
+  <span class="eyebrow">For other MCP clients · and the dashboard</span>
+  <h2 class="big">Running the server <em>yourself.</em></h2>
+  <p class="dek">If you installed the plugin, you can stop here. The same server runs in Claude Desktop, Cursor, and any app that speaks MCP. One command finds each app and wires it, backing up any file it touches.</p>
 </div>
+<div class="cmd">
+  <span class="eyebrow">Claude Desktop, Cursor, Claude Code without the plugin</span>
+  <code>npx -y career-compass-mcp install</code>
+  <small>Needs Node.js 22 or newer. If the plugin is already installed, it leaves Claude Code alone so you don't get two copies of every tool. The package has 18 tools · 4 prompts · 9 resources · 1 dashboard; the <a href="https://github.com/benskamps/career-compass-mcp#for-other-mcp-clients" rel="noopener noreferrer">README</a> has every route.</small>
+</div>
+
 <figure class="plate">
-  <img src="p4-lite-dashboard-window-web.jpg" alt="Illustration: a wooden window frame in a cream wall looks onto the same card-catalog drawer of index cards. Taped inside the glass, a freshly printed sheet shows a five-column board of small clay and sage cards, a short dotted list, and a row of horizontal bars — a live view drawn on the pane." loading="eager" decoding="async" width="1400" height="781">
+  <img src="p4-lite-dashboard-window-web.jpg" alt="Illustration: a wooden window frame in a cream wall looks onto the same card-catalog drawer of index cards. Taped inside the glass, a freshly printed sheet shows a five-column board of small clay and sage cards, a short dotted list, and a row of horizontal bars — a live view drawn on the pane." loading="lazy" decoding="async" width="1400" height="781">
   <figcaption><b>Plate IV</b> The lite dashboard: a sheet on the glass, reprinted from the drawer each time you look.</figcaption>
 </figure>
-<!-- ─────────────────────────────── 1 ─────────────────────────────── -->
+<!-- ─────────────────────────────── dashboard ─────────────────────────────── -->
 <section id="dashboard">
-  <div class="sec-head"><div><span class="eyebrow">Panel four</span><h2>How the dashboard works</h2></div><span class="num">04</span></div>
-  <p class="lede">Four stations. The important one is the last: the page never writes. Anything you want changed, you say to Claude — and the dashboard either hands you the words, or, with Claude Code installed, asks for you.</p>
+  <div class="sec-head"><div><span class="eyebrow">The dashboard</span><h2>The dashboard looks. Claude does.</h2></div><span class="num">06</span></div>
+  <p class="lede">A read-only view of the same files Claude reads and writes, redrawn every time you open it. Anything you want changed, you say to Claude — and the dashboard either hands you the words, or, with Claude Code installed, asks for you.</p>
 
   <ol class="loop">
     <li><h3>Open it</h3><p>One command starts a tiny web server on your own computer and opens your browser. It only answers the computer you are sitting at; nothing on your network, and no other website, can reach the page.</p></li>
     <li><h3>It reads the drawer</h3><p>On every request the page re-reads the pipeline file from disk and renders the whole document fresh. Nothing is cached, nothing is remembered between loads. Refresh the browser and you are looking at the files as they are right now.</p></li>
     <li><h3>You look</h3><p>Six numbers across the top, a kanban by stage with the closed applications folded away, a next-actions list of what is overdue or due soon, and a stage chart. Click a card and its drawer opens: days in stage, follow-up, posting, contacts, rounds, latest note.</p></li>
-    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row carries a ready-made question — "give me a full status on my Acme application," "help me with this overdue follow-up." By default it copies the words for you to paste. Start the dashboard with <span class="mono">--ask-claude</span> and, if Claude Code is installed, the click asks Claude directly: the answer streams into a panel on the page, and a reload button appears once Claude may have changed your files. Either way the page itself stays read-only.</p></li>
+    <li><h3>You ask Claude, not the page</h3><p>Every button, card drawer, and next-action row carries a ready-made question. By default it copies the words for you to paste. Start the dashboard with <span class="mono">--ask-claude</span> and, if Claude Code is installed, the click asks Claude directly, read-only unless you also pass <span class="mono">--ask-claude-writes</span>. That runs under your own Claude account and billing, and sends what it reads to Anthropic like any Claude Code session.</p></li>
   </ol>
 
   <div class="cmd">
@@ -319,14 +503,14 @@ figure.shot figcaption .chip.ships{border-color:var(--sage);color:var(--sage)}
 
   <figure class="shot">
     <img src="dashboard-lite-light.png" alt="Screenshot of the lite dashboard in light mode: six KPI cards, a five-column pipeline board with one card's detail drawer, a next-actions panel, and a stage-distribution bar chart, on the sample data." loading="lazy" decoding="async" width="1440" height="1183">
-    <figcaption><span class="chip ships">2.7.0</span>Screenshot, not illustration · the bundled sample search · captured from the published build</figcaption>
+    <figcaption><span class="chip ships">screenshot</span>Not an illustration · the bundled sample search · captured from a published build</figcaption>
   </figure>
 </section>
 
 
 <footer class="colophon">
-  <div>Career Compass · career-compass-mcp 2.9.7 · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="https://www.npmjs.com/package/career-compass-mcp" rel="noopener noreferrer">npm</a><br>Every claim on this page is checked against the 2.9.7 tool list and README · numbers: 18 tools, 7 prompts, 9 resources · no usage or outcome figures are quoted because none are measured</div>
-  <div>Plates I–IV: illustrations · one real screenshot · commissioned in the den, 2026-09-05<br>ASSETS · keep the four *-web.jpg plates and the .png screenshot beside this file</div>
+  <div>Career Compass · career-compass-mcp 2.9.8 · <a href="https://github.com/benskamps/career-compass-mcp" rel="noopener noreferrer">github.com/benskamps/career-compass-mcp</a> · <a href="../privacy/">privacy</a><br>Claims on this page are checked against the 2.9.8 tool list and README by a test · numbers: 18 tools, 4 prompts, 9 resources · the examples use fictional sample data · no usage or outcome figures are quoted because none are measured</div>
+  <div>Plates I–IV: illustrations · one real screenshot · commissioned in the den, 2026-09-05<br>ASSETS · keep the four *-web.jpg plates, the .png screenshot and og.png beside this file</div>
 </footer>
 
 </div>

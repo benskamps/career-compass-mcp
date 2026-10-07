@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
@@ -21,7 +21,7 @@ const OUT = process.env.EVAL_SUITE_ROOT ?? join(repo, "plugin");
 const TOOLS_SUITE = join(OUT, "evals");
 const CHAT_SUITE = join(OUT, "evals-chat");
 const MCP = "mcp__plugin_career-compass_career-compass__";
-const SKILLS = "career-compass|fit-check|start|today|interview-prep";
+const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|answer";
 
 // ---------- inputs ----------
 
@@ -256,6 +256,25 @@ const noFalseSaveClaim = {
 
 const noUnaskedWrite = (tool) => ({ type: "tool_used", tool: `${MCP}${tool}`, min: 0, max: 0 });
 
+// Every write tool, graded on every case where the user didn't ask for a write.
+// A rejection reply writes only when it is given an applicationId (it marks the
+// application rejected), so that call is the one graded.
+const noUnaskedWrites = (tools = ["save_career_section", "pipeline_add", "pipeline_update", "capture_insight"]) => ({
+  ...Object.fromEntries(tools.map((t) => [`trust--no-unasked-${t.replaceAll("_", "-")}`, noUnaskedWrite(t)])),
+  "trust--no-unasked-rejection-status": {
+    type: "tool_used", tool: `${MCP}generate_rejection_response`, input_match: '"applicationId"\\s*:', min: 0, max: 0,
+  },
+});
+
+// First replies talk about the user's job search, not the plumbing behind it.
+const noPlumbing = {
+  type: "regex", weight: 0.5, flags: "i", match: "not_contains",
+  pattern: "(Career )?KB is empty|nothing to (work|compare) (with|against)|fit tool|check_setup|explore_opportunity|save_career_section",
+};
+
+// The feedback ask belongs to an accepted offer; anywhere else it is noise.
+const noFeedbackAsk = { type: "regex", weight: 0.5, flags: "i", match: "not_contains", pattern: FEEDBACK_ASK };
+
 // ---------- assemble ----------
 
 function resumeAndPosting(p, post, ask) {
@@ -318,6 +337,25 @@ function buildChat() {
         [`task--${t.task}`]: taskRubric(t, post),
         "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
+        "voice--no-stray-feedback-ask": noFeedbackAsk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  {
+    const c = SERVER_MISSING_CASE;
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "Cowork with the plugin's server down: no tools, and the user says where they are.",
+      prompt: resumeAndPosting(p, postingFor(c.persona), c.ask), tags: ["surface", "quality"],
+      graders: {
+        "surface--server-failed-branch": { type: "llm", weight: 2, body: c.expect },
+        "surface--no-switch-surface-advice": {
+          type: "regex", weight: 0.5, flags: "i", match: "not_contains",
+          pattern: "(use|try|switch to|install|open) (Claude Code|Cowork|the desktop app)",
+        },
+        "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
         "activation--skill-fired": skillFired,
       },
     }); n++;
@@ -336,8 +374,8 @@ function buildTools() {
       prompt: `${post.body}\n\nDo I fit this?`, tags: ["first-contact", "quality"],
       graders: {
         "first-reply--asks-for-one-thing": postingOnlyFirstReply,
-        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
-        "trust--no-unasked-pipeline-add": noUnaskedWrite("pipeline_add"),
+        "first-reply--no-plumbing": noPlumbing,
+        ...noUnaskedWrites(),
         "activation--skill-fired": skillFired,
       },
     }); n++;
@@ -352,8 +390,8 @@ function buildTools() {
         "first-reply--offers-to-save": { type: "regex", pattern: "save|remember|keep (it|this|your)", flags: "i", weight: 0.5 },
         "task--fit-check": fitRubric(post),
         "honesty--no-invented-facts": honesty(p),
-        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
-        "trust--no-unasked-pipeline-add": noUnaskedWrite("pipeline_add"),
+        "first-reply--no-plumbing": noPlumbing,
+        ...noUnaskedWrites(),
         "activation--skill-fired": skillFired,
       },
     }); n++;
@@ -373,7 +411,8 @@ PASS if the reply is built on specifics from the user's saved history or pipelin
 FAIL if the reply asks the user to paste their résumé or background, gives generic advice that ignores the saved history, or does not do what the user asked.` },
         "memory--no-false-gaps": kbGaps,
         "honesty--no-invented-facts": kbTruth,
-        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        ...noUnaskedWrites(),
+        "voice--no-stray-feedback-ask": noFeedbackAsk,
         "activation--skill-fired": skillFired,
       },
     });
@@ -387,7 +426,7 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
       prompt: t.ask, tags: ["task", "quality"],
       graders: {
         "task--today": { type: "llm", weight: 2, body: t.expect },
-        "trust--no-unasked-pipeline-add": noUnaskedWrite("pipeline_add"),
+        ...noUnaskedWrites(),
         "activation--skill-fired": skillFired,
       },
     });
@@ -402,7 +441,8 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
       graders: {
         [c.check]: { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": kbTruth,
-        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        ...noUnaskedWrites(),
+        "voice--no-stray-feedback-ask": noFeedbackAsk,
         "activation--skill-fired": skillFired,
       },
     });
@@ -417,11 +457,51 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
         "task--right-tool": { type: "tool_used", tool: `${MCP}${c.tool}`, min: 1 },
         "task--routed-result": { type: "llm", weight: 2, body: `PASS if the reply gives ${c.expect}. FAIL otherwise.` },
         "honesty--no-invented-facts": kbTruth,
-        "trust--no-unasked-save": noUnaskedWrite("save_career_section"),
+        ...noUnaskedWrites(),
         "activation--skill-fired": skillFired,
       },
     });
     cpSync(join(here, "mocks", c.mocks ?? "kb"), join(dir, "mocks"), { recursive: true });
+    n++;
+  }
+  for (const c of COLD_OPENER_CASES) {
+    const p = c.persona ? personas[c.persona] : null;
+    writeCase(TOOLS_SUITE, c.id, {
+      description: "A cold opener on an empty Career KB: the asks people actually start with.",
+      prompt: p ? `Here's my résumé:\n\n${p.body}\n\n${c.ask}` : c.ask, tags: ["first-contact", "cold-opener", "quality"],
+      graders: {
+        "first-reply--cold-opener": { type: "llm", weight: 2, body: c.expect },
+        "first-reply--no-plumbing": noPlumbing,
+        ...(p ? { "honesty--no-invented-facts": honesty(p) } : {}),
+        ...noUnaskedWrites(),
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of FEATURE_CASES) {
+    const extra = {};
+    if (c.id === "save-keeps-history") {
+      // An experience save that leaves out the other roles would drop them.
+      extra["trust--save-keeps-other-roles"] = {
+        type: "tool_used", tool: `${MCP}save_career_section`, min: 0, max: 0,
+        input_match: '^(?![\\s\\S]*Apex)(?=[\\s\\S]*"experience")',
+      };
+    }
+    const dir = writeCase(TOOLS_SUITE, c.id, {
+      description: "A council-deployment feature, on Alex Rivera's saved KB unless the case says otherwise.",
+      prompt: c.ask, tags: ["feature", "quality"],
+      graders: {
+        [c.check]: { type: "llm", weight: 2, body: c.expect },
+        ...(c.mocks === "empty" ? {} : { "honesty--no-invented-facts": kbTruth }),
+        ...(c.writes ? noUnaskedWrites(c.writes) : {}),
+        ...extra,
+        ...(c.id === "close-out-accepted" ? {} : { "voice--no-stray-feedback-ask": noFeedbackAsk }),
+        "activation--skill-fired": skillFired,
+      },
+    });
+    const base = c.mocks === "empty" ? "empty" : "kb";
+    cpSync(join(here, "mocks", base), join(dir, "mocks"), { recursive: true });
+    if (c.mocks && c.mocks !== "empty") cpSync(join(here, "mocks", c.mocks), join(dir, "mocks"), { recursive: true });
     n++;
   }
   return n;

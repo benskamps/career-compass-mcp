@@ -6,77 +6,155 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D22-green.svg)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
 
-**An AI-native career co-pilot for Claude.**
+**Paste a job posting. Get an honest fit verdict.**
 
-Career Compass gives Claude your entire career history as a working corpus — then uses it
-to tailor every résumé, track every application, prep every interview, and pressure-test
-every offer. One conversation that never forgets what you have done.
+Paste a job posting and your resume, and ask "Do I fit this?" You get a straight verdict
+(strong fit, stretch, or long shot), each of the posting's must-haves matched to evidence
+from your own background, and the top two gaps with how to handle them. Then Claude can
+tailor your résumé, write the cover letter and prep the interview without padding your
+history. Free, MIT-licensed, and in Claude Code and Cowork your files stay on your own
+computer.
 
-Your data is plain YAML on your own disk. No account, no cloud sync, no telemetry.
+## What a fit check looks like
 
-![Career Compass dashboard — pipeline board, next actions, and stage distribution](docs/screenshots/dashboard-lite-dark.png)
+*Example on sample data:* the fictional Alex Rivera who ships with the package, and a
+made-up posting.
 
-**See it in 10 seconds.** No install, no config, no data of your own required:
+```
+You:    [pastes a VP of Operations posting from a payments company]
+        Do I fit this?
+
+Claude: Stretch: strong on operations at scale, but no P&L or payments
+        experience yet.
+
+        Must-haves, with your evidence
+        - 8+ years leading operations teams: Operations Manager at Apex
+          Logistics, team of 42; Senior Program Manager at MedFlow, 6 PMs.
+        - Scaling a process across sites: patient onboarding cut from 47 days
+          to 11 across 3 acquired health systems.
+        - Vendor and cost management: procurement cycle cut from 9 months to
+          6 weeks; headcount costs down 18% while throughput rose 31%.
+
+        Top two gaps
+        1. P&L ownership. You ran $8M in program budgets, which isn't a P&L.
+           Say what that budget covered, and ask in the screen whether the
+           role owns a P&L from day one.
+        2. Payments. Nothing in your history is payments or fintech. Lead
+           with the healthcare compliance work as the closest thing, and
+           don't claim more.
+
+        Want me to tailor your résumé to this one, or track it?
+```
+
+The real reply goes on with talking points, red flags and questions to ask. A "day in the
+life" of the role comes only when you ask for one.
+
+## It won't pad your résumé
+
+Every sentence it writes about you has to come from your history or from what you told it.
+When a stronger draft needs a fact it doesn't have, the draft says so in place:
+
+```
+- Cut patient onboarding from 47 days to 11 after the acquisition of 3
+  regional health systems, leading a team of [confirm: team size] and
+  eliminating $2.1M in compliance penalties over 18 months.
+```
+
+The sample record says what changed, not how many people did it, so the bullet asks. You
+fill in the bracket or cut it; nothing gets invented to sound stronger.
+
+## Get it in the Claude directory
+
+In the Claude app or on claude.ai, open **Customize → Plugins**, search for
+**Career Compass**, and add it. That's the whole install.
+
+| Where you use Claude | What you get |
+|---|---|
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting and Claude does the fit check, tailoring, interview prep or offer review in the conversation. Nothing is saved between chats. |
+| **Cowork** and **Claude Code** on your computer | The skills plus the local server: your career history and every application are kept as plain YAML on your computer, so later answers start from them. Needs **Node.js 22 or newer**. |
+
+The commands below work in Claude Code and Cowork. In claude.ai chat, just ask in plain
+words ("prep me for my interview on Friday").
+
+| Command | What it does |
+|---|---|
+| `/career-compass:start` | Sets up your career history from a pasted résumé, or shows what to try first |
+| `/career-compass:fit-check` | A fit verdict for a pasted posting |
+| `/career-compass:interview-prep` | Likely questions, three to five STAR stories from your real work, and questions to ask |
+| `/career-compass:today` | One "start here" move, then the rest of today's list |
+| `/career-compass:debrief` | Right after an interview: what landed, what to sharpen, and a thank-you note per interviewer from your own notes |
+| `/career-compass:week` | Your week: what moved, stalled or closed, your pace, and one focus for next week |
+| `/career-compass:sweep` | Checks your inbox and calendar (through connectors you already use) for job-search mail and invites, then updates applications in one batch you approve. Never sends email |
+| `/career-compass:answer` | Answer an application form's questions from your real history |
+
+A few things it does once you've used it for a while: saves end with a receipt of what
+changed, you can record an offer or how an interview round went, and `/career-compass:today`
+leads with a debrief the day after an interview. When you accept an offer it switches to
+closing out the search and then to your first weeks in the new job. If you want a nudge,
+you can set up a [morning briefing](#a-morning-briefing-if-you-want-one) on your own
+computer.
+
+## Turn your git history into honest résumé evidence
+
+If you write code, you have a record of what you did. Ask:
+
+> **"Look at my project in ~/code/billing-service and tell me what I can honestly claim on my résumé."**
+
+`harvest_evidence` reads that project's git history on your computer and reports counts,
+each with the command that produced it. It writes nothing and sends nothing.
+
+```
+## What is measurably true
+- Committed to billing-service across 14 distinct months, 2024-11 to 2025-12.
+  - how: git log --no-merges --author=<you> --since=2024-10-07; counted distinct YYYY-MM values.
+- 212 of 530 non-merge commits in this window are yours (40%).
+  - how: git rev-list --count --no-merges, with and without --author. Share of commits,
+    which is a measure of participation and NOT of contribution size.
+
+## What this cannot tell you
+- Did any of this ship to real users, and did anything measurable change when it did?
+  That number is the résumé line; none of the above is.
+```
+
+*Example on made-up numbers.* Counts are not achievements, so Claude asks the questions the
+log can't answer first. Say you built the invoicing service and it shipped, and the draft
+keeps to that:
+
+```
+- Built the invoicing service in billing-service over 14 months (212 commits),
+  which [confirm: what changed for users once it shipped, and by how much?].
+```
+
+## Tell me what it got wrong
+
+There is no telemetry, so the only way I hear about a bad fit check is if you say so.
+[Open a "What did your first fit check get wrong?" issue](https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml)
+(leave out anything personal), or say what you used it for in
+[Discussions](https://github.com/benskamps/career-compass-mcp/discussions).
+
+More: [How Career Compass works](https://benskamps.github.io/career-compass-mcp/how-it-works/),
+with pages for [people who were laid off](https://benskamps.github.io/career-compass-mcp/for/laid-off/),
+[career switchers](https://benskamps.github.io/career-compass-mcp/for/career-switchers/) and
+[new grads](https://benskamps.github.io/career-compass-mcp/for/new-grads/).
+
+---
+
+## For other MCP clients
+
+Everything below is for running the server yourself, outside the Claude directory: Claude
+Desktop, Cursor, other MCP clients, or Claude Code without the plugin. If you installed the
+plugin, skip it. Running the command below as well would register a second copy of every
+tool, so `install` detects the plugin and leaves Claude Code alone.
+
+The package has 18 tools, 4 prompts, 9 resources and a local dashboard. To see the
+dashboard on the bundled sample first, with no install and no data of your own:
 
 ```bash
 npx -y career-compass-mcp dashboard --sample
 ```
 
-That opens the screenshot above in your browser, running against a fictional job search
-bundled with the package. It is read-only — nothing is written, and nothing leaves your
-machine.
-
----
-
-## What it feels like
-
-> **Prefer the picture?** [How Career Compass works](https://benskamps.github.io/career-compass-mcp/how-it-works/) — one illustrated page: the five steps, facts-about-you vs. the résumé you send, how the interview prep helps you ask, and [how the dashboard works](https://benskamps.github.io/career-compass-mcp/how-it-works/#dashboard). Also on [brokenbranch.dev](https://www.brokenbranch.dev/career-compass/).
-
-```
-You: I have a panel interview at Veridian Health on Friday — Director of Operations role.
-     Can you prep me?
-
-Claude: On it. Reading your career history now...
-
-     [Generates 90-second pitch, 8 STAR stories matched to likely panel questions,
-      company research brief, 10 questions to ask them, and a list of watch-outs
-      based on gaps in your background — all in one response]
-```
-
-```
-You: Here's a job posting I just found. [pastes posting]
-     How well do I fit?
-
-Claude: Fit score: 8.1/10. Here's why — and here's what they'll probe you on...
-
-     [Returns matched strengths, honest gap analysis, talking points in their language,
-      and a "day in the life" of what the role actually looks like]
-```
-
-```
-You: Show me what needs attention in my pipeline today.
-
-Claude: 3 things:
-     - Meridian Logistics follow-up is overdue (8 days since you applied, referral from Marcus Chen)
-     - Veridian panel is Friday — prep above
-     - Novare rejection arrived — want me to draft a keep-the-door-open response?
-```
-
----
-
-## Install
-
-### From the Claude directory (Claude Code and Cowork)
-
-Find **Career Compass** in the directory under **Customize → Plugins** on claude.ai or in
-the desktop app, and add it. That's the whole install: the plugin starts the server for you
-and brings a skill that teaches Claude the working order. Change where your files live in
-the plugin's settings (**Career data folder**). If you installed it this way, skip the rest
-of this section. Running the command below as well would register a second copy of every
-tool, so `install` detects the plugin and leaves Claude Code alone.
-
-The plugin's server runs on your own computer, so it works in Claude Code and in Cowork
-sessions on your machine, but not in claude.ai chat on the web or mobile.
+It opens in your browser, read-only, against the fictional Alex Rivera search. Nothing is
+written and nothing leaves your machine.
 
 ### Everywhere else, in one command
 
@@ -206,12 +284,13 @@ Claude will extract your work history, achievements, and skills into structured 
 clarifying questions about gaps or vague metrics, and call `save_career_section` once per
 section to write it to disk.
 
-`save_career_section` is where your data actually lands — it is the only tool that writes
-the Career KB. It saves one section at a time (`profile`, `experience`, `skills`,
-`education`, `projects`, `testimonials`), validates against the schema before touching the
-file, and keeps the previous version as a timestamped `.bak`. Because it replaces a section
-wholesale, your client will ask you to confirm each write; approving them is what fills the
-KB.
+`save_career_section` is where your history actually lands. It saves one section at a time
+(`profile`, `experience`, `skills`, `education`, `projects`, `testimonials`), validates
+against the schema before touching the file, and keeps the previous version as a
+timestamped `.bak`. It compares each save with what is stored: a save that would drop roles
+or achievements is refused unless the call says to replace them, and every save ends with a
+one-line receipt of what changed. Your client asks you to confirm each write; approving them
+is what fills the KB.
 
 That is the whole setup. From there every tool has full context on who you are, and the KB
 compounds — each posting you explore, interview you debrief, and offer you weigh can add a
@@ -236,20 +315,30 @@ on your own disk**.
 - **Who sees it:** only the MCP client you connect it to, and through that client your model
   provider, under *their* policy — and only for the requests you make. Career Compass sends
   it nowhere on its own.
-- **The one network call:** `check_setup` asks the public **npm registry** whether a newer
-  version has been released. It is an unauthenticated GET for the package name, carrying
-  nothing about you or your data, and it only happens when `check_setup` is called with
-  `checkForUpdates: true`, which Claude does when you ask about updates. It is off by
-  default. There is no analytics or phone-home path anywhere else in the package.
+- **The one request the server makes:** `check_setup` asks the public **npm registry**
+  whether a newer version has been released. It is an unauthenticated GET for the package
+  name, carrying nothing about you or your data, and it only happens when `check_setup` is
+  called with `checkForUpdates: true`, which Claude does when you ask about updates. It is
+  off by default. There is no analytics or phone-home path anywhere else in the package.
+- **Requests you run yourself:** any `npx … career-compass-mcp` command, including the
+  dashboard command `check_setup` prints, has npm download the package from the same
+  registry. That is npm fetching code, and it carries none of your data.
+- **The dashboard's `--ask-claude` option** runs Claude Code on your computer, which sends
+  the Career KB content it reads to Anthropic under your own Claude account and billing.
+  It is off unless you start the dashboard with it, and read-only unless you start it with
+  `--ask-claude-writes`.
+- **Schedules are yours:** Career Compass runs nothing on a timer. A
+  [morning briefing](#a-morning-briefing-if-you-want-one) is a task you create in your own
+  Claude app; it runs on your computer and only reads.
 - **What ships in the package:** the server code and a small set of **fictional** example
   files (`data/example/` — the Alex Rivera persona). A publish-time leak guard enforces that
   no real career data can ride along.
 - **The dashboard reads at request time, locally.** Your YAML is read when you open a page,
   by a server on your own `localhost`. It is never baked into a build, never prerendered,
   and never sent over the network.
-- **What else is in that folder:** timestamped `.bak` copies of previous versions (the five
-  most recent per file; older ones are pruned on the next write, and backups you make by
-  hand are never touched), plus — only while a write is actually happening — a
+- **What else is in that folder:** timestamped `.bak` copies of previous versions (only
+  the newest 5 per data file are kept; older ones are deleted automatically on the next
+  write, and backups you make by hand are never touched), plus — only while a write is actually happening — a
   `.write-claim` file that stops a second Career Compass process from writing at the same
   time.
 - **Retention is yours:** files stay until you delete them. Remove the `CAREER_DATA_PATH`
@@ -264,6 +353,24 @@ questions or concerns: [open an issue](https://github.com/benskamps/career-compa
 
 ---
 
+## A morning briefing, if you want one
+
+Career Compass never runs on a timer. If you'd like your job-search list waiting each
+morning, you can create a **local** scheduled task in the Claude Code desktop app (see
+[desktop scheduled tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks)). A local
+task runs on your computer, so it reaches the server and your data folder. Give it this
+prompt, as plain text:
+
+> Call pipeline_view with action next_actions. Lead with the Start here item in eight lines or fewer, and change nothing. If it's after 2pm, say it's a catch-up run.
+
+Use the plain prompt rather than `/career-compass:today`: scheduled runs don't start
+commands that only run when you type them. `pipeline_view` only reads, so the briefing
+changes nothing. Cowork's scheduled tasks may run remotely, where your local data folder
+isn't available, so try one by hand before relying on it. Cloud routines and `/loop` don't
+fit this: cloud runs can't see your files, and `/loop` ends with the session.
+
+---
+
 ## Tools
 
 Eighteen tools, grouped by where they land in a search. **Read** tools take no permission
@@ -273,16 +380,16 @@ prompt in most clients; **Write** tools ask before touching your files.
 
 | Tool | Access | What it does |
 |------|--------|-------------|
-| `explore_opportunity` | Read | Scores a posting against your KB **and your stated preferences** — salary band, remote, relocation, notice period. Returns a fit score, an explicit comp and location check, matched strengths, honest gaps, talking points, day-in-the-life, red flags. Pass `sourceFitLabel` ("LinkedIn: strong match") and it will agree or disagree with the job board, in both directions |
+| `explore_opportunity` | Read | Judges a posting against your KB **and your stated preferences** — salary band, remote, relocation, notice period. Opens with a verdict (Strong fit, Stretch, or Long shot) and the biggest reason, then an explicit comp and location check, evidence per requirement, honest gaps, talking points and red flags. A "day in the life" only when you ask. Pass `sourceFitLabel` ("LinkedIn: strong match") and it will agree or disagree with the job board, in both directions |
 | `research_company` | Read | Builds an intelligence brief: product, culture, funding, interview process, strategic fit |
 
 ### Apply
 
 | Tool | Access | What it does |
 |------|--------|-------------|
-| `tailor_resume` | Read | Generates an ATS-optimized résumé from your KB — standard, federal, academic, or functional |
+| `tailor_resume` | Read | Writes a résumé tailored to one posting from your KB — standard, federal, academic, or functional — using the posting's words only where your history says the same thing |
 | `generate_cover_letter` | Read | Writes a cover letter with your actual achievements woven in, in a tone you pick — professional, conversational, enthusiastic, or concise |
-| `format_for_ats` | Read | Reformats résumé content for a specific ATS: Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic |
+| `format_for_ats` | Read | Reformats résumé text you already have into plain sections an applicant tracking system can parse, ready to paste field by field (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic). Reformats only; it never rewrites what you did |
 
 ### Track the pipeline
 
@@ -290,7 +397,7 @@ prompt in most clients; **Write** tools ask before touching your files.
 |------|--------|-------------|
 | `pipeline_view` | Read | Lists applications, funnel stats, what needs attention, or one application by id |
 | `pipeline_add` | Write | Adds one application. Optional starting `status` (defaults to `applied`); unknown statuses are rejected with a did-you-mean suggestion |
-| `pipeline_update` | Write | Updates one application — status, notes, follow-up date, a contact, or an interview round |
+| `pipeline_update` | Write | Updates one application — status, notes, follow-up date, a contact, an interview round and how it went, or an offer's terms and answer deadline |
 | `classify_email` | Read | Classifies a job-search email and extracts contacts, dates, and suggested pipeline updates |
 
 ### Interview and decide
@@ -345,17 +452,19 @@ subscribes, so a client that never does pays nothing for the feature.
 
 ## Prompts
 
-Power-user shortcuts. Most clients surface these as slash commands.
+Power-user shortcuts for MCP clients that show prompts, usually as slash commands. Plugin
+users get the `/career-compass:…` commands above instead.
 
 | Prompt | What it does |
 |--------|-------------|
 | `resume-tailor` | Drop in a posting → get a tailored résumé |
-| `interview-coach` | Company + role + interview type → full prep package |
 | `negotiation-coach` | Paste an offer → analysis, strategy, and counter scripts |
-| `setup-career-kb` | Walk through building your Career KB from scratch — profile, experience, skills, first pipeline entry |
-| `daily-review` | Triage the pipeline → today's highest-leverage moves, overdue items, upcoming interviews |
 | `post-interview-debrief` | Capture what an interview surfaced → record the durable signal, set up the next step |
 | `weekly-retro` | Review the week's movement and journal signals → one takeaway that compounds |
+
+Retired: `daily-review`, `interview-coach` and `setup-career-kb` duplicated the plugin's
+`/career-compass:today`, `/career-compass:interview-prep` and `/career-compass:start`. Ask
+for the same thing in plain words and the tools do it.
 
 ---
 
@@ -401,8 +510,12 @@ prompt — the server runs `claude` headless with Career Compass as its only too
 answer streams into a panel on the page, with a *Reload the board* button when Claude may have
 changed your files. It is opt-in, loopback-only, one question at a time, and Claude Code runs
 without your user hooks, without other MCP servers, and without shell or file-editing tools.
-Prompts that need you to paste a posting still copy. Without the flag (or without Claude
-Code) the buttons copy, exactly as before.
+It is read-only unless you start it with `--ask-claude-writes`. Prompts that need you to
+paste a posting still copy. Without the flag (or without Claude Code) the buttons copy,
+exactly as before.
+
+Each question runs under your own Claude account: Claude Code sends the Career KB content it
+reads to Anthropic, and the usage is billed to you like any other Claude Code session.
 
 Other flags: `--port <n>` (default 3141, falling back to the next free port), `--no-open` to
 skip launching a browser, `--lite` to force this dashboard explicitly. Full list:
@@ -433,6 +546,9 @@ skip launching a browser, `--lite` to force this dashboard explicitly. Full list
     └── applications.yaml   # all job applications
 ```
 
+Optional sections (`narrative.yaml`, `stories.yaml`, `people.yaml`) appear in `career/`
+the first time you save one.
+
 This is your single source of truth — built once, enriched over time, read by every tool.
 You never need to edit these files by hand: paste a document and ask Claude to save it. But
 they are plain YAML, so you can.
@@ -447,6 +563,10 @@ Alex Rivera) if you want to see the shape before writing your own.
 | Env var | Default | Description |
 |---------|---------|-------------|
 | `CAREER_DATA_PATH` | `~/.career-compass` | Directory holding your career and pipeline YAML |
+
+Plugin users set the same thing in the plugin's settings as **Career data folder**
+(`data_path`, default `~/.career-compass`). The plugin passes it to the server as
+`CAREER_DATA_PATH`.
 
 ---
 
@@ -577,8 +697,10 @@ So if Career Compass got you through a week of applications:
 - **[Say so in Discussions](https://github.com/benskamps/career-compass-mcp/discussions)** —
   what you used it for, what was missing, what you wish it did instead. Job searches differ
   enough that I would rather hear about yours than guess at it.
+- **[Tell me what a fit check got wrong](https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml)**
+  — a short form; leave out anything personal.
 
-Neither one sends me anything you have not chosen to type.
+None of these sends me anything you have not chosen to type.
 
 ## Contributing
 

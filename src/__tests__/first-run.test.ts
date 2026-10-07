@@ -95,7 +95,7 @@ describe("first run from an empty data directory", () => {
       const before = textOf(
         await client.callTool({ name: "tailor_resume", arguments: { posting: "Director of Operations" } }),
       );
-      expect(before.toLowerCase()).toContain("no career data");
+      expect(before.toLowerCase()).toContain("no saved career kb");
       // ...and it must name the REAL directory, not a repo-relative one.
       expect(before).toContain(dataDir);
       expect(before).not.toContain("data/career/");
@@ -127,7 +127,7 @@ describe("first run from an empty data directory", () => {
       const after = textOf(
         await client.callTool({ name: "tailor_resume", arguments: { posting: "Director of Operations" } }),
       );
-      expect(after.toLowerCase()).not.toContain("no career data");
+      expect(after.toLowerCase()).not.toContain("no saved career kb");
       expect(after).toContain("Alex Rivera");
     } finally {
       await client.close();

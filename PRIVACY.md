@@ -1,6 +1,6 @@
 # Privacy Policy — Career Compass MCP
 
-**Last updated:** 2026-10-05
+**Last updated:** 2026-10-07
 **Applies to:** the `career-compass-mcp` MCP server, its bundled local dashboard, and the
 Career Compass plugin's skills in every Claude app, all versions.
 
@@ -13,9 +13,11 @@ career history and job pipeline are plain YAML files in a directory you choose. 
 uploaded, and there is nothing for us to collect, store, sell, or hand over — because your
 data never reaches us in the first place.
 
-There is exactly one outbound network request in the whole package, and only when you ask
-for it: the `check_setup` tool asks the public npm registry whether a newer version has
-been released. It sends nothing about you. Details under [Update checks](#update-checks).
+The server makes one outbound network request of its own, and only when you ask for it:
+the `check_setup` tool asks the public npm registry whether a newer version has been
+released. It sends nothing about you. Details under [Update checks](#update-checks).
+Commands you run yourself with `npx`, such as the dashboard command `check_setup` prints,
+are separate requests: npm downloads the package, and nothing about you is sent.
 
 In claude.ai chat (web, desktop and mobile) only the plugin's skills load, as instructions
 to Claude. The server does not run there, so Career Compass stores nothing and sends
@@ -40,18 +42,21 @@ Career Compass reads and writes the career information *you* give it:
 
 ## Where it is stored
 
-In a single directory on your machine, set by the `CAREER_DATA_PATH` environment variable.
-The default is `~/.career-compass/`. Files are ordinary YAML you can open, edit, back up,
+In a single directory on your machine, set by the `CAREER_DATA_PATH` environment variable
+(in the plugin, the **Career data folder** setting). The default is `~/.career-compass/`. Files are ordinary YAML you can open, edit, back up,
 or delete with any text editor. While a write is in progress the folder also briefly holds a
 `.write-claim` file naming the process doing the writing, so a second Career Compass process
 (a dashboard, or a server registered in two clients) refuses rather than overwriting it. It is
 deleted when the write finishes, contains no personal data, and is safe to remove by hand.
 Each write also leaves a timestamped `.bak` copy of the
-previous version in the same directory.
+previous version in the same directory. Only the newest 5 `.bak` files per data file are
+kept; older ones are deleted automatically on the next write. Backups you make by hand are
+never touched.
 
 **We never receive this data.** There is no Career Compass account, no cloud sync, no
-backup service, and no telemetry or analytics of any kind. The only request the software
-ever makes to the internet is the version check described below, which carries none of it.
+backup service, and no telemetry or analytics of any kind. The only request the server
+makes to the internet on its own is the version check described below, which carries none
+of it.
 
 ## Update checks
 
@@ -85,6 +90,10 @@ Precisely what that involves:
 The npm registry is operated by npm, Inc. (GitHub/Microsoft) under its own privacy policy:
 https://docs.npmjs.com/policies/privacy
 
+Career Compass runs nothing on a schedule. Any schedule, such as a morning briefing, is
+one you create yourself in your own Claude app; it runs locally on your computer and only
+reads.
+
 Separately, `check_setup` also checks whether your local dashboard is running by requesting
 `http://127.0.0.1:<port>/`. That is a loopback request to your own machine; it never
 reaches the network.
@@ -105,7 +114,13 @@ npm registry about a version number and carries nothing else.
 
 The bundled local dashboard (`career-compass-mcp dashboard`) serves pages from
 `127.0.0.1` on your own machine, renders them with no external assets, and makes no
-network calls.
+network calls. Starting it means running it, usually with `npx`, which downloads the
+package from the npm registry as described above.
+
+If you start the dashboard with `--ask-claude`, its buttons run Claude Code on your
+computer. Claude Code sends the Career KB content it reads to Anthropic, under your own
+Claude account and billing, like any other Claude Code session. It is off unless you pass
+the flag, and read-only unless you start it with `--ask-claude-writes`.
 
 ## In claude.ai chat
 
@@ -132,8 +147,9 @@ anywhere else.
 
 ## Data retention
 
-Your files stay on your disk until you delete them. There is no retention period on our
-side because we hold nothing. To remove everything, delete your `CAREER_DATA_PATH`
+Your files stay on your disk until you delete them. The one exception is backups: only the
+newest 5 `.bak` files per data file are kept, and older ones are deleted automatically.
+There is no retention period on our side because we hold nothing. To remove everything, delete your `CAREER_DATA_PATH`
 directory (including the `.bak` files and any leftover `.write-claim`) and uninstall the package.
 
 ## Third-party sharing

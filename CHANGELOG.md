@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.9.8 — 2026-10-07
 
 ### Added
 
@@ -11,6 +11,45 @@
 - **The day after an interview, `/today` leads with a debrief.** It offers to draft a
   thank-you from what you tell it and to keep what you learned for the next round,
   instead of telling you to chase a timeline.
+- **Four new commands.** `/career-compass:debrief` (what landed, a thank-you per
+  interviewer from your own notes, what to keep for next time), `/career-compass:week` (a
+  weekly review where every claim cites an application or journal entry),
+  `/career-compass:sweep` (reads job-search mail and calendar through connectors you've
+  already added, shows the search first, and proposes one batch of tracker updates) and
+  `/career-compass:answer` (application form questions within their limits; eligibility
+  questions stay yours, and years of experience are never inflated). Each works in
+  claude.ai chat from what you paste, where you just ask in plain words.
+- **Your story, once.** A `narrative` file keeps your own words for why you're looking,
+  a gap, a switch, work authorization or notice period; cover letters and interview prep
+  quote it instead of asking again.
+- **A story bank.** Interview stories you like can be saved to `stories`, reused as you
+  told them, and tracked by who heard them, so prep says "you told Priya that one
+  already" and picks another.
+- **People you know.** A `people` file keeps contacts apart from any one application;
+  `/today` nudges a reconnect when one is due, never above interviews or offers.
+- **When you accept an offer.** `/today` turns into a close-out for two weeks (thank the
+  people who helped, withdraw from live processes, save what worked, a recap of the
+  search), then a landing mode: a 30/60/90 plan from what interviewers probed, and a
+  weekly win to capture.
+- **Pace and progress.** Set `weeklyPace` in your profile and `/today` shows "This week:
+  2 of 5 sent · 1 conversation" and which week of the search you're in. Stats name a
+  repeated stage where applications end, and once there's enough data, how excitement
+  and source compare with outcomes, with the counts shown.
+- **Calendar export.** `pipeline_view` with action `calendar` returns an .ics file of
+  interviews, follow-ups and offer deadlines for your own calendar.
+- **Restore a backup.** `check_setup` lists recent backups per KB file with their entry
+  counts, and `save_career_section` with `restoreFrom` swaps one back in, backing up the
+  current file first.
+- **First value without a saved history.** `explore_opportunity` and `tailor_resume`
+  take a pasted `resume` when nothing is saved yet. A pasted résumé with no posting gets
+  three roles it supports today and the bullets a screener would skip. "What does this
+  do?" can run a fit check on a clearly labelled sample profile.
+- **Opt-in morning briefing.** After your first tracked application, Claude offers once
+  to help you set up a weekday briefing in your own Claude Code Desktop routine. It only
+  reads, and runs on your machine.
+- **Evals:** cold openers, all five write tools graded, an injection case, feature
+  cases, intervals on every score, a model-free write-integrity lane, and an MCP-only
+  profile.
 
 ### Changed
 
@@ -24,6 +63,30 @@
 - **Works better in claude.ai chat.** The skill now covers recruiter emails, rejection
   replies, company research and "what should I work on today" without tools, and tells
   chat apart from a server that failed to start in Claude Code or Cowork.
+- **The front door says what it does.** The how-it-works page and README lead with an
+  honest fit verdict on sample data; the tool count, npx installer and dashboard move
+  below the fold. Segment pages for people laid off, switching careers, and new grads.
+  The plugin listing gains privacy, support and documentation links.
+- **`check_setup` is three lines on a fresh install** and says whether it is running from
+  the plugin or standalone. Empty-KB messages now tell Claude to work from what you
+  pasted, not tell you to set things up first.
+- **`format_for_ats` keeps to parsing hygiene** (plain text, standard headings, no tables)
+  instead of vendor folklore stated as fact.
+- **Journal entries carry where they came from** (`origin: user_said | inferred`); drafts
+  treat Claude's inferences as hypotheses, never as facts about you. Journal context puts
+  entries about the company you're working on first.
+- **`evaluate_offer` puts your other recorded offers side by side** and offers to save the
+  deadline; `classify_email` proposes the offer or interview fields to record.
+- **The dashboard's Ask button is read-only** unless started with `--ask-claude-writes`.
+- **Duplicates are caught.** `pipeline_add` returns the existing application when the
+  company and role already match, unless you ask for a second entry.
+- Not-found errors suggest the closest application. A start-up line names an old
+  Node.js version and the fix.
+
+### Removed
+
+- MCP prompts `daily-review`, `interview-coach` and `setup-career-kb`: they duplicated
+  `/career-compass:today`, `/career-compass:interview-prep` and `/career-compass:start`.
 
 ### Fixed
 
@@ -46,7 +109,9 @@
   reply draft, `interview_arc` and `format_for_ats` carried a one-line substitute that
   missed "never invent my inner life"; a rejection draft could say "I'm disappointed".
   They now append the full rule, and a test fails if a drafting tool drops it.
-- `setup-career-kb` no longer asks for skill proficiency levels you didn't give.
+- **Privacy policy covers what ships:** the dashboard's Ask button sends what it reads to
+  Anthropic under your own account, only the newest 5 backups per file are kept, and
+  `npx` commands you run are separate from the server's one request.
 
 
 ## 2.9.7 — 2026-10-06

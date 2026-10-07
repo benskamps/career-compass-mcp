@@ -58,8 +58,15 @@ Program Management, Cross-functional Team Leadership, Executive Stakeholder Mana
 - Jamie Park, CEO, Brightline Software (Skip-level manager): "When we were acquired, Alex was the reason our largest accounts stayed calm. She knew each stakeholder personally and had the credibility to make a difficult transition feel seamless.
 " (on Reference letter, provided for applications)
 
+## My story (saved narrative)
+None saved yet. If the draft needs one of these topics and it isn't here (why I'm looking, why I left, a gap, a switch, work authorization, notice period), use a [confirm: ...] placeholder or ask me once, then offer to save my answer to `narrative` with save_career_section.
+
+## Story bank
+No saved stories yet. For each new story you write, offer once to save it to `stories`. After the round, offer to record which stories I told and to whom: with my OK, call save_career_section with section `stories` and the full list, adding a usedWith entry { applicationId, company, round, interviewer, date } to each story told.
+
 ## Recent Career Signals (from your journal — 5 of 5)
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
+The first 2 entries are about Veridian Health.
 
 - 2026-06-06 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
 - 2026-05-30 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
@@ -80,7 +87,7 @@ Generate complete interview prep tailored to a final at Veridian Health:
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
 ### 2. STAR Stories
-Build each one from a real achievement in the Career KB, written out in full. For each story, provide:
+Start from the story bank: where a saved story fits a likely question, use it verbatim and say it is a saved one. Only then build new ones, each from a real achievement in the Career KB, written out in full, and offer once to save the new ones to `stories`. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
@@ -126,6 +133,7 @@ Before section 1, give me a three-line summary: the one story to lead with, the 
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- Journal entries marked as Claude's inference are hypotheses: never state them as facts about me.
 - The name on an email or document I paste is mine (people apply under nicknames and married names). Don't compare it with an account or system name.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.

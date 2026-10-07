@@ -42,6 +42,9 @@ Classify this email and extract structured data:
 - Which application does this match? (match against known companies: Veridian Health, Meridian Logistics Group, Novare Capital Partners, Canopy Analytics, Stratos Cloud, Brightpath Health, Apex Consulting Group, Lumen Digital)
 - What status update should be made?
 - What follow-up action is needed and by when?
+- Write the change as a proposed `pipeline_update` call (application id + parameters) for the user to approve; do not run it. Use these exact parameter names:
+  - **Offer:** `status: "offer"`, `offerBaseSalary`, `offerBonus`, `offerEquity`, `offerCurrency`, `offerStartDate`, `offerExpiresDate` (dates as YYYY-MM-DD), `offerNotes` for anything else the offer states. Fill each from the email's own words; for one the email doesn't state, write `[confirm: ...]` instead of a value.
+  - **Interview invite:** `status: "interviewing"` (or `"screening"` for a recruiter screen), `interviewType` (one of phone_screen, behavioral, technical, panel, final, offer_call, other), `interviewDate` (YYYY-MM-DD), `interviewers` (only names the email gives). A date the email leaves open is `[confirm: date]`.
 
 ### Suggested Response Draft
 Write a brief, professional reply (3-5 sentences) appropriate for this email type. Say nothing about me, my availability, or my pay expectations that I haven't told you; use a [confirm: ...] placeholder instead.
@@ -58,6 +61,7 @@ Lead your reply with one line: what this email is and the one thing to do next. 
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- Journal entries marked as Claude's inference are hypotheses: never state them as facts about me.
 - The name on an email or document I paste is mine (people apply under nicknames and married names). Don't compare it with an account or system name.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.

@@ -2,14 +2,17 @@
   "name": "career-compass",
   "displayName": "Career Compass",
   "icon": "./.claude-plugin/icon.png",
-  "version": "2.9.7",
-  "description": "Paste a job posting and see how well you really fit. Then tailor your résumé, write the cover letter, and prep the interview without padding your history. In Claude Code and Cowork it also remembers your career history and tracks every application, on your own computer.",
+  "version": "2.9.8",
+  "description": "Paste a job posting and your resume to see how well you really fit. Then tailor your resume to that job, write the cover letter, and prep the interview without padding your history. In Claude Code and Cowork it also remembers your career history and tracks every application, on your own computer.",
   "author": {
     "name": "Ben Schippers",
     "url": "https://github.com/benskamps"
   },
   "homepage": "https://benskamps.github.io/career-compass-mcp/how-it-works/",
   "repository": "https://github.com/benskamps/career-compass-mcp",
+  "documentationUrl": "https://benskamps.github.io/career-compass-mcp/how-it-works/",
+  "supportUrl": "https://github.com/benskamps/career-compass-mcp/issues",
+  "privacyPolicyUrl": "https://benskamps.github.io/career-compass-mcp/privacy",
   "license": "MIT",
   "keywords": [
     "career",
@@ -20,7 +23,9 @@
     "interview-prep",
     "application-tracking",
     "offer-negotiation",
-    "career-change"
+    "career-change",
+    "git",
+    "developer-resume"
   ],
   "userConfig": {
     "data_path": {

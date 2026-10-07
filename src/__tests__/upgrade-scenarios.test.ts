@@ -759,11 +759,13 @@ describe("check_setup reports the dashboard", () => {
     rmSync(dataDir, { recursive: true, force: true });
   });
 
-  it("treats a dashboard that isn't running as normal, with the command to start it", async () => {
+  it("treats a dashboard that isn't running as normal, without handing over a command", async () => {
     const client = await connect();
     try {
       const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
-      expect(out).toMatch(/career-compass-mcp@\d+\.\d+\.\d+\S* dashboard/);
+      expect(out).toMatch(/Dashboard\*\* — Not running.*That's normal/);
+      // A dashboard nobody opened is not homework: no npx command under a green tick.
+      expect(out).not.toMatch(/career-compass-mcp@\d+\.\d+\.\d+\S* dashboard/);
       expect(out).not.toContain("❌ **Dashboard**");
     } finally {
       await client.close();

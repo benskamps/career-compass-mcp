@@ -20,8 +20,10 @@ import { isAllowedHost, hostnameOf } from "../loopback-guard.js";
  * Claude Code headless (`claude -p … --output-format stream-json`) with THIS
  * package wired in as the only MCP server, and stream the answer back into the
  * page. The click becomes a real, tool-using Claude turn; the dashboard stays
- * read-only itself — every write still happens inside Claude, through the same
- * validated tools, with the same .bak safety.
+ * read-only itself. So does Claude, by default: only the read-only tools are
+ * allowed, because a headless run has nobody to confirm a write with. The
+ * writing tools need a second opt-in, `--ask-claude-writes`, and even then go
+ * through the same validated tools, with the same .bak safety.
  *
  * Opt-in, twice: the user passes `--ask-claude`, AND the `claude` binary has to
  * be present. Without both, the page keeps its copy buttons and loses nothing.
@@ -85,7 +87,41 @@ export const ASK_SYSTEM_PROMPT =
   "Be concrete and brief: lead with the answer, then the next step. Plain prose or short bullets; no headings deeper than one level. " +
   "If you change the pipeline or the KB, say exactly what changed in one line at the end so the user knows to reload the board.";
 
-export function buildClaudeArgs(prompt: string, mcpConfigPath: string): string[] {
+/** Told to Claude when writes are off, so it proposes a change instead of failing at one. */
+export const READ_ONLY_NOTE =
+  "This dashboard session is read-only: you can't change the pipeline or the KB from here. " +
+  "When a change would help, say exactly what you'd change, and that the user can make it by asking Claude in their usual chat " +
+  "(or by restarting the dashboard with --ask-claude-writes).";
+
+/**
+ * The tools a dashboard ask may run without the user's say-so: the read-only
+ * ones, by name.
+ *
+ * Headless Claude Code (`-p`) has nobody to ask, so a tool on the allow list
+ * simply runs. Allowing the whole server meant a button click could rewrite a
+ * KB section or move an application with no confirmation anywhere, which every
+ * other surface of this product refuses to do. Writes need the separate
+ * `--ask-claude-writes` flag. A test cross-checks this list against the live
+ * server's `readOnlyHint` annotations, so a tool that starts writing cannot stay
+ * on it.
+ */
+export const READ_ONLY_TOOLS = [
+  "check_setup", "classify_email", "evaluate_offer", "explore_opportunity", "format_for_ats",
+  "generate_cover_letter", "harvest_evidence", "ingest_document", "interview_arc", "pipeline_view",
+  "prepare_interview", "research_company", "tailor_resume",
+] as const;
+
+/** The tools that write, allowed only with `--ask-claude-writes`. */
+export const WRITE_TOOLS = [
+  "capture_insight", "generate_rejection_response", "pipeline_add", "pipeline_update", "save_career_section",
+] as const;
+
+const SERVER = "mcp__career-compass";
+const qualified = (names: readonly string[]) => names.map((n) => `${SERVER}__${n}`).join(",");
+
+export function buildClaudeArgs(prompt: string, mcpConfigPath: string, opts: { allowWrites?: boolean } = {}): string[] {
+  const allowed = opts.allowWrites ? [...READ_ONLY_TOOLS, ...WRITE_TOOLS] : [...READ_ONLY_TOOLS];
+  const disallowed = ["Bash", "Edit", "Write", "MultiEdit", "NotebookEdit", "WebFetch", "WebSearch", "Agent"];
   return [
     "-p", prompt,
     "--output-format", "stream-json",
@@ -94,11 +130,12 @@ export function buildClaudeArgs(prompt: string, mcpConfigPath: string): string[]
     "--mcp-config", mcpConfigPath,
     "--setting-sources", "project",
     "--no-session-persistence",
-    // The bare server name allows every tool that server exposes (Claude Code's
-    // documented form); a trailing wildcard is not part of the grammar.
-    "--allowedTools", "mcp__career-compass",
-    "--disallowedTools", "Bash,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,Agent",
-    "--append-system-prompt", ASK_SYSTEM_PROMPT,
+    // Tools by full name: the bare server name would allow every tool it
+    // exposes, writers included. Without the writes flag the writers are also
+    // disallowed outright, so a project setting cannot re-allow them.
+    "--allowedTools", qualified(allowed),
+    "--disallowedTools", [...disallowed, ...(opts.allowWrites ? [] : WRITE_TOOLS.map((n) => `${SERVER}__${n}`))].join(","),
+    "--append-system-prompt", opts.allowWrites ? ASK_SYSTEM_PROMPT : ASK_SYSTEM_PROMPT + " " + READ_ONLY_NOTE,
   ];
 }
 
@@ -144,11 +181,13 @@ export interface RunAskOptions {
   cwd: string;
   onEvent: (e: AskEvent) => void;
   timeoutMs?: number;
+  /** Let Claude run the writing tools too (`--ask-claude-writes`). Off by default. */
+  allowWrites?: boolean;
 }
 
 /** Spawn Claude Code for one prompt and forward its events. Resolves when the child exits. */
 export function runAsk(opts: RunAskOptions): { child: ChildProcess; finished: Promise<number | null> } {
-  const args = [...opts.cmd.args, ...buildClaudeArgs(opts.prompt, opts.mcpConfigPath)];
+  const args = [...opts.cmd.args, ...buildClaudeArgs(opts.prompt, opts.mcpConfigPath, { allowWrites: opts.allowWrites })];
   const child = spawn(opts.cmd.command, args, {
     cwd: opts.cwd,
     stdio: ["ignore", "pipe", "pipe"],
@@ -212,7 +251,7 @@ export function isAllowedOrigin(origin: string | undefined): boolean {
   } catch { return false; }
 }
 
-export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcpConfigPath?: string; timeoutMs?: number }): AskBridge {
+export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcpConfigPath?: string; timeoutMs?: number; allowWrites?: boolean }): AskBridge {
   const token = randomBytes(24).toString("hex");
   const mcpConfigPath = opts.mcpConfigPath ?? writeMcpConfig(opts.dataDir);
   let inFlight = false;
@@ -241,7 +280,7 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
       "x-accel-buffering": "no",
     });
     const { child, finished } = runAsk({
-      prompt, cmd: opts.cmd, mcpConfigPath, cwd: opts.dataDir, timeoutMs: opts.timeoutMs,
+      prompt, cmd: opts.cmd, mcpConfigPath, cwd: opts.dataDir, timeoutMs: opts.timeoutMs, allowWrites: opts.allowWrites,
       onEvent: (ev) => {
         send(res, ev);
         // The operator's terminal gets the receipt (time, and the API-equivalent

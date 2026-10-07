@@ -125,6 +125,60 @@ export const Profile = z.object({
   openToRemote: z.boolean().optional(),
   openToRelocation: z.boolean().optional(),
   noticePeriod: z.string().optional().describe("e.g. '2 weeks', 'immediately'"),
+  weeklyPace: z.number().int().min(1).max(100).optional()
+    .describe("Applications per week the user wants to send; /today shows progress against it"),
+});
+
+// ─── Narrative, stories, people (optional sections, each its own file) ─────────
+
+/**
+ * "Your story, once": the answers the truth rule refuses to invent (why you
+ * left, the gap, the switch, work authorization), saved in the user's own words
+ * so every draft can quote them instead of asking again or leaving a placeholder.
+ */
+export const NarrativeTopic = z.enum([
+  "why_looking", "why_left", "gap", "switch", "work_authorization",
+  "notice_period", "optimizing_for", "other",
+]);
+export const NarrativeEntry = z.object({
+  topic: NarrativeTopic,
+  text: z.string().describe("The user's own words, quoted verbatim in drafts"),
+  updated: z.string().optional().describe("YYYY-MM-DD"),
+});
+
+/** Where and to whom a story has been told, so a panel never hears it twice. */
+export const StoryUse = z.object({
+  applicationId: z.string().optional(),
+  company: z.string().optional(),
+  round: z.string().optional(),
+  interviewer: z.string().optional(),
+  date: z.string().optional(),
+});
+/** A rehearsed interview story, kept so prep reuses it instead of rewriting it. */
+export const Story = z.object({
+  title: z.string(),
+  situation: z.string().optional(),
+  task: z.string().optional(),
+  action: z.string().optional(),
+  result: z.string().optional(),
+  text: z.string().optional().describe("The full story as the user tells it, if not split into STAR parts"),
+  sourceCompany: z.string().optional(),
+  sourceRole: z.string().optional(),
+  themes: z.array(z.string()).default([]),
+  usedWith: z.array(StoryUse).default([]),
+});
+
+/** A person in the user's network, kept apart from any one application. */
+export const Person = z.object({
+  name: z.string(),
+  howWeKnow: z.string().optional(),
+  company: z.string().optional(),
+  role: z.string().optional(),
+  lastContact: z.string().optional().describe("YYYY-MM-DD"),
+  offered: z.string().optional().describe("What they offered: a referral, an intro, a chat"),
+  applicationIds: z.array(z.string()).default([]),
+  reconnectEveryDays: z.number().int().min(1).optional(),
+  notes: z.string().optional(),
 });
 
 // ─── Career Journal ─────────────────────────────────────────────────────────────
@@ -166,6 +220,8 @@ export const JournalEntry = z.object({
     "ingest_document",
     "manual",
   ]).default("manual").describe("Which surface produced this entry"),
+  origin: z.enum(["user_said", "inferred"]).optional()
+    .describe("user_said: the user stated it. inferred: Claude's reading, a hypothesis that drafts never state as fact"),
 });
 
 /** The on-disk shape of `data/career/journal.yaml`: a flat, append-ordered list. */
@@ -181,6 +237,9 @@ export const CareerData = z.object({
   projects: z.array(Project).default([]),
   testimonials: z.array(Testimonial).default([]),
   journal: z.array(JournalEntry).default([]),
+  narrative: z.array(NarrativeEntry).default([]),
+  stories: z.array(Story).default([]),
+  people: z.array(Person).default([]),
 });
 
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
@@ -261,3 +320,6 @@ export type Pipeline = z.infer<typeof Pipeline>;
 export type Contact = z.infer<typeof Contact>;
 export type InterviewRound = z.infer<typeof InterviewRound>;
 export type Offer = z.infer<typeof Offer>;
+export type NarrativeEntry = z.infer<typeof NarrativeEntry>;
+export type Story = z.infer<typeof Story>;
+export type Person = z.infer<typeof Person>;

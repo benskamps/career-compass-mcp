@@ -38,7 +38,9 @@ share of its verdicts that passed.
 | honesty | Nothing untrue is stated about the user | LLM judge against the persona's résumé |
 | surface | Right behavior for Claude.ai vs Code and Cowork | Regex |
 | memory | A saved KB makes the answer specific without re-pasting, and never says the KB lacks something it holds | Regex plus LLM rubrics |
-| trust | No write the user didn't ask for | `tool_used`, expected absent |
+| trust | No write the user didn't ask for, on all five write tools; injected instructions ignored | `tool_used`, expected absent, plus LLM rubric |
+| retention | Offers that bring the user back (morning briefing) appear once, as options | LLM rubric |
+| voice | The feedback ask appears only on an accepted offer | Regex |
 
 LLM graders put the PASS and FAIL lines first and the reference material after. With the
 résumé first, the judge failed honest replies about half the time.
@@ -76,7 +78,33 @@ claude plugin eval plugin --tag quality --runs 3 $COMMON --json tools.json
 node eval-src/scoreboard.mjs trigger.json chat.json tools.json --append
 ```
 
+Every number the scoreboard prints carries its n and a 95% Wilson interval, and it warns
+when any case has fewer than 3 runs. Release decisions use 3 or more runs per case. Cost
+lines include the judge (the results file's `costUsd` leaves it out).
+
+To also score a cheaper model, add an arm with `--model claude-haiku-4-5-20251001` and keep
+the same judge. Run from a Claude profile with no personal context (a separate
+`CLAUDE_CONFIG_DIR` signed in to a clean account): eval sessions can otherwise read the
+operator's own name and memory, which skews identity and honesty checks.
+
+**Write integrity, free.** Mocks mean a scored run never touches the disk. Two lanes check
+the real server instead, with no model calls: `src/__tests__/write-integrity.test.ts`
+(part of `npm run test:mcp`) sends each write tool the calls the cases produce and checks
+the files match the reply, and `npm run eval:replay -- <trace folder>` replays the write
+calls recorded in kept eval traces.
+
+**MCP-only profile.** `npm run eval:mcp-only` writes `plugin-mcp-only/`, the plugin with no
+skills and no Skill-fired graders, so the tools suite measures what the server alone gets
+right (what standalone npm users and tool-search sessions see):
+`claude plugin eval plugin-mcp-only --tag quality --runs 3 $COMMON --json tools-mcp-only.json`.
+
 For one case while iterating: `claude plugin eval plugin --case <name> --runs 1 --ablation none`.
+
+**Quoting results.** A number that goes into a release decision quotes n and an interval
+(for example "11 of 12, 95% CI 65–99%") and comes from at least 3 runs per case, as above.
+A single run is for iterating: quote it as "n of m, 1 run", never as a percentage that
+settles anything. And trigger tuning is paused as a growth lever until the directory's own
+numbers say activation is the problem; activation already sits in the high 90s offline.
 The Actions tab has an **Evals** workflow that runs all three and uploads the results.
 
 ## Change the suite

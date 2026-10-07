@@ -61,7 +61,7 @@
 <header>
   <p class="eyebrow">Career Compass MCP</p>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated 2026-09-26 · applies to all versions of the MCP server and its bundled local dashboard</p>
+  <p class="meta">Last updated 2026-10-07 · applies to the <code>career-compass-mcp</code> MCP server, its bundled local dashboard, and the Career Compass plugin&#39;s skills in every Claude app, all versions.</p>
 </header>
 
 <div class="lede">
@@ -69,9 +69,14 @@
 career history and job pipeline are plain YAML files in a directory you choose. Nothing is
 uploaded, and there is nothing for us to collect, store, sell, or hand over — because your
 data never reaches us in the first place.</p>
-<p>There is exactly one outbound network request in the whole package, and only when you ask
-for it: the <code>check_setup</code> tool asks the public npm registry whether a newer version has
-been released. It sends nothing about you. Details under <a href="#update-checks">Update checks</a>.</p>
+<p>The server makes one outbound network request of its own, and only when you ask for it:
+the <code>check_setup</code> tool asks the public npm registry whether a newer version has been
+released. It sends nothing about you. Details under <a href="#update-checks">Update checks</a>.
+Commands you run yourself with <code>npx</code>, such as the dashboard command <code>check_setup</code> prints,
+are separate requests: npm downloads the package, and nothing about you is sent.</p>
+<p>In claude.ai chat (web, desktop and mobile) only the plugin&#39;s skills load, as instructions
+to Claude. The server does not run there, so Career Compass stores nothing and sends
+nothing. Details under <a href="#in-claudeai-chat">In claude.ai chat</a>.</p>
 </div>
 
 <h2 id="what-data-the-software-handles">What data the software handles</h2>
@@ -89,17 +94,20 @@ which files each commit touched) to report what you measurably did there. It wri
 nothing, anywhere, and sends nothing.</li>
 </ul>
 <h2 id="where-it-is-stored">Where it is stored</h2>
-<p>In a single directory on your machine, set by the <code>CAREER_DATA_PATH</code> environment variable.
-The default is <code>~/.career-compass/</code>. Files are ordinary YAML you can open, edit, back up,
+<p>In a single directory on your machine, set by the <code>CAREER_DATA_PATH</code> environment variable
+(in the plugin, the <strong>Career data folder</strong> setting). The default is <code>~/.career-compass/</code>. Files are ordinary YAML you can open, edit, back up,
 or delete with any text editor. While a write is in progress the folder also briefly holds a
 <code>.write-claim</code> file naming the process doing the writing, so a second Career Compass process
 (a dashboard, or a server registered in two clients) refuses rather than overwriting it. It is
 deleted when the write finishes, contains no personal data, and is safe to remove by hand.
 Each write also leaves a timestamped <code>.bak</code> copy of the
-previous version in the same directory.</p>
+previous version in the same directory. Only the newest 5 <code>.bak</code> files per data file are
+kept; older ones are deleted automatically on the next write. Backups you make by hand are
+never touched.</p>
 <p><strong>We never receive this data.</strong> There is no Career Compass account, no cloud sync, no
-backup service, and no telemetry or analytics of any kind. The only request the software
-ever makes to the internet is the version check described below, which carries none of it.</p>
+backup service, and no telemetry or analytics of any kind. The only request the server
+makes to the internet on its own is the version check described below, which carries none
+of it.</p>
 <h2 id="update-checks">Update checks</h2>
 <p>The <code>check_setup</code> tool reports the health of your install, and part of that report is
 whether you are running the current release. To answer that it makes a single HTTPS GET to
@@ -127,12 +135,15 @@ an error and it never blocks the rest of the report.</li>
 </ul>
 <p>The npm registry is operated by npm, Inc. (GitHub/Microsoft) under its own privacy policy:
 <a href="https://docs.npmjs.com/policies/privacy">https://docs.npmjs.com/policies/privacy</a></p>
+<p>Career Compass runs nothing on a schedule. Any schedule, such as a morning briefing, is
+one you create yourself in your own Claude app; it runs locally on your computer and only
+reads.</p>
 <p>Separately, <code>check_setup</code> also checks whether your local dashboard is running by requesting
 <code>http://127.0.0.1:&lt;port&gt;/</code>. That is a loopback request to your own machine; it never
 reaches the network.</p>
 <h2 id="who-else-sees-it">Who else sees it</h2>
 <p>Career Compass is an MCP server, so it answers a client you connect it to — normally Claude
-Desktop or Claude Code. When you ask Claude to tailor a resume or prep an interview, the
+Code, or Cowork on your computer. When you ask Claude to tailor a resume or prep an interview, the
 relevant parts of your career data are passed to that client, and from there to the model
 provider under <strong>their</strong> privacy policy, not this one:</p>
 <ul>
@@ -144,7 +155,25 @@ Career Compass itself sends none of your data anywhere — its one outbound requ
 npm registry about a version number and carries nothing else.</p>
 <p>The bundled local dashboard (<code>career-compass-mcp dashboard</code>) serves pages from
 <code>127.0.0.1</code> on your own machine, renders them with no external assets, and makes no
-network calls.</p>
+network calls. Starting it means running it, usually with <code>npx</code>, which downloads the
+package from the npm registry as described above.</p>
+<p>If you start the dashboard with <code>--ask-claude</code>, its buttons run Claude Code on your
+computer. Claude Code sends the Career KB content it reads to Anthropic, under your own
+Claude account and billing, like any other Claude Code session. It is off unless you pass
+the flag, and read-only unless you start it with <code>--ask-claude-writes</code>.</p>
+<h2 id="in-claudeai-chat">In claude.ai chat</h2>
+<p>The Career Compass plugin is also offered in claude.ai chat on the web, desktop and mobile.
+There, only its skills load: plain-text instructions that tell Claude how to do a fit
+check, tailor a résumé, or prep an interview from what you paste into the conversation. The
+MCP server above does not run in chat, so:</p>
+<ul>
+<li>nothing is written to your computer or anywhere else by Career Compass, and nothing
+carries over between chats;</li>
+<li>Career Compass makes no network requests, not even the update check;</li>
+<li>what you paste, and Claude&#39;s replies, are part of your Claude conversation, handled by
+Anthropic under its privacy policy (<a href="https://www.anthropic.com/legal/privacy">https://www.anthropic.com/legal/privacy</a>) exactly as
+any other chat is. We never see it.</li>
+</ul>
 <h2 id="untrusted-text">Untrusted text</h2>
 <p>Job postings, emails, and documents you paste in are third-party content. Career Compass
 wraps them in a clearly-marked, nonce-delimited block before they reach the model, so text
@@ -153,8 +182,9 @@ risk that a malicious posting can direct the model to act against you, but no su
 is absolute. Treat pasted content from unknown sources with the same care you would apply
 anywhere else.</p>
 <h2 id="data-retention">Data retention</h2>
-<p>Your files stay on your disk until you delete them. There is no retention period on our
-side because we hold nothing. To remove everything, delete your <code>CAREER_DATA_PATH</code>
+<p>Your files stay on your disk until you delete them. The one exception is backups: only the
+newest 5 <code>.bak</code> files per data file are kept, and older ones are deleted automatically.
+There is no retention period on our side because we hold nothing. To remove everything, delete your <code>CAREER_DATA_PATH</code>
 directory (including the <code>.bak</code> files and any leftover <code>.write-claim</code>) and uninstall the package.</p>
 <h2 id="third-party-sharing">Third-party sharing</h2>
 <p>None. We do not share, sell, rent, or disclose your data, because we never receive it.

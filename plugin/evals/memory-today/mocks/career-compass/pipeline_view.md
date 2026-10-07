@@ -13,4 +13,5 @@
 ## Coming up
 - 📅 Follow-up due tomorrow — Stratos Cloud / Program Director (2026-06-17, ID: demo-005)
 
+_Week 6 of your search_
 _8 tracked · 6 active · 2 in conversation · 1 with an offer · 71% response rate_

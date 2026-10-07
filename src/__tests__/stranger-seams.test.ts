@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -50,24 +50,9 @@ afterEach(() => {
   rmSync(dataDir, { recursive: true, force: true });
 });
 
-describe("S1 — the onboarding prompt uses the schema's own field names", () => {
-  it("setup-career-kb names role/startDate/endDate/'present' and object achievements, never 'title'", async () => {
-    const { client, server } = await connect();
-    try {
-      const { messages } = await client.getPrompt({ name: "setup-career-kb", arguments: {} });
-      const text = (messages[0].content as { text: string }).text;
-      const experienceLine = text.split("\n").find((l) => l.includes("**Experience**"))!;
-      expect(experienceLine).toContain("`role`");
-      expect(experienceLine).toContain("`startDate`");
-      expect(experienceLine).toContain("'present'");
-      expect(experienceLine).toContain("not plain strings");
-      expect(experienceLine).not.toContain("company, title"); // the wording that taught the wrong field
-    } finally {
-      await client.close();
-      await server.close();
-    }
-  });
-
+// The `setup-career-kb` prompt this guarded was retired (the /start skill owns
+// onboarding); the schema half of the seam still holds.
+describe("S1 — onboarding uses the schema's own field names", () => {
   it("an experience entry written the way the prompt describes it is accepted", async () => {
     const { client, server } = await connect();
     try {
@@ -148,6 +133,9 @@ describe("S4 — one spelling of the data folder, everywhere", () => {
 
 describe("S5 — the git tip is not a bash-only && chain", () => {
   it("check_setup prints three plain git lines", async () => {
+    // A populated install: a fresh one gets the three-line form, with no git tip.
+    mkdirSync(path.join(dataDir, "career"), { recursive: true });
+    writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: Alex Rivera\nsummary: Ops.\n", "utf-8");
     const { client, server } = await connect();
     try {
       const setup = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));

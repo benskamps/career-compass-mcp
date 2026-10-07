@@ -227,3 +227,122 @@ describe("docs truth: the README describes the real surface", () => {
     ).toEqual([]);
   });
 });
+
+// ── The front door ───────────────────────────────────────────────────────────
+// The pages a stranger lands on from the directory card (how-it-works, the
+// segment pages) and from GitHub (the README) once promised "7–10 STAR
+// stories", a "Fit score: 8.1/10" and "18 tools · 7 prompts" for months after
+// the product stopped doing any of it. These checks fail on that drift.
+
+const PKG_VERSION_STR = (
+  JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf-8")) as { version: string }
+).version;
+
+const FRONT_DOOR = [
+  "README.md",
+  "docs/how-it-works/index.html",
+  "docs/for/laid-off/index.html",
+  "docs/for/career-switchers/index.html",
+  "docs/for/new-grads/index.html",
+  "plugin/README.md",
+];
+
+/** Claims the product no longer makes, each with why it is wrong. */
+const STALE_CLAIMS: { pattern: RegExp; why: string }[] = [
+  { pattern: /\b7\s*(?:[–-]|to)\s*10\s+STAR/i, why: "prepare_interview writes three to five STAR stories by default" },
+  { pattern: /\b10\s*(?:[–-]|to)\s*15\s+likely questions/i, why: "prepare_interview asks for 8–12 likely questions" },
+  { pattern: /\b\d+(?:\.\d+)?\s*\/\s*10\b|\bout of 10\b|\bfit score:/i, why: "fit is a verdict (strong fit, stretch, long shot), not a score out of 10" },
+  { pattern: /\bis not an 8\b/i, why: "fit is a verdict, not a number" },
+  { pattern: /\b(?:7|seven) prompts\b/i, why: "three MCP prompts were retired" },
+  { pattern: /ATS-optimi[sz]ed/i, why: "format_for_ats reformats; nothing is 'optimized' for a parser" },
+];
+
+export function staleClaims(text: string): string[] {
+  return STALE_CLAIMS.filter((c) => c.pattern.test(text)).map((c) => `${c.pattern} (${c.why})`);
+}
+
+function semverCmp(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if (pa[i] !== pb[i]) return pa[i] - pb[i];
+  return 0;
+}
+
+/** Version strings on a page that are older than the release in package.json. */
+export function olderVersions(text: string, current: string): string[] {
+  return [...text.matchAll(/(?<![\d.])\d+\.\d+\.\d+(?![\d.])/g)]
+    .map((m) => m[0])
+    .filter((v) => semverCmp(v, current) < 0);
+}
+
+describe("docs truth: the front door describes this release", () => {
+  it.each(FRONT_DOOR)("%s makes none of the retired claims", (rel) => {
+    const text = readFileSync(path.join(repoRoot, rel), "utf-8");
+    expect(staleClaims(text), `${rel} still says something the product stopped doing`).toEqual([]);
+  });
+
+  // plugin/README.md pins are checked to equal the release in plugin-bundle-truth.
+  it.each(FRONT_DOOR.filter((f) => f !== "plugin/README.md"))(
+    "%s names no version older than package.json",
+    (rel) => {
+      const text = readFileSync(path.join(repoRoot, rel), "utf-8");
+      expect(
+        olderVersions(text, PKG_VERSION_STR),
+        `${rel} names a version older than ${PKG_VERSION_STR}. Update it with the release.`,
+      ).toEqual([]);
+    },
+  );
+
+  it("how-it-works and the README state the live tool, prompt and resource counts", async () => {
+    const original = process.env.CAREER_DATA_PATH;
+    process.env.CAREER_DATA_PATH = EXAMPLE_DATA_PATH;
+    const server = createServer();
+    const client = new Client({ name: "docs-truth-counts", version: "0.0.0" });
+    const [c, s] = InMemoryTransport.createLinkedPair();
+    await Promise.all([server.connect(s), client.connect(c)]);
+    const tools = (await client.listTools()).tools.length;
+    const prompts = (await client.listPrompts()).prompts.length;
+    // Fixed resources only; the per-application template lists one entry per tracked role.
+    const resources = (await client.listResources()).resources.filter((r) => /^[a-z]+:\/\/[a-z]+$/.test(r.uri)).length;
+    await client.close();
+    await server.close();
+    if (original === undefined) delete process.env.CAREER_DATA_PATH;
+    else process.env.CAREER_DATA_PATH = original;
+
+    const page = readFileSync(path.join(repoRoot, "docs/how-it-works/index.html"), "utf-8");
+    for (const claim of [`${tools} tools`, `${prompts} prompts`, `${resources} resources`]) {
+      expect(page, `how-it-works should say "${claim}"`).toContain(claim);
+      expect(README, `README should say "${claim}"`).toContain(claim);
+    }
+  });
+
+  it("how-it-works carries the social-card meta, and the card image exists", () => {
+    const page = readFileSync(path.join(repoRoot, "docs/how-it-works/index.html"), "utf-8");
+    for (const tag of ['property="og:title"', 'property="og:description"', 'property="og:image"', 'name="twitter:card"']) {
+      expect(page).toContain(tag);
+    }
+    expect(page).toContain("https://benskamps.github.io/career-compass-mcp/how-it-works/og.png");
+    expect(existsSync(path.join(repoRoot, "docs/how-it-works/og.png"))).toBe(true);
+  });
+
+  it("every example on the front-door pages is labelled as sample data", () => {
+    for (const rel of FRONT_DOOR.filter((f) => f.startsWith("docs/"))) {
+      const text = readFileSync(path.join(repoRoot, rel), "utf-8");
+      expect(text, `${rel} shows a fit check without saying it is sample data`).toMatch(/Example on sample data/);
+    }
+  });
+
+  it("negative control: the claims that used to ship are caught", () => {
+    expect(staleClaims("7–10 STAR stories from your facts")).toHaveLength(1);
+    expect(staleClaims("Claude: Fit score: 8.1/10. Here's why")).toHaveLength(1);
+    expect(staleClaims("18 tools · 7 prompts · 9 resources")).toHaveLength(1);
+    expect(staleClaims("A role that misses your floor is not an 8.")).toHaveLength(1);
+    expect(staleClaims("three to five STAR stories; a verdict, not a score")).toEqual([]);
+  });
+
+  it("negative control: an older version is caught and the current one is not", () => {
+    expect(olderVersions("captured on 2.7.0, checked against 2.9.7", "2.9.7")).toEqual(["2.7.0"]);
+    expect(olderVersions("career-compass-mcp 2.9.7", "2.9.7")).toEqual([]);
+    expect(olderVersions("v2.10.0", "2.9.7")).toEqual([]);
+  });
+});

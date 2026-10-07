@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "career-compass-mcp",
   "display_name": "Career Compass",
-  "version": "2.9.7",
+  "version": "2.9.8",
   "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
-  "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, score your fit, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The whole package makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and only happens when you ask for it (checkForUpdates is off by default). Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (pipeline KPIs, a kanban board by stage with a per-card detail drawer, a company/role filter, a next-actions panel for overdue follow-ups and upcoming interviews, and a stage-distribution chart) that re-reads your YAML on every request.",
+  "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, give an honest fit verdict, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The server itself makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and only happens when you ask for it (checkForUpdates is off by default). Commands you run yourself, such as npx career-compass-mcp dashboard, download the package from npm. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (pipeline KPIs, a kanban board by stage with a per-card detail drawer, a company/role filter, a next-actions panel for overdue follow-ups and upcoming interviews, and a stage-distribution chart) that re-reads your YAML on every request.",
   "author": {
     "name": "Ben Schippers",
     "url": "https://github.com/benskamps"
@@ -36,7 +36,7 @@
   "tools": [
     {
       "name": "explore_opportunity",
-      "description": "Judge how well the user fits one job posting, using their saved Career KB and stated preferences (salary floor, remote or relocation, notice period). Returns a verdict (Strong fit, Stretch, or Long shot) with a score, requirement-by-requirement evidence, the top gaps and how to address them, and talking points; if the user pastes the job board's own match label, it agrees or disagrees with it explicitly. Use it whenever the user pastes a posting and asks whether to apply. With an empty Career KB it says so, so judge from a pasted r\u00e9sum\u00e9 instead. Writes nothing."
+      "description": "Judge how well the user fits one job posting, using their saved Career KB and stated preferences (salary floor, remote or relocation, notice period). Returns a verdict (Strong fit, Stretch, or Long shot) with a score, requirement-by-requirement evidence, the top gaps and how to address them, and talking points; if the user pastes the job board's own match label, it agrees or disagrees with it explicitly. Use it whenever the user pastes a posting and asks whether to apply. Before anything is saved, pass the r\u00e9sum\u00e9 they pasted as `resume` and the verdict works from that. Writes nothing."
     },
     {
       "name": "research_company",
@@ -44,27 +44,27 @@
     },
     {
       "name": "tailor_resume",
-      "description": "Write a r\u00e9sum\u00e9 tailored to one job posting from the user's saved Career KB: the posting's vocabulary, the most relevant real achievements first, nothing invented, and [confirm: ...] placeholders where a fact is missing. Returns the r\u00e9sum\u00e9 text first, then a keyword match report. Needs a saved Career KB; when the user has only pasted a r\u00e9sum\u00e9, tailor from that directly. Use format_for_ats afterwards for a specific applicant system's fields. Writes nothing."
+      "description": "Write a r\u00e9sum\u00e9 tailored to one job posting from the user's saved Career KB: the posting's vocabulary, the most relevant real achievements first, nothing invented, and [confirm: ...] placeholders where a fact is missing. Returns the r\u00e9sum\u00e9 text first, then a keyword match report. Use it when the user wants a r\u00e9sum\u00e9 for a specific posting. Before anything is saved, pass the r\u00e9sum\u00e9 they pasted as `resume` and it tailors from that. Use format_for_ats afterwards for a specific applicant system's fields. Writes nothing."
     },
     {
       "name": "generate_cover_letter",
-      "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing."
+      "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing."
     },
     {
       "name": "format_for_ats",
-      "description": "Reformat r\u00e9sum\u00e9 text the user already has for one applicant tracking system (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): plain-text sections ready to paste field by field, with typical length limits flagged. Reformats only, never rewrites content; use tailor_resume to change what the r\u00e9sum\u00e9 says. Writes nothing."
+      "description": "Reformat r\u00e9sum\u00e9 text the user already has into clean, parse-safe plain text for an applicant tracking system (Workday, Greenhouse, Lever, LinkedIn, iCIMS, Taleo, SmartRecruiters, or generic): standard headings, consistent dates, sections ready to paste field by field, and long sections flagged (limits vary by employer). Use it when the user is about to paste a r\u00e9sum\u00e9 into an application form. Reformats only, never rewrites content; use tailor_resume to change what the r\u00e9sum\u00e9 says. Writes nothing."
     },
     {
       "name": "pipeline_view",
-      "description": "Read the job application pipeline. action \"next_actions\" answers \"what should I work on?\" with a ranked digest led by one start-here move; \"list\" shows applications (filter by status or priority); \"stats\" gives funnel and response rates; \"get\" fetches one application by id. Read-only: never modifies anything."
+      "description": "Read the job application pipeline. action \"next_actions\" answers \"what should I work on?\" with a ranked digest led by one start-here move; \"list\" shows applications (filter by status or priority); \"stats\" gives funnel and response rates, plus any pattern the user's own numbers support; \"get\" fetches one application by id; \"calendar\" returns upcoming interviews, follow-up dates and offer deadlines as .ics text for the user to save and open in their calendar. Read-only: never modifies anything, and the .ics is returned, not written."
     },
     {
       "name": "pipeline_add",
-      "description": "Add one job application to the pipeline. Creates a new record; never modifies an existing one. Use pipeline_update to change an application already being tracked."
+      "description": "Add one job application to the pipeline. Writes one new record; never modifies an existing one. If the same company and role are already tracked, it writes nothing and returns the existing id instead (use pipeline_update to change that one). Use this when the user applies to, or wants to track, a role not yet on the board."
     },
     {
       "name": "pipeline_update",
-      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, or record an offer and its answer deadline. Overwrites the fields you supply and leaves the rest untouched."
+      "description": "Update one application already in the pipeline: change its status, add a note, set a follow-up date, record a contact, log an interview round and its outcome, record an offer and its answer deadline, or note which r\u00e9sum\u00e9 version was sent. Writes: overwrites the fields you supply and leaves the rest untouched. Use after the user confirms the change."
     },
     {
       "name": "classify_email",
@@ -72,15 +72,15 @@
     },
     {
       "name": "prepare_interview",
-      "description": "Prep the user for one upcoming interview: an opening pitch, STAR stories built from their real Career KB, likely questions for that round, questions to ask, and the concerns to get ahead of. Finds the application by id or company name and uses its posting, rounds, and contacts. For a later round in a process already under way, call interview_arc too so the prep doesn't repeat ground covered. Writes nothing."
+      "description": "Prep the user for one upcoming interview: an opening pitch, STAR stories (saved ones from their story bank first, skipping any this company or interviewer already heard), likely questions for that round, questions to ask, and the concerns to get ahead of, quoting their saved narrative where it applies. Finds the application by id or company name and uses its posting, rounds, and contacts. For a later round in a process already under way, call interview_arc too so the prep doesn't repeat ground covered. Writes nothing."
     },
     {
       "name": "interview_arc",
-      "description": "For a user already partway through one company's interviews: reconstruct the process so far (rounds done, what each surfaced, threads left open) from the pipeline, the journal, and their notes, then project what the next round will probe and how to prepare without repeating covered ground. Use prepare_interview instead for a first interview. Writes nothing."
+      "description": "For a user already partway through one company's interviews: reconstruct the process so far (rounds done, what each surfaced, threads left open, which saved stories each round already heard) from the pipeline, the journal, the story bank, and their notes, then project what the next round will probe and how to prepare without repeating covered ground. Use prepare_interview instead for a first interview. Writes nothing."
     },
     {
       "name": "evaluate_offer",
-      "description": "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their current pay, stated targets, other offers, and any market data they supply, then what to negotiate and the exact words. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing."
+      "description": "Analyze a job offer the user has received: total compensation year one and fully vested, how it compares to their current pay, stated targets, other offers (including live offers already recorded in their pipeline, side by side), and any market data they supply, then what to negotiate and the exact words. Use it when the user has an offer in hand. Benchmarks come only from data the user gives; the server never fetches salary data. Writes nothing; when the offer's deadline isn't recorded it suggests saving it with pipeline_update."
     },
     {
       "name": "ingest_document",
@@ -92,11 +92,11 @@
     },
     {
       "name": "capture_insight",
-      "description": "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and r\u00e9sum\u00e9s read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, or an offer decision, and save only what the user said, with their OK."
+      "description": "Append one lasting takeaway to the user's career journal: what an interview surfaced, why an offer felt right or wrong, the pattern behind a rejection, or fresh proof of a skill. Later fit checks, interview prep, and r\u00e9sum\u00e9s read these back. Writes one new entry and never changes existing ones. Offer it after a debrief, a rejection, or an offer decision, and save only with the user's OK. Set origin to user_said for what they said, or inferred for your own reading, which drafts then treat as a hypothesis."
     },
     {
       "name": "save_career_section",
-      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. A save that would drop stored entries or achievements is refused and names them, unless `replace` is true. The previous version is kept as a timestamped .bak next to it."
+      "description": "Write one section of the Career KB to disk. This is how the Career KB gets populated \u2014 ingest_document and the resume tools only read and extract. Replaces the whole section, so send the complete list you want stored, not just new entries. A save that would drop stored entries or achievements is refused and names them, unless `replace` is true. The previous version is kept as a timestamped .bak next to it. To undo a bad save, pass `restoreFrom` with a backup name that check_setup lists instead of `data`: the current file is backed up first, then that backup is put back. Writes to disk either way; use it only with the user's OK."
     },
     {
       "name": "harvest_evidence",
@@ -104,7 +104,7 @@
     },
     {
       "name": "check_setup",
-      "description": "Health-check this Career Compass install and report everything at once: whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding comes with the one command that fixes it. Run this first whenever something seems wrong, or right after an install or upgrade."
+      "description": "Health-check this Career Compass install and report everything at once: how it is running (plugin or standalone) and its version, whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, the recent backups of each section with how to restore one, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding that needs action comes with the one step that fixes it. Run it when something seems wrong, when the user asks whether it's working, or to find a backup to restore; not on first contact. Writes nothing."
     }
   ],
   "tools_generated": false,

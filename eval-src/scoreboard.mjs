@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..");
-const AXES = ["activation", "false-fire", "first-reply", "task", "honesty", "surface", "memory", "trust"];
+const AXES = ["activation", "false-fire", "first-reply", "task", "honesty", "surface", "memory", "trust", "retention", "voice"];
 
 function latest(suite) {
   const dir = join(repo, "plugin", suite, "results");
@@ -41,6 +41,8 @@ const tally = Object.fromEntries(AXES.map((a) => [a, { pass: 0, total: 0 }]));
 const deltas = [];
 const worst = [];
 let cost = 0;
+let judgeCost = 0;
+let minRuns = Infinity;
 let version = "?";
 let model = "?";
 
@@ -50,6 +52,10 @@ for (const file of files) {
   version = result.suite?.plugins?.[0]?.version ?? version;
   for (const c of result.cases) {
     const runs = c.arms?.with ?? [];
+    if (!c.name.startsWith("trigger-")) minRuns = Math.min(minRuns, runs.length);
+    for (const arm of Object.values(c.arms ?? {})) {
+      for (const r of arm ?? []) judgeCost += r.judgeCostUsd ?? 0;
+    }
     model = c.model ?? model;
     for (const run of runs) {
       for (const g of run.graders ?? []) {
@@ -74,14 +80,37 @@ for (const file of files) {
 }
 
 const pct = ({ pass, total }) => (total ? `${Math.round((100 * pass) / total)}%` : "n/a");
+
+// 95% Wilson score interval. A percentage from a handful of verdicts is a guess,
+// so every number on the board carries its n and its interval.
+export function wilson(pass, total, z = 1.96) {
+  if (!total) return null;
+  const p = pass / total;
+  const denom = 1 + (z * z) / total;
+  const centre = (p + (z * z) / (2 * total)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / total + (z * z) / (4 * total * total))) / denom;
+  return [Math.max(0, centre - half), Math.min(1, centre + half)];
+}
+const withCi = ({ pass, total }) => {
+  const ci = wilson(pass, total);
+  if (!ci) return "n/a";
+  return `${pass}/${total} · ${pct({ pass, total })} (CI ${Math.round(100 * ci[0])}–${Math.round(100 * ci[1])}%)`;
+};
 const date = new Date().toISOString().slice(0, 10);
 
-console.log(`\nCareer Compass ${version} · ${date} · ${files.length} result file(s) · $${cost.toFixed(2)}\n`);
-console.log("| Axis | Score | Verdicts |");
-console.log("| --- | --- | --- |");
+// The results file's costUsd leaves out the judge; the true cost of a run is both.
+const totalCost = cost + judgeCost;
+console.log(`\nCareer Compass ${version} · ${date} · ${files.length} result file(s) · $${totalCost.toFixed(2)} ` +
+  `($${cost.toFixed(2)} runs + $${judgeCost.toFixed(2)} judge)\n`);
+if (minRuns < 3) {
+  console.log(`⚠ Some cases have ${minRuns} run(s). Release decisions need 3 or more runs per case; ` +
+    "quote these numbers as n of m, not as conclusions.\n");
+}
+console.log("| Axis | Passed / verdicts · score (95% CI) |");
+console.log("| --- | --- |");
 for (const a of AXES) {
   const label = a === "false-fire" ? "false fires (lower is better)" : a;
-  console.log(`| ${label} | ${pct(tally[a])} | ${tally[a].total} |`);
+  console.log(`| ${label} | ${withCi(tally[a])} |`);
 }
 if (deltas.length) {
   const mean = deltas.reduce((s, d) => s + d, 0) / deltas.length;
@@ -103,6 +132,6 @@ if (append) {
       "should-not-fire prompts where it fired anyway.\n\n" +
       `| Date | Version | ${AXES.join(" | ")} | Cost |\n| ${["---", "---", ...AXES.map(() => "---"), "---"].join(" | ")} |\n`);
   }
-  appendFileSync(board, `| ${date} | ${version} | ${AXES.map((a) => pct(tally[a])).join(" | ")} | $${cost.toFixed(2)} |\n`);
+  appendFileSync(board, `| ${date} | ${version} | ${AXES.map((a) => withCi(tally[a])).join(" | ")} | $${totalCost.toFixed(2)} |\n`);
   console.log(`\nAppended a row to ${board}`);
 }

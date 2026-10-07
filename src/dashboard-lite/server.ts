@@ -10,7 +10,7 @@ export { ALLOWED_HOSTNAMES, isAllowedHost, hostnameOf } from "../loopback-guard.
 
 export interface LiteServerOptions {
   /** When set, dashboard buttons ask Claude Code directly instead of copying a prompt. */
-  ask?: { cmd: ClaudeCommand; timeoutMs?: number };
+  ask?: { cmd: ClaudeCommand; timeoutMs?: number; allowWrites?: boolean };
 }
 
 /**
@@ -34,7 +34,7 @@ export function createLiteDashboardServer(options: LiteServerOptions = {}): Serv
   let bridge: AskBridge | null = null;
   const getBridge = (): AskBridge | null => {
     if (!options.ask) return null;
-    if (!bridge) bridge = createAskBridge({ dataDir: getDataDir(), cmd: options.ask.cmd, timeoutMs: options.ask.timeoutMs });
+    if (!bridge) bridge = createAskBridge({ dataDir: getDataDir(), cmd: options.ask.cmd, timeoutMs: options.ask.timeoutMs, allowWrites: options.ask.allowWrites });
     return bridge;
   };
   return createServer(async (req, res) => {

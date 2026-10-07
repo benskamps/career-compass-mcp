@@ -57,7 +57,11 @@ Options:
   --ask-claude     Dashboard buttons ask Claude directly (needs Claude Code installed).
                    Runs \`claude\` headless with your Career Compass data; the answer
                    streams into the page. Without it, buttons copy a prompt to paste.
-  --lite           Force the built-in dashboard (only matters in a source checkout that built the full one)
+                   Read-only: Claude can look at your pipeline and KB but not change them.
+  --ask-claude-writes
+                   Same as --ask-claude, and also lets Claude add and update applications
+                   and save to your Career KB from the dashboard, without asking first.
+  --lite          Force the built-in dashboard (only matters in a source checkout that built the full one)
 
 Your data folder is CAREER_DATA_PATH, or ~/.career-compass when that is unset.
 `);
@@ -127,7 +131,10 @@ if (!isDashboard) {
     existsSync(join(standaloneDir, ".next", "static")) && existsSync(join(standaloneDir, ".staged"));
   // --ask-claude lives in the lite dashboard, so asking for it means asking for
   // lite even in a source checkout that has the full app built.
-  const askClaudeFlag = args.includes("--ask-claude");
+  // --ask-claude-writes implies --ask-claude: it is the same bridge with the
+  // writing tools allowed as well.
+  const askWritesFlag = args.includes("--ask-claude-writes");
+  const askClaudeFlag = args.includes("--ask-claude") || askWritesFlag;
   const useLite = forceLite || askClaudeFlag || !existsSync(standalonePath) || !standaloneStaged;
 
   if (useLite) {
@@ -155,12 +162,14 @@ if (!isDashboard) {
     if (askClaude && useSample) {
       console.error("--ask-claude is off for the bundled sample: it is read-only and not yours to change.");
     }
-    const ask = askClaude && claudeCmd && !useSample ? { cmd: claudeCmd } : undefined;
+    const ask = askClaude && claudeCmd && !useSample ? { cmd: claudeCmd, allowWrites: askWritesFlag } : undefined;
     const server = await startLiteDashboard(port, undefined, { ask });
     console.error(`Lite dashboard running at http://localhost:${port}`);
     if (ask) {
       console.error("Ask Claude: ON — dashboard buttons send their question to Claude Code on this machine.");
-      console.error("  Claude reads and updates your career data only through Career Compass's own tools — no shell, no other files.");
+      console.error(ask.allowWrites
+        ? "  Claude reads and updates your career data only through Career Compass's own tools — no shell, no other files. Writes run without a confirmation step."
+        : "  Read-only: Claude reads your career data through Career Compass's own tools and changes nothing. Add --ask-claude-writes to let it update too.");
     } else if (claudeCmd && !useSample) {
       console.error("Tip: add --ask-claude and the dashboard buttons will ask Claude directly instead of copying a prompt.");
     }
