@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { loadPipeline, mutatePipeline, isCorruptDataError } from "../storage/file-store.js";
+import { loadPipeline, mutatePipeline, isCorruptDataError, loadCareerData } from "../storage/file-store.js";
+import { formatRoles } from "./career-context.js";
 import { Application, ApplicationStatus, Pipeline, STATUS_ORDER, statusRank } from "../schemas/career-schema.js";
 import { randomUUID } from "crypto";
 import { embedUntrusted } from "../untrusted.js";
@@ -550,6 +551,12 @@ export function registerPipelineTools(server: McpServer): void {
         throw error;
       }
       const companyList = [...new Set(pipeline.applications.map(a => a.company))].join(", ");
+      // The reply draft speaks for the user, and outreach usually cites their past
+      // work ("your MedFlow work caught our eye"). Without their roles the draft
+      // either asks what MedFlow is or guesses. Best-effort: an unreadable KB just
+      // leaves the section out; this tool's job is the email, not the KB.
+      let roles = "";
+      try { const career = await loadCareerData(); roles = career ? formatRoles(career, 6) : ""; } catch { roles = ""; }
 
       return {
         content: [{
@@ -561,7 +568,7 @@ ${embedUntrusted("email", emailContent)}
 
 ## Known Companies in Pipeline
 ${companyList || "None yet"}
-
+${roles ? `\n## The user's recent roles (from the Career KB)\n${roles}\n` : ""}
 ---
 
 **Instructions for Claude:**
@@ -569,7 +576,7 @@ Classify this email and extract structured data:
 
 ### Classification
 - **Type:** one of: recruiter_outreach | application_confirmation | interview_invite | technical_assessment | rejection | offer | reference_request | networking | unknown
-- **Urgency:** high (response needed today) | medium (respond within 2 days) | low (FYI only)
+- **Urgency:** high (the email names a deadline today or tomorrow) | medium (it asks for a reply, with no near deadline) | low (FYI only). Quote any deadline the email gives; don't invent one
 - **Sentiment:** positive | neutral | negative
 
 ### Extracted Data

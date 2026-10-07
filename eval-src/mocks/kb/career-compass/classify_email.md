@@ -14,6 +14,11 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Known Companies in Pipeline
 Veridian Health, Meridian Logistics Group, Novare Capital Partners, Canopy Analytics, Stratos Cloud, Brightpath Health, Apex Consulting Group, Lumen Digital
 
+## The user's recent roles (from the Career KB)
+- **Senior Program Manager @ MedFlow Health Systems** (2021-03 to present): Led enterprise-scale digital health initiatives across 14 hospital systems, managing $8M in annual program budgets and a team of 6 PMs.
+- **Operations Manager @ Apex Logistics Partners** (2018-06 to 2021-02): Managed end-to-end operations for a regional 3PL serving 120+ retail clients, overseeing warehouse operations, carrier relationships, and a team of 42.
+- **Customer Success Manager @ Brightline Software (acquired by Salesforce)** (2016-01 to 2018-05): Owned post-sale relationship for enterprise accounts in the $100K–$500K ARR range, driving adoption, expansion, and retention across a 22-account portfolio.
+
 ---
 
 **Instructions for Claude:**
@@ -21,7 +26,7 @@ Classify this email and extract structured data:
 
 ### Classification
 - **Type:** one of: recruiter_outreach | application_confirmation | interview_invite | technical_assessment | rejection | offer | reference_request | networking | unknown
-- **Urgency:** high (response needed today) | medium (respond within 2 days) | low (FYI only)
+- **Urgency:** high (the email names a deadline today or tomorrow) | medium (it asks for a reply, with no near deadline) | low (FYI only). Quote any deadline the email gives; don't invent one
 - **Sentiment:** positive | neutral | negative
 
 ### Extracted Data
@@ -53,5 +58,6 @@ Lead your reply with one line: what this email is and the one thing to do next. 
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- The name on an email or document I paste is mine (people apply under nicknames and married names). Don't compare it with an account or system name.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.

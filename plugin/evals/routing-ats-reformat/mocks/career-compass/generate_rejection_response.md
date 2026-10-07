@@ -28,7 +28,7 @@ Write a rejection response that achieves: **keep_door_open**
 - Genuine, not sycophantic
 - Brief (3-5 sentences max)
 - Memorable without being awkward
-- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews
+- Mention only what the rejection message or I have said about the process. Don't invent a conversation, an interviewer's name, or a detail of the interviews, and don't say how the process felt to me ("I enjoyed", "I'm disappointed") or what it involved unless I said so; leave a [confirm: ...] slot instead
 
 
 **For goal: keep_door_open:**
@@ -52,5 +52,6 @@ Lead with the recommended response, ready to copy; keep any commentary to one li
 - A skills or competencies list holds only skills the source names. Use the posting's wording only where it names the same skill.
 - In my voice, never invent my inner life or story: how I felt, what I used to call my work, why I am moving on, how a role changed over time, what a break was like or whether it was planned. Keep tense true: if I am between jobs or on a break, don't write that I use a tool "every day".
 - If a stronger version needs a fact you don't have, still write the full draft, and put the missing piece in a short visible placeholder such as [confirm: who used these reports?]. Never state something as fact and also ask me to confirm it; if it needs confirming, it is a placeholder. In a letter, use at most two placeholders and put any other questions after the letter.
+- The name on an email or document I paste is mine (people apply under nicknames and married names). Don't compare it with an account or system name.
 - Things I haven't told you about my situation (work authorization, why a job ended, whether a career break is over, my current equity or bonus) are open questions. Name them as gaps or ask; never assume an answer in my voice.
 - Before you send a draft, reread every sentence about me and check that you could point to its source. Cut or bracket anything you can't. Only say "I added nothing" after doing that check.
