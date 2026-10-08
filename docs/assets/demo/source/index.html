@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280, height=800">
+<title>Career Compass Demo</title>
+<!--
+  Career Compass MCP — "Do I fit this?" demo.
+  Deterministic: the page is driven only by window.seek(t) (seconds). No wall-clock.
+  All quoted text is real: the job posting (input), an excerpt of the real
+  explore_opportunity tool result, and an excerpt of Claude's real reply.
+  Cuts are marked with "…"; nothing is reworded.
+-->
+<style>
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:100 900;font-display:block;src:url(fonts/fraunces-normal-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:100 900;font-display:block;src:url(fonts/fraunces-normal-latinext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:100 900;font-display:block;src:url(fonts/fraunces-italic-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:100 900;font-display:block;src:url(fonts/fraunces-italic-latinext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:block;src:url(fonts/jetbrainsmono-normal-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:block;src:url(fonts/jetbrainsmono-normal-latinext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"JetBrains Mono";font-style:italic;font-weight:100 800;font-display:block;src:url(fonts/jetbrainsmono-italic-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+:root{
+  --paper:#f6f2ea; --paper-deep:#ece4d3; --ink:#2b2218; --ink-soft:#5a4a39;
+  --rule:#d9cdb8; --clay:#c2603c; --clay-deep:#8a3b1f; --sage:#5a6b3c; --brass:#a2894f;
+  --serif:"Fraunces", Georgia, serif; --mono:"JetBrains Mono", ui-monospace, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:800px;overflow:hidden}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+
+/* ---------- backdrop ---------- */
+#stage{position:absolute;inset:0;overflow:hidden;
+  background:
+    radial-gradient(760px 520px at 22% 8%, rgba(194,96,60,.20), rgba(194,96,60,0) 70%),
+    radial-gradient(680px 560px at 86% 92%, rgba(162,137,79,.24), rgba(162,137,79,0) 70%),
+    radial-gradient(1100px 700px at 50% 46%, #f8f4ec 0%, #efe7d8 78%, #e7dcc7 100%);
+}
+#grain{position:absolute;inset:0;opacity:.32;mix-blend-mode:multiply;pointer-events:none}
+.vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(1400px 900px at 50% 45%, rgba(0,0,0,0) 60%, rgba(60,40,20,.10) 100%)}
+
+/* ---------- window ---------- */
+#win{position:absolute;left:120px;top:44px;width:1040px;height:668px;border-radius:18px;
+  background:var(--paper);overflow:hidden;
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 1px rgba(43,34,24,.10),
+             0 2px 4px rgba(43,34,24,.06), 0 18px 40px -12px rgba(60,38,18,.28), 0 50px 90px -30px rgba(60,38,18,.30);}
+#bar{height:46px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--rule);
+  background:linear-gradient(#f9f6f0,#f3eee4);font-family:var(--mono);font-size:12px;color:var(--ink-soft);letter-spacing:.02em}
+.dots{display:flex;gap:7px;margin-right:18px}
+.dots i{width:11px;height:11px;border-radius:50%;background:var(--rule);display:block}
+#bar .title{flex:1;text-align:center;margin-right:96px}
+#bar .conn{display:flex;align-items:center;gap:7px;font-size:11.5px}
+#bar .conn b{width:7px;height:7px;border-radius:50%;background:var(--sage);display:block;box-shadow:0 0 0 3px rgba(90,107,60,.16)}
+
+#view{position:absolute;top:46px;left:0;right:0;bottom:64px;overflow:hidden}
+#view::before{content:"";position:absolute;left:0;right:0;top:0;height:22px;z-index:2;
+  background:linear-gradient(var(--paper),rgba(246,242,234,0))}
+#content{position:absolute;left:0;right:0;top:0;padding:30px 64px 40px;will-change:transform}
+
+#composer{position:absolute;left:0;right:0;bottom:0;height:64px;border-top:1px solid var(--rule);
+  display:flex;align-items:center;padding:0 22px;background:#f8f5ef}
+#composer .box{flex:1;height:38px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);
+  display:flex;align-items:center;padding:0 14px;font-family:var(--serif);font-style:italic;font-size:15px;color:#a8998a}
+#composer .send{width:38px;height:38px;border-radius:10px;margin-left:10px;background:var(--ink);opacity:.85;
+  display:flex;align-items:center;justify-content:center}
+
+.who{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+
+/* user */
+#user{display:flex;flex-direction:column;align-items:flex-end;margin-bottom:26px}
+#user .who{margin:0 4px 8px 0}
+.bubble{width:660px;background:var(--paper-deep);border:1px solid #e2d8c4;border-radius:16px 16px 4px 16px;padding:18px 22px 18px}
+.posting{position:relative;height:286px;overflow:hidden;font-size:14.5px;line-height:1.48;color:var(--ink)}
+.posting::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;background:linear-gradient(rgba(236,228,211,0),var(--paper-deep) 88%)}
+.posting .h{font-weight:600;font-size:15.5px}
+.posting .m{color:var(--ink-soft)}
+.posting p{margin-bottom:6px}
+.posting ul{list-style:none;margin:2px 0 6px}
+.posting li{padding-left:16px;position:relative}
+.posting li::before{content:"–";position:absolute;left:0;color:var(--brass)}
+.ask{margin-top:8px;padding-top:12px;border-top:1px dashed #d3c6ad;font-size:22px;font-style:italic;font-weight:500;color:var(--ink);min-height:44px}
+.caret{display:inline-block;width:2px;height:22px;background:var(--clay);vertical-align:-3px;margin-left:2px}
+
+/* tool chip */
+#tool{margin:0 0 28px 0;width:680px}
+.chip{display:inline-flex;align-items:center;gap:10px;height:38px;padding:0 14px 0 10px;border:1px solid var(--rule);border-radius:999px;background:#fbf8f2;font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+.chip .sep{color:var(--brass)}
+.chip .fn{color:var(--clay-deep);font-weight:600}
+.chip .st{color:var(--ink-soft);font-size:11.5px;margin-left:4px;display:flex;align-items:center;gap:7px}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--rule);border-top-color:var(--clay)}
+.ok{width:14px;height:14px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center}
+#panel{height:0;overflow:hidden}
+.panel-in{margin-top:10px;border:1px solid var(--rule);border-radius:12px;background:#fbf8f2;padding:14px 18px 14px;font-family:var(--mono);font-size:11.6px;line-height:1.62;color:var(--ink-soft);position:relative}
+.panel-in::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:2px;background:var(--clay);opacity:.7}
+.panel-in .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin-bottom:6px;display:flex;justify-content:space-between}
+.panel-in b{color:var(--ink);font-weight:600}
+.panel-in .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-in .gap{height:10px}
+.panel-in .k{color:var(--clay-deep)}
+
+/* reply */
+#reply .head{display:flex;align-items:center;gap:14px;margin-bottom:10px;height:26px}
+.pill{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--sage);border-radius:999px;padding:5px 12px 5px 10px;display:inline-flex;align-items:center;gap:8px;transform-origin:left center}
+.pill i{width:7px;height:7px;border-radius:50%;background:#e9efd9;display:block}
+.lead{font-size:19px;line-height:1.5;color:var(--ink);max-width:830px}
+.lead .big{display:block;font-style:italic;font-weight:600;font-size:46px;line-height:1.1;letter-spacing:-.01em;color:var(--clay-deep);margin-bottom:6px}
+.sec{margin-top:26px;max-width:860px}
+.sh{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.sh::after{content:"";flex:1;height:1px;background:var(--rule)}
+.body{font-size:16px;line-height:1.55;color:var(--ink)}
+.body b{font-weight:650}
+.body ol,.body ul{list-style:none}
+.body li{position:relative;padding-left:28px;margin-bottom:7px}
+.body ol li .n{position:absolute;left:0;top:1px;font-family:var(--mono);font-size:12px;color:var(--brass)}
+.body ul li::before{content:"";position:absolute;left:6px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--clay)}
+.cut{color:var(--brass)}
+
+.comp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fig{border:1px solid var(--rule);border-radius:12px;padding:10px 16px;background:#fbf8f2}
+.fig .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.fig .v{font-size:24px;font-weight:550;letter-spacing:-.01em;margin-top:2px}
+.fig.post .v{color:var(--clay-deep)}
+.bandbar{position:relative;height:30px;margin:2px 0 12px}
+.bandbar .axis{position:absolute;left:0;right:0;top:14px;height:1px;background:var(--rule)}
+.bandbar .you,.bandbar .them{position:absolute;height:8px;border-radius:5px}
+.bandbar .you{top:7px;background:rgba(90,107,60,.35);border:1px solid var(--sage)}
+.bandbar .them{top:17px;background:rgba(194,96,60,.35);border:1px solid var(--clay)}
+.bandbar .bl{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;line-height:14px}
+.bandbar .tk{position:absolute;top:0;font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);transform:translateX(-50%)}
+
+.verdict{margin-top:26px;max-width:860px;border:1px solid var(--rule);border-left:4px solid var(--sage);border-radius:12px;background:#fbf8f2;padding:16px 22px}
+.verdict .body{font-size:16px}
+.verdict .go{font-style:italic;font-weight:650;font-size:30px;color:var(--sage);display:block;margin-bottom:4px}
+
+/* footer caption */
+#cap{position:absolute;left:0;right:0;bottom:30px;display:flex;justify-content:center;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);letter-spacing:.02em}
+#cap .d{color:var(--brass)}
+
+.w{opacity:0}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="grain" width="1280" height="800" xmlns="http://www.w3.org/2000/svg">
+    <filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .26  0 0 0 0 .16  0 0 0 .55 0"/></filter>
+    <rect width="100%" height="100%" filter="url(#n)"/>
+  </svg>
+  <div class="vignette"></div>
+
+  <div id="win">
+    <div id="bar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="title">New conversation</div>
+      <div class="conn"><b></b>MCP · career-compass</div>
+    </div>
+
+    <div id="view"><div id="content">
+
+      <!-- 1. user -->
+      <div id="user">
+        <div class="who">You</div>
+        <div class="bubble">
+          <div class="posting">
+            <p class="h">Director of Operations — Ledgerline (Series C payments platform, 600 people)</p>
+            <p class="m">Remote (US). $165,000–$190,000 + equity.</p>
+            <p>You'll own operational excellence across onboarding, support and risk ops as we scale merchant volume 3x.</p>
+            <p>Must have:</p>
+            <ul>
+              <li>7+ years leading operations or program teams</li>
+              <li>Track record scaling a process across multiple sites or business units</li>
+              <li>Vendor management and cost discipline</li>
+              <li>Experience in a regulated industry (payments, healthcare, insurance)</li>
+            </ul>
+            <p>Nice to have:</p>
+            <ul>
+              <li>Payments or fintech background</li>
+              <li>P&amp;L ownership</li>
+            </ul>
+          </div>
+          <div class="ask"><span id="typed"></span><span class="caret" id="caret"></span></div>
+        </div>
+      </div>
+
+      <!-- 2. tool call -->
+      <div id="tool">
+        <div class="chip">
+          <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b2218"/><circle cx="16" cy="16" r="10" fill="#c2603c"/><path d="M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z" fill="#2b2218"/></svg>
+          <span>career-compass</span><span class="sep">·</span><span class="fn">explore_opportunity</span>
+          <span class="st" id="st"><span class="spin" id="spin"></span><span id="stx">running</span></span>
+        </div>
+        <div id="panel"><div class="panel-in" id="panelIn">
+          <div class="lbl"><span>Tool result · excerpt</span><span>Opportunity Analysis</span></div>
+          <div class="ln"><b>Evidence (achievements by role):</b></div>
+          <div class="ln">- <b>Senior Program Manager @ MedFlow Health Systems</b>: Reduced average patient onboarding time from 47 days to 11 days → Enabled 3x faster revenue recognition and eliminated $2.1M in compliance penalties over 18 months</div>
+          <div class="ln">- <b>Senior Program Manager @ MedFlow Health Systems</b>: Rebuilt vendor evaluation framework, reducing tool procurement cycle from 9 months to 6 weeks → Unlocked $4.3M in modernization budget and reduced vendor cost overruns by 22%</div>
+          <div class="ln">- <b>Operations Manager @ Apex Logistics Partners</b>: Grew on-time delivery rate from 81% to 97.3% in 14 months → Retained 3 major retail accounts worth $6.8M annually that were at risk of churning</div>
+          <div class="ln">…</div>
+          <div class="gap"></div>
+          <div class="ln"><b>Preference contract — the hard constraints this fit must be checked against:</b></div>
+          <div class="ln"><span class="k">Salary band:</span> USD 140,000–180,000</div>
+          <div class="ln"><span class="k">Open to remote:</span> yes</div>
+          <div class="ln"><span class="k">Open to relocation:</span> no</div>
+          <div class="ln"><span class="k">Notice period:</span> 3 weeks</div>
+          <div class="ln"><span class="k">Target company size:</span> Series B, Series C, Mid-market (200-2000 employees)</div>
+        </div></div>
+      </div>
+
+      <!-- 3. reply -->
+      <div id="reply">
+        <div class="head" id="rhead"><span class="who">Claude</span><span class="pill" id="pill"><i></i>Strong fit</span></div>
+
+        <p class="lead"><span class="big stream" data-start="0" data-wps="7">Strong fit, 8/10.</span><span class="stream" data-start="0.45" data-wps="20">Every must-have is backed by numbers in your history, and the role clears your whole preference contract: pay, remote, and company size.</span></p>
+
+        <div class="sec" id="secComp">
+          <div class="sh"><span class="stream" data-start="1.9" data-wps="10">Compensation Check</span></div>
+          <div class="comp at" data-at="2.05">
+            <div class="fig post"><div class="k">Posting</div><div class="v">$165,000–$190,000 + equity</div></div>
+            <div class="fig"><div class="k">Your band</div><div class="v">$140,000–$180,000</div></div>
+          </div>
+          <div class="bandbar at" data-at="2.35" id="bandbar">
+          </div>
+          <div class="body"><b class="stream" data-start="2.6" data-wps="8">Inside the band.</b> <span class="stream" data-start="2.95" data-wps="22">Their floor ($165K) is $25K above yours. Their top ($190K) is $10K above your ceiling. You have room to anchor high.</span></div>
+        </div>
+
+        <div class="sec" id="secSkills">
+          <div class="sh"><span class="stream" data-start="4.2" data-wps="10">Skills Match</span></div>
+          <div class="body"><ol>
+            <li><span class="n at" data-at="4.35">1.</span><b class="stream" data-start="4.35" data-wps="24">"7+ years leading operations or program teams":</b> <span class="stream" data-start="4.65" data-wps="26">You managed a team of 42 at Apex Logistics (2018–2021) and you lead a team of 6 PMs at MedFlow (2021 to present). <span class="cut">…</span></span></li>
+            <li><span class="n at" data-at="5.7">2.</span><b class="stream" data-start="5.7" data-wps="24">"Scaling a process across multiple sites or business units":</b> <span class="stream" data-start="6.05" data-wps="26">At MedFlow you ran initiatives across 14 hospital systems. <span class="cut">…</span></span></li>
+            <li><span class="n at" data-at="6.55">3.</span><b class="stream" data-start="6.55" data-wps="24">"Vendor management and cost discipline":</b> <span class="stream" data-start="6.75" data-wps="26">You rebuilt the vendor evaluation framework, which cut tool procurement from 9 months to 6 weeks, unlocked $4.3M in modernization budget and reduced vendor cost overruns by 22%. <span class="cut">…</span></span></li>
+          </ol></div>
+        </div>
+
+        <div class="sec" id="secGaps">
+          <div class="sh"><span class="stream" data-start="8.0" data-wps="10">Skill Gaps</span></div>
+          <div class="body"><ul>
+            <li class="at" data-at="8.15"><b class="stream" data-start="8.15" data-wps="10">Risk ops.</b> <span class="stream" data-start="8.4" data-wps="26">This is one of the three areas the role owns, and nothing in your history covers it. <span class="cut">…</span></span></li>
+            <li class="at" data-at="9.15"><b class="stream" data-start="9.15" data-wps="14">Payments regulation and compliance depth.</b> <span class="stream" data-start="9.5" data-wps="26">The posting accepts healthcare, so this doesn't fail the requirement. <span class="cut">…</span></span></li>
+          </ul></div>
+        </div>
+
+        <div class="verdict at" data-at="10.2" id="verdict">
+          <div class="sh"><span class="stream" data-start="10.2" data-wps="10">Verdict</span></div>
+          <div class="body"><b class="go stream" data-start="10.4" data-wps="5">Pursue it.</b><span class="stream" data-start="10.8" data-wps="30">This is a Series C company within your size targets, the pay is inside your band, the role is remote, and the job is the kind of multi-site onboarding and cost work where your numbers are strongest. <span class="cut">…</span> Apply, but prepare for the compliance and risk-ops questions before the first interview.</span></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <div id="composer"><div class="box">Reply…</div><div class="send"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 12V2M2.5 6.5 7 2l4.5 4.5" stroke="#f6f2ea" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+  </div>
+
+  <div id="cap">
+    <svg width="14" height="14" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b2218"/><circle cx="16" cy="16" r="10" fill="#c2603c"/><path d="M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z" fill="#2b2218"/></svg>
+    <span>Real tool output</span><span class="d">·</span><span>career-compass-mcp 2.9.9</span><span class="d">·</span><span>bundled sample data (fictional Alex Rivera)</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------------- timeline (seconds) ----------------
+  const T = {
+    userIn: 0.4, typeStart: 1.3, typeEnd: 2.3,
+    chipIn: 2.9, resultAt: 4.1,           // spinner 3.1 -> 4.5
+    openEnd: 4.6, closeStart: 7.7, closeEnd: 8.2,
+    reply: 8.4,                            // reply-relative times in data-start/data-at
+    fadeOut: 23.0, total: 23.6
+  };
+  window.DURATION = T.total;
+  window.POSTER_T = 22.6;
+
+  const $ = s => document.querySelector(s);
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const ease = x => { x=clamp(x,0,1); return x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2; };
+  const easeOut = x => { x=clamp(x,0,1); return 1-Math.pow(1-x,3); };
+  const prog = (t,a,b)=>clamp((t-a)/(b-a),0,1);
+
+  // band bar: axis 130k..200k
+  (function(){
+    const bb = $('#bandbar'), lo=130, hi=200, W=100;
+    const x = v => ((v-lo)/(hi-lo)*W)+'%';
+    const mk=(cls,a,b)=>{const d=document.createElement('div');d.className=cls;d.style.left=x(a);d.style.width=((b-a)/(hi-lo)*W)+'%';bb.appendChild(d);};
+    mk('you',140,180); mk('them',165,190);
+    const lab=(txt,v,top,c)=>{const d=document.createElement('div');d.className='bl';d.textContent=txt;d.style.left='calc('+x(v)+' + 8px)';d.style.top=top+'px';d.style.color=c;bb.appendChild(d);};
+    lab('Your band',180,2,'#5a6b3c'); lab('Posting',190,13,'#8a3b1f');
+  })();
+
+  // split .stream text into word spans
+  const words = []; // {el, t}
+  document.querySelectorAll('.stream').forEach(el=>{
+    const start = T.reply + parseFloat(el.dataset.start), wps = parseFloat(el.dataset.wps);
+    let i = 0;
+    const walk = node => {
+      [...node.childNodes].forEach(ch=>{
+        if (ch.nodeType===3){
+          const parts = ch.textContent.split(/(\s+)/);
+          const frag = document.createDocumentFragment();
+          parts.forEach(p=>{
+            if (!p) return;
+            if (/^\s+$/.test(p)){ frag.appendChild(document.createTextNode(p)); return; }
+            const s=document.createElement('span'); s.className='w'; s.textContent=p;
+            words.push({el:s, t:start + (i++)/wps}); frag.appendChild(s);
+          });
+          ch.replaceWith(frag);
+        } else if (ch.nodeType===1) walk(ch);
+      });
+    };
+    walk(el);
+  });
+  const ats = [...document.querySelectorAll('.at')].map(el=>({el, t:T.reply+parseFloat(el.dataset.at)}));
+
+  // section rules (.sh::after) follow their heading's first word
+  const heads = [...document.querySelectorAll('.sh')].map(el=>({el, t: words.find(w=>el.contains(w.el)).t}));
+  const typedText = "Do I fit this?";
+  const content=$('#content'), view=$('#view'), panel=$('#panel'), panelIn=$('#panelIn');
+  let PANEL_H=0, VIEW_H=0, items=[], CONTENT_H=0;
+
+  function measure(){
+    panel.style.height='auto'; PANEL_H = panel.offsetHeight; panel.style.height='0px';
+    VIEW_H = view.clientHeight; CONTENT_H = content.offsetHeight;
+    const top = el => { let y=0,n=el; while(n && n!==content){ y+=n.offsetTop; n=n.offsetParent; } return y; };
+    const toolBottom = top($('#tool .chip')) + $('#tool .chip').offsetHeight;
+    const tool = $('#tool');
+    const after = el => !!(tool.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) && !tool.contains(el);
+    items = [];
+    items.push({t:T.userIn, b: top($('#user'))+$('#user').offsetHeight, ap:false});
+    items.push({t:T.chipIn, b: toolBottom, ap:true});
+    items.push({t:T.reply, b: top($('#rhead'))+$('#rhead').offsetHeight, ap:true});
+    words.forEach(w=>{ const r=w.el.getBoundingClientRect(), c=content.getBoundingClientRect(); items.push({t:w.t, b:r.bottom-c.top, ap:true}); });
+    ats.forEach(a=>{ items.push({t:a.t, b: top(a.el)+a.el.offsetHeight, ap:after(a.el)}); });
+    items.sort((a,b)=>a.t-b.t);
+  }
+
+  const SCROLL_Q = 170;
+  function panelH(t){
+    if (t < T.resultAt) return 0;
+    if (t < T.closeStart) return PANEL_H*ease(prog(t,T.resultAt,T.openEnd));
+    return PANEL_H*(1-ease(prog(t,T.closeStart,T.closeEnd)));
+  }
+  function target(t){
+    let b=0; const ph=panelH(t);
+    for (const it of items){ if (it.t>t) break; b=Math.max(b, it.b + (it.ap?ph:0)); }
+    const maxScroll = Math.max(0, CONTENT_H + ph - VIEW_H);
+    const raw = b + 36 - VIEW_H;
+    if (raw <= 0) return 0;
+    // chunked: scroll in eased bursts of SCROLL_Q px instead of a constant creep
+    return clamp(Math.ceil(raw / SCROLL_Q) * SCROLL_Q, 0, maxScroll);
+  }
+  // triangular filter over the last 0.55s -> smooth, deterministic scroll
+  function scrollAt(t){
+    const N=24, span=0.55; let s=0, wsum=0;
+    for (let k=0;k<=N;k++){ const u=k/N, w=1-Math.abs(u*2-1)+0.0001; s+=w*target(t-span*u); wsum+=w; }
+    return s/wsum;
+  }
+
+  window.seek = function(t){
+    t = clamp(t,0,T.total);
+    // global content fade at loop end
+    const fade = 1-ease(prog(t,T.fadeOut,T.total));
+    content.style.opacity = fade;
+
+    // user bubble
+    const u = easeOut(prog(t,T.userIn,T.userIn+0.55));
+    const user=$('#user'); user.style.opacity=u; user.style.transform=`translateY(${(1-u)*14}px)`;
+    const n = Math.round(typedText.length*prog(t,T.typeStart,T.typeEnd));
+    $('#typed').textContent = typedText.slice(0,n);
+    const caretOn = t>=T.userIn+0.3 && t<T.chipIn+0.2 && (t<T.typeEnd ? true : Math.floor(t*2.2)%2===0);
+    $('#caret').style.opacity = caretOn?1:0;
+
+    // tool chip
+    const c = easeOut(prog(t,T.chipIn,T.chipIn+0.45));
+    const tool=$('#tool'); tool.style.opacity=c; tool.style.transform=`translateY(${(1-c)*10}px)`;
+    const running = t < T.resultAt;
+    $('#spin').style.display = running?'block':'none';
+    $('#spin').style.transform = `rotate(${(t*420)%360}deg)`;
+    let ok=$('#okmark'); if(!ok){ ok=document.createElement('span'); ok.id='okmark'; ok.className='ok'; ok.innerHTML='<svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.2 4.2 3.2 6 6.8 1.8" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $('#st').insertBefore(ok,$('#stx')); }
+    ok.style.display = running?'none':'flex';
+    $('#stx').textContent = running ? 'running…' : 'result received';
+    const ph = panelH(t); panel.style.height = ph.toFixed(2)+'px';
+    panelIn.style.opacity = PANEL_H? clamp(ph/PANEL_H*1.4-0.2,0,1) : 0;
+
+    // reply
+    const r = easeOut(prog(t,T.reply,T.reply+0.4));
+    $('#rhead').style.opacity = r;
+    const pt = T.reply+0.6, p = prog(t,pt,pt+0.45);
+    const pill=$('#pill'); pill.style.opacity=easeOut(p); pill.style.transform=`scale(${0.85+0.15*easeOut(p)})`;
+    for (const w of words){ w.el.style.opacity = easeOut(prog(t,w.t,w.t+0.18)); }
+    for (const h of heads){ h.el.style.opacity = easeOut(prog(t,h.t,h.t+0.3)); }
+    for (const a of ats){ const q=easeOut(prog(t,a.t,a.t+0.35)); a.el.style.opacity=q; a.el.style.transform=`translateY(${(1-q)*6}px)`; }
+
+    // scroll
+    content.style.transform = `translateY(${-scrollAt(t).toFixed(2)}px)`;
+  };
+
+  window.ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(()=>{ measure(); window.seek(0); return true; });
+
+  // live preview when opened directly in a browser (?play)
+  if (location.search.includes('play')) window.ready.then(()=>{ const t0=performance.now(); const loop=()=>{ seek(((performance.now()-t0)/1000)%T.total); requestAnimationFrame(loop); }; loop(); });
+})();
+</script>
+</body>
+</html>

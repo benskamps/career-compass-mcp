@@ -1,4 +1,9 @@
-# Career Compass
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/brand/banner-dark.png">
+    <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/brand/banner.png" width="100%" alt="Career Compass. Paste a job posting. Get an honest fit verdict.">
+  </picture>
+</h1>
 
 [![npm](https://img.shields.io/npm/v/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
@@ -17,8 +22,17 @@ computer.
 
 ## What a fit check looks like
 
-*Example on sample data:* the fictional Alex Rivera who ships with the package, and a
-made-up posting.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a Director of Operations posting and asks Do I fit this. Career Compass's explore_opportunity tool returns the sample candidate's evidence and preference contract, and Claude replies: Strong fit, 8/10, pay inside the band, the first three must-haves matched to evidence, and two gaps, risk ops and payments regulation. Verdict: pursue it.">
+</p>
+
+*A real run, recorded on 2.9.9:* the `explore_opportunity` output on the bundled sample data,
+and Claude's reply to it, trimmed for length (every cut is shown as "…"). Also as an
+[MP4](docs/assets/demo/demo.mp4); how it was made is in
+[docs/assets/demo/source](docs/assets/demo/source/README.md).
+
+Another example in text, on the same fictional Alex Rivera who ships with the package and a
+different made-up posting:
 
 ```
 You:    [pastes a VP of Operations posting from a payments company]
