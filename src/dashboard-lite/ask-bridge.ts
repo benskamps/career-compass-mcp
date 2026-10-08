@@ -35,8 +35,10 @@ import { isAllowedHost, hostnameOf } from "../loopback-guard.js";
  *   - prompts capped in length; one ask in flight at a time; the child is
  *     killed when the browser goes away; no shell — argv only;
  *   - Claude Code is run with `--strict-mcp-config` (only our server),
- *     `--setting-sources project` from the data dir (no user hooks, no user
- *     MCP servers), `--no-session-persistence`, and file/shell tools disallowed.
+ *     `--setting-sources project` from a private temp dir (no user hooks, no
+ *     user MCP servers, and nothing planted in the data folder: a
+ *     `.claude/settings.json` hook there would otherwise run on every click),
+ *     `--no-session-persistence`, and file/shell tools disallowed.
  */
 
 export interface ClaudeCommand { command: string; args: string[]; }
@@ -280,7 +282,9 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
       "x-accel-buffering": "no",
     });
     const { child, finished } = runAsk({
-      prompt, cmd: opts.cmd, mcpConfigPath, cwd: opts.dataDir, timeoutMs: opts.timeoutMs, allowWrites: opts.allowWrites,
+      // cwd is the config's own mkdtemp dir, never the data folder: project
+      // settings load from cwd, and the data folder may be synced or shared.
+      prompt, cmd: opts.cmd, mcpConfigPath, cwd: dirname(mcpConfigPath), timeoutMs: opts.timeoutMs, allowWrites: opts.allowWrites,
       onEvent: (ev) => {
         send(res, ev);
         // The operator's terminal gets the receipt (time, and the API-equivalent

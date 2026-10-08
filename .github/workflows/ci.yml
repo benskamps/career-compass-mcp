@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 # Two jobs, because the repository has two halves and a green that covers one of
 # them is the defect this file used to have. CI built and tested the MCP server
 # only, with a comment saying the dashboard build was "intentionally skipped" —
