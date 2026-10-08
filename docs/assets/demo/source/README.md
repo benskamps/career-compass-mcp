@@ -1,0 +1,4 @@
+Every word on screen is real: the job posting is the real input, the tool panel is an excerpt of the actual `explore_opportunity` result from career-compass-mcp 2.9.9 run on the bundled sample data (fictional Alex Rivera), and the reply is an excerpt of a real Claude reply to that result. Cuts are marked "…" and nothing is reworded.
+`index.html` is a deterministic timeline (`window.seek(t)`, no wall-clock). Open `index.html?play` to preview it in a browser.
+To re-render: `node docs/assets/demo/source/render.mjs` from the repo root. It needs playwright, a Chromium (`CHROMIUM=/path/to/chrome` if it isn't at /opt/pw-browsers) and ffmpeg, and makes no network calls. It writes demo.mp4, demo.gif and poster.png. Optional env vars: `GIF_FPS`, `DITHER`, `CRF`.
+material/ holds the real input (posting.txt), the tool result (explore.md, re-capture with material/capture.mjs) and Claude's full reply (reply.md) the demo excerpts.

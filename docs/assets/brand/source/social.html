@@ -1,0 +1,94 @@
+<!doctype html>
+<!-- Social cards for Career Compass. ?w=1280&h=640 -> GitHub social preview (content kept inside
+     the central 1200x600 safe area); ?w=1200&h=630 -> og.png for the Pages site.
+     The verdict is verbatim from a real run on the bundled sample data (Director of Operations posting). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Career Compass social card</title>
+<style>
+@font-face{font-family:Fraunces;font-style:italic;font-weight:100 900;src:url(fonts/fraunces-italic-latin.woff2) format("woff2")}
+@font-face{font-family:Fraunces;font-style:normal;font-weight:100 900;src:url(fonts/fraunces-normal-latin.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;src:url(fonts/jetbrainsmono-normal-latin.woff2) format("woff2")}
+:root{--paper:#f6f2ea;--paper-deep:#ece4d3;--ink:#2b2218;--ink-soft:#5a4a39;--rule:#d9cdb8;--clay:#c2603c;--clay-deep:#8a3b1f;--sage:#5a6b3c;--brass:#a2894f;
+  --W:1280px;--H:640px;--px:84px;--py:64px}
+*{box-sizing:border-box}
+html,body{margin:0;width:var(--W);height:var(--H);overflow:hidden}
+body{background:var(--paper);color:var(--ink);font-family:Fraunces,Georgia,serif;position:relative}
+.layer{position:absolute;inset:0}
+.glow{background:
+  radial-gradient(ellipse 760px 480px at 180px -80px,rgba(255,206,140,.55),transparent 70%),
+  radial-gradient(ellipse 560px 420px at 88% 72%,rgba(162,137,79,.16),transparent 70%),
+  radial-gradient(ellipse 120% 140% at 40% 30%,transparent 55%,rgba(110,80,45,.15) 100%)}
+.rules{background:repeating-linear-gradient(180deg,transparent 0 35px,rgba(160,135,100,.17) 35px 36px);background-position:0 12px;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 50%,transparent 78%)}
+.margin{left:calc(var(--px) - 34px);width:1.5px;right:auto;background:rgba(194,96,60,.26);-webkit-mask-image:linear-gradient(180deg,transparent,#000 15%,#000 85%,transparent)}
+.grain{opacity:.09;mix-blend-mode:multiply}
+.wrap{position:absolute;inset:var(--py) var(--px);display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px;font-style:italic;font-weight:420;font-variation-settings:"opsz" 144;font-size:31px;letter-spacing:-.01em}
+.brand b{font-weight:420;color:var(--clay)}
+.real{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--sage);
+  border:1.5px solid rgba(90,107,60,.55);border-radius:999px;padding:7px 15px 7px 13px;display:flex;align-items:center;gap:9px;background:rgba(246,242,234,.6)}
+.real i{width:7px;height:7px;border-radius:50%;background:var(--sage);display:block}
+h1{margin:42px 0 0;font-style:italic;font-weight:380;font-variation-settings:"opsz" 144;font-size:76px;line-height:1.04;letter-spacing:-.008em;margin-left:-3px}
+h1 em{font-style:italic;color:var(--clay)}
+.card{margin-top:auto;width:calc(var(--W) - 2*var(--px) - 400px);min-width:var(--cardmin,740px);background:rgba(255,253,248,.82);border:1.5px solid var(--rule);border-radius:16px;
+  padding:24px 30px 26px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 18px 40px -12px rgba(60,40,20,.22),0 2px 6px rgba(60,40,20,.06);position:relative}
+.meta{display:flex;align-items:center;gap:14px;font-family:"JetBrains Mono",monospace;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--sage);color:#f6f2ea;border-radius:999px;padding:6px 14px 6px 12px;font-weight:700;font-size:13.5px;letter-spacing:.16em}
+.pill svg{display:block}
+.meta .score{color:var(--sage);font-weight:700}
+.meta .sep{width:4px;height:4px;border-radius:50%;background:var(--brass)}
+.quote{margin:16px 0 0;font-size:var(--qs,25px);line-height:1.36;font-variation-settings:"opsz" 36;font-weight:400;color:var(--ink);letter-spacing:-.003em}
+.quote strong{font-weight:640}
+.dial{position:absolute}
+</style>
+</head>
+<body>
+<div class="layer glow"></div>
+<div class="layer rules"></div>
+<div class="layer margin"></div>
+<svg class="layer grain" width="100%" height="100%"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .27  0 0 0 0 .18  0 0 0 1.4 -.25"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+
+<svg class="dial" id="dial"></svg>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#2b2218"/><circle cx="16" cy="16" r="10" fill="#c2603c"/><path d="M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z" fill="#2b2218"/></svg>
+      <span>Career <b>Compass</b></span>
+    </div>
+    <div class="real"><i></i>Real output · bundled sample data</div>
+  </div>
+  <h1>Paste a job posting.<br><em>Get an honest fit verdict.</em></h1>
+  <div class="card">
+    <div class="meta">
+      <span class="pill"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.4 L4.8 9 L10 3" fill="none" stroke="#f6f2ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Strong fit</span>
+      <span>Director of Operations</span><span class="sep"></span><span>Claude, on a pasted posting</span>
+    </div>
+    <p class="quote">&ldquo;Every must-have is backed by numbers in your history, and the role clears your whole preference contract: pay, remote, and company size.&rdquo;</p>
+  </div>
+</div>
+
+<script src="compass.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const W = +q.get('w') || 1280, H = +q.get('h') || 640;
+const root = document.documentElement.style;
+root.setProperty('--W', W + 'px'); root.setProperty('--H', H + 'px');
+// GitHub crops the preview to a central 1200x600 on some surfaces: keep a 40px+ inner margin.
+root.setProperty('--px', (W >= 1280 ? 84 : 64) + 'px');
+root.setProperty('--py', (H >= 640 ? 62 : 58) + 'px');
+const R = 132, box = 420;
+if (W < 1280) { root.setProperty('--cardmin', '716px'); root.setProperty('--qs', '24px'); }
+const dial = document.getElementById('dial');
+dial.setAttribute('width', box); dial.setAttribute('height', box);
+dial.setAttribute('viewBox', `${-box / 2} ${-box / 2} ${box} ${box}`);
+const px = W >= 1280 ? 84 : 64;
+dial.style.left = (W - px - box / 2 - (W >= 1280 ? 168 : 158)) + 'px';
+dial.style.top = (H - (H >= 640 ? 62 : 58) - box / 2 - R + 2) + 'px';
+drawCompass(dial, { r: R, theme: 'light', bearing: 44, labelSize: 11.5 });
+</script>
+</body>
+</html>
