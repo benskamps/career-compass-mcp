@@ -132,7 +132,9 @@ function toMock(text, dataDir, isError) {
     .replace(/UNTRUSTED_[0-9A-F]{8}/g, "UNTRUSTED_0E7A1C55")
     // Dated output would make every re-record a diff.
     .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/g, `${EVAL_TODAY}T12:00:00.000Z`)
-    .replaceAll(new Date().toISOString().slice(0, 10), EVAL_TODAY)
+    // No blanket replace of the real calendar day: the server's clock is pinned
+    // to EVAL_TODAY, so the real day only shows up as a legitimate shifted date,
+    // and on EVAL_TODAY + 1 that rewrote every "tomorrow" in the digest.
     .replaceAll("2001-02-03", "{{input.dateApplied}}")
     // pipeline_add mints a random id for the new application.
     .replace(/ID: `[0-9a-f]{8}`/g, "ID: `5eed0001`");
