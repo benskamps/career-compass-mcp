@@ -10,7 +10,7 @@ import { TRUTH_RULE } from "./truth-rule.js";
 import { isWriteClaimUnavailable } from "../storage/write-claim.js";
 import { isReadOnlyStore } from "../storage/read-only-error.js";
 import { ACTIVE_STATUSES, computeStats, patternLines } from "../pipeline-stats.js";
-import { buildTodayDigest } from "./today-digest.js";
+import { buildTodayDigest, nextOnBoard, nextOnBoardLine } from "./today-digest.js";
 import { clockNow } from "../clock.js";
 import type {
   PipelineAddArgs,
@@ -238,6 +238,9 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
     remote: "unknown",
   };
   pipeline.applications.push(newApp);
+  // A first session that ends on "added" gives no reason to come back; one that
+  // names the day something on the board turns into work does.
+  const next = nextOnBoard(pipeline.applications, clockNow());
   return {
     content: [{
       type: "text",
@@ -245,7 +248,7 @@ export async function handleAdd(args: PipelineAddArgs, pipeline: Pipeline): Prom
         // The default is a guess about the user's world. Say so once, with the
         // alternative, so a role that was only found is not recorded as sent.
         args.status ? "" : " (defaulted — if you haven't applied yet, update it to `discovered`)"
-      }\n${status === "discovered" ? "Found" : "Applied"}: ${today}${first ? `\n\n${FIRST_APPLICATION_BRIEFING}` : ""}`,
+      }\n${status === "discovered" ? "Found" : "Applied"}: ${today}${next ? `\n📅 ${nextOnBoardLine(next)}` : ""}${first ? `\n\n${FIRST_APPLICATION_BRIEFING}` : ""}`,
     }],
   };
 }
@@ -343,6 +346,10 @@ export async function handleUpdate(args: PipelineUpdateArgs, pipeline: Pipeline)
   if (offerTouched && app.offer) lines.push(describeOffer(app.offer));
   if (args.roundOutcome) lines.push(`Latest round outcome: ${args.roundOutcome}`);
   if (args.tailoredResumeVersion?.trim()) lines.push(`Résumé sent: ${app.tailoredResumeVersion}`);
+  // Only when the board's dates moved: a status, a round, a follow-up or an offer.
+  const datesMoved = Boolean(args.status || args.followUpDue || args.interviewType || args.interviewDate || offerTouched);
+  const next = datesMoved ? nextOnBoard(pipeline.applications, clockNow()) : null;
+  if (next) lines.push(`📅 ${nextOnBoardLine(next)}`);
   return { content: [{ type: "text", text: lines.join("\n") }] };
 }
 

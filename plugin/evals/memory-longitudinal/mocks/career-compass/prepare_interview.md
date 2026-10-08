@@ -7,13 +7,13 @@
 
 **Application context** (pipeline entry `demo-001`):
 - Status: interviewing
-- Applied: 2026-09-22
+- Applied: 2026-09-23
 - Posting: https://veridianhealth.com/careers/director-operations
 - Salary range on file: USD 155,000–185,000
 - Rounds recorded: 2
-  - phone screen (2026-09-27), with Rachel Torres: Passed — advancing to panel
-  - panel (2026-10-08), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
-- Notes: [2026-09-22] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-09-27] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-10-04] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
+  - phone screen (2026-09-28), with Rachel Torres: Passed — advancing to panel
+  - panel (2026-10-09), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
+- Notes: [2026-09-23] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-09-28] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-10-05] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
 - Contacts: Rachel Torres (Talent Acquisition Partner), David Kim (Chief Operating Officer)
 
 
@@ -68,12 +68,12 @@ No saved stories yet. For each new story you write, offer once to save it to `st
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 The first 2 entries are about Veridian Health.
 
-- 2026-09-27 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-20 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-10-06 · **note** · Cascade Health Partners — Read up on Cascade Health Partners before applying; nothing decided yet.
-- 2026-10-05 · **note** · Quillfeather Health — Read up on Quillfeather Health before applying; nothing decided yet.
-- 2026-10-04 · **note** · Harborview Digital Health — Read up on Harborview Digital Health before applying; nothing decided yet.
-- 2026-10-03 · **note** · Northwind Care — Read up on Northwind Care before applying; nothing decided yet.
+- 2026-09-28 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-09-21 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-10-07 · **note** · Cascade Health Partners — Read up on Cascade Health Partners before applying; nothing decided yet.
+- 2026-10-06 · **note** · Quillfeather Health — Read up on Quillfeather Health before applying; nothing decided yet.
+- 2026-10-05 · **note** · Harborview Digital Health — Read up on Harborview Digital Health before applying; nothing decided yet.
+- 2026-10-04 · **note** · Northwind Care — Read up on Northwind Care before applying; nothing decided yet.
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 

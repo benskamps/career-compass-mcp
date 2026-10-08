@@ -141,7 +141,7 @@ describe("C17 weekly pace and campaign footer", () => {
 
   it("shows the campaign week without a pace", () => {
     const out = text(p, JUNE_16, null);
-    expect(out).toContain("_Week 7 of your search_");
+    expect(out).toMatch(/_Week 7 of your search( · Last 7 days: [^_]+)?_/);
     expect(out).not.toContain("This week:");
   });
 

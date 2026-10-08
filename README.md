@@ -26,7 +26,7 @@ computer.
   <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a Director of Operations posting and asks Do I fit this. Career Compass's explore_opportunity tool returns the sample candidate's evidence and preference contract, and Claude replies: Strong fit, pay inside the band, the first three must-haves matched to evidence, and two gaps, risk ops and payments regulation. Verdict: pursue it.">
 </p>
 
-*A real run, recorded on 2.9.9:* the `explore_opportunity` output on the bundled sample data,
+*A real run:* the `explore_opportunity` output on the bundled sample data,
 and Claude's reply to it, trimmed for length (every cut is shown as "…"). Also as an
 [MP4](docs/assets/demo/demo.mp4); how it was made is in
 [docs/assets/demo/source](docs/assets/demo/source/README.md).

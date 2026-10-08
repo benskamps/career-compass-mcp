@@ -2,7 +2,7 @@
   "name": "career-compass",
   "displayName": "Career Compass",
   "icon": "./.claude-plugin/icon.png",
-  "version": "2.9.9",
+  "version": "2.10.0",
   "description": "Paste a job posting and your resume to see how well you really fit. Then tailor your resume to that job, write the cover letter, and prep the interview without padding your history. In Claude Code and Cowork it also remembers your career history and tracks every application, on your own computer.",
   "author": {
     "name": "Ben Schippers",

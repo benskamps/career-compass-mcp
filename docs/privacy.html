@@ -104,6 +104,12 @@ Each write also leaves a timestamped <code>.bak</code> copy of the
 previous version in the same directory. Only the newest 5 <code>.bak</code> files per data file are
 kept; older ones are deleted automatically on the next write. Backups you make by hand are
 never touched.</p>
+<p>The folder also holds <code>.visits.json</code>: when you last used Career Compass, which items on your
+daily list you had already been shown, and the last few companies you worked on (a fit
+check, a tailored résumé). It is how a return visit can open with what changed while you
+were away. Every tool updates it, read-only ones included; it holds no career history,
+stays in the folder, is readable only by you, and is never sent anywhere. Deleting it costs
+nothing but that note.</p>
 <p><strong>We never receive this data.</strong> There is no Career Compass account, no cloud sync, no
 backup service, and no telemetry or analytics of any kind. The only request the server
 makes to the internet on its own is the version check described below, which carries none
@@ -185,7 +191,7 @@ anywhere else.</p>
 <p>Your files stay on your disk until you delete them. The one exception is backups: only the
 newest 5 <code>.bak</code> files per data file are kept, and older ones are deleted automatically.
 There is no retention period on our side because we hold nothing. To remove everything, delete your <code>CAREER_DATA_PATH</code>
-directory (including the <code>.bak</code> files and any leftover <code>.write-claim</code>) and uninstall the package.</p>
+directory (including the <code>.bak</code> files, <code>.visits.json</code> and any leftover <code>.write-claim</code>) and uninstall the package.</p>
 <h2 id="third-party-sharing">Third-party sharing</h2>
 <p>None. We do not share, sell, rent, or disclose your data, because we never receive it.
 There are no advertisers, analytics providers, data brokers, or subprocessors involved.</p>

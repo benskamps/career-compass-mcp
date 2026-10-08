@@ -12,7 +12,11 @@
             "description": "Full job posting text, or paste the raw text from a job board"
           },
           "company": {
-            "description": "Company name (if not in posting). Journal notes about this company are shown first.",
+            "description": "Company name; pass it even when the posting names it. Journal notes about this company are shown first.",
+            "type": "string"
+          },
+          "role": {
+            "description": "Role title, if known. Lets a later visit ask whether the user applied.",
             "type": "string"
           },
           "notes": {

@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../server.js";
+import { VISITS_FILENAME } from "../storage/visit-state.js";
 
 /**
  * Tool-annotation guard: the hints must be present, and they must be true.
@@ -33,10 +34,20 @@ import { createServer } from "../server.js";
 const EXAMPLE_DATA_PATH = fileURLToPath(new URL("../../data/example", import.meta.url));
 
 /** Content fingerprint of an entire directory tree: paths + bytes. */
+/**
+ * The visit log (`.visits.json`) is the one file every call touches, read-only
+ * ones included: when the user was last here and which digest items they have
+ * seen, so a return visit can say what changed. It holds no career data, is
+ * never shown as the user's data, and a host's consent step is about their
+ * career data and pipeline, which this still checks byte for byte.
+ */
+const IGNORED = new Set([VISITS_FILENAME]);
+
 function fingerprint(dir: string): string {
   const hash = createHash("sha256");
   const walk = (d: string, prefix: string) => {
     for (const entry of readdirSync(d).sort()) {
+      if (prefix === "" && IGNORED.has(entry)) continue;
       const full = path.join(d, entry);
       const rel = `${prefix}/${entry}`;
       if (statSync(full).isDirectory()) walk(full, rel);

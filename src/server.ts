@@ -12,6 +12,7 @@ import { registerPrompts } from "./prompts/index.js";
 import { PKG_VERSION } from "./version.js";
 import { SERVER_INSTRUCTIONS } from "./server-instructions.js";
 import { unreadableCareerSections } from "./storage/file-store.js";
+import { installWelcomeBack } from "./tools/welcome-back.js";
 
 export interface ServerOptions {
   /**
@@ -37,6 +38,10 @@ export function createServer(options: ServerOptions = {}): McpServer {
   });
 
   noticeUnreadableSections(server);
+
+  // A return visit opens with what changed while the user was away: digest
+  // items they haven't seen and last time's loose ends. See tools/welcome-back.ts.
+  installWelcomeBack(server);
 
   // Resources — Career KB + Pipeline
   registerCareerResources(server);
