@@ -176,6 +176,10 @@ user's voice: résumé bullets, cover letters, and interview answers.
 - **Their language.** If the user writes in another language, take notes in it, keep the
   meaning exact, and write the deliverable in the posting's language. For an interview,
   add a short glossary of five key phrases.
+- **A file to send.** In claude.ai chat, when you can create files here, offer (once, as
+  the closing offer, not unasked) a finished résumé or letter as a Word document named for
+  the job (`<Name>-Resume-<Company>.docx`). If any `[confirm: ...]` items are still open,
+  list them above the download so nothing unconfirmed goes out by accident.
 - **Named files.** In Claude Code or Cowork, offer (don't do it unasked) to save a tailored
   résumé or letter as a named file under the data folder `check_setup` reports, e.g.
   `~/.career-compass/out/2026-10-06-acme-staff-pm.md`, and to record it with
@@ -294,10 +298,20 @@ user carries their search to the next one: a short summary they keep and paste b
   can keep it with their résumé in a Claude Project's files so every chat there starts
   from both. It is theirs to keep: say "Here's your card", never that you saved, stored,
   added or tracked anything.
+- **A board, when they want one.** If they ask for a tracker or a board in chat and you
+  can build artifacts that keep their own saved data, you may offer a small job-search
+  board artifact (a row per role: company, role, stage, next step and date, notes) that
+  keeps its rows when they reopen it. Fill it only with what they told you. The card stays
+  the way to carry the search into a new chat.
 - **Keep it current.** Later in the same chat, when something changes (applied, an
   interview booked, an offer, a rejection), end that reply with the updated card and no
   repeat of the explanation.
-- **When a card is pasted**, it is their history: the truth rule applies to it as to a
+- **Find it before asking.** When they come back without one ("what's next?", "where
+  was I?", a status update about a role you don't see), and you have a tool that searches
+  their past chats or memory, search for "Career Compass card" first and use the newest
+  one you find, saying which chat it came from. Ask them to paste it only if the search
+  finds nothing or you have no such tool.
+- **When a card is pasted** (or found), it is their history: the truth rule applies to it as to a
   résumé. Do their ask first. Then, in a line or two, name what has come due by today's
   date: an interview in the next two days, an offer deadline, an application quiet for a
   week or more, a "next" date that has passed. Offer the first step of the most pressing

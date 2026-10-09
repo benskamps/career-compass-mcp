@@ -30,7 +30,10 @@ takeaway, with `origin: "inferred"` for your read or `"user_said"` if it's their
 Write it only after they say yes. If the search ended in an accepted offer, the week is
 instead a win capture (`capture_insight` type `win`).
 
-Without the tools (claude.ai chat), ask: "Paste this week's applications: company, role,
-date, stage, last contact, and any notes." Then do the same review, citing their lines.
+Without the tools (claude.ai chat), use their Career Compass card (pasted, or found by
+searching past chats when you can, as the career-compass skill describes). If there is
+none, ask: "Paste your Career Compass card, or this week's applications: company, role,
+date, stage, last contact, and any notes." Then do the same review, citing their lines,
+and end with the updated card.
 
 $ARGUMENTS

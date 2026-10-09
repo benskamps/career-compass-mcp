@@ -33,6 +33,8 @@ With the Career Compass tools, then offer one batch and write it only after one 
 If another round is likely, run `interview_arc` for what comes next.
 
 Without the tools (claude.ai chat), do all of the above from what they tell you, and give
-the follow-up date as a reminder line instead of saving anything.
+the follow-up date as a reminder line instead of saving anything. If they have a Career
+Compass card, end with it updated (the round, the follow-up date, stories told to whom);
+if not, offer one.
 
 $ARGUMENTS

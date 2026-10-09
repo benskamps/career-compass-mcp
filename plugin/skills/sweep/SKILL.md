@@ -26,7 +26,7 @@ The user wants their job-search mail and events turned into pipeline updates.
    (`pipeline_update`), each with the message it came from. Skip anything not about
    their search.
 5. **Apply after one yes**, then give one line per change made. Without the tools, give
-   the list for their own tracker instead.
+   the list for their own tracker instead, or their Career Compass card updated with it.
 
 Never send, reply to, label, archive or delete email, and never create calendar events.
 Reply drafts, if they ask, go here in the chat.
