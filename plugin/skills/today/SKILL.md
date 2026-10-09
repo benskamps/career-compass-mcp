@@ -30,9 +30,10 @@ The user wants today's job-search digest: the one thing to do first, then the re
   skill's one-time morning briefing offer.
 - If the search has ended in an accepted offer, offer the career-compass skill's landing
   mode (this week's wins) instead of tracking new roles.
-- If the tools are not available, explain in one sentence that tracking needs Career
-  Compass running in Claude Code or Cowork on their computer. Then offer to build today's
-  list anyway from what they paste: each application's company, role, date applied and
-  last contact.
+- If the tools are not available (usually claude.ai chat), don't explain setup. If they
+  pasted a Career Compass card or a list of applications, rank it as the career-compass
+  skill's chat method says. If not, ask for one thing: "Paste your Career Compass card, or
+  list your applications (company, role, date applied, last contact), and I'll tell you
+  what to do first." At the end, offer the card if they don't have one yet.
 
 $ARGUMENTS

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "career-compass-mcp",
   "display_name": "Career Compass",
-  "version": "2.10.0",
+  "version": "2.11.0",
   "description": "Your AI-native career co-pilot \u2014 Career KB, tailored resumes, job pipeline, interview prep, and offer evaluation. Local-first: your data never leaves your machine.",
   "long_description": "Career Compass turns Claude into a full job-search partner. It keeps your entire career history as plain YAML on your own disk, then uses it to tailor a resume to any posting, give an honest fit verdict, draft cover letters, track every application from discovery through offer, prep you for each interview with STAR stories drawn from your real work, and evaluate offers against your targets.\n\nIt is local-first by design. There is no account, no cloud sync, and no telemetry. The server itself makes exactly one outbound network request: check_setup asks the public npm registry whether a newer version has been released, which sends nothing about you or your data and only happens when you ask for it (checkForUpdates is off by default). Commands you run yourself, such as npx career-compass-mcp dashboard, download the package from npm. Your career data lives in a folder you choose and is passed only to the Claude client you connect, only for the requests you make.\n\nIncludes a dependency-free local dashboard (pipeline KPIs, a kanban board by stage with a per-card detail drawer, a company/role filter, a next-actions panel for overdue follow-ups and upcoming interviews, and a stage-distribution chart) that re-reads your YAML on every request.",
   "author": {

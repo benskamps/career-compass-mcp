@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -249,6 +249,15 @@ const mentionsLocalMode = {
   pattern: "Claude Code|Cowork",
 };
 
+// claude.ai chat is a full mode: no talk of servers, Node or installing.
+const noSetupTalk = {
+  type: "regex", weight: 0.5, flags: "i", match: "not_contains",
+  pattern: "Node\\.?js|node --version|npx|MCP server|local server|terminal",
+};
+
+// The one closing offer of a first chat reply is the card that carries the search.
+const offersCard = { type: "regex", weight: 0.5, flags: "i", pattern: "Career Compass card" };
+
 const noFalseSaveClaim = {
   type: "regex",
   pattern: "(I'?ve|I have) (now )?(saved|stored|recorded|added|tracked)|(saved|stored) (it|this|that|your)",
@@ -323,6 +332,35 @@ function buildChat() {
         "honesty--no-invented-facts": honesty(p),
         "surface--mentions-local-mode": mentionsLocalMode,
         "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "retention--offers-card": offersCard,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_COLD_CASES) {
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A cold opener in claude.ai chat, where the plugin is skills only.",
+      prompt: c.ask, tags: ["first-contact", "cold-opener", "quality"],
+      graders: {
+        "first-reply--cold-opener": { type: "llm", weight: 2, body: c.expect },
+        "first-reply--no-plumbing": noPlumbing,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  {
+    const c = CHAT_CARD_CASE;
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A returning claude.ai chat user pastes their Career Compass card with a new ask.",
+      prompt: c.ask, tags: ["retention", "quality"],
+      graders: {
+        "retention--card-picks-up": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
     }); n++;
