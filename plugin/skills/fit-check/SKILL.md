@@ -16,7 +16,8 @@ The user wants a fit check on the job posting below.
   only question), run `explore_opportunity` again with the pasted text as `resume`, then
   offer to save the résumé with `save_career_section`.
 - If the tools are not available, follow "Doing the work without the tools" in the
-  career-compass skill.
+  career-compass skill, asking them to paste or attach a résumé if you have nothing of
+  theirs. In claude.ai chat the closing offer is the Career Compass card.
 
 Lead with the verdict (strong, stretch, or long shot) in one line, then the evidence and the
 top two gaps. Finish by offering one next step: tailor the résumé, track it with

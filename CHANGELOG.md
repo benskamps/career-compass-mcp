@@ -1,5 +1,41 @@
 # Changelog
 
+## 2.11.0 — 2026-10-09
+
+Most installs come from claude.ai chat, and only about one in seven of those people ever
+used Career Compass (Cowork: 44%). In chat the plugin is skills only, with no local
+server, and it read that way: a first reply ended on Node.js and "switch to Claude Code",
+the `/` menu entry promised to check an install, and nothing carried over to the next
+chat. This release makes chat a first-class mode.
+
+### Added
+
+- **The Career Compass card.** In claude.ai chat, the first useful reply closes by
+  offering a short card: you, what you want, the roles you're weighing with their stage,
+  verdict and next date. Paste it into your next chat (or keep it in a Claude Project) and
+  Claude picks up where you left off: it does what you asked, then names what came due,
+  such as an interview tomorrow or a follow-up gone quiet. The card updates in the same chat
+  as things change. Nothing is saved anywhere; the card is yours.
+- **Attach instead of paste.** A résumé can be a PDF (including LinkedIn's "Save to PDF")
+  or another file, which is far easier on a phone. A posting link is read when Claude can
+  open web pages, or Claude asks for the text.
+
+### Changed
+
+- **No setup talk in chat.** Replies in claude.ai chat no longer mention Node.js, servers
+  or installing. One clause says Claude Code and Cowork can also remember your history.
+  The Node.js check stays for Claude Code or Cowork when the local helper didn't start.
+- **`/` menu copy.** The start entry now reads as the first step ("paste or attach your
+  résumé and a job, get an honest fit verdict") instead of "checks the install", and a bare
+  start or "get me started" is one first step with no feature list.
+- **Today in chat** ranks a pasted card or list instead of explaining tracking.
+
+### Evals
+
+- New chat cases: `chat-cold-get-started` and `chat-returning-card`. Chat first-contact
+  cases now also check for no setup talk and for the card offer. Two trigger prompts paste
+  a card.
+
 ## 2.10.0 — 2026-10-08
 
 Week one showed people try Career Compass once and stop: about 1.7 uses per active

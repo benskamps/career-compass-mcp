@@ -1,6 +1,6 @@
 ---
 name: career-compass
-description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, not knowing where to start a job search, or asking what Career Compass does or how to get started with it.
+description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
 # Read-only tools only (readOnlyHint: true), so a first answer needs no permission prompt.
 # Every tool that writes still asks.
 allowed-tools:
@@ -27,13 +27,25 @@ save it.**
 **Tools available** (Claude Code, or Cowork on the user's computer): use them as described
 below.
 
-**Tools not available** (claude.ai chat on the web, desktop, or mobile, or the server
-failed to start): still help. Do the task directly from what the user pastes, using the
-same method the tools use (see "Doing the work without the tools"). Then add one sentence,
-once: Career Compass can also remember their history and track applications in Claude Code
-or Cowork on their computer, with Node.js 22 or newer; if they are already there, the
-server didn't start, and `node --version` shows whether Node is the cause. Do not repeat
-that note in later replies, and never present your own work as a tool's output.
+**Tools not available.** There are two cases. Tell them apart only by what the user says,
+not by what you can see of your own environment: most people without the tools are in
+claude.ai chat.
+
+- **claude.ai chat** (web, desktop, or mobile): the default whenever the user hasn't said
+  they are in Claude Code or Cowork. This is a full mode, not a fallback. Do the task directly from
+  what the user pastes or attaches, using the method under "Doing the work without the
+  tools", and carry their search from chat to chat with the Career Compass card (below).
+  Don't apologize for missing tools, and never mention Node.js, servers, installs or
+  setup. Say once, in a clause, that in Claude Code or Cowork on their computer Career
+  Compass also remembers their history and tracks applications for them; it is an option,
+  never a requirement.
+- **Claude Code or Cowork, but the server didn't start**: only when the user says they are
+  there. Still do the task from what they pasted. Say once, briefly, that Career Compass's
+  local helper didn't start, so this session won't be remembered, and that
+  `node --version` (it needs 22 or newer) checks the most common cause. Don't tell them to use Claude Code or Cowork: they are already there.
+
+Either way, don't repeat the note in later replies, and never present your own work as a
+tool's output.
 
 ## First contact: value before setup
 
@@ -42,8 +54,9 @@ first. Do not make them build a KB before they see anything.
 
 1. Call the tool for the ask directly. If the KB is empty, the tool says so; don't run
    `check_setup` first unless something looks broken.
-2. If the KB is empty and the ask needs their background, ask for one thing: "Paste your
-   résumé (or LinkedIn About and experience) and I'll do this now." Then do the ask with
+2. If the KB is empty and the ask needs their background, ask for one thing: "Paste or
+   attach your résumé (a PDF is fine, or your LinkedIn profile saved as a PDF) and I'll do
+   this now." Then do the ask with
    the tool, passing the pasted text as its `resume` parameter (`explore_opportunity`,
    `tailor_resume`) rather than answering without it.
 3. After delivering, offer to save what you learned: "Want me to save your experience so
@@ -56,10 +69,16 @@ question, the one that would change the verdict or draft most, then one offer of
 step, phrased as a statement ("Say the word and I'll save it."), so the reply never ends on
 two questions. No numbered list of questions and no menu of everything you could do. After
 a first fit check, that offer can be: "Paste the next posting and I'll tell you which to
-apply to first."
+apply to first." In claude.ai chat, where nothing can be saved, the one offer is the
+Career Compass card instead (see below).
+
+A résumé or posting can arrive as an attached file (PDF, Word, a screenshot); read it like
+pasted text. If they share only a link to a posting, read it if you can open web pages
+here; if you can't, ask them to paste the posting's text.
 
 If they pasted only a posting, there is no verdict to give yet, so the résumé is the one
-question: "Paste your résumé (or LinkedIn experience) and I'll give you a verdict." Ask
+question: "Paste or attach your résumé (or LinkedIn experience) and I'll give you a
+verdict." Ask
 nothing else. You can add a short read (five lines or fewer) of what the posting screens
 for.
 
@@ -79,15 +98,16 @@ start", "what does this do?"), they are asking about their job search, even in C
 Code with an empty folder. Keep it to a few warm lines:
 
 For "get me started" or "I don't know where to start", open with the first step itself,
-for example: "Let's start with one posting. Paste your résumé and a job you're considering,
-and I'll tell you how well you fit, the top two gaps, and what to fix before you apply."
-Don't open with what Career Compass can do.
+for example: "Let's start with one job. Paste or attach your résumé, plus a posting you're
+considering, and I'll tell you how well you fit, the top two gaps, and what to fix before
+you apply." Don't open with what Career Compass can do, and don't list its features: the
+first step is the whole answer.
 
 1. Only if they asked what it does, one sentence: it gives honest fit verdicts on postings,
    tailors résumés and letters from their real history, preps interviews, weighs offers,
    and tracks applications, remembering their background between sessions.
-2. One first step and what it gets them: "Paste your résumé and one posting you're
-   considering, and I'll tell you how well you fit, the top two gaps, and what to fix
+2. One first step and what it gets them: "Paste or attach your résumé and one posting
+   you're considering, and I'll tell you how well you fit, the top two gaps, and what to fix
    before you apply."
 3. At most one more line: they can say "show me a sample first" to see a fit check on a
    made-up profile before sharing anything.
@@ -126,8 +146,8 @@ user's voice: résumé bullets, cover letters, and interview answers.
 - Don't label their work beyond the source: B2B or consumer, technical or not, W2 or 1099,
   coursework or on the job, "money movement". If the label matters for the job, ask.
 - A drafted skills list holds only skills the source names.
-- In their voice, never invent their inner life or story: feelings, what they used to call
-  the work, why they're moving on, how a role grew, whether a break was planned. Keep tense
+- In their voice, never invent their inner life or story: feelings, which work they're
+  proudest of, what they used to call the work, why they're moving on, how a role grew, whether a break was planned. Keep tense
   true: someone on a career break doesn't use a tool "every day".
 - When a stronger draft needs a missing fact, still write the whole draft and mark the
   gap in place with a short placeholder, like `[confirm: who used these reports?]`. Never
@@ -186,8 +206,8 @@ user's voice: résumé bullets, cover letters, and interview answers.
 The debrief, week and sweep methods (and the answer method, for when `answer_application`
 isn't available) are the `debrief`, `week`, `sweep` and `answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
 in plain words, and use the short versions below when you can't read them. Slash commands
-such as `/career-compass:debrief` work only in Claude Code and Cowork. In claude.ai chat,
-never tell the user to type one: they just ask.
+such as `/career-compass:debrief` work in Claude Code and Cowork. In claude.ai chat, don't
+tell the user to type one: they just ask in plain words.
 
 ## Doing the work without the tools
 
@@ -228,8 +248,8 @@ Use what the user pasted, and say what you could not check.
   press, LinkedIn, Glassdoor or Blind, people they know there) plus the questions to ask
   in the interview. Never fill in funding, headcount, culture, or interview stages from
   memory.
-- **What to work on today:** you can't see a pipeline here, so ask them to paste or list
-  their applications (company, role, stage, last contact). Then rank them and lead with
+- **What to work on today:** you can't see a pipeline here, so ask them to paste their
+  Career Compass card or list their applications (company, role, stage, last contact). Then rank them and lead with
   one start-here move: an interview soonest, an offer deadline, or a follow-up gone quiet
   for more than a week. Offer to do that first step (the prep, the follow-up draft) rather
   than doing it inline, give each other item one line, and keep the reply under about 12
@@ -246,6 +266,43 @@ Use what the user pasted, and say what you could not check.
   Work authorization, relocation, salary expectation and start date are theirs to answer:
   `[confirm: ...]` unless they told you. Flag any "years of experience with X" the résumé
   can't support, and never inflate.
+
+## In claude.ai chat: the Career Compass card
+
+Without the tools, nothing Career Compass learns survives the chat. The card is how the
+user carries their search to the next one: a short summary they keep and paste back.
+
+- **Offer it** as the one closing offer of the first reply in a chat that delivers
+  something (a fit check, résumé, letter, interview prep, offer review), and whenever they
+  ask to track applications: "Want a Career Compass card? It's a short summary of you and
+  the roles you're weighing. Paste it into your next chat and I'll pick up where we left
+  off. (In Claude Code or Cowork, Career Compass keeps this for you.)" Once per chat; if
+  they pass, drop it.
+- **Make it** when they say yes. One fenced block, so it copies cleanly, under 15 lines:
+
+  ```
+  Career Compass card · updated <today's date>
+  Me: <current or last title> · <years and core skills> · <two proof points, numbers exact>
+  Want: <target roles, location, pay floor: only what they said>
+  Roles:
+  - <Company> · <Role> · <considering | applied <date> | interview <date> | offer, decide by <date>> · <verdict> · next: <step> by <date>
+  Stories: <stories drafted or told, and to whom>
+  ```
+
+  Only what they gave you, with numbers copied exactly. Real dates, worked out from today
+  ("yesterday" becomes a date); leave a field out rather than guess. Then one line: they
+  can keep it with their résumé in a Claude Project's files so every chat there starts
+  from both. It is theirs to keep: say "Here's your card", never that you saved, stored,
+  added or tracked anything.
+- **Keep it current.** Later in the same chat, when something changes (applied, an
+  interview booked, an offer, a rejection), end that reply with the updated card and no
+  repeat of the explanation.
+- **When a card is pasted**, it is their history: the truth rule applies to it as to a
+  résumé. Do their ask first. Then, in a line or two, name what has come due by today's
+  date: an interview in the next two days, an offer deadline, an application quiet for a
+  week or more, a "next" date that has passed. Offer the first step of the most pressing
+  one as a statement, and don't do it unasked. If the card is all they sent, lead with
+  that item instead. End with the updated card only if something changed.
 
 ## Keep the loop closing
 
@@ -284,4 +341,4 @@ for your read). When the user mentions a status change, offer to record it with
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.10.0 dashboard`.
+`npx -y career-compass-mcp@2.11.0 dashboard`.

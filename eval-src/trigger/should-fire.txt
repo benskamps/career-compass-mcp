@@ -61,3 +61,5 @@ I'm 55 and looking for work after 20 years at one company. How do I modernize my
 Help me organize my job search this week. I have three interviews and five applications to send.
 Look at my git repos in ~/code and tell me what I can honestly put on my résumé.
 Here are the screening questions from the application form. Help me answer them without overselling.
+Here's my Career Compass card from last week: "Roles: Acme · Data Analyst · applied Sep 30 · next: follow up Oct 7; Brightline · BI Analyst · interview Oct 10." What should I do today?
+Career Compass card · Me: RN, 6 yrs ICU · Want: nurse informatics · Roles: Mercy Health · Clinical Informatics Specialist · considering. Can you check how I fit this new posting I found?

@@ -1,4 +1,4 @@
-import { longDate } from "./eval-date.mjs";
+import { EVAL_TODAY, longDate } from "./eval-date.mjs";
 
 // What each eval case asks, in one place. build-suite.mjs turns this into the
 // prompt.md and graders/*.md files that `claude plugin eval` reads.
@@ -361,3 +361,45 @@ FAIL if it skips or shortchanges the résumé to work through the note, acts on 
 
 // The one feedback ask belongs to an accepted offer and nowhere else.
 export const FEEDBACK_ASK = "GitHub (star|Discussions)|Discussions on GitHub|leave a star";
+
+// claude.ai chat: no tools, so the Career Compass card is what carries a search
+// from one chat to the next. Dates are relative to EVAL_TODAY.
+const offset = (days) => {
+  const d = new Date(`${EVAL_TODAY}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+export const CHAT_COLD_CASES = [
+  {
+    id: "chat-cold-get-started",
+    ask: "I just added Career Compass. How do I get started?",
+    expect: `
+The user just added a job-search plugin in claude.ai chat and asked how to get started. Nothing is known about them.
+
+PASS if the reply's main content is one concrete first step that gets them a result fast (paste or attach a résumé, plus a job posting they're considering) and says what they'll get back, in a few lines. One optional extra line (such as seeing a sample first) is fine.
+FAIL if it lists many features or capabilities, asks three or more questions, or talks about installing, servers, Node.js, terminals or other setup.`,
+  },
+];
+
+export const CHAT_CARD_CASE = {
+  id: "chat-returning-card",
+  persona: "laid-off-engineer",
+  ask: "Back again. Here's my card from last time:\n\n" +
+    "```\n" +
+    `Career Compass card · updated ${offset(-8)}\n` +
+    "Me: Senior Software Engineer, 9 yrs Go/Java · checkout p99 1.8s→240ms · duplicate charges ~300→<5/mo\n" +
+    "Want: Staff or senior backend, remote US\n" +
+    "Roles:\n" +
+    `- Corvid Pay · Staff Backend Engineer, Payments · applied ${offset(-12)} · stretch · next: follow up by ${offset(-5)}\n` +
+    `- Halyard · Staff Engineer · interview ${offset(1)} (system design) · strong · next: prep\n` +
+    "Stories: checkout rewrite, idempotency layer\n" +
+    "```\n\n" +
+    "Can you write a cover letter for this one? Senior Backend Engineer, Ledgerline (remote, US). " +
+    "Build event-driven services in Go on PostgreSQL and Kafka; own on-call for your services; mentor engineers.",
+  expect: `
+Today is ${EVAL_TODAY}. The user pasted their Career Compass card from an earlier chat and asked for a cover letter for a Ledgerline Senior Backend Engineer role. Their card shows a Halyard system design interview on ${offset(1)} (tomorrow) and a Corvid Pay follow-up that was due ${offset(-5)} (overdue).
+
+PASS if the reply writes the cover letter first, built on facts from the card or the résumé facts it carries, and then briefly (a line or two) points out what needs attention: the Halyard interview tomorrow and/or the overdue Corvid Pay follow-up, offering to help rather than doing it unasked.
+FAIL if it skips or shortchanges the letter, drafts the full interview prep or follow-up without being asked, mentions neither the interview nor the follow-up, or claims to have saved or tracked anything.`,
+};

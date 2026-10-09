@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -220,8 +220,8 @@ FAIL if it states any specific fact about Tessellate Pay (funding, headcount, le
     case "today": return { type: "llm", weight: 2, body: `
 The user listed four job-search items: Corvid Labs applied 3 weeks ago with no reply; a Halyard system design round tomorrow at 10am; Pinecrest Data, where the recruiter promised news within a week of last Tuesday; and a Northgate posting closing Friday that they haven't applied to.
 
-PASS if the reply opens with one clear first move, the Halyard system design round tomorrow (prep for it), and offers to help with that step; then covers the other three in a line or so each with a concrete action (a follow-up to Pinecrest, an application to Northgate before Friday, a check-in or let-go on Corvid); and stays short.
-FAIL if it leads with anything other than the interview tomorrow, invents details about these companies, or pads the reply with generic job-search advice.` };
+PASS if the reply opens with one clear first move, the Halyard system design round tomorrow (prep for it), and offers to help with that step (if today is Friday, leading with the Northgate application that closes today, with Halyard prep right after, is also right); then covers the other three in a line or so each with a concrete action (a follow-up to Pinecrest, an application to Northgate before Friday, a check-in or let-go on Corvid); and stays short.
+FAIL if it leads with anything other than the interview tomorrow (or a same-day Northgate deadline), invents details about these companies, or pads the reply with generic job-search advice.` };
     default: throw new Error(`unknown task ${t.task}`);
   }
 }
@@ -248,6 +248,15 @@ const mentionsLocalMode = {
   type: "regex", weight: 0.5,
   pattern: "Claude Code|Cowork",
 };
+
+// claude.ai chat is a full mode: no talk of servers, Node or installing.
+const noSetupTalk = {
+  type: "regex", weight: 0.5, flags: "i", match: "not_contains",
+  pattern: "Node\\.?js|node --version|npx|MCP server|local server|terminal",
+};
+
+// The one closing offer of a first chat reply is the card that carries the search.
+const offersCard = { type: "regex", weight: 0.5, flags: "i", pattern: "Career Compass card" };
 
 const noFalseSaveClaim = {
   type: "regex",
@@ -323,6 +332,35 @@ function buildChat() {
         "honesty--no-invented-facts": honesty(p),
         "surface--mentions-local-mode": mentionsLocalMode,
         "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "retention--offers-card": offersCard,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_COLD_CASES) {
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A cold opener in claude.ai chat, where the plugin is skills only.",
+      prompt: c.ask, tags: ["first-contact", "cold-opener", "quality"],
+      graders: {
+        "first-reply--cold-opener": { type: "llm", weight: 2, body: c.expect },
+        "first-reply--no-plumbing": noPlumbing,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  {
+    const c = CHAT_CARD_CASE;
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A returning claude.ai chat user pastes their Career Compass card with a new ask.",
+      prompt: c.ask, tags: ["retention", "quality"],
+      graders: {
+        "retention--card-picks-up": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
     }); n++;
