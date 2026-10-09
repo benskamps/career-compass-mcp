@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.11.1 — 2026-10-09
+
+More for claude.ai chat, where most people use Career Compass.
+
+### Added
+
+- **Claude finds your last card.** When Claude can search your past chats or memory, a
+  return visit ("where was I?") starts from your newest Career Compass card, with no paste
+  needed. When it can't, it asks once.
+- **A file you can send.** In chat, a finished résumé or cover letter can come as a Word
+  document named for the job, with any open `[confirm: ...]` items listed first.
+- **The card everywhere.** The weekly review, interview debrief and inbox sweep in chat
+  read your card and end with it updated.
+- **An optional board.** Ask for a tracker in chat and Claude can build a small
+  job-search board that keeps your roles when you reopen it.
+
+### Evals
+
+- New chat case `chat-where-was-i`: a returning user with nothing to go on gets one clear
+  ask and no invented history.
+
 ## 2.11.0 — 2026-10-09
 
 Most installs come from claude.ai chat, and only about one in seven of those people ever
