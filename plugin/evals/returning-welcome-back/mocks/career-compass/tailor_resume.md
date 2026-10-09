@@ -113,3 +113,5 @@ Output the full resume text first, ready to copy, then a short "Keyword Match Re
 - ⚠️ **Overdue follow-up** — Meridian Logistics Group / Head of Customer Success: due 2026-10-05, 4 days ago (ID: demo-002) → Send Marcus Chen a two-line check-in. I can draft it.
 - 💰 **Pending offer** — Brightpath Health / Sr. Program Manager: expires in 11 days (2026-10-20, ID: demo-006) → Decide or counter before then. Ask "evaluate my Brightpath Health offer" to weigh it against your targets.
 - Last time you checked your fit for Northwind Labs (Senior Product Manager); it isn't on your board. If you applied, or want to, I can track it.
+
+_The user hasn't seen this yet. After answering their request, mention the most pressing item in one line, as an offer; don't act on it unasked._

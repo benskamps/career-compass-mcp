@@ -136,6 +136,11 @@ export function buildWelcomeBack(input: WelcomeInput): string | null {
   }
   lines.push(...ends);
   if (reset) lines.push(reset);
+  // Eval round 1: appended under a long tool result with no guidance, one reply
+  // in three never mentioned it. The digest shows it on screen, so it needs none.
+  if (!(tool === "pipeline_view" && action === "next_actions")) {
+    lines.push("", "_The user hasn't seen this yet. After answering their request, mention the most pressing item in one line, as an offer; don't act on it unasked._");
+  }
   return ["", "---", header, ...lines].join("\n");
 }
 
