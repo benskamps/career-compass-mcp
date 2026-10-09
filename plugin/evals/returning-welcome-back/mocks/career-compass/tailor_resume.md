@@ -41,11 +41,11 @@ Owned post-sale relationship for enterprise accounts in the $100K–$500K ARR ra
 ## Recent Career Signals (from your journal — 5 of 5)
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 
-- 2026-09-28 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-21 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-09-30 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
-- 2026-09-24 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
-- 2026-09-03 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
+- 2026-09-29 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-09-22 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-10-01 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-09-25 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+- 2026-09-04 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 
@@ -109,7 +109,7 @@ Output the full resume text first, ready to copy, then a short "Keyword Match Re
 
 ---
 ↩️ **Since you were last here** (3 days ago):
-- 🎯 **Upcoming interview** — Veridian Health / Director of Operations: panel tomorrow (2026-10-09, ID: demo-001) → Prep for it today. Ask "prep me for my Veridian Health panel" and I'll build it from your history and notes.
-- ⚠️ **Overdue follow-up** — Meridian Logistics Group / Head of Customer Success: due 2026-10-04, 4 days ago (ID: demo-002) → Send Marcus Chen a two-line check-in. I can draft it.
-- 💰 **Pending offer** — Brightpath Health / Sr. Program Manager: expires in 11 days (2026-10-19, ID: demo-006) → Decide or counter before then. Ask "evaluate my Brightpath Health offer" to weigh it against your targets.
+- 🎯 **Upcoming interview** — Veridian Health / Director of Operations: panel tomorrow (2026-10-10, ID: demo-001) → Prep for it today. Ask "prep me for my Veridian Health panel" and I'll build it from your history and notes.
+- ⚠️ **Overdue follow-up** — Meridian Logistics Group / Head of Customer Success: due 2026-10-05, 4 days ago (ID: demo-002) → Send Marcus Chen a two-line check-in. I can draft it.
+- 💰 **Pending offer** — Brightpath Health / Sr. Program Manager: expires in 11 days (2026-10-20, ID: demo-006) → Decide or counter before then. Ask "evaluate my Brightpath Health offer" to weigh it against your targets.
 - Last time you checked your fit for Northwind Labs (Senior Product Manager); it isn't on your board. If you applied, or want to, I can track it.

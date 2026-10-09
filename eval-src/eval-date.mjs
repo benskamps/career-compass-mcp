@@ -10,7 +10,7 @@
 // number of days, keeping its shape, and pins the server's clock to EVAL_TODAY.
 // The graders embed the same shifted copy. Move EVAL_TODAY to the day you
 // re-record before a paid run, then run record-mocks and build-suite.
-export const EVAL_TODAY = "2026-10-08";
+export const EVAL_TODAY = "2026-10-09";
 export const SAMPLE_TODAY = "2026-06-16";
 
 const DAY = 86400000;
