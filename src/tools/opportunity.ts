@@ -30,7 +30,8 @@ export function registerOpportunityTools(server: McpServer): void {
         "and the verdict works from that. Writes nothing.",
       inputSchema: {
         posting: z.string().describe("Full job posting text, or paste the raw text from a job board"),
-        company: z.string().optional().describe("Company name (if not in posting). Journal notes about this company are shown first."),
+        company: z.string().optional().describe("Company name; pass it even when the posting names it. Journal notes about this company are shown first."),
+        role: z.string().optional().describe("Role title, if known. Lets a later visit ask whether the user applied."),
         notes: z.string().optional().describe("Any additional context about this opportunity"),
         sourceFitLabel: z.string().optional().describe("The fit label the job board showed, e.g. 'LinkedIn: strong match' or 'Indeed: 62% match' — the analysis will explicitly agree or disagree with it"),
         resume: z.string().optional().describe(
@@ -131,7 +132,7 @@ Only if the user asked what the job would be like: the first 90 days and a typic
 Anything in the posting that warrants clarification or concern.
 
 ### 10. Verdict
-Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
+Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it. If the verdict is to pursue it and it isn't already tracked, make tracking it (pipeline_add with status "discovered", once they say yes) the closing offer, so it shows up in their daily list.
 
 ${RESPONSE_SHAPE}
 ${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}

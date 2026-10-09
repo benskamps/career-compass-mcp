@@ -254,6 +254,14 @@ checks and interview prep can use it (`origin: "user_said"` for their words, `"i
 for your read). When the user mentions a status change, offer to record it with
 `pipeline_update` instead of leaving the pipeline stale.
 
+- **Coming back.** The first tool result after a break can end with "↩️ Since you were
+  last here": digest items that came due while they were away, and last time's loose ends
+  (a fit check on a role that never reached the board). Do what they asked first, then
+  name the most pressing item in one line as an offer. Don't act on it unasked, and don't
+  repeat it later in the conversation.
+- **End on the next date.** When a `pipeline_add` or `pipeline_update` result has a
+  "📅 Next up" line, keep it in your confirmation: it tells them when coming back pays off.
+  After a fit check you'd pursue, the closing offer is to track the role.
 - **Stories.** Interview prep reuses saved `stories` verbatim before drafting new ones,
   offers to save new ones, and checks `usedWith` so an interviewer doesn't hear the same
   story twice. After an interview, offer to add who heard which story.
@@ -276,4 +284,4 @@ for your read). When the user mentions a status change, offer to record it with
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.9.9 dashboard`.
+`npx -y career-compass-mcp@2.10.0 dashboard`.

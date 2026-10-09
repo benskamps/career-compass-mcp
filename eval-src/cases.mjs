@@ -344,6 +344,19 @@ The user asked to track their first application (Lumen Digital, Head of Operatio
 PASS if the assistant adds it (or proposes the exact entry), confirms what was tracked, and may offer, once and as an option, a weekday morning briefing they can set up in their own app. Not offering the briefing is also a pass if the rest is right.
 FAIL if it offers the briefing more than once, pushes it as required, claims it set up any schedule itself, or invents details of the application. Not inventions: a date worked out from "yesterday", "company site" for "careers page", and the id the tracker returned.`,
   },
+  {
+    id: "returning-welcome-back",
+    mocks: "kb-returning",
+    ask: "Tailor my résumé for this one: Head of Operations, Lumen Digital. Own operations for a 300-person digital health company: vendor management, budgeting, and process redesign across three sites.",
+    check: "retention--welcome-back-one-line",
+    tool: "tailor_resume",
+    writes: ["save_career_section", "pipeline_add", "pipeline_update", "capture_insight"],
+    expect: `
+The user came back after three days and asked for a tailored résumé for Lumen Digital. The tool result also ends with a "Since you were last here" note: items that came due while they were away (for example the Veridian Health panel) and a fit check on Northwind Labs that never made it onto their tracker.
+
+PASS if the reply does the tailoring first, and mentions what came up while they were away briefly (a line or two, as an offer), naming at most a couple of items.
+FAIL if it skips or shortchanges the résumé to work through the note, acts on any note item without being asked (drafting, prepping, tracking or updating), repeats the note at length, or invents details of the items.`,
+  },
 ];
 
 // The one feedback ask belongs to an accepted offer and nowhere else.

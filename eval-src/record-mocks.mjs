@@ -78,12 +78,29 @@ const VARIANTS = {
       evaluate_offer: { company: "Brightpath Health", offerDetails: "__IN_offerDetails__" },
     },
   },
+  // A return visit three days after a fit check on a role that never reached the
+  // board: the first tool call carries "Since you were last here".
+  "kb-returning": {
+    state: "kb",
+    seed: (dir) => writeFileSync(join(dir, ".visits.json"), JSON.stringify(RETURNING_VISIT, null, 2)),
+    calls: {
+      tailor_resume: { posting: "__IN_posting__", company: "Lumen Digital" },
+    },
+  },
   "kb-meridian": {
     state: "kb",
     calls: {
       generate_cover_letter: { company: "Meridian Logistics Group", role: "Head of Customer Success" },
     },
   },
+};
+
+const daysBefore = (n, hour) => { const [y, m, d] = EVAL_TODAY.split("-").map(Number); return new Date(y, m - 1, d - n, hour).toISOString(); };
+const RETURNING_VISIT = {
+  version: 1,
+  lastSeen: daysBefore(3, 18),
+  seenDigest: [],
+  recent: [{ tool: "explore_opportunity", company: "Northwind Labs", role: "Senior Product Manager", at: daysBefore(3, 17) }],
 };
 
 const CROWDING_ENTRIES = ["Lumen Digital", "Stratos Cloud", "Northwind Care", "Harborview Digital Health", "Quillfeather Health", "Cascade Health Partners"]

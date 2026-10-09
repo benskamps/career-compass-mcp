@@ -41,11 +41,11 @@
 ## Recent Career Signals (from your journal — 5 of 5)
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 
-- 2026-09-27 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-20 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-09-29 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
-- 2026-09-23 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
-- 2026-09-02 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
+- 2026-09-29 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-09-22 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-10-01 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-09-25 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+- 2026-09-04 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 
@@ -117,7 +117,7 @@ Only if the user asked what the job would be like: the first 90 days and a typic
 Anything in the posting that warrants clarification or concern.
 
 ### 10. Verdict
-Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it.
+Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it. If the verdict is to pursue it and it isn't already tracked, make tracking it (pipeline_add with status "discovered", once they say yes) the closing offer, so it shows up in their daily list.
 
 **Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.
 

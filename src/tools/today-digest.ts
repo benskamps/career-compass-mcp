@@ -138,7 +138,7 @@ function candidates(app: Application, now: Date): Item[] {
   const fu = days(app.followUpDue);
   if (!Number.isNaN(fu) && !stale) {
     if (fu <= 0) {
-      out.push({ app, score: 80 + Math.min(-fu, 7), line: `⚠️ **Overdue follow-up** — ${label(app)}: due ${fu === 0 ? "today" : `${app.followUpDue}, ${-fu} days ago`} (ID: ${app.id})`, action: nudge });
+      out.push({ app, score: 80 + Math.min(-fu, 7), line: `⚠️ **Overdue follow-up** — ${label(app)}: due ${fu === 0 ? "today" : `${app.followUpDue}, ${-fu} day${fu === -1 ? "" : "s"} ago`} (ID: ${app.id})`, action: nudge });
     } else if (fu <= 3) {
       out.push({ app, score: 30, line: `📅 Follow-up due ${when(fu)} — ${label(app)} (${app.followUpDue}, ID: ${app.id})` });
     }
@@ -198,6 +198,8 @@ export interface DigestData {
   comingUp: DigestItem[];
   /** A kindly worded pattern across closed applications, when there is one. */
   pattern?: string;
+  /** On a quiet day: the next dated thing on the board, so the user knows when to come back. */
+  nextUp?: string;
   footer: string[];
 }
 
@@ -421,9 +423,11 @@ export function buildTodayDigest(pipeline: Pipeline, now: Date = new Date(), car
   // with no visible progress feels endless; "week 6, 2 of 5 sent" does not.
   const pace = afterAccept ? null : weekPace(apps, career?.profile?.weeklyPace, now);
   const week = start && !afterAccept ? Math.floor(-days(start) / 7) + 1 : NaN;
+  // Without a pace, the last seven days are still visible progress.
+  const lastWeek = !pace && !afterAccept ? recentMomentum(apps, now) : "";
   const campaign = [
     !Number.isNaN(week) && week >= 1 ? `Week ${week} of your search` : "",
-    pace ? `This week: ${pace.sent} of ${pace.pace} sent · ${pace.conversations} conversation${pace.conversations === 1 ? "" : "s"}` : "",
+    pace ? `This week: ${pace.sent} of ${pace.pace} sent · ${pace.conversations} conversation${pace.conversations === 1 ? "" : "s"}` : lastWeek,
   ].filter(Boolean).join(" · ");
   const footer = [campaign, board].filter(Boolean);
   const pattern = afterAccept ? null : endedAfterSamePattern(apps);
@@ -439,6 +443,13 @@ export function buildTodayDigest(pipeline: Pipeline, now: Date = new Date(), car
     data.headline = headline;
     data.startHere = { line: move };
     out.push(headline, "", `**Start here:** ${move}`);
+    // "Nothing needs you" is a reason to close the tab; the date something
+    // will is a reason to come back.
+    const next = stats.active === 0 ? null : nextOnBoard(apps, now);
+    if (next) {
+      data.nextUp = nextOnBoardLine(next);
+      out.push("", `📅 ${data.nextUp}`);
+    }
   } else {
     const [first, ...rest] = due;
     data.startHere = toDigestItem(first);
@@ -484,4 +495,74 @@ function quietDayMove(apps: Application[], pace: Pace | null): string {
     return `you've sent ${pace.sent} of ${pace.pace} this week, so ${countWord(left)} to go. ${firstFound}`;
   }
   return `you've hit your pace: ${pace.sent} of ${pace.pace} sent this week. Use today to deepen one live process instead: a referral ask, company research, or prep for what's next.`;
+}
+
+/** "Last 7 days: 3 sent · 1 interview", or "" when the week was empty. */
+export function recentMomentum(apps: Application[], now: Date): string {
+  const days = calendarDays(now);
+  const inLastWeek = (iso?: string) => { const d = days(iso); return !Number.isNaN(d) && d <= 0 && d > -7; };
+  const sent = apps.filter((a) => inLastWeek(a.dateApplied)).length;
+  const interviews = apps.flatMap((a) => a.interviewRounds ?? []).filter((r) => inLastWeek(r.date)).length;
+  const parts = [
+    sent ? `${sent} sent` : "",
+    interviews ? `${interviews} interview${interviews === 1 ? "" : "s"}` : "",
+  ].filter(Boolean);
+  return parts.length ? `Last 7 days: ${parts.join(" · ")}` : "";
+}
+
+/** The next dated thing on the board, for "come back then". */
+export interface NextOnBoard {
+  date: string;
+  /** Days from today; 1 or more. */
+  inDays: number;
+  /** "the Brightpath follow-up window opens", "your Canopy panel", ... */
+  what: string;
+}
+
+/** A follow-up is worth sending this many days after applying; the digest's 📬 item fires then. */
+const FOLLOW_UP_AFTER_DAYS = 7;
+
+function addDays(iso: string, n: number): string {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return today(new Date(y, m - 1, d + n));
+}
+
+function weekday(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+/**
+ * The soonest future date anything on the board turns into work.
+ *
+ * A first session that ends on "added" gives no reason to come back; one that
+ * ends on "next up: the Brightpath follow-up window opens Thu, Oct 15" does,
+ * and names the day. Only dates the board already implies count: an interview,
+ * a follow-up the user set, an offer deadline, or the week-after-applying
+ * follow-up window the digest itself acts on. Nothing is invented and nothing
+ * is written.
+ */
+export function nextOnBoard(apps: Application[], now: Date = new Date()): NextOnBoard | null {
+  const days = calendarDays(now);
+  const options: NextOnBoard[] = [];
+  const push = (date: string | undefined, what: string) => {
+    const d = days(date);
+    if (!Number.isNaN(d) && d >= 1) options.push({ date: date!.slice(0, 10), inDays: d, what });
+  };
+  for (const app of apps) {
+    if (CLOSED.includes(app.status)) continue;
+    for (const r of app.interviewRounds ?? []) push(r.date, `your ${app.company} ${roundName(r.type)}`);
+    if (app.status === "offer" || app.status === "negotiating") push(app.offer?.expiresDate, `the ${app.company} offer deadline`);
+    if (app.followUpDue) push(app.followUpDue, `the ${app.company} follow-up you set`);
+    else if (app.status === "applied" && app.dateApplied && /^\d{4}-\d{2}-\d{2}/.test(app.dateApplied)) {
+      push(addDays(app.dateApplied, FOLLOW_UP_AFTER_DAYS), `the ${app.company} follow-up window`);
+    }
+  }
+  options.sort((a, b) => a.inDays - b.inDays);
+  return options[0] ?? null;
+}
+
+/** "Next up: your Canopy panel, Thu, Oct 15 (in 3 days)." */
+export function nextOnBoardLine(next: NextOnBoard): string {
+  return `Next up: ${next.what}, ${weekday(next.date)} (${next.inDays === 1 ? "tomorrow" : `in ${next.inDays} days`}).`;
 }

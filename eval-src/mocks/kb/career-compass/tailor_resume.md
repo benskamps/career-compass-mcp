@@ -41,11 +41,11 @@ Owned post-sale relationship for enterprise accounts in the $100K–$500K ARR ra
 ## Recent Career Signals (from your journal — 5 of 5)
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 
-- 2026-09-27 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-20 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-09-29 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
-- 2026-09-23 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
-- 2026-09-02 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
+- 2026-09-29 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-09-22 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-10-01 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-09-25 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+- 2026-09-04 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 

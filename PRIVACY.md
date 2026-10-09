@@ -53,6 +53,13 @@ previous version in the same directory. Only the newest 5 `.bak` files per data 
 kept; older ones are deleted automatically on the next write. Backups you make by hand are
 never touched.
 
+The folder also holds `.visits.json`: when you last used Career Compass, which items on your
+daily list you had already been shown, and the last few companies you worked on (a fit
+check, a tailored résumé). It is how a return visit can open with what changed while you
+were away. Every tool updates it, read-only ones included; it holds no career history,
+stays in the folder, is readable only by you, and is never sent anywhere. Deleting it costs
+nothing but that note.
+
 **We never receive this data.** There is no Career Compass account, no cloud sync, no
 backup service, and no telemetry or analytics of any kind. The only request the server
 makes to the internet on its own is the version check described below, which carries none
@@ -150,7 +157,7 @@ anywhere else.
 Your files stay on your disk until you delete them. The one exception is backups: only the
 newest 5 `.bak` files per data file are kept, and older ones are deleted automatically.
 There is no retention period on our side because we hold nothing. To remove everything, delete your `CAREER_DATA_PATH`
-directory (including the `.bak` files and any leftover `.write-claim`) and uninstall the package.
+directory (including the `.bak` files, `.visits.json` and any leftover `.write-claim`) and uninstall the package.
 
 ## Third-party sharing
 

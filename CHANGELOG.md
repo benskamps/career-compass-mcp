@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.10.0 — 2026-10-08
+
+Week one showed people try Career Compass once and stop: about 1.7 uses per active
+account. Everything it knows about what needs you only showed up if you thought to ask.
+This release gives a return visit, and the end of a first one, a reason.
+
+### Added
+
+- **"Since you were last here."** The first thing you ask after a break (eight hours or
+  more) ends with a short note of what changed while you were away: a follow-up that came
+  due, an interview that's now tomorrow, an offer deadline closing in, and last time's loose
+  ends, such as a fit check on a role you never tracked. Claude does what you asked first
+  and mentions the top item in one line. It appears once per return, never on errors or
+  `check_setup`, and changes nothing on your board.
+- **Every add or update ends on the next date that matters.** "📅 Next up: the Lumen
+  Digital follow-up window, Thu, Oct 15 (in 7 days)." The same line closes a quiet day in
+  `/career-compass:today`, so "nothing needs you" also says when something will.
+- **A fit check you'd pursue ends by offering to track the role**, so it shows up on your
+  daily list instead of being forgotten. `explore_opportunity` takes the role title too.
+- **Progress without a pace.** With no weekly target set, the digest footer shows the last
+  seven days: "Last 7 days: 3 sent · 1 interview".
+- **After a long break**, the welcome-back note offers to tidy a board that has gone stale
+  instead of listing every silent application.
+
+### Changed
+
+- **Privacy:** the data folder now holds `.visits.json` (when you were last here, which
+  daily-list items you'd seen, the last few companies you worked on). Owner-only, never
+  sent anywhere, safe to delete. PRIVACY.md says so.
+- "1 days ago" on an overdue follow-up now reads "1 day ago".
+
 ## 2.9.9 — 2026-10-07
 
 The 2.9.8 features existed but often never reached anyone in Claude Code, where Claude

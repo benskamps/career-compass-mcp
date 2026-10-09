@@ -26,7 +26,7 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Other Offers on Record (from the pipeline)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
-| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-11 | 2026-10-18 |
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-13 | 2026-10-20 |
 
 ---
 

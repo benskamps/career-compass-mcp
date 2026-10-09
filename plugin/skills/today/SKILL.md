@@ -18,8 +18,10 @@ The user wants today's job-search digest: the one thing to do first, then the re
 - Never change a status, date or note on your own. Where the digest suggests one (mark a
   silent application ghosted, record where an offer stands, set a follow-up date), offer
   the exact `pipeline_update` and make it only after the user says yes.
-- If nothing is due, say so in one line, name the next thing coming up, and suggest one
-  forward move such as tracking a new role. Don't invent work.
+- If nothing is due, say so in one line, name the "📅 Next up" date when the digest has
+  one, and suggest one forward move such as tracking a new role. Don't invent work.
+- If the result ends with "↩️ Since you were last here", open with what is new since their
+  last visit in one line, then the digest as usual.
 - If the pipeline is empty, say so in one line and ask for one thing: "Tell me one role
   you've applied to or are considering (company and title) and I'll start tracking it."
   That is the whole reply. When they answer, show the `pipeline_add` calls as one batch,

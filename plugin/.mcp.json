@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "career-compass-mcp@2.9.9"
+        "career-compass-mcp@2.10.0"
       ],
       "env": {
         "CAREER_DATA_PATH": "${user_config.data_path}"
