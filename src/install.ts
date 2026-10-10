@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from
 import { execFileSync } from "child_process";
 import { homedir } from "os";
 import { join, delimiter } from "path";
+import { PKG_NAME, PKG_VERSION } from "./version.js";
 
 /**
  * `career-compass-mcp install` — said and done.
@@ -14,10 +15,23 @@ import { join, delimiter } from "path";
  * happened and what to restart.
  *
  * Nothing here needs a shell; every config is read and written as JSON. The
- * only spawn is Claude Code's own CLI, argv-only.
+ * only spawns are Claude Code's own CLI and one `npx` warm-up, argv-only.
+ *
+ * Every entry pins this exact version. A bare `npx -y career-compass-mcp` asks
+ * the registry on every launch and reinstalls into the same cache folder when a
+ * release lands. Claude Desktop starts the server twice at once (chat, plus the
+ * shared pool for Cowork and Code), the two reinstalls collide, and npx is left
+ * with a half-written folder it treats as installed: every later launch dies on
+ * a missing module until someone deletes it by hand. A pinned version that is
+ * already installed is never refetched, so there is nothing to collide, and the
+ * warm-up installs it once here, serially, before any client launches it.
+ * Upgrading is running install again; check_setup says when one has shipped.
  */
 
 export type ClientId = "claude-desktop" | "claude-code" | "cursor";
+
+/** A result line that is not a client: the one-time npx warm-up. */
+export type ResultId = ClientId | "npx-cache";
 
 export interface InstallOptions {
   dataPath?: string;          // sets CAREER_DATA_PATH in every entry
@@ -31,20 +45,28 @@ export interface InstallOptions {
 }
 
 export interface ClientResult {
-  client: ClientId;
+  client: ResultId;
   label: string;
   status: "added" | "updated" | "present" | "skipped" | "dry-run" | "failed";
   detail: string;
   restart?: string;
+  viaPlugin?: boolean;        // the plugin runs its own server; nothing of ours to launch
+}
+
+/** The npx spec every entry runs: this exact version, never a bare name. */
+export function pinnedSpec(version: string = PKG_VERSION): string {
+  // "unknown" means package.json was unreadable; a bare name beats a spec npx rejects.
+  return version === "unknown" ? PKG_NAME : `${PKG_NAME}@${version}`;
 }
 
 /** The server entry, in the shape each client expects. */
-export function serverEntry(platform: NodeJS.Platform, dataPath?: string): Record<string, unknown> {
+export function serverEntry(platform: NodeJS.Platform, dataPath?: string, version: string = PKG_VERSION): Record<string, unknown> {
   // Claude Desktop on Windows spawns without a shell, so `npx` (a .cmd) has to
   // go through cmd. Everywhere else `npx` resolves directly.
+  const spec = pinnedSpec(version);
   const base = platform === "win32"
-    ? { command: "cmd", args: ["/c", "npx", "-y", "career-compass-mcp"] }
-    : { command: "npx", args: ["-y", "career-compass-mcp"] };
+    ? { command: "cmd", args: ["/c", "npx", "-y", spec] }
+    : { command: "npx", args: ["-y", spec] };
   return dataPath ? { ...base, env: { CAREER_DATA_PATH: dataPath } } : base;
 }
 
@@ -150,19 +172,28 @@ export function installClaudeCode(opts: InstallOptions, platform: NodeJS.Platfor
       client: "claude-code",
       label,
       status: "present",
+      viaPlugin: true,
       detail: "The Career Compass plugin is installed and already runs the server. Nothing to add, which avoids a second copy of every tool.",
     };
   }
-  let present = false;
-  try { exec(bin, ["mcp", "get", "career-compass"]); present = true; } catch { present = false; }
-  if (present) return { client: "claude-code", label, status: "present", detail: "Already registered (claude mcp get career-compass)." };
+  const spec = pinnedSpec();
+  let current: string | null = null;
+  try { current = exec(bin, ["mcp", "get", "career-compass"]); } catch { current = null; }
+  // An older registration runs the bare, unpinned name; replace it with this version.
+  const stale = current !== null && !current.includes(spec);
+  if (current !== null && !stale) return { client: "claude-code", label, status: "present", detail: "Already registered (claude mcp get career-compass)." };
   const args = ["mcp", "add", "career-compass", "-s", "user"];
   if (opts.dataPath) args.push("-e", `CAREER_DATA_PATH=${opts.dataPath}`);
-  args.push("--", "npx", "-y", "career-compass-mcp");
-  if (opts.dryRun) return { client: "claude-code", label, status: "dry-run", detail: `Would run: claude ${args.join(" ")}` };
+  args.push("--", "npx", "-y", spec);
+  if (opts.dryRun) return { client: "claude-code", label, status: "dry-run", detail: `Would ${stale ? "replace the registration with" : "run"}: claude ${args.join(" ")}` };
   try {
+    if (stale) exec(bin, ["mcp", "remove", "career-compass", "-s", "user"]);
     exec(bin, args);
-    return { client: "claude-code", label, status: "added", detail: `Registered for every project: claude ${args.join(" ")}`, restart: "Open a new Claude Code session." };
+    return {
+      client: "claude-code", label, status: stale ? "updated" : "added",
+      detail: `${stale ? "Re-registered at this version" : "Registered for every project"}: claude ${args.join(" ")}`,
+      restart: "Open a new Claude Code session.",
+    };
   } catch (e) {
     return { client: "claude-code", label, status: "failed", detail: `claude mcp add failed: ${(e as Error).message}` };
   }
@@ -190,6 +221,29 @@ export function claudeCodeHasPlugin(bin: string, exec: (cmd: string, args: strin
 
 const defaultExec = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
 
+/**
+ * Install the pinned version into npx's cache once, before any client starts it,
+ * so the first launch never installs (and two first launches never race). A
+ * failure is reported but not fatal: the first launch will then install it.
+ * Returns null on success so the report stays about clients.
+ */
+export function warmNpxCache(platform: NodeJS.Platform, exec: (cmd: string, args: string[]) => string): ClientResult | null {
+  const spec = pinnedSpec();
+  if (spec === PKG_NAME) return null;
+  const [cmd, args] = platform === "win32"
+    ? ["cmd", ["/c", "npx", "-y", spec, "--version"]]
+    : ["npx", ["-y", spec, "--version"]];
+  try {
+    exec(cmd, args);
+    return null;
+  } catch (e) {
+    return {
+      client: "npx-cache", label: "Server download", status: "failed",
+      detail: `Could not pre-install ${spec} (${(e as Error).message.split("\n")[0]}). Each client will download it on first launch instead; if one then fails to start, run install again.`,
+    };
+  }
+}
+
 export function runInstall(opts: InstallOptions = {}): ClientResult[] {
   const platform = opts.platform ?? process.platform;
   const env = opts.env ?? process.env;
@@ -200,6 +254,12 @@ export function runInstall(opts: InstallOptions = {}): ClientResult[] {
   if (want("claude-desktop")) out.push(installClaudeDesktop(opts, platform, env, home));
   if (want("claude-code")) out.push(installClaudeCode(opts, platform, env, exec));
   if (want("cursor")) out.push(installCursor(opts, platform, home));
+  // Clients only launch it after the restart the report asks for, so warming
+  // last still comes first. Skip it when no client will run it.
+  if (!opts.dryRun && out.some((r) => !r.viaPlugin && (r.status === "added" || r.status === "updated" || r.status === "present"))) {
+    const warm = warmNpxCache(platform, exec);
+    if (warm) out.push(warm);
+  }
   return out;
 }
 
@@ -212,12 +272,12 @@ export function renderInstallReport(results: ClientResult[], opts: { dryRun?: bo
   // A dry run that WOULD configure a client has found one; only "skipped" and
   // "failed" mean nothing was there to wire. The first published dry run said
   // "No Claude client was found" directly under two clients it had just listed.
-  const found = results.filter((r) => r.status !== "skipped" && r.status !== "failed");
+  const found = results.filter((r) => r.client !== "npx-cache" && r.status !== "skipped" && r.status !== "failed");
   const restarts = [...new Set(results.filter((r) => r.restart && r.status !== "present").map((r) => r.restart!))];
   lines.push("");
   if (found.length === 0) {
     lines.push("No Claude client was found on this machine. Install Claude Desktop, Claude Code, or Cursor and run this again —");
-    lines.push("or wire any MCP client by hand: command `npx`, args `-y career-compass-mcp`.");
+    lines.push(`or wire any MCP client by hand: command \`npx\`, args \`-y ${pinnedSpec()}\`.`);
   } else {
     if (opts.dryRun) lines.push("Run it without --dry-run to write these.");
     if (restarts.length) lines.push(restarts.join(" "));

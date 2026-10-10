@@ -180,7 +180,8 @@ npx -y career-compass-mcp install
 ```
 
 It backs up any config it touches, leaves your other servers alone, skips clients you don't
-have, and does nothing twice. `--dry-run` shows the plan first; `--data /path/to/career-data`
+have, and does nothing twice. It pins the version it installs and downloads it once up front,
+so no launch ever reinstalls; run it again to upgrade. `--dry-run` shows the plan first; `--data /path/to/career-data`
 puts your files somewhere other than `~/.career-compass`. Then say to Claude: **"Run the
 Career Compass setup check."**
 
@@ -237,6 +238,10 @@ Add the server:
   }
 }
 ```
+
+Pin a version in `args` (`"career-compass-mcp@2.11.2"` rather than the bare name) if you can:
+Desktop starts the server twice at once, and an unpinned name reinstalls on every release,
+which can leave npx's cache half-written (see **On npx** below). `install` does this for you.
 
 Restart Claude Desktop. To choose your own data directory, add an `env` block alongside
 `args`:
@@ -599,14 +604,19 @@ Your career data is never touched by an upgrade. It lives in `CAREER_DATA_PATH`,
 package, and older data directories keep working — sections added by later releases are
 created when you first write them.
 
-**On npx.** `npx -y career-compass-mcp` resolves the latest published version, but npx
-caches, so a stale copy can persist. Force the current one, then restart your client:
+**On npx.** `install` pins the version it writes (`career-compass-mcp@<version>`), so
+upgrading is running it again, then restarting your client:
 
 ```bash
-npx -y career-compass-mcp@latest --version
+npx -y career-compass-mcp@latest install
 ```
 
-If the version still lags, run `npm cache clean --force` and try again.
+A hand-written entry with the bare name (`npx -y career-compass-mcp`) asks npm for the latest
+version on every launch and reinstalls into one shared cache folder after each release. Claude
+Desktop starts the server twice at once, and the two reinstalls can collide and leave that
+folder half-written. If the server log shows `Cannot find module` or `ENOTEMPTY` under
+`npm-cache\_npx`, delete the `_npx` folder inside your npm cache (`npm config get cache` prints
+where it is; `npm cache clean --force` does not touch it), then run the `install` command above.
 
 **On a global install.** `npm install -g career-compass-mcp@latest`, then
 `career-compass-mcp --version`. Restart your client afterward — it keeps the old server

@@ -79,7 +79,8 @@ if (args[0] === "install") {
   catch (e) { console.error(`Error: ${(e as Error).message}`); process.exit(2); }
   const results = runInstall(opts);
   console.log(renderInstallReport(results, { dryRun: opts.dryRun }));
-  process.exit(results.some((r) => r.status === "failed") ? 1 : 0);
+  // A failed warm-up is not a failed install: the first launch downloads it instead.
+  process.exit(results.some((r) => r.status === "failed" && r.client !== "npx-cache") ? 1 : 0);
 }
 
 if (!isDashboard) {
