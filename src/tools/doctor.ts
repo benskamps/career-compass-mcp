@@ -197,7 +197,7 @@ function versionFinding(result: UpdateCheckResult | null): Finding {
       label: "Version",
       status: "warn",
       detail: `v${PKG_VERSION} installed; v${result.latest} is the current release on npm.`,
-      fix: `Ask Claude: "update career-compass-mcp to ${result.latest}" — see the Upgrading section of the README for your install type (Claude Desktop bundle, npm, or source).`,
+      fix: `Ask Claude: "update career-compass-mcp to ${result.latest}". Set up with npx or \`install\`: run \`npx -y career-compass-mcp@latest install\` and restart your client. Otherwise see the Upgrading section of the README for your install type (Claude Desktop bundle, npm, or source).`,
     };
   }
   if (order > 0) {

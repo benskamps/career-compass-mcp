@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.11.2 — 2026-10-10
+
+A fix for people who set Career Compass up with `install` or a hand-written npx entry.
+
+### Fixed
+
+- **The server stops breaking itself on release day.** An npx entry with the bare package
+  name asks npm for the newest version at every launch and reinstalls into one shared
+  cache folder after each release. Claude Desktop starts the server twice at once, the
+  two reinstalls collided, and npx kept running the half-written folder they left: on one
+  Windows machine every launch failed for five weeks with `Cannot find module`. `install`
+  now pins the version it writes (`career-compass-mcp@2.11.2`) and downloads it once up
+  front, so a launch never reinstalls and starts without asking the registry. Running
+  `install` again upgrades, and moves an older unpinned Desktop entry or Claude Code
+  registration onto the pinned one. Plugin and Desktop-extension installs were never
+  affected.
+- **Troubleshooting points at the real cache.** The README's `npm cache clean --force`
+  tip never touched npx's folder; it now says which folder to delete. `check_setup`'s
+  upgrade step names `npx -y career-compass-mcp@latest install`.
+
 ## 2.11.1 — 2026-10-09
 
 More for claude.ai chat, where most people use Career Compass.

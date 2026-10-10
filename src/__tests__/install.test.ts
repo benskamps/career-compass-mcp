@@ -3,8 +3,11 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, readdirSyn
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  serverEntry, claudeDesktopConfigPath, mergeServersConfig, runInstall, renderInstallReport, parseInstallArgs,
+  serverEntry, claudeDesktopConfigPath, mergeServersConfig, runInstall, renderInstallReport, parseInstallArgs, pinnedSpec,
 } from "../install.js";
+import { PKG_VERSION } from "../version.js";
+
+const SPEC = `career-compass-mcp@${PKG_VERSION}`;
 
 /**
  * `career-compass-mcp install` — said and done, pinned.
@@ -21,9 +24,18 @@ const winEnv = () => ({ APPDATA: appdata, PATH: "" });
 
 describe("serverEntry", () => {
   it("goes through cmd on Windows and plain npx elsewhere; env only when a data path is given", () => {
-    expect(serverEntry("win32")).toEqual({ command: "cmd", args: ["/c", "npx", "-y", "career-compass-mcp"] });
-    expect(serverEntry("darwin")).toEqual({ command: "npx", args: ["-y", "career-compass-mcp"] });
+    expect(serverEntry("win32")).toEqual({ command: "cmd", args: ["/c", "npx", "-y", SPEC] });
+    expect(serverEntry("darwin")).toEqual({ command: "npx", args: ["-y", SPEC] });
     expect(serverEntry("linux", "/d/data")).toMatchObject({ env: { CAREER_DATA_PATH: "/d/data" } });
+  });
+
+  it("pins the exact version, so npx never reinstalls over a copy another launch is running", () => {
+    // A bare name makes npx ask the registry on every launch and reify into one
+    // shared cache folder per release; Claude Desktop's two simultaneous starts
+    // collided there and left a half-written folder npx kept running (2026-10 log).
+    expect(PKG_VERSION).toMatch(/^\d+\.\d+\.\d+/);
+    expect(serverEntry("darwin", undefined, "9.8.7")).toEqual({ command: "npx", args: ["-y", "career-compass-mcp@9.8.7"] });
+    expect(pinnedSpec("unknown")).toBe("career-compass-mcp");
   });
 });
 
@@ -69,16 +81,18 @@ describe("runInstall (fake machine)", () => {
     mkdirSync(path.join(home, ".cursor"));
     const binDir = path.join(home, "bin"); mkdirSync(binDir); writeFileSync(path.join(binDir, "claude.exe"), "");
     const calls: string[][] = [];
-    const exec = (_cmd: string, args: string[]) => { calls.push(args); if (args[1] === "get") throw new Error("not found"); return ""; };
+    const exec = (cmd: string, args: string[]) => { calls.push([cmd, ...args]); if (args[1] === "get") throw new Error("not found"); return ""; };
     const env = { APPDATA: appdata, PATH: binDir };
 
     const res = runInstall({ platform: "win32", env, home, exec, dataPath: "D:/career" });
     expect(res.map((r) => [r.client, r.status])).toEqual([["claude-desktop", "added"], ["claude-code", "added"], ["cursor", "added"]]);
     const cfg = JSON.parse(readFileSync(path.join(claudeDir, "claude_desktop_config.json"), "utf-8"));
     expect(cfg.mcpServers.other).toEqual({ command: "x" });
-    expect(cfg.mcpServers["career-compass"]).toEqual({ command: "cmd", args: ["/c", "npx", "-y", "career-compass-mcp"], env: { CAREER_DATA_PATH: "D:/career" } });
+    expect(cfg.mcpServers["career-compass"]).toEqual({ command: "cmd", args: ["/c", "npx", "-y", SPEC], env: { CAREER_DATA_PATH: "D:/career" } });
     expect(readdirSync(claudeDir).some((f) => f.startsWith("claude_desktop_config.json.bak-"))).toBe(true);
-    expect(calls.at(-1)).toEqual(["mcp", "add", "career-compass", "-s", "user", "-e", "CAREER_DATA_PATH=D:/career", "--", "npx", "-y", "career-compass-mcp"]);
+    expect(calls.find((c) => c[2] === "add")?.slice(1)).toEqual(["mcp", "add", "career-compass", "-s", "user", "-e", "CAREER_DATA_PATH=D:/career", "--", "npx", "-y", SPEC]);
+    // One serial warm-up of the pinned version, after the configs are written.
+    expect(calls.at(-1)).toEqual(["cmd", "/c", "npx", "-y", SPEC, "--version"]);
     const cursor = JSON.parse(readFileSync(path.join(home, ".cursor", "mcp.json"), "utf-8"));
     expect(cursor.mcpServers["career-compass"].command).toBe("npx");
     const report = renderInstallReport(res);
@@ -87,7 +101,7 @@ describe("runInstall (fake machine)", () => {
 
     // Second run: everything present, nothing rewritten, no second backup.
     const before = readdirSync(claudeDir).length;
-    const again = runInstall({ platform: "win32", env, home, exec: (_c, a) => (a[1] === "get" ? "ok" : ""), dataPath: "D:/career" });
+    const again = runInstall({ platform: "win32", env, home, exec: (_c, a) => (a[1] === "get" ? `npx -y ${SPEC}` : ""), dataPath: "D:/career" });
     expect(again.map((r) => r.status)).toEqual(["present", "present", "present"]);
     expect(readdirSync(claudeDir).length).toBe(before);
   });
@@ -115,6 +129,32 @@ describe("runInstall (fake machine)", () => {
     };
     const res2 = runInstall({ platform: "win32", env: { APPDATA: appdata, PATH: binDir }, home, exec: other, only: ["claude-code"] });
     expect(res2.map((r) => r.status)).toEqual(["added"]);
+  });
+
+  it("moves an older unpinned setup onto this version: Desktop entry rewritten, Code re-registered", () => {
+    const claudeDir = path.join(appdata, "Claude"); mkdirSync(claudeDir);
+    const file = path.join(claudeDir, "claude_desktop_config.json");
+    writeFileSync(file, JSON.stringify({ mcpServers: { "career-compass": { command: "cmd", args: ["/c", "npx", "-y", "career-compass-mcp"], env: { CAREER_DATA_PATH: "D:/mine" } } } }), "utf-8");
+    const binDir = path.join(home, "bin"); mkdirSync(binDir); writeFileSync(path.join(binDir, "claude.exe"), "");
+    const calls: string[][] = [];
+    const exec = (_c: string, a: string[]) => { calls.push(a); if (a[0] === "plugin") throw new Error("old cli"); return a[1] === "get" ? "Command: npx\nArgs: -y career-compass-mcp" : ""; };
+    const res = runInstall({ platform: "win32", env: { APPDATA: appdata, PATH: binDir }, home, exec, only: ["claude-desktop", "claude-code"] });
+    expect(res.map((r) => r.status)).toEqual(["updated", "updated"]);
+    expect(JSON.parse(readFileSync(file, "utf-8")).mcpServers["career-compass"]).toEqual({ command: "cmd", args: ["/c", "npx", "-y", SPEC], env: { CAREER_DATA_PATH: "D:/mine" } });
+    const removeAt = calls.findIndex((a) => a[1] === "remove");
+    const addAt = calls.findIndex((a) => a[1] === "add");
+    expect(removeAt).toBeGreaterThan(-1);
+    expect(addAt).toBeGreaterThan(removeAt);
+  });
+
+  it("a failed warm-up is reported but does not count as a failed install", () => {
+    const claudeDir = path.join(appdata, "Claude"); mkdirSync(claudeDir);
+    const exec = (c: string) => { if (c === "cmd") throw new Error("ENOTFOUND registry.npmjs.org\nmore"); return ""; };
+    const res = runInstall({ platform: "win32", env: winEnv(), home, exec, only: ["claude-desktop"] });
+    expect(res.map((r) => [r.client, r.status])).toEqual([["claude-desktop", "added"], ["npx-cache", "failed"]]);
+    expect(res[1].detail).toContain("ENOTFOUND registry.npmjs.org");
+    expect(res[1].detail).not.toContain("more");
+    expect(renderInstallReport(res)).toContain("Restart Claude Desktop.");
   });
 
   it("dry-run writes nothing and names what it would do", () => {
