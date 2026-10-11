@@ -675,9 +675,13 @@ export const FEEDBACK_LINE =
  * declares; a server added by hand (Desktop config, `claude mcp add`, the
  * `.mcpb`) never has it. "Which install am I on?" is the first question of
  * every support thread, and the answer used to take three messages.
+ *
+ * Takes the one value, not the whole environment: this file also checks npm for
+ * a newer version, and the directory's scan reads `process.env` next to a
+ * `fetch` as a credential that could leave the machine.
  */
-export function runningSurface(env: NodeJS.ProcessEnv = process.env): string {
-  return env.CLAUDE_PLUGIN_ROOT?.trim()
+export function runningSurface(pluginRoot: string | undefined = process.env.CLAUDE_PLUGIN_ROOT): string {
+  return pluginRoot?.trim()
     ? `Running from the Career Compass plugin v${PKG_VERSION}`
     : `Running as a standalone MCP server v${PKG_VERSION}`;
 }

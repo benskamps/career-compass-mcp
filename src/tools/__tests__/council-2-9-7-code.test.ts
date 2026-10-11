@@ -148,9 +148,9 @@ describe("C2 · check_setup on a fresh install is three lines, no homework", () 
 
 describe("C3 · check_setup names its surface", () => {
   it("plugin when CLAUDE_PLUGIN_ROOT is set, standalone otherwise", () => {
-    expect(runningSurface({ CLAUDE_PLUGIN_ROOT: "/x/plugin" })).toBe(`Running from the Career Compass plugin v${PKG_VERSION}`);
-    expect(runningSurface({})).toBe(`Running as a standalone MCP server v${PKG_VERSION}`);
-    expect(runningSurface({ CLAUDE_PLUGIN_ROOT: "  " })).toContain("standalone");
+    expect(runningSurface("/x/plugin")).toBe(`Running from the Career Compass plugin v${PKG_VERSION}`);
+    expect(runningSurface("")).toBe(`Running as a standalone MCP server v${PKG_VERSION}`);
+    expect(runningSurface("  ")).toContain("standalone");
   });
 
   it("appears in the report", async () => {
