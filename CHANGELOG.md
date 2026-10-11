@@ -4,6 +4,12 @@
 
 ### Changed
 
+- **Drafts keep your verbs.** A résumé line that says "adopted" stays "adopted", not
+  "shipped"; "managed" stays "managed"; one job's fact doesn't become "across both roles".
+  Drafts no longer credit you with "exposure" to something only the posting mentions, and
+  they leave why you want the job to you, with a `[confirm: …]` spot instead of a guessed
+  reason. On the five chat cases that slipped in the 2.11.2 comparison, honesty went from
+  9 of 15 to 15 of 15.
 - **`check_setup` reads one environment variable, not the whole environment.** It only
   needs `CLAUDE_PLUGIN_ROOT` to say which install is running. The directory's security
   scan flagged `doctor.js` because the file passed all of `process.env` around next to
