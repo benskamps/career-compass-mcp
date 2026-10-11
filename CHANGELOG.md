@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **`check_setup` reads one environment variable, not the whole environment.** It only
+  needs `CLAUDE_PLUGIN_ROOT` to say which install is running. The directory's security
+  scan flagged `doctor.js` because the file passed all of `process.env` around next to
+  the npm version check; it now reads just that one value.
+
 ## 2.11.2 — 2026-10-10
 
 A fix for people who set Career Compass up with `install` or a hand-written npx entry.
