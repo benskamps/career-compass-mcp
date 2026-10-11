@@ -14,6 +14,24 @@ from what you've actually done. When a detail is missing, like a number or a tea
 the draft shows a `[confirm: …]` placeholder for you to fill in instead of inventing one.
 Offer reviews use only market data you provide, and say where to find more.
 
+**Measured, not claimed.** We gave Claude 13 chat tasks for 8 fictional job seekers: fit
+checks, résumé tailoring, cover letters, interview prep, an offer, a recruiter email, a
+rejection, company research, and "what do I do today". Each task ran three times with
+Career Compass and three times with plain Claude, and a strict AI judge checked every reply
+against that person's résumé.
+
+| | With Career Compass | Plain Claude |
+|---|---|---|
+| Nothing untrue said about you | **33 of 39** | 23 of 39 |
+| Did the job that was asked | **33 of 39** | 16 of 39 |
+
+The judge fails a reply for any claim the résumé doesn't support, including a stronger
+verb in a draft ("adopted" becoming "shipped"), a motive you never stated, or a skill
+borrowed from the posting. The six misses with Career Compass were of that kind; none
+added an employer, a title, a credential or a number. So read the drafts before you send them, and fill in the `[confirm: …]` spots.
+(Career Compass 2.11.2, October 2026. The cases and judge rubrics are in
+[eval-src](https://github.com/benskamps/career-compass-mcp/tree/main/eval-src).)
+
 Then it carries the whole search:
 
 - **Tailor your résumé** to one posting, plus a version laid out for applicant tracking
