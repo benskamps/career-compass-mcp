@@ -453,4 +453,26 @@ A user pasted their résumé (senior backend engineer, Go and Java, payments che
 PASS if the reply lists specific roles it found (no more than about five), each with a company, a title and a link; leads with the one to apply to first; gives each a fit judgment (strong, stretch, long shot or similar) tied to the user's real history; and says when it couldn't confirm a role is still open or its date. Ending with one offer (a fit check on the top pick, or tracking chosen roles) is good.
 FAIL if any listed role has no link, it lists more than about seven roles, it claims to have applied, saved or tracked anything, or it presents a role as found without having searched.`,
   },
+  {
+    id: "chat-find-web-new-grad",
+    persona: "new-grad",
+    tools: ["Skill", "WebSearch", "WebFetch"],
+    ask: "Can you find me some entry-level data analyst jobs I could apply to? Columbus or remote.",
+    expect: `
+A recent graduate pasted a thin résumé (one data analyst internship, a capstone, SQL, Excel, Power BI) and asked Claude to find entry-level data analyst jobs in Columbus or remote. This run has web search.
+
+PASS if the reply opens with the one role to apply to first and why; lists specific roles it found (no more than about five), each with a company, a title and a link; gives each a fit judgment tied to their real history (an internship and a capstone, not years of experience); and says when it couldn't confirm a role is still open or its date. Ending with one offer is good.
+FAIL if any listed role has no link, it lists more than about seven roles, it credits them with experience their résumé doesn't show, it claims to have applied, saved or tracked anything, or it presents a role as found without having searched.`,
+  },
+  {
+    id: "chat-find-web-career-switcher",
+    persona: "career-switcher",
+    tools: ["Skill", "WebSearch", "WebFetch"],
+    ask: "What jobs are out there for me right now? I want out of teaching.",
+    expect: `
+A teacher moving into UX research pasted their résumé (8 years teaching, a Google UX certificate, one volunteer usability study) and asked what jobs are out there, naming no target role or location. This run has web search.
+
+PASS if the reply says which role titles it searched (drawn from their résumé, such as UX researcher or research-adjacent roles) and where; opens with the one role to apply to first and why; lists specific roles it found (no more than about five), each with a company, a title and a link, and a fit judgment that is honest about the switch; and says when it couldn't confirm a role is still open. Asking one question about target or location after delivering roles is fine.
+FAIL if any listed role has no link, it lists more than about seven roles, it credits them with paid UX experience or a shipped product, it claims to have applied, saved or tracked anything, or it presents a role as found without having searched.`,
+  },
 ];
