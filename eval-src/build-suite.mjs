@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FIND_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ const OUT = process.env.EVAL_SUITE_ROOT ?? join(repo, "plugin");
 const TOOLS_SUITE = join(OUT, "evals");
 const CHAT_SUITE = join(OUT, "evals-chat");
 const MCP = "mcp__plugin_career-compass_career-compass__";
-const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|find|answer";
+const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|find|feedback|answer";
 
 // ---------- inputs ----------
 
@@ -391,6 +391,28 @@ function buildChat() {
         "surface--no-false-save-claim": noFalseSaveClaim,
         // Job postings name stacks ("Node.js"), so the find cases check setup talk without it.
         "surface--no-setup-talk": { ...noSetupTalk, pattern: "node --version|npx|MCP server|local server|terminal" },
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_FEEDBACK_CASES) {
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "Report what Career Compass got wrong, with personal details taken out.",
+      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["quality", "feedback"],
+      graders: {
+        "voice--report-a-miss": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
+        // The prefilled issue link is public: no name, employer, school or hiring company in it.
+        "trust--link-carries-no-identity": {
+          type: "regex", weight: 1, flags: "i", match: "not_contains",
+          pattern: "issues/new[^\\s)\\]]*(Marcus|Webb|Trailhead|Fieldnote|Stripe|Colorado)",
+        },
+        "trust--no-sent-claim": {
+          type: "regex", weight: 1, flags: "i", match: "not_contains",
+          pattern: "(I'?ve|I have) (now )?(sent|submitted|filed|posted|reported) (it|this|that|the|your)",
+        },
+        "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
     }); n++;

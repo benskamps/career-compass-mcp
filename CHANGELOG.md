@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Tell the maker what it got wrong.** `/career-compass:feedback`, or "report this" in
+  claude.ai chat, turns a miss into a short report with your name, employers, schools and
+  pasted text taken out, shows you every word, and gives you a prefilled GitHub issue
+  link. Nothing is sent unless you send it. When you correct Claude, it fixes the answer
+  first and then mentions this once per conversation; it never asks for ratings.
+- **Find roles.** `/career-compass:find`, or "find me roles": up to five current postings,
+  each with its own link, led by the one to apply to first. Without web search, three
+  ready-to-paste searches instead.
+- Listed in the Official MCP Registry and claimable on Glama.
+
+### Changed
+
+- The feedback issue form now covers drafts, role searches, the card and setup talk, not
+  only fit checks.
+
 ## 2.12.0 — 2026-10-12
 
 Chat users get a reason and a day to come back, and a calendar nudge if they want one.

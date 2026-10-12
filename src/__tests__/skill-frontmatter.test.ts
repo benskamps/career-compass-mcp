@@ -68,7 +68,7 @@ describe("plugin skill frontmatter", () => {
       expect(fm.name).toBe(name);
       expect(fm["disable-model-invocation"], `${name} should be disable-model-invocation`).toBe(true);
     }
-    for (const name of ["debrief", "week", "sweep", "find", "answer"]) {
+    for (const name of ["debrief", "week", "sweep", "find", "feedback", "answer"]) {
       expect(skills).toContain(name);
       expect(main).toContain(`the ${name} method`);
     }
