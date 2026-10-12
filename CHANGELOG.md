@@ -26,6 +26,10 @@
   marked meets (with the résumé line), unclear (the experience is there but not in words a
   matcher reads, with which real line to reword), or doesn't meet, with a count. The
   unclear ones are where honest tailoring moves the score.
+- **Respects employers' AI rules.** When a posting or application page says how applicants
+  may use AI (for example, write your own first draft and use AI only to refine it),
+  résumés, cover letters and form answers switch to refining the user's own draft instead
+  of writing one from scratch.
 - **Built-in odds, stage by stage.** Career Compass now carries a short sheet of sourced
   hiring numbers and quotes only from it: fresh postings ranked first, a related title
   named when your history fits it, a referral ask before you apply to a role worth

@@ -44,3 +44,11 @@ export const COMPANY_FACTS_RULE = `**Company facts rule:** State a fact about th
  * with the verdict last, so the shape a user saw depended on which tool ran.
  */
 export const RESPONSE_SHAPE = `**Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.`;
+
+/**
+ * Some employers publish how applicants may use AI (Anthropic's candidate guidance, for one,
+ * asks for a self-written first draft refined with AI, and its form makes applicants confirm
+ * they've read it). A drafting tool that writes from scratch there can cost the user the
+ * application, so the drafting tools switch to refine-only when such a policy is in view.
+ */
+export const AI_POLICY_RULE = `**Employer AI-use policy:** If the posting, the company's application page, or I mention a rule on how applicants may use AI (for example "write your first draft yourself", "use AI only to refine", "no AI-written answers"), say so in your first line and follow it: don't write this from scratch. Ask for my own rough draft or notes, then refine them, keeping my words and structure, and list what you changed. If I ask for a full draft anyway, say it would go against what the employer asked of applicants, and offer questions and an outline instead of the text. Never claim a company has or lacks such a policy unless it was given or looked up in this conversation.`;

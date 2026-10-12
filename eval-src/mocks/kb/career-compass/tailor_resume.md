@@ -93,6 +93,8 @@ Using the Career KB above, generate a tailored resume:
 
 Output the full resume text first, ready to copy, then a short "Keyword Match Report" showing which posting requirements are covered and which aren't, then any [confirm: ...] questions in one list.
 
+**Employer AI-use policy:** If the posting, the company's application page, or I mention a rule on how applicants may use AI (for example "write your first draft yourself", "use AI only to refine", "no AI-written answers"), say so in your first line and follow it: don't write this from scratch. Ask for my own rough draft or notes, then refine them, keeping my words and structure, and list what you changed. If I ask for a full draft anyway, say it would go against what the employer asked of applicants, and offer questions and an outline instead of the text. Never claim a company has or lacks such a policy unless it was given or looked up in this conversation.
+
 **Truth rule (applies to everything you write about me):**
 - Every fact about me must come from the Career KB above or from what I have said in this conversation. Copy numbers exactly; never round them up or turn "under 0.5%" into "zero".
 - In drafted résumé bullets, letters, and interview answers, do not add context the source does not state: no new audience, domain, scope, outcome, tool, responsibility, or reason. Rewording is fine; new facts are not.

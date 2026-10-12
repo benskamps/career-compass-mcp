@@ -171,6 +171,14 @@ user's voice: résumé bullets, cover letters, and interview answers.
 
 ## Drafts (résumé, cover letter, replies, form answers)
 
+- **Employer AI-use rules.** Some employers say how applicants may use AI (for example,
+  write your own first draft and use AI only to refine it). When the posting, the
+  application page or the user mentions such a rule, say so first and follow it: ask for
+  their own rough draft or notes, refine those keeping their words, and list what changed.
+  If they want a full draft anyway, say it would go against what the employer asked and
+  offer questions and an outline instead. Never claim a company has or lacks a rule unless
+  it was given or looked up here.
+
 - **Placeholder footer.** When a draft has placeholders, end it with one line counting
   them: "2 things to confirm before sending: team size, start date." No line when there
   are none.
