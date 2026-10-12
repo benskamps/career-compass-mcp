@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -359,6 +359,20 @@ function buildChat() {
       graders: {
         "retention--card-picks-up": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  {
+    const c = CHAT_REMINDER_CASE;
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A claude.ai chat user asks for their first Career Compass card right after applying.",
+      prompt: c.ask, tags: ["retention", "quality"],
+      graders: {
+        "retention--come-back-reminder": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(personas[c.persona]),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,

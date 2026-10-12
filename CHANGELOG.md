@@ -1,9 +1,25 @@
 # Changelog
 
-## Unreleased
+## 2.12.0 — 2026-10-12
+
+Chat users get a reason and a day to come back, and a calendar nudge if they want one.
+
+### Added
+
+- **Chat tells you when to come back, and can remind you.** In claude.ai chat, the Career
+  Compass card now ends with one line naming the day it pays to return (a follow-up a
+  week after applying, the morning after an interview, two days before an offer
+  deadline) and what Claude will do then. Say yes and it goes on your calendar: through a
+  calendar connector after you OK the event, or as a small `.ics` file to open. The event
+  carries your card, so coming back is one paste.
+- **A "Job search" Project tip with your first card.** Put the card and your résumé in a
+  Claude Project with a one-line instruction, and every chat there starts where you left
+  off. Claude now reads a card from the Project's files before asking for it.
 
 ### Changed
 
+- The listing and docs no longer say "nothing is saved between chats" for claude.ai; they
+  describe the card, the Project and the reminder instead.
 - **Drafts keep your verbs.** A résumé line that says "adopted" stays "adopted", not
   "shipped"; "managed" stays "managed"; one job's fact doesn't become "across both roles".
   Drafts no longer credit you with "exposure" to something only the posting mentions, and

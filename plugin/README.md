@@ -58,7 +58,7 @@ cloud sync and no telemetry.
 
 | Where | What you get |
 |---|---|
-| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. Nothing is saved between chats. |
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
 | **Claude Code**, and **Cowork sessions on your computer** | The skills plus a local server that remembers your history and tracks your applications. Needs **Node.js 22 or newer**. |
 
 ## Getting started
@@ -109,7 +109,7 @@ and writes nothing.
 
 The plugin makes two kinds of network request, and neither carries your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.11.2` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.12.0` and its
   dependencies from the public npm registry.
 - **Update check, only when you ask:** the `check_setup` tool can ask the public npm
   registry for the latest published version. It is off by default; Claude turns it on when
@@ -124,7 +124,7 @@ covering collection, storage, sharing, retention, and contact details, is at
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.11.2`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.12.0`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
