@@ -1,6 +1,6 @@
 ---
 name: career-compass
-description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, asking where to find openings or to find roles that match them, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
+description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, asking where to find openings or to find roles that match them, correcting an earlier answer or wanting to tell Career Compass's maker it got something wrong, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
 # Read-only tools only (readOnlyHint: true), so a first answer needs no permission prompt.
 # Every tool that writes still asks.
 allowed-tools:
@@ -210,13 +210,14 @@ user's voice: résumé bullets, cover letters, and interview answers.
 | Review the week | the week method |
 | Pull job-search mail and invites into the pipeline | the sweep method |
 | Find open roles to apply to ("find me roles", "what's out there for me?") | the find method |
+| Tell Career Compass's maker it got something wrong ("report this", "this is a bug") | the feedback method |
 | Answer an application form's questions | `answer_application` |
 | Remember something that matters | `capture_insight` after interviews, offers, and rejections, with `origin: "user_said"` for what they told you and `"inferred"` for your own read |
 | Prove work from local projects ("look at my repos in ~/code and tell me what I can honestly claim") | `harvest_evidence` on each repository folder, then turn its counts into résumé bullets with `[confirm: ...]` for every outcome the history can't show |
 | Check the install | `check_setup` |
 
-The debrief, week, sweep and find methods (and the answer method, for when `answer_application`
-isn't available) are the `debrief`, `week`, `sweep`, `find` and `answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
+The debrief, week, sweep, find and feedback methods (and the answer method, for when `answer_application`
+isn't available) are the `debrief`, `week`, `sweep`, `find`, `feedback` and `answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
 in plain words, and use the short versions below when you can't read them. Slash commands
 such as `/career-compass:debrief` work in Claude Code and Cowork. In claude.ai chat, don't
 tell the user to type one: they just ask in plain words.
@@ -290,6 +291,11 @@ Use what the user pasted, and say what you could not check.
   so don't offer to save. Without web search, say so in one line and give three
   ready-to-paste searches (`site:boards.greenhouse.io OR site:jobs.lever.co …` with their
   title and location), then offer a fit check on any posting they paste.
+- **Reporting a miss:** draft a short report in general terms (no names, employers, schools,
+  salaries or pasted text): where they used it, what went wrong, what it said and should
+  have said. Show every word, then give the link
+  github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml for them
+  to open and submit. Never send it yourself.
 - **Application questions:** answer each from their résumé within its character limit.
   Work authorization, relocation, salary expectation and start date are theirs to answer:
   `[confirm: ...]` unless they told you. Flag any "years of experience with X" the résumé
@@ -405,6 +411,11 @@ for your read). When the user mentions a status change, offer to record it with
 - **Landing mode.** After the close-out, offer a 30/60/90 plan built from what
   interviewers probed (`interview_arc` rounds, journal `interview_insight` entries), and a
   weekly win capture (`capture_insight` type `win`, `origin: "user_said"`).
+- **When you got it wrong.** If the user corrects you ("that's wrong", "I do have SQL",
+  "that posting doesn't exist"), fix it first. Then, once per conversation, add one line:
+  "If you'd like Career Compass's maker to hear about that, say 'report this' and I'll
+  draft a short report with your details taken out; nothing is sent unless you send it."
+  Never ask unprompted for ratings or reviews, and never after a rejection or bad news.
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is

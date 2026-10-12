@@ -100,6 +100,7 @@ words ("prep me for my interview on Friday").
 | `/career-compass:week` | Your week: what moved, stalled or closed, your pace, and one focus for next week |
 | `/career-compass:sweep` | Checks your inbox and calendar (through connectors you already use) for job-search mail and invites, then updates applications in one batch you approve. Never sends email |
 | `/career-compass:find` | Finds open roles that match you, ranks the best few against your real history with a link to each, and skips what you already track. Never applies for you |
+| `/career-compass:feedback` | Turns something it got wrong into a short report with your personal details taken out, shows you every word, and gives you a link to send it to the maker. Nothing is sent unless you send it |
 | `/career-compass:answer` | Answer an application form's questions from your real history |
 
 A few things it does once you've used it for a while: saves end with a receipt of what

@@ -1,6 +1,6 @@
-name: What did your first fit check get wrong?
-description: A fit check, résumé draft or interview prep said something wrong or unhelpful. Two minutes, no personal data.
-title: "Fit check got it wrong: "
+name: What did Career Compass get wrong?
+description: A fit check, draft, role search, interview prep or anything else said something wrong or unhelpful. Two minutes, no personal data.
+title: "Got it wrong: "
 labels: ["feedback", "fit-check"]
 body:
   - type: markdown
@@ -31,6 +31,10 @@ body:
         - It said something about me that isn't true
         - The gaps or advice weren't useful
         - It asked too many questions, or the wrong one
+        - A draft (résumé, cover letter, reply) was off
+        - A role search listed bad, dead or made-up postings
+        - It forgot something, or the Career Compass card was wrong
+        - It talked about setup or tools I don't have
         - Something else
     validations:
       required: true
