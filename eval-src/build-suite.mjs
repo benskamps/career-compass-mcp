@@ -389,7 +389,8 @@ function buildChat() {
         "task--find": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
-        "surface--no-setup-talk": noSetupTalk,
+        // Job postings name stacks ("Node.js"), so the find cases check setup talk without it.
+        "surface--no-setup-talk": { ...noSetupTalk, pattern: "node --version|npx|MCP server|local server|terminal" },
         "activation--skill-fired": skillFired,
       },
     }); n++;

@@ -23,8 +23,10 @@ The user wants open roles to apply to. Anything they said about what they want i
    - Posted date if the page shows one, else "date not shown"
    - Strong, stretch, or long shot, with the one line of their history that earns it and,
      for a stretch, the gap
-   List only postings you actually found, with their real link. Never invent a role, a
-   company that is hiring, a link, a salary or a date. A role you couldn't open gets "I
+   List only postings you actually found, each with its own link to that posting. A role
+   you saw only on a list page or in a snippet, with no link of its own, doesn't make the
+   list; point to the board it's on in one line after the list instead. Never invent a
+   role, a company that is hiring, a link, a salary or a date. A role you couldn't open gets "I
    couldn't open this one; check it's still live". Leave out roles they already applied to
    or are tracking, unless nothing else turned up, and say so.
 4. **Without web search**, say so in one line, then give three searches ready to paste,
