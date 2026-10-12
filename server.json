@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.benskamps/career-compass-mcp",
+  "title": "Career Compass",
+  "description": "Job-search co-pilot: fit checks, résumé tailoring, cover letters, pipeline, interview prep, offers.",
+  "version": "2.12.0",
+  "repository": {
+    "url": "https://github.com/benskamps/career-compass-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "career-compass-mcp",
+      "version": "2.12.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CAREER_DATA_PATH",
+          "description": "Folder for your career data (defaults to ~/.career-compass)",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

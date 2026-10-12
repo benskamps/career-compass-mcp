@@ -79,3 +79,20 @@ jobs:
       # duplicated here on purpose, so the two cannot drift apart.
       - name: Publish
         run: npm publish
+
+      # Official MCP Registry (registry.modelcontextprotocol.io), which other
+      # directories (MCPRush, Glama, …) index from. Runs after npm publish
+      # because the registry verifies ownership by reading `mcpName` from the
+      # published package. Auth is the same OIDC token as above: the
+      # io.github.benskamps/ namespace accepts this repo's workflows.
+      #
+      # continue-on-error: the npm release is the product; a registry hiccup
+      # must never make a good release look failed. Re-run this job to retry.
+      - name: Publish to the MCP Registry
+        continue-on-error: true
+        run: |
+          pkg="$(node -p "require('./package.json').version")"
+          jq --arg v "$pkg" '.version = $v | .packages[0].version = $v' server.json > server.tmp && mv server.tmp server.json
+          curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
