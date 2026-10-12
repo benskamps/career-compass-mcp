@@ -1,8 +1,8 @@
 # Career Compass — Setup Check
 
-Running as a standalone MCP server v2.11.2.
+Running as a standalone MCP server v2.12.0.
 
-ℹ️ **Version** — v2.11.2 installed. Not compared against npm — the update check is off unless you ask for it.
+ℹ️ **Version** — v2.12.0 installed. Not compared against npm — the update check is off unless you ask for it.
    → Say "check Career Compass for updates" to run this with checkForUpdates: true (one request to the public npm registry).
 ✅ **Data directory** — ~/.career-compass exists and is writable.
 ℹ️ **Git backup** — ~/.career-compass is not a git repository.

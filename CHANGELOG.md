@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 2.12.0 — 2026-10-12
+
+Chat users get a reason and a day to come back, and a calendar nudge if they want one.
 
 ### Added
 
