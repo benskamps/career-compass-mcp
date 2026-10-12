@@ -23,7 +23,7 @@ they said is below.
      ("it said I had no SQL; my résumé lists SQL under Skills").
    The draft has four parts:
    - **Where:** claude.ai chat (web, desktop or mobile), Cowork, Claude Code, another MCP
-     app, or not sure. Judge it from what they said; if they didn't say, "Not sure".
+     app, or "Not sure". Only what they said; never guess it.
    - **What went wrong:** the one closest option from this list, word for word:
      "The verdict was wrong (strong fit / stretch / long shot)", "It missed something I
      have, or said I lack something I have", "It said something about me that isn't true",
@@ -32,16 +32,17 @@ they said is below.
      made-up postings", "It forgot something, or the Career Compass card was wrong",
      "It talked about setup or tools I don't have", "Something else".
    - **Details:** what they asked for, what it said, and what it should have said, in
-     three to six plain lines.
+     three to six plain lines. Only what they told you or what you can see: no theories
+     about why it went wrong, no numbers you worked out, and no metrics from their
+     résumé (say "a high-volume event pipeline", not its throughput).
    - **Version:** with the Career Compass tools, the version `check_setup` reports; else
      leave it out.
 3. **Show it, then the link.** Show the whole draft in one code block, then one line:
    "This is everything the report says. Change anything you like, then open
-   <link> and press Submit (you'll need a free GitHub account). Nothing is sent unless
-   you send it." Build the link from the draft, with each value URL-encoded:
-   `https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml&title=Got%20it%20wrong%3A%20<short summary>&where=<Where>&what=<What went wrong>&details=<Details>&version=<Version>`
-   If the details are long, leave `details` out of the link and say "paste the details
-   into the box". They can also say it in
+   https://github.com/benskamps/career-compass-mcp/issues/new?template=fit-check-wrong.yml,
+   pick the matching options, paste the details into the box and press Submit (you'll
+   need a free GitHub account). Nothing is sent unless you send it." Give the link
+   exactly as written, with nothing added to it. They can also say it in
    [Discussions](https://github.com/benskamps/career-compass-mcp/discussions) instead.
 4. **Fix it now if you can.** If what went wrong happened in this conversation and you can
    see the right answer, give the corrected version after the link, in a line or two, or

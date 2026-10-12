@@ -6,8 +6,8 @@
 
 - **Tell the maker what it got wrong.** `/career-compass:feedback`, or "report this" in
   claude.ai chat, turns a miss into a short report with your name, employers, schools and
-  pasted text taken out, shows you every word, and gives you a prefilled GitHub issue
-  link. Nothing is sent unless you send it. When you correct Claude, it fixes the answer
+  pasted text taken out, shows you every word, and gives you the GitHub issue form
+  to paste it into. Nothing is sent unless you send it. When you correct Claude, it fixes the answer
   first and then mentions this once per conversation; it never asks for ratings.
 - **Find roles.** `/career-compass:find`, or "find me roles": up to five current postings,
   each with its own link, led by the one to apply to first. Without web search, three
