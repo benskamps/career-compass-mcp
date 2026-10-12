@@ -226,9 +226,16 @@ tell the user to type one: they just ask in plain words.
 
 Use what the user pasted, and say what you could not check.
 
-- **Fit check:** pull the posting's must-haves and nice-to-haves, map each to concrete
-  evidence from the résumé, and give a verdict (strong, stretch, or long shot) with the top
-  two gaps and how to address each in the application.
+- **Fit check:** first, the knockouts: the hard requirements a screening question could
+  reject on automatically, before a person reads anything (work authorization or
+  sponsorship, onsite location, a license, certification or clearance, minimum years, a
+  degree stated as required). Mark each clears, fails, or unknown. A fail makes it a long
+  shot, and the verdict line says why; unknown is a question to ask, never a fail. Never
+  suggest shading a screening answer. Then mark each must-have meets (quote the résumé
+  line), unclear (the history suggests it but the résumé doesn't say it in the posting's
+  terms; name the real line to reword), or doesn't meet, and give the count ("meets 5 of
+  8, 2 unclear"). Give a verdict (strong, stretch, or long shot) with the top two gaps and
+  how to address each in the application.
 - **Tailored résumé:** reorder and reword real bullets toward the posting's language, lead
   with quantified outcomes, and keep every fact true. List any claim you need them to
   confirm.

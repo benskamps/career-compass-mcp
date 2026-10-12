@@ -119,23 +119,39 @@ describe("explore_opportunity carries the preference contract", () => {
 
   it("demands an explicit compensation check, including the silent-posting case", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
-    expect(text).toContain("### 2. Compensation Check");
+    expect(text).toContain("### 3. Compensation Check");
     expect(text).toContain("above the band / inside the band / below the floor");
     expect(text).toContain("posting silent on comp");
   });
 
   it("demands an explicit location and remote check", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
-    expect(text).toContain("### 3. Location & Remote Check");
+    expect(text).toContain("### 4. Location & Remote Check");
     expect(text).toContain("Open to remote");
     expect(text).toContain("Open to relocation");
   });
 
   it("asks for matches AND gaps as separate sections", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
-    expect(text).toContain("### 4. Skills Match");
-    expect(text).toContain("### 5. Skill Gaps");
-    expect(text.indexOf("### 4. Skills Match")).toBeLessThan(text.indexOf("### 5. Skill Gaps"));
+    expect(text).toContain("### 5. Must-Have Check");
+    expect(text).toContain("### 6. Skill Gaps");
+    expect(text.indexOf("### 5. Must-Have Check")).toBeLessThan(text.indexOf("### 6. Skill Gaps"));
+  });
+
+  it("marks each must-have meets, unclear, or doesn't meet, the way ATS graders score", async () => {
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("**Meets**");
+    expect(text).toContain("**Unclear**");
+    expect(text).toContain("**Doesn't meet**");
+    expect(text).toContain("using only facts already in the history");
+  });
+
+  it("checks knockout requirements first, and never treats unknown as a fail", async () => {
+    const text = await callText("explore_opportunity", { posting: POSTING });
+    expect(text).toContain("### 1. Knockout Check");
+    expect(text.indexOf("### 1. Knockout Check")).toBeLessThan(text.indexOf("### 2. Fit Score"));
+    expect(text).toContain("never treat unknown as a fail");
+    expect(text).toContain("Never suggest shading an answer");
   });
 });
 
@@ -179,7 +195,7 @@ describe("explore_opportunity vs. the job board's own label", () => {
       posting: POSTING,
       sourceFitLabel: "LinkedIn: strong match",
     });
-    expect(text).toContain("### 6. Verdict vs. the Source Label");
+    expect(text).toContain("### 7. Verdict vs. the Source Label");
     expect(text).toContain("**Agree with the label**");
     expect(text).toContain("**Disagree — the board is over-calling this**");
     expect(text).toContain("**Disagree — the board is under-calling this**");
@@ -199,7 +215,7 @@ describe("explore_opportunity vs. the job board's own label", () => {
 
   it("still asks the question when no label was supplied", async () => {
     const text = await callText("explore_opportunity", { posting: POSTING });
-    expect(text).toContain("### 6. Verdict vs. the Source Label");
+    expect(text).toContain("### 7. Verdict vs. the Source Label");
     expect(text).toContain("No job-board label was supplied");
     expect(text).toContain("sourceFitLabel");
     // And it must not invent a label block. (The posting itself is still fenced,
