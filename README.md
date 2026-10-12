@@ -84,7 +84,7 @@ In the Claude app or on claude.ai, open **Customize → Plugins**, search for
 
 | Where you use Claude | What you get |
 |---|---|
-| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting and Claude does the fit check, tailoring, interview prep or offer review in the conversation. Nothing is saved between chats. |
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting and Claude does the fit check, tailoring, interview prep or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
 | **Cowork** and **Claude Code** on your computer | The skills plus the local server: your career history and every application are kept as plain YAML on your computer, so later answers start from them. Needs **Node.js 22 or newer**. |
 
 The commands below work in Claude Code and Cowork. In claude.ai chat, just ask in plain

@@ -300,23 +300,49 @@ user carries their search to the next one: a short summary they keep and paste b
   ```
 
   Only what they gave you, with numbers copied exactly. Real dates, worked out from today
-  ("yesterday" becomes a date); leave a field out rather than guess. Then one line: they
-  can keep it with their résumé in a Claude Project's files so every chat there starts
-  from both. It is theirs to keep: say "Here's your card", never that you saved, stored,
-  added or tracked anything.
+  ("yesterday" becomes a date); leave a field out rather than guess. It is theirs to keep:
+  say "Here's your card", never that you saved, stored, added or tracked anything.
+- **Name the day to come back.** Right under the card, when a role on it has a next step,
+  one line naming the soonest day it pays to return and what you'll do then, with the
+  reminder offer in the same line: "Come back Thu Oct 16 if Corvid Pay hasn't answered,
+  with this card, and I'll draft the nudge. Say the word and I'll put it on your
+  calendar." Pick the day from
+  the card: a follow-up seven days after applying, the day after an interview (debrief and
+  thank-you notes), two days before an offer deadline, else the `next:` date they gave.
+  Only real dates; no line when nothing has a next step.
+- **The reminder, when they say yes.** One event for that day, titled for the move
+  ("Career Compass: follow up with Corvid Pay"), with the card and "Open Claude and paste
+  this card" in its notes.
+  - If a calendar connector here can create events, show the event (title, date, notes)
+    and create it only after their OK. Never more than that one event unasked.
+  - Else, if you can create files here, give a small `.ics` file for it (an all-day event
+    on that date) that they open to add to their calendar.
+  - Else, one line: put that date in their calendar with "paste my Career Compass card".
+
+  Say what happened plainly: "It's on your calendar" only after the connector confirms
+  it, otherwise "Here's the reminder file". This is the only nudge chat can give, so offer
+  it once per chat, and drop it if they pass.
+- **A Job search Project, once.** With the first card in a search (not when they pasted
+  one), add a short tip: make a Claude Project called "Job search", put the card and their
+  résumé in its files, and add this line to its instructions: "Use Career Compass. Start
+  from the Career Compass card in this project's files, and give me an updated card when
+  anything changes." Every chat there then starts where they left off; they swap in the
+  new card when you update it. Skip the tip if the card or résumé already sits in this
+  project's files.
 - **A board, when they want one.** If they ask for a tracker or a board in chat and you
   can build artifacts that keep their own saved data, you may offer a small job-search
   board artifact (a row per role: company, role, stage, next step and date, notes) that
   keeps its rows when they reopen it. Fill it only with what they told you. The card stays
   the way to carry the search into a new chat.
 - **Keep it current.** Later in the same chat, when something changes (applied, an
-  interview booked, an offer, a rejection), end that reply with the updated card and no
-  repeat of the explanation.
+  interview booked, an offer, a rejection), end that reply with the updated card and its
+  come-back line, and no repeat of the explanation.
 - **Find it before asking.** When they come back without one ("what's next?", "where
-  was I?", a status update about a role you don't see), and you have a tool that searches
-  their past claude.ai conversations, search it for "Career Compass card" first and use
-  the newest one you find, saying which chat it came from. Don't go looking through files
-  or folders for it. If the search finds nothing, or there is no such tool, say in one
+  was I?", a status update about a role you don't see), first use a Career Compass card in
+  this project's files or instructions if there is one (the newest by its date). Else, if
+  you have a tool that searches their past claude.ai conversations, search it for "Career
+  Compass card" and use the newest one you find, saying which chat it came from. Don't go
+  looking through files or folders on a computer for it. If the search finds nothing, or there is no such tool, say in one
   line that you can't see earlier chats from here and ask for the card or a quick list of
   their applications; that is the whole reply, with no setup talk.
 - **When a card is pasted** (or found), it is their history: the truth rule applies to it as to a
@@ -324,7 +350,8 @@ user carries their search to the next one: a short summary they keep and paste b
   date: an interview in the next two days, an offer deadline, an application quiet for a
   week or more, a "next" date that has passed. Offer the first step of the most pressing
   one as a statement, and don't do it unasked. If the card is all they sent, lead with
-  that item instead. End with the updated card only if something changed.
+  that item instead. End with the updated card only if something changed, and with it the
+  come-back line (the calendar offer only if they haven't had it in this chat).
 
 ## Keep the loop closing
 

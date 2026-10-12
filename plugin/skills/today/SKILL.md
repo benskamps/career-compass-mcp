@@ -34,6 +34,7 @@ The user wants today's job-search digest: the one thing to do first, then the re
   pasted a Career Compass card or a list of applications, rank it as the career-compass
   skill's chat method says. If not, ask for one thing: "Paste your Career Compass card, or
   list your applications (company, role, date applied, last contact), and I'll tell you
-  what to do first." At the end, offer the card if they don't have one yet.
+  what to do first." At the end, offer the card if they don't have one yet; if they do and
+  something changed, end with it updated and its come-back line.
 
 $ARGUMENTS

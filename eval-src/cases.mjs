@@ -412,3 +412,18 @@ Today is ${EVAL_TODAY}. The user pasted their Career Compass card from an earlie
 PASS if the reply writes the cover letter first, built on facts from the card or the résumé facts it carries, and then briefly (a line or two) points out what needs attention: the Halyard interview tomorrow and/or the overdue Corvid Pay follow-up, offering to help rather than doing it unasked.
 FAIL if it skips or shortchanges the letter, drafts the full interview prep or follow-up without being asked, mentions neither the interview nor the follow-up, or claims to have saved or tracked anything.`,
 };
+
+// The first card in a chat: the reply names the day to come back and offers a
+// reminder, because nothing else in chat brings the user back.
+export const CHAT_REMINDER_CASE = {
+  id: "chat-card-reminder",
+  persona: "laid-off-engineer",
+  ask: "I just applied to Corvid Pay for the Staff Backend Engineer, Payments role (remote, US). " +
+    "Quick background: Senior Software Engineer, 9 years in Go and Java; I cut checkout p99 from 1.8s to 240ms " +
+    "and took duplicate charges from about 300 a month to under 5. Can you make me a Career Compass card?",
+  expect: `
+Today is ${EVAL_TODAY}. A claude.ai chat user applied to Corvid Pay today and asked for a Career Compass card. Nothing else is known about them.
+
+PASS if the reply gives the card in one copyable block with Corvid Pay applied ${EVAL_TODAY} and a follow-up step dated about a week out (around ${offset(7)}), then names the day it pays to come back and what will happen then, and offers to put that on their calendar (through a calendar connector after their OK, or as a reminder file, or as a plain line to add themselves). A short tip about keeping the card in a Claude Project is fine.
+FAIL if it invents facts not in the message (other employers, titles, numbers, a second role), says a reminder or calendar event was already created, claims to have saved or tracked anything, offers a menu of several next steps, or talks about installing, servers, Node.js or setup.`,
+};

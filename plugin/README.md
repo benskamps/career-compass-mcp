@@ -58,7 +58,7 @@ cloud sync and no telemetry.
 
 | Where | What you get |
 |---|---|
-| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. Nothing is saved between chats. |
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
 | **Claude Code**, and **Cowork sessions on your computer** | The skills plus a local server that remembers your history and tracks your applications. Needs **Node.js 22 or newer**. |
 
 ## Getting started
