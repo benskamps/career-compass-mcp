@@ -577,6 +577,13 @@ describe("2.9.9 · the tools carry the close-out, offer and first-application be
     expect(text).toMatch(/Lead the comparison with my saved salary target/);
   });
 
+  it("evaluate_offer defaults to a counter and cites only the one randomized study", async () => {
+    const { text } = await call("evaluate_offer", { company: "Hooli", offerDetails: "Base 165k" });
+    expect(text).toContain("Default to recommending a counter unless I've given a reason not to");
+    expect(text).toContain("Cullen, Pakzad-Hurson & Perez-Truglia, 2025");
+    expect(text).toContain("cite no other negotiation statistic");
+  });
+
   it("pipeline_add records the date given and offers the briefing only on the first application", async () => {
     const first = await call("pipeline_add", { company: "Lumen", role: "Head of Ops", dateApplied: "2026-10-06" });
     expect(first.text).toContain("Applied: 2026-10-06");

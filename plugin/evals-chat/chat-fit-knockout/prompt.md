@@ -1,6 +1,6 @@
 ---
-description: Fit check where a hard requirement would screen the user out.
-tags: [task, quality, fit]
+description: 'Lifecycle levers from the hiring research: knockouts, referral ask, countering an offer.'
+tags: [task, quality, lifecycle]
 max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Skill]
