@@ -16,6 +16,16 @@
 
 ### Changed
 
+- **Fit checks look for knockouts first.** A screening question on a hard requirement
+  (work authorization, onsite location, a license or clearance, minimum years, a required
+  degree) is the one documented way an applicant system rejects someone before a person
+  reads anything. Fit checks now list those requirements first and mark each clears, fails
+  or unknown; a failed one is named on the verdict line, and an unknown one is a question,
+  never a fail. Works in claude.ai chat too.
+- **Must-haves marked the way the graders score them.** Each must-have in the posting is
+  marked meets (with the résumé line), unclear (the experience is there but not in words a
+  matcher reads, with which real line to reword), or doesn't meet, with a count. The
+  unclear ones are where honest tailoring moves the score.
 - The feedback issue form now covers drafts, role searches, the card and setup talk, not
   only fit checks.
 

@@ -89,50 +89,62 @@ default, do not reason as if the answer were "no", and do not let it move the fi
 either direction. Name what is missing and ask for it. Inventing a preference and then
 ruling a job out on it is the exact failure this tool exists to prevent.
 
-**Open your reply with one line:** the verdict in exactly these words, **Strong fit**, **Stretch**, or **Long shot**, then the score and the single biggest reason. The user decides from that line; everything below is the evidence.
+**Open your reply with one line:** the verdict in exactly these words, **Strong fit**, **Stretch**, or **Long shot**, then the score and the single biggest reason. If a knockout in section 1 fails, that knockout is the biggest reason. The user decides from that line; everything below is the evidence.
 
-### 1. Fit Score (X/10)
+### 1. Knockout Check
+The only documented way an applicant tracking system rejects someone with no human involved is a screening question the employer sets to disqualify (Workday, Greenhouse, SmartRecruiters, Oracle, Indeed and LinkedIn all support it). Those questions come from the posting's hard requirements, so check them first. List each hard requirement the posting states as required (not "preferred"): work authorization or sponsorship, onsite location or commute, a license, certification or clearance, a minimum number of years, a degree stated as required, shift or travel availability. Mark each one:
+- **Clears**: quote the career context line that shows it.
+- **Fails**: the career context or the user says otherwise. Say plainly that a screening question on this would likely reject the application before anyone reads it, and the verdict is **Long shot** whatever else fits, unless the posting offers an alternative ("or equivalent experience").
+- **Unknown**: we don't know (work authorization is often unknown). Ask; never treat unknown as a fail, and never guess it.
+If the posting states no hard requirements, say "no knockouts stated" in one line. Never suggest shading an answer to get past a screening question.
+
+
+### 2. Fit Score (X/10)
 Overall match with a one-line rationale. Strong fit is roughly 8-10, stretch 5-7, long shot below 5. Score against the *whole* contract: a role that
 matches on skills but misses the salary floor or the location constraint is not an 8.
 
-### 2. Compensation Check
+### 3. Compensation Check
 Compare the posting's compensation to the salary band above, explicitly:
 - Quote the posting's number or range, then say **above the band / inside the band / below the floor**, with the figures side by side.
 - If the posting gives no compensation at all, say **"posting silent on comp"** in those words. Do not infer, estimate, or borrow a number from elsewhere. Say when in the process to ask, and what to ask for.
 - If the band above reads "not set", say so plainly and note that the compensation half of this verdict is unverifiable until it is filled in.
 
-### 3. Location & Remote Check
+### 4. Location & Remote Check
 Compare the posting's location and onsite expectation to **Open to remote** and **Open to relocation** above:
 - **If either reads "not set", the user has never answered it.** Do not treat it as a constraint, do not assume a default, and do not rule the role in or out on it. Say which answer is missing and ask for it — an unanswered question is not a "no".
 - Onsite or hybrid in a place they have **stated** they will not relocate to → that is a blocker, name it as one, not as a footnote.
 - Remote role and they have stated they are open to remote → say it is clear, and check whether the posting hides a geographic or timezone restriction.
 - Posting vague or silent on location → say so and put it at the top of the questions to ask.
 
-### 4. Skills Match
-5-7 specific points where the background directly maps to what they are asking for. Quote from both the posting and the career history.
+### 5. Must-Have Check
+Graders such as Workday HiredScore, Greenhouse Talent Matching, Indeed's Smart Fit Score and Ashby score the résumé against the posting's must-haves, and recruiters read the top of that sorted list first. Mirror that: list each must-have the posting names, and mark it:
+- **Meets**: quote the posting and the career history line that proves it.
+- **Unclear**: the history suggests it but the résumé doesn't say it in words a grader can match. Name which real line to reword and how, using only facts already in the history.
+- **Doesn't meet**: nothing in the history shows it. It goes in section 6.
+End with the count, e.g. "Meets 5 of 8 must-haves, 2 unclear". The unclear ones are where tailoring honestly moves the score.
 
-### 5. Skill Gaps
+### 6. Skill Gaps
 Every requirement in the posting that the career context does not evidence. For each: (a) how significant, (b) whether it is a dealbreaker, (c) how to address it. Do not soften this section — an unlisted gap is one they find in the interview instead.
 
-### 6. Verdict vs. the Source Label
+### 7. Verdict vs. the Source Label
 ${sourceFitLabel
-  ? `Open this section with exactly one of: **Agree with the label**, **Disagree — the board is over-calling this**, or **Disagree — the board is under-calling this**. Then justify it against sections 2, 3, and 5, and rule in both directions:
+  ? `Open this section with exactly one of: **Agree with the label**, **Disagree — the board is over-calling this**, or **Disagree — the board is under-calling this**. Then justify it against sections 1, 3, 4, and 6, and rule in both directions:
 - Board says strong match, but comp misses the floor / location is a blocker / a dealbreaker gap exists → say the board is wrong, and say which check it ignored.
 - Board says weak or partial match, but the preference contract and the skills actually line up → say the board is wrong, and say what it under-weighted (career-changer profiles and non-obvious title mappings are where boards fail most).
 - If you agree, say so plainly and name the single thing that would flip the verdict.`
   : `No job-board label was supplied for this posting. State the label you would expect a keyword-matching board to show for it, and where that matcher would most likely mislead — over-calling on title overlap, or under-calling because the transferable evidence is worded differently. Re-run this tool with \`sourceFitLabel\` to check a specific board's claim.`}
 
-### 7. Talking Points
+### 8. Talking Points
 5 things to lead with in conversations about this role, framing the background in their language.
 
-### 8. Day in the Life
+### 9. Day in the Life
 Only if the user asked what the job would be like: the first 90 days and a typical week, from what the posting says. Otherwise skip this section.
 
-### 9. Red Flags / Questions
+### 10. Red Flags / Questions
 Anything in the posting that warrants clarification or concern.
 
-### 10. Verdict
-Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 2, 3, or 5 came back as a blocker, the verdict has to reckon with it rather than route around it. If the verdict is to pursue it and it isn't already tracked, make tracking it (pipeline_add with status "discovered", once they say yes) the closing offer, so it shows up in their daily list.
+### 11. Verdict
+Pursue or not? The strategic case for or against, stated in one paragraph. If any check in sections 1, 3, 4, or 6 came back as a blocker, the verdict has to reckon with it rather than route around it. If the verdict is to pursue it and it isn't already tracked, make tracking it (pipeline_add with status "discovered", once they say yes) the closing offer, so it shows up in their daily list.
 
 ${RESPONSE_SHAPE}
 ${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}

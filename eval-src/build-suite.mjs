@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -391,6 +391,20 @@ function buildChat() {
         "surface--no-false-save-claim": noFalseSaveClaim,
         // Job postings name stacks ("Node.js"), so the find cases check setup talk without it.
         "surface--no-setup-talk": { ...noSetupTalk, pattern: "node --version|npx|MCP server|local server|terminal" },
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_KNOCKOUT_CASES) {
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "Fit check where a hard requirement would screen the user out.",
+      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["task", "quality", "fit"],
+      graders: {
+        "task--knockout-first": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
     }); n++;
