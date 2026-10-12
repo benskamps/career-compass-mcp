@@ -79,6 +79,7 @@ résumé so the next fit check, cover letter, and interview prep start from it.
 | `/career-compass:debrief` | Right after an interview: what landed, what to sharpen, and a thank-you note per interviewer from your own notes |
 | `/career-compass:week` | Your week: what moved, stalled or closed, your pace, and one focus for next week |
 | `/career-compass:sweep` | Checks your inbox and calendar (through connectors you already use) for job-search mail and invites, then updates applications in one batch you approve. Never sends email |
+| `/career-compass:find` | Finds open roles that match you, ranks the best few against your real history with a link to each, and skips what you already track. Never applies for you |
 | `/career-compass:answer` | Answers an application form's questions from your real history, within each character limit |
 
 You can also just ask: "Prep me for my panel interview at Acme on Friday", "I got an offer,

@@ -1,6 +1,6 @@
 ---
 name: career-compass
-description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
+description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, asking where to find openings or to find roles that match them, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
 # Read-only tools only (readOnlyHint: true), so a first answer needs no permission prompt.
 # Every tool that writes still asks.
 allowed-tools:
@@ -86,7 +86,8 @@ for.
 If they pasted only a résumé ("what should I apply for?"), the answer is three role
 titles at the level the résumé supports today, each with its one line of evidence, then
 the two bullets a screener would skip and why (no number, no outcome, jargon). Then end
-with the save offer as the one offer, plus at most one question.
+with the save offer as the one offer, plus at most one question. If they asked you to find
+open roles, use the find method instead.
 
 Talk about their job search, not the plumbing. Don't say "your Career KB is empty", "the
 fit tool had nothing to work with", or name tools; say "I don't have your background yet".
@@ -208,13 +209,14 @@ user's voice: résumé bullets, cover letters, and interview answers.
 | Debrief an interview | the debrief method |
 | Review the week | the week method |
 | Pull job-search mail and invites into the pipeline | the sweep method |
+| Find open roles to apply to ("find me roles", "what's out there for me?") | the find method |
 | Answer an application form's questions | `answer_application` |
 | Remember something that matters | `capture_insight` after interviews, offers, and rejections, with `origin: "user_said"` for what they told you and `"inferred"` for your own read |
 | Prove work from local projects ("look at my repos in ~/code and tell me what I can honestly claim") | `harvest_evidence` on each repository folder, then turn its counts into résumé bullets with `[confirm: ...]` for every outcome the history can't show |
 | Check the install | `check_setup` |
 
-The debrief, week and sweep methods (and the answer method, for when `answer_application`
-isn't available) are the `debrief`, `week`, `sweep` and `answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
+The debrief, week, sweep and find methods (and the answer method, for when `answer_application`
+isn't available) are the `debrief`, `week`, `sweep`, `find` and `answer` skills beside this one (`../<name>/SKILL.md`); follow them whenever the user asks
 in plain words, and use the short versions below when you can't read them. Slash commands
 such as `/career-compass:debrief` work in Claude Code and Cowork. In claude.ai chat, don't
 tell the user to type one: they just ask in plain words.
@@ -272,6 +274,17 @@ Use what the user pasted, and say what you could not check.
 - **Inbox sweep:** if a mail or calendar connector is available, show the exact search
   query and run it only on their OK; otherwise ask them to paste the emails. Classify
   each and list the tracker changes. Never send email.
+- **Finding roles:** with web search, search current postings for what they want (their
+  words, their card's `Want:` line, or the titles their résumé supports) and give up to
+  five, opening with "Apply to <company, title> first" and why, then best first: company,
+  title, location, the link as found, posted date or "date not
+  shown", and a strong, stretch or long-shot line from their real history. Only postings
+  you actually found, each with its own link (a role with no link of its own isn't named at
+  all; name the board instead); never invent a role, a hiring company, a link, a salary or a date. In chat,
+  nothing is saved, so don't offer to save their background here.
+  Without web search, say so in one line and give three ready-to-paste searches
+  (`site:boards.greenhouse.io OR site:jobs.lever.co …` with their title and location),
+  then offer a fit check on any posting they paste.
 - **Application questions:** answer each from their résumé within its character limit.
   Work authorization, relocation, salary expectation and start date are theirs to answer:
   `[confirm: ...]` unless they told you. Flag any "years of experience with X" the résumé
