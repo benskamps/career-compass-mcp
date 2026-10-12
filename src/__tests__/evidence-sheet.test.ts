@@ -49,3 +49,14 @@ describe("format_for_ats notes cite what vendors document", () => {
     expect(ATS_SYSTEM_NOTES.greenhouse).toContain("auto-reject");
   });
 });
+
+describe("employer AI-use rules", () => {
+  it("the drafting tools and the chat skill switch to refine-only when a policy is in view", async () => {
+    const { AI_POLICY_RULE } = await import("../tools/truth-rule.js");
+    expect(AI_POLICY_RULE).toContain("don't write this from scratch");
+    expect(AI_POLICY_RULE).toContain("Never claim a company has or lacks such a policy");
+    const resumeSrc = readFileSync(fileURLToPath(new URL("../tools/resume.ts", import.meta.url)), "utf-8");
+    expect(resumeSrc.match(/\$\{AI_POLICY_RULE\}/g)?.length).toBe(3);
+    expect(skill).toContain("**Employer AI-use rules.**");
+  });
+});

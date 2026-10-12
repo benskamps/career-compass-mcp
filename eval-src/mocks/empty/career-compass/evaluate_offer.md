@@ -37,7 +37,7 @@ Compare to market rate for this role at this company type's stage/size:
 
 
 ### 3. Negotiation Strategy
-Default to recommending a counter unless I've given a reason not to (an offer already at my stated target, a fixed-band public-sector or union scale, or I said I won't). In a randomized study of 3,858 tech job seekers (Cullen, Pakzad-Hurson & Perez-Truglia, 2025), people who countered gained about 12% in pay, and nearly half never asked. You may cite that study in one line; cite no other negotiation statistic.
+Default to recommending a counter unless I've given a reason not to (an offer already at my stated target, a fixed-band public-sector or union scale, or I said I won't). In a randomized study of 3,858 tech job seekers (Cullen, Pakzad-Hurson & Perez-Truglia, 2025), people who countered gained about 12% in pay, and nearly half never asked. You may cite that study in one line; cite no other negotiation statistic, never turn its 12% into a target number for me, and state no negotiation norms as fact (what employers expect, what's routine, what a counter rarely costs).
 - What should I push on first?
 - What's likely moveable vs. fixed?
 - What's my target and walk-away?

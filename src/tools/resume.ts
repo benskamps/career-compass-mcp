@@ -5,7 +5,7 @@ import { guardedRead } from "./read-guard.js";
 import { formatSignalDigest } from "./signal-digest.js";
 import { embedUntrusted } from "../untrusted.js";
 import { noCareerDataMessage } from "../empty-state.js";
-import { TRUTH_RULE } from "./truth-rule.js";
+import { TRUTH_RULE, AI_POLICY_RULE } from "./truth-rule.js";
 import { formatRoles, formatAchievements, formatCredentials, formatProjects, narrativeBlock } from "./career-context.js";
 import { KB_OVER_PASTED, PASTED_RESUME_CLOSE, workFromPastedResume } from "./opportunity.js";
 import type { CareerData } from "../schemas/career-schema.js";
@@ -119,6 +119,8 @@ ${format === "functional" ? `1. Header
 
 Output the full resume text first, ready to copy, then a short "Keyword Match Report" showing which posting requirements are covered and which aren't, then any [confirm: ...] questions in one list.
 ${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
+${AI_POLICY_RULE}
+
 ${TRUTH_RULE}`,
         }],
       };
@@ -231,6 +233,8 @@ ${tone === "concise" ? "Every sentence earns its place. Max 250 words total." : 
 
 Keep it under 400 words. Make it feel human, not templated, through plain specific language rather than invented story: each sentence about me is either a fact from the Career KB or a plain statement of what I would bring or want. No scenes, causes, surprises, or lessons the Career KB doesn't give ("when results were stuck", "I didn't call it that at the time"), no "I've always…", and no claims about how I work today unless I am working today.
 
+${AI_POLICY_RULE}
+
 ${TRUTH_RULE}`,
         }],
       };
@@ -318,6 +322,8 @@ Answer every question, in order, in my voice. Under each answer show its length 
 - After the answers, one line counting the placeholders: "3 things to confirm before submitting: work authorization, salary, Epic years." No line when there are none.
 - Then one offer: when I fill in a narrative answer (work authorization, why I'm leaving, a gap), save it verbatim to \`narrative\` with save_career_section so the next form reuses it. Write nothing without my OK.
 ${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
+${AI_POLICY_RULE}
+
 ${TRUTH_RULE}`,
         }],
       };

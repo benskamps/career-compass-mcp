@@ -9,12 +9,12 @@ allowed_tools: [Skill]
 Back again. Here's my card from last time:
 
 ```
-Career Compass card · updated 2026-10-01
+Career Compass card · updated 2026-10-04
 Me: Senior Software Engineer, 9 yrs Go/Java · checkout p99 1.8s→240ms · duplicate charges ~300→<5/mo
 Want: Staff or senior backend, remote US
 Roles:
-- Corvid Pay · Staff Backend Engineer, Payments · applied 2026-09-27 · stretch · next: follow up by 2026-10-04
-- Halyard · Staff Engineer · interview 2026-10-10 (system design) · strong · next: prep
+- Corvid Pay · Staff Backend Engineer, Payments · applied 2026-09-30 · stretch · next: follow up by 2026-10-07
+- Halyard · Staff Engineer · interview 2026-10-13 (system design) · strong · next: prep
 Stories: checkout rewrite, idempotency layer
 ```
 

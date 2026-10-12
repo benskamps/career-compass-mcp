@@ -26,7 +26,7 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Offer already on record for this application (`demo-006`, status offer)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
-| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-13 | 2026-10-20 |
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-16 | 2026-10-23 |
 
 ---
 
@@ -48,7 +48,7 @@ Compare to market rate for Sr. Program Manager at Brightpath Health's stage/size
 - Lead the comparison with my saved salary target: say plainly whether the base is below, inside, or above it
 
 ### 3. Negotiation Strategy
-Default to recommending a counter unless I've given a reason not to (an offer already at my stated target, a fixed-band public-sector or union scale, or I said I won't). In a randomized study of 3,858 tech job seekers (Cullen, Pakzad-Hurson & Perez-Truglia, 2025), people who countered gained about 12% in pay, and nearly half never asked. You may cite that study in one line; cite no other negotiation statistic.
+Default to recommending a counter unless I've given a reason not to (an offer already at my stated target, a fixed-band public-sector or union scale, or I said I won't). In a randomized study of 3,858 tech job seekers (Cullen, Pakzad-Hurson & Perez-Truglia, 2025), people who countered gained about 12% in pay, and nearly half never asked. You may cite that study in one line; cite no other negotiation statistic, never turn its 12% into a target number for me, and state no negotiation norms as fact (what employers expect, what's routine, what a counter rarely costs).
 - What should I push on first?
 - What's likely moveable vs. fixed?
 - What's my target and walk-away?
