@@ -391,7 +391,9 @@ user carries their search to the next one: a short summary they keep and paste b
   calendar." Pick the day from
   the card: a follow-up seven days after applying, the day after an interview (debrief and
   thank-you notes), two days before an offer deadline, else the `next:` date they gave.
-  Only real dates; no line when nothing has a next step.
+  Only real dates; no line when nothing has a next step. A reply that gives the card ends
+  there (or with the Project tip below): no other offers or questions after it, not even the
+  referral question.
 - **The reminder, when they say yes.** One event for that day, titled for the move
   ("Career Compass: follow up with Corvid Pay"), with the card and "Open Claude and paste
   this card" in its notes.
