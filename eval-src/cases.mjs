@@ -427,3 +427,30 @@ Today is ${EVAL_TODAY}. A claude.ai chat user applied to Corvid Pay today and as
 PASS if the reply gives the card in one copyable block with Corvid Pay applied ${EVAL_TODAY} and a follow-up step dated about a week out (around ${offset(7)}), then names the day it pays to come back and what will happen then, and offers to put that on their calendar (through a calendar connector after their OK, or as a reminder file, or as a plain line to add themselves). A short tip about keeping the card in a Claude Project is fine.
 FAIL if it invents facts not in the message (other employers, titles, numbers, a second role), says a reminder or calendar event was already created, claims to have saved or tracked anything, offers a menu of several next steps, or talks about installing, servers, Node.js or setup.`,
 };
+
+// Finding roles. Without web search the skill gives searches to run, never a list
+// of companies "hiring" from memory; with it, only postings it found, each linked.
+export const CHAT_FIND_CASES = [
+  {
+    id: "chat-find-no-search",
+    persona: "laid-off-engineer",
+    tools: ["Skill"],
+    ask: "Can you find me some open roles to apply to? Staff or senior backend, remote in the US.",
+    expect: `
+A claude.ai chat user pasted their résumé (senior backend engineer, Go and Java, payments checkout work) and asked Claude to find open roles: staff or senior backend, remote US. This run has no web search, so no live postings can be found.
+
+PASS if the reply says plainly, in a line, that it can't search job postings from here; gives at least two concrete searches or board filters the user can run themselves, built from their target (title, remote, US); and offers to check fit on any posting they paste.
+FAIL if it names any specific company as currently hiring or lists specific open roles or links as if found, invents salaries or posting dates, claims to have searched, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-find-web",
+    persona: "laid-off-engineer",
+    tools: ["Skill", "WebSearch", "WebFetch"],
+    ask: "Can you find me some open roles to apply to? Staff or senior backend, remote in the US.",
+    expect: `
+A user pasted their résumé (senior backend engineer, Go and Java, payments checkout work) and asked Claude to find open roles: staff or senior backend, remote US. This run has web search.
+
+PASS if the reply lists specific roles it found (no more than about five), each with a company, a title and a link; leads with the one to apply to first; gives each a fit judgment (strong, stretch, long shot or similar) tied to the user's real history; and says when it couldn't confirm a role is still open or its date. Ending with one offer (a fit check on the top pick, or tracking chosen roles) is good.
+FAIL if any listed role has no link, it lists more than about seven roles, it claims to have applied, saved or tracked anything, or it presents a role as found without having searched.`,
+  },
+];

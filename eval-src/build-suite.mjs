@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FIND_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ const OUT = process.env.EVAL_SUITE_ROOT ?? join(repo, "plugin");
 const TOOLS_SUITE = join(OUT, "evals");
 const CHAT_SUITE = join(OUT, "evals-chat");
 const MCP = "mcp__plugin_career-compass_career-compass__";
-const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|answer";
+const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|find|answer";
 
 // ---------- inputs ----------
 
@@ -60,7 +60,7 @@ function frontmatter(fields) {
   return `---\n${out.join("\n")}\n---\n`;
 }
 
-function writeCase(suite, name, { prompt, tags, graders, maxTurns = 12, description }) {
+function writeCase(suite, name, { prompt, tags, graders, maxTurns = 12, description, allowedTools = ["Skill"] }) {
   const dir = join(suite, name);
   mkdirSync(join(dir, "graders"), { recursive: true });
   writeFileSync(join(dir, "prompt.md"), `${frontmatter({
@@ -68,7 +68,7 @@ function writeCase(suite, name, { prompt, tags, graders, maxTurns = 12, descript
     tags,
     max_turns: maxTurns,
     timeout_seconds: 300,
-    allowed_tools: ["Skill"],
+    allowed_tools: allowedTools,
   })}\n${prompt.trim()}\n`);
   for (const [file, { body = "", ...fields }] of Object.entries(graders)) {
     writeFileSync(join(dir, "graders", `${file}.md`), `${frontmatter(fields)}${body ? `\n${body.trim()}\n` : ""}`);
@@ -373,6 +373,21 @@ function buildChat() {
       graders: {
         "retention--come-back-reminder": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(personas[c.persona]),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_FIND_CASES) {
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "Find open roles to apply to, from a pasted résumé.",
+      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["task", "quality", "find"],
+      allowedTools: c.tools,
+      graders: {
+        "task--find": { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
