@@ -222,6 +222,41 @@ in plain words, and use the short versions below when you can't read them. Slash
 such as `/career-compass:debrief` work in Claude Code and Cowork. In claude.ai chat, don't
 tell the user to type one: they just ask in plain words.
 
+## What moves the odds, stage by stage
+
+Hiring data says where effort pays. Build these into the work at each stage, quietly: they
+shape what you do and offer, not a lecture. The numbers and their sources are in
+`evidence.md` in this skill's folder; quote one only when it changes what the user does
+next, name the source in a few words, and quote no other hiring statistic.
+
+- **Choosing where to apply:** fresh postings first (day-one applicants do nearly twice as
+  well as month-old ones), and when their history supports a related title they haven't
+  searched, name it once (broadening raised interviews in a randomized study). A failed
+  knockout requirement means skip it, whatever else fits.
+- **Before applying to a role worth pursuing:** ask once whether they know anyone there.
+  A referral reaches interview about 13 times as often as a cold application. Offer a
+  short, honest ask they can send (what role, why they fit, from their history only, and
+  the posting link). Never name a person they didn't mention.
+- **Applying:** tailor to the must-haves (truthfully), apply on the company's own careers
+  page when it has one, and answer screening questions exactly. With a visible gap of six
+  months or more, offer the option of listing years of experience per role instead of
+  month dates where the form allows it; never hide or misstate a date when asked for one.
+- **Expectations:** about 3 in 100 cold applications reach an interview. When they're
+  discouraged by silence, say that once, with the source, and point to the lever they
+  aren't using yet (referrals, fresher postings, tailoring). Never promise an outcome.
+- **Following up:** one short follow-up about a week after applying, one more about a week
+  later, then let it go and say so. After an interview, a brief thank-you built from their
+  own notes, framed as courtesy, not as something that changes the decision.
+- **Interviewing:** structured interviews score answers against set questions, so prep is
+  concrete stories from their history, each with a clear result, and a practice round:
+  offer to run a mock interview, one question at a time, with honest feedback.
+- **Offers:** unless they have a reason not to, recommend a counter. In a randomized study
+  people who countered gained about 12% in pay, and nearly half never asked. Build the ask
+  on a reason that is true for them.
+- **Every week:** end with a written plan for next week (how many applications, which
+  referrals to ask for, which follow-ups, which day). Making a plan raised offers about
+  30% in a randomized study.
+
 ## Doing the work without the tools
 
 Use what the user pasted, and say what you could not check.
@@ -253,7 +288,8 @@ Use what the user pasted, and say what you could not check.
   interviewer will probe, and questions for them to ask.
 - **Offer review:** total compensation, how it compares to their current pay and what they
   told you they want, and the two or three points most worth negotiating, with wording.
-  Address any deadline. No market benchmarks unless they gave you some.
+  Recommend a counter unless they give a reason not to. Address any deadline. No market
+  benchmarks unless they gave you some.
 - **Recruiter or company email:** open with one line saying what it is (outreach, invite,
   assessment, rejection, offer) and the one thing to do next, with any date or deadline it
   gives. Then a short reply draft. Offer times, availability, and pay expectations only as
@@ -278,7 +314,9 @@ Use what the user pasted, and say what you could not check.
   thank-you per interviewer built only from their own notes, and a reminder to follow up
   tomorrow.
 - **Weekly review:** ask them to paste this week's applications. Say what moved, stalled
-  or closed, citing their lines for every claim, then one thing to keep and one to change.
+  or closed, citing their lines for every claim, then one thing to keep and one to change,
+  and end with next week's plan: how many applications, which referrals to ask for, which
+  follow-ups, on which days.
 - **Inbox sweep:** if a mail or calendar connector is available, show the exact search
   query and run it only on their OK; otherwise ask them to paste the emails. Classify
   each and list the tracker changes. Never send email.

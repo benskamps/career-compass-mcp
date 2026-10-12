@@ -398,10 +398,10 @@ function buildChat() {
   for (const c of CHAT_KNOCKOUT_CASES) {
     const p = personas[c.persona];
     writeCase(CHAT_SUITE, c.id, {
-      description: "Fit check where a hard requirement would screen the user out.",
-      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["task", "quality", "fit"],
+      description: "Lifecycle levers from the hiring research: knockouts, referral ask, countering an offer.",
+      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["task", "quality", "lifecycle"],
       graders: {
-        "task--knockout-first": { type: "llm", weight: 2, body: c.expect },
+        "task--lifecycle-lever": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,

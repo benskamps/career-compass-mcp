@@ -20,7 +20,13 @@ read resources. Then, in this order:
 4. **A month on:** one line, only when the data shows it, e.g. "A month ago your journal
    kept flagging no metrics; your last three fit checks didn't." Skip it otherwise.
 5. **The honest read:** one thing working to do more of, one not working to change.
-6. **Next week's focus:** the single highest-leverage bet.
+6. **Next week's focus:** the single highest-leverage bet. If nearly all their
+   applications are cold and none came through a referral, that's usually it: name the
+   one or two tracked companies where asking someone is worth trying.
+7. **Next week's plan:** a short written plan with numbers and days: how many
+   applications, which referrals to ask for, which follow-ups are due, and which day for
+   each. A written plan raised offers about 30% in a randomized study (see the
+   career-compass skill's `evidence.md`); keep it to four lines.
 
 Cite the application (company, role) or journal entry (date and summary) behind every
 claim. If you can't point to one, cut the claim.

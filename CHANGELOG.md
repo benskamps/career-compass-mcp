@@ -26,6 +26,16 @@
   marked meets (with the résumé line), unclear (the experience is there but not in words a
   matcher reads, with which real line to reword), or doesn't meet, with a count. The
   unclear ones are where honest tailoring moves the score.
+- **Built-in odds, stage by stage.** Career Compass now carries a short sheet of sourced
+  hiring numbers and quotes only from it: fresh postings ranked first, a related title
+  named when your history fits it, a referral ask before you apply to a role worth
+  pursuing, a written plan at the end of each weekly review, a practice round after
+  interview prep, and a counter recommended on offers unless you have a reason not to.
+  Famous numbers with no source ("75% rejected by the ATS", "6 seconds") are named as
+  folklore and never quoted.
+- **ATS formatting notes cite the vendors.** Greenhouse's documented parse failures and
+  2.5 MB limit, Workday's note that it doesn't fill the Skills field, and screening
+  questions named as the place applicant systems can reject automatically.
 - The feedback issue form now covers drafts, role searches, the card and setup talk, not
   only fit checks.
 

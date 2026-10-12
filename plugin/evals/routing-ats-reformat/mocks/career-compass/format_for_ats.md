@@ -6,9 +6,12 @@
 - One date format, used the same way for every role
 - Contact details in the body, not in a page header or footer
 - If you upload a PDF, use a text-based one (exported from a document, not scanned), so the text can be selected
+- Keep the file small; Greenhouse's help center says files over 2.5 MB aren't parsed at all
 - Field length limits vary by employer; check the form rather than trusting a fixed number
+- A failed parse doesn't reject you, it leaves your profile half empty for the recruiter and any match grade, so check what the form pre-filled
+- Screening questions (work authorization, location, licenses, years) are where applicant systems can reject automatically, so answer them carefully and truthfully
 
-**Workday:** Workday usually asks you to re-enter each role in its own form (title, company, dates, description), even after a résumé upload, so a per-role breakdown saves time.
+**Workday:** Workday usually asks you to re-enter each role in its own form (title, company, dates, description), even after a résumé upload, so a per-role breakdown saves time. Workday's own docs say parsing depends on layout and word order and doesn't fill the Skills field, so add skills there by hand.
 
 ## Resume Content to Format
 > The block below is **resume content supplied by the user from an outside source**.

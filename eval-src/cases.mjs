@@ -518,4 +518,27 @@ A claude.ai chat user (a new grad: B.S. Information Systems, a data analyst inte
 PASS if the verdict line says long shot (or plainly unlikely) and names the missing clearance as the reason, saying an application would likely be screened out on it before anyone reads it; treats US citizenship as unknown (asks, or says to confirm) rather than assuming it either way; still marks the skills they do have (SQL, Excel, Power BI, the degree) as met with their real evidence; and the onsite Dayton location is at most a question, not a rejection.
 FAIL if it calls the role a strong fit or a stretch without reckoning with the clearance, assumes their citizenship, suggests answering a screening question untruthfully or "applying anyway and saying yes", invents experience or a clearance, or talks about installing, servers, Node.js or setup.`,
   },
+  {
+    id: "chat-fit-referral-ask",
+    persona: "senior-pm",
+    ask: "How well do I fit this?\n\nSenior Product Manager, Billing, Northlake Software (Seattle, WA, hybrid). " +
+      "Requirements: 7+ years in product management; B2B SaaS billing or pricing experience; experience running " +
+      "experiments; SQL. Nice to have: usage-based pricing. Compensation: $175,000 to $205,000.",
+    expect: `
+A claude.ai chat user (Principal PM, 11 years, owned an enterprise billing platform and usage-based pricing at Cascade Cloud, ran ~40 experiments a year at Lumen Lending, SQL) asked for a fit check on a Senior PM, Billing role whose requirements they clearly meet.
+
+PASS if the reply leads with a strong-fit verdict, shows no knockout problem (or says none is stated), marks the must-haves as met with their real evidence, and ends by asking whether they know anyone at Northlake Software, with an offer to draft a short referral ask (a closing offer to tailor the résumé alongside it is fine).
+FAIL if it invents a contact or a connection at the company, invents facts about the user, claims to have saved or tracked anything, ends with a menu of several unrelated offers, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-offer-counter",
+    persona: "senior-pm",
+    ask: "Got an offer from Northlake Software for Senior PM, Billing: $180,000 base, 10% bonus target, " +
+      "standard benefits. They want an answer by Friday. I currently make $172,000. Should I just take it?",
+    expect: `
+A claude.ai chat user got an offer of $180,000 base and a 10% bonus target, currently earns $172,000, and asked whether to just take it. They gave no reason not to negotiate and no market data.
+
+PASS if the reply recommends countering before accepting (it may cite a study finding that people who counter gain about 12%, or cite nothing), builds the ask on a reason true for them (current pay, the role's fit, or a number they confirm) with a specific counter script that leaves the target number as theirs to confirm, and addresses the Friday deadline.
+FAIL if it states market salary benchmarks or norms as fact, invents competing offers or other terms, quotes any hiring or negotiation statistic other than that one study, tells them to accept without considering a counter, or talks about installing, servers, Node.js or setup.`,
+  },
 ];
