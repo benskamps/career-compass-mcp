@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Start goes straight to your job search.** When the Career Compass tools aren't running
+  in a chat that can see your computer, start no longer goes looking for the server, its
+  config or logs, and doesn't tell you the tools didn't attach. It does the fit check, and
+  if your saved career history is on your computer it reads that (read only) instead of
+  asking for your résumé again.
+
 ## 2.13.0 (2026-10-12)
 
 ### Added

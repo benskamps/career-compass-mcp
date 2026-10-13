@@ -15,7 +15,17 @@ The user ran the Career Compass start command. Follow the career-compass skill's
 1. If the Career Compass tools are available, call `check_setup` (offline; do not pass
    `checkForUpdates`). If they are not, you are most likely in claude.ai chat: follow the
    career-compass skill's chat mode (no setup talk, no Node.js), and skip the saving steps
-   below in favor of the Career Compass card.
+   below in favor of the Career Compass card. Onboarding here is the job-search answer
+   itself, not getting the tools running:
+   - Don't look for, start or repair a Career Compass server, config, log or install on
+     their computer, even if you can see one or had started to; drop it and do the ask.
+   - Don't say the tools didn't attach or that nothing gets saved. Chat mode's one clause
+     about Claude Code or Cowork is the only mention.
+   - If you can read files on their computer and `~/.career-compass/career/` holds their
+     saved history, read it (read only) as their background instead of asking for a
+     résumé, and say so in a clause. If it isn't there, don't mention it.
+   - If they say they built or work on Career Compass, they are still the job seeker
+     here: no notes about installs, activation or how the plugin is doing.
 2. If they pasted a résumé and a posting, do the fit check: that is the start. If they
    pasted only a résumé below, give value first: three role titles at the level it
    supports today, each with its one line of evidence, and the two bullets a screener
