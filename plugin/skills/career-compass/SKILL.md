@@ -30,7 +30,9 @@ below.
 **Tools not available.** There are two cases. Tell them apart only by what the user says,
 not by what you can see of your own environment: most people without the tools are in
 claude.ai chat. A terminal, files, a memory folder or a failed file read are not the
-user saying anything; don't mention the helper, Node.js or setup because of them.
+user saying anything; don't mention the helper, Node.js or setup because of them. If you
+can see a Career Compass server, config or log on their computer, leave it alone: don't
+inspect, start or repair it, even if the user built Career Compass. Do their job-search ask.
 
 - **claude.ai chat** (web, desktop, or mobile): the default whenever the user hasn't said
   they are in Claude Code or Cowork. This is a full mode, not a fallback. Do the task directly from
