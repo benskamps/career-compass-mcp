@@ -4,6 +4,11 @@
 
 ### Fixed
 
+- **Start goes straight to your job search.** When the Career Compass tools aren't running
+  in a chat that can see your computer, start no longer goes looking for the server, its
+  config or logs, and doesn't tell you the tools didn't attach. It does the fit check, and
+  if your saved career history is on your computer it reads that (read only) instead of
+  asking for your résumé again.
 - **`/today` in chat finds the tracker you already have.** When Claude can read files on
   your computer and you used Career Compass in Claude Code or Cowork before, it reads your
   saved applications (read-only) instead of asking you to paste them, and if nothing has
