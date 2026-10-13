@@ -30,9 +30,13 @@ The user wants today's job-search digest: the one thing to do first, then the re
   skill's one-time morning briefing offer.
 - If the search has ended in an accepted offer, offer the career-compass skill's landing
   mode (this week's wins) instead of tracking new roles.
-- If the tools are not available (usually claude.ai chat), don't explain setup. If they
-  pasted a Career Compass card or a list of applications, rank it as the career-compass
-  skill's chat method says. If not, ask for one thing: "Paste your Career Compass card, or
+- If the tools are not available (usually claude.ai chat), don't explain setup, and don't
+  say the tools aren't loaded or available: go straight to their search. If they pasted a
+  Career Compass card or a list of applications, rank it as the career-compass skill's
+  chat method says. If they didn't, look for one before asking, as that skill's "Find it
+  before asking" says; that includes the tracker Career Compass already saved on their
+  computer, when you have a tool that can read their files. If nothing turns up, ask for
+  one thing: "Paste your Career Compass card, or
   list your applications (company, role, date applied, last contact), and I'll tell you
   what to do first." At the end, offer the card if they don't have one yet; if they do and
   something changed, end with it updated and its come-back line.
