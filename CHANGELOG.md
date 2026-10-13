@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **It finds your applications on its own.** In a chat where Claude can read files on your
+  computer but the Career Compass tools aren't running, `/career-compass:today` and "where
+  was I?" read your Career Compass applications file (read only) before asking you to paste
+  a card.
+
 ## 2.13.0 (2026-10-12)
 
 ### Added

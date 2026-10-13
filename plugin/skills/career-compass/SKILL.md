@@ -425,8 +425,12 @@ user carries their search to the next one: a short summary they keep and paste b
   was I?", a status update about a role you don't see), first use a Career Compass card in
   this project's files or instructions if there is one (the newest by its date). Else, if
   you have a tool that searches their past claude.ai conversations, search it for "Career
-  Compass card" and use the newest one you find, saying which chat it came from. Don't go
-  looking through files or folders on a computer for it. If the search finds nothing, or there is no such tool, say in one
+  Compass card" and use the newest one you find, saying which chat it came from. Else, if
+  you have a tool that reads files on their computer (a desktop file connector, for
+  example), read `~/.career-compass/pipeline/applications.yaml`, where Career Compass
+  keeps their applications: read only, say in a clause that you read it and when it was
+  last updated, and rank it like a card. If it isn't there, don't mention it. Don't go
+  looking anywhere else on their computer. If none of these finds anything, say in one
   line that you can't see earlier chats from here and ask for the card or a quick list of
   their applications; that is the whole reply, with no setup talk.
 - **When a card is pasted** (or found), it is their history: the truth rule applies to it as to a
