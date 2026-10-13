@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **`/today` in chat finds the tracker you already have.** When Claude can read files on
+  your computer and you used Career Compass in Claude Code or Cowork before, it reads your
+  saved applications (read-only) instead of asking you to paste them, and if nothing has
+  changed in two weeks it asks what happened since before ranking. It also no longer opens
+  by saying the tools aren't loaded.
+
 ## 2.13.0 (2026-10-12)
 
 ### Added
