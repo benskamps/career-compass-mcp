@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.13.1 (2026-10-14)
 
 ### Fixed
 
@@ -14,6 +14,11 @@
   saved applications (read-only) instead of asking you to paste them, and if nothing has
   changed in two weeks it asks what happened since before ranking. It also no longer opens
   by saying the tools aren't loaded.
+- **The saved tracker is found on the first try.** Chat now opens
+  `~/.career-compass/pipeline/applications.yaml` (and your saved career history for start)
+  by its exact path instead of searching for it, since file searches skip hidden folders
+  and guessed the wrong home folder. `/career-compass:today` knows the path on its own,
+  and chat no longer offers to edit the tracker it can only read.
 
 ## 2.13.0 (2026-10-12)
 

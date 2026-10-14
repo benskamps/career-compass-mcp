@@ -34,11 +34,20 @@ The user wants today's job-search digest: the one thing to do first, then the re
   say the tools aren't loaded or available: go straight to their search. If they pasted a
   Career Compass card or a list of applications, rank it as the career-compass skill's
   chat method says. If they didn't, look for one before asking, as that skill's "Find it
-  before asking" says; that includes the tracker Career Compass already saved on their
-  computer, when you have a tool that can read their files. If nothing turns up, ask for
-  one thing: "Paste your Career Compass card, or
-  list your applications (company, role, date applied, last contact), and I'll tell you
-  what to do first." At the end, offer the card if they don't have one yet; if they do and
-  something changed, end with it updated and its come-back line.
+  before asking" says. When you have a tool that reads files on their computer, that
+  includes the tracker Career Compass already saved there: read
+  `~/.career-compass/pipeline/applications.yaml` once, read only, passing that exact path
+  with the `~` as written (the tool expands it), not a home folder you guessed. Don't
+  search for it (file searches skip hidden folders) and read no other folders. If the
+  file isn't there, don't mention trying; if the read fails or is refused, one clause at
+  most, with no ask to grant access. It is read
+  only from here: don't offer to fix or update it, and name no tool; a change goes on the
+  updated card. If nothing
+  in it changed in the last two weeks, give the date it was last updated and ask what has
+  happened since before ranking. If nothing turns up, ask for one thing: "Paste your
+  Career Compass card, or list your applications (company, role, date applied, last
+  contact), and I'll tell you what to do first." At the end, offer the card if they don't
+  have one yet; if they do and something changed, end with it updated and its come-back
+  line.
 
 $ARGUMENTS
