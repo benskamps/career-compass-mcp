@@ -26,7 +26,7 @@ The user ran the Career Compass start command. Follow the career-compass skill's
      résumé, and say so in a clause. Open `~/.career-compass/career/profile.yaml` and
      `experience.yaml` by that exact path, with the `~` as written (the tool expands it),
      not a home folder you guessed; don't search for the folder, since file searches skip
-     hidden folders. If it isn't there, don't mention it.
+     hidden folders. If it isn't there or the read fails, don't mention it.
    - If they say they built or work on Career Compass, they are still the job seeker
      here: no notes about installs, activation or how the plugin is doing.
 2. If they pasted a résumé and a posting, do the fit check: that is the start. If they

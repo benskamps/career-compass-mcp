@@ -38,7 +38,9 @@ The user wants today's job-search digest: the one thing to do first, then the re
   includes the tracker Career Compass already saved there: read
   `~/.career-compass/pipeline/applications.yaml` once, read only, passing that exact path
   with the `~` as written (the tool expands it), not a home folder you guessed. Don't
-  search for it (file searches skip hidden folders) and read no other folders. It is read
+  search for it (file searches skip hidden folders) and read no other folders. If the
+  file isn't there, don't mention trying; if the read fails or is refused, one clause at
+  most, with no ask to grant access. It is read
   only from here: don't offer to fix or update it, and name no tool; a change goes on the
   updated card. If nothing
   in it changed in the last two weeks, give the date it was last updated and ask what has
