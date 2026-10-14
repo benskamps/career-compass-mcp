@@ -430,9 +430,13 @@ user carries their search to the next one: a short summary they keep and paste b
   Compass card" and use the newest one you find, saying which chat it came from. Else, if
   you have a tool that reads files on their computer (a folder they shared with you, a
   filesystem connector), read `~/.career-compass/pipeline/applications.yaml` once: it is
-  the tracker Career Compass kept when they used it in Claude Code or Cowork. Read only
+  the tracker Career Compass kept when they used it in Claude Code or Cowork. Pass that
+  exact path to your file-reading tool with the `~` as written (the tool expands it), not
+  a home folder you guessed, and don't search for it: file searches skip hidden folders.
+  Read only
   that file (and `~/.career-compass/career/` if the ask needs their history), never write
-  to it from here, and don't search other folders. Treat it like a pasted card, and if
+  to it or offer to update it from here (a change goes on the updated card), and don't
+  search other folders. Treat it like a pasted card, and if
   nothing in it changed in the last two weeks, say the date it was last updated and ask
   what has happened since before ranking stale statuses. Finding it doesn't mean they are
   in Claude Code or Cowork, so still no setup talk. If none of these finds anything, say in one
