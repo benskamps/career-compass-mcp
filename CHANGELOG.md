@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.14.1 (2026-10-17)
+
+### Changed
+
+- **The Career Compass card carries proof, not just status.** In claude.ai chat the card
+  now includes four to six of your strongest résumé lines, copied word for word. Your next
+  chat can write a letter or prep an interview from the card without the résumé.
+- **Fewer blanks to fill.** A draft marks at most three `[confirm: ...]` gaps (a letter
+  two), picks the ones that matter most, and asks about the rest in one question.
+  Interview prep from a card builds on its proof lines.
+- **A tailored résumé leaves a layoff line off** by default, says so, and offers to put
+  it back.
+- **Come-back days skip weekends.** A follow-up or debrief day moves to Monday, and an
+  offer-deadline day moves to the Friday before.
+- **Saying "yes" to the offered step does that step.** It builds on the last reply
+  instead of repeating it.
+- **One offer ends a first reply.** In chat, the Claude Code or Cowork mention now
+  appears only inside the card offer.
+- **The listing and README open with prompts you can copy**, including "a sample Career
+  Compass fit check" for anyone without a posting at hand.
+
+### Fixed
+
+- In chat, Career Compass no longer says it remembers your background between sessions.
+  The card does that.
+- Fit-check counts ("meets 5 of 8") now match the must-haves listed.
+- The Alex Rivera sample profile says "over 10 years", matching 2016 to the present.
+
 ## 2.14.0 (2026-10-17)
 
 ### Changed
