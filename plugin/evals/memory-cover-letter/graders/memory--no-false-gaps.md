@@ -103,7 +103,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
     
     --- career/journal.yaml
     - id: a1b2c3d4
-      date: 2026-09-09T15:30:00.000Z
+      date: 2026-09-12T15:30:00.000Z
       type: skill_evidence
       summary: Cited in a performance review for cross-functional stakeholder alignment across 4 departments.
       company: Northwind Logistics
@@ -114,7 +114,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
       sentiment: positive
       source: ingest_document
     - id: b2c3d4e5
-      date: 2026-09-30T18:00:00.000Z
+      date: 2026-10-03T18:00:00.000Z
       type: win
       summary: Renegotiated a core vendor contract, cutting spend 18% without cutting scope.
       company: Northwind Logistics
@@ -124,7 +124,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
       sentiment: positive
       source: manual
     - id: c3d4e5f6
-      date: 2026-10-06T16:30:00.000Z
+      date: 2026-10-09T16:30:00.000Z
       type: rejection_pattern
       summary: Reached the final round but lost to a candidate with direct healthcare-operations experience.
       company: Cascade Health Partners
@@ -134,7 +134,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
       sentiment: hard
       source: rejection
     - id: d4e5f6a7
-      date: 2026-09-27T18:20:00.000Z
+      date: 2026-09-30T18:20:00.000Z
       type: fit_signal
       summary: Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth.
       company: Veridian Health
@@ -145,7 +145,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
       sentiment: neutral
       source: explore_opportunity
     - id: e5f6a7b8
-      date: 2026-10-04T15:40:00.000Z
+      date: 2026-10-07T15:40:00.000Z
       type: interview_insight
       summary: Capacity-optimization story landed well; stumbled on a regulatory/compliance question.
       company: Veridian Health
@@ -349,9 +349,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: hybrid
         postingUrl: https://veridianhealth.com/careers/director-operations
         status: interviewing
-        dateDiscovered: "2026-09-27"
-        dateApplied: "2026-09-29"
-        dateUpdated: "2026-10-11T14:22:00.000Z"
+        dateDiscovered: "2026-09-30"
+        dateApplied: "2026-10-02"
+        dateUpdated: "2026-10-14T14:22:00.000Z"
         priority: high
         excitement: 9
         source: LinkedIn
@@ -369,18 +369,18 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Hiring Manager
         interviewRounds:
           - type: phone_screen
-            date: "2026-10-04"
+            date: "2026-10-07"
             interviewers: [Rachel Torres]
             outcome: Passed — advancing to panel
           - type: panel
-            date: "2026-10-15"
+            date: "2026-10-18"
             interviewers: [David Kim, Head of Clinical Ops, VP Engineering]
             notes: 90-minute panel. Prep STAR stories around cross-functional change management.
         notes:
-          - "[2026-09-29] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD."
-          - "[2026-10-04] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal."
-          - "[2026-10-11] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops."
-        followUpDue: "2026-10-17"
+          - "[2026-10-02] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD."
+          - "[2026-10-07] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal."
+          - "[2026-10-14] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops."
+        followUpDue: "2026-10-20"
         coverLetterGenerated: true
         tags: [healthcare, operations, director, panel-stage]
     
@@ -391,9 +391,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         location: Remote
         remote: remote
         status: applied
-        dateDiscovered: "2026-10-05"
-        dateApplied: "2026-10-07"
-        dateUpdated: "2026-10-07T09:15:00.000Z"
+        dateDiscovered: "2026-10-08"
+        dateApplied: "2026-10-10"
+        dateUpdated: "2026-10-10T09:15:00.000Z"
         priority: medium
         excitement: 7
         source: Company site
@@ -408,9 +408,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Internal referral contact
         interviewRounds: []
         notes:
-          - "[2026-10-05] Marcus flagged this opening. Direct referral — he'll put in a word with the hiring manager."
-          - "[2026-10-07] Applied via company site. Tailored to emphasize NRR and QBR redesign from Brightline days."
-        followUpDue: "2026-10-10"
+          - "[2026-10-08] Marcus flagged this opening. Direct referral — he'll put in a word with the hiring manager."
+          - "[2026-10-10] Applied via company site. Tailored to emphasize NRR and QBR redesign from Brightline days."
+        followUpDue: "2026-10-13"
         coverLetterGenerated: true
         tags: [logistics, customer-success, referral]
     
@@ -421,9 +421,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         location: Chicago, IL (Hybrid)
         remote: hybrid
         status: rejected
-        dateDiscovered: "2026-09-17"
-        dateApplied: "2026-09-18"
-        dateUpdated: "2026-10-06T16:00:00.000Z"
+        dateDiscovered: "2026-09-20"
+        dateApplied: "2026-09-21"
+        dateUpdated: "2026-10-09T16:00:00.000Z"
         priority: high
         excitement: 8
         source: LinkedIn
@@ -438,17 +438,17 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Recruiter
         interviewRounds:
           - type: phone_screen
-            date: "2026-09-24"
+            date: "2026-09-27"
             interviewers: [Jennifer Wu]
             outcome: Advanced
           - type: behavioral
-            date: "2026-10-01"
+            date: "2026-10-04"
             interviewers: [Partner, Chief of Staff (outgoing)]
             outcome: Did not advance — preferred fintech-native background
         notes:
-          - "[2026-09-18] Stretch role but strong culture fit signal from job description."
-          - "[2026-10-01] Behavioral went well subjectively, but feedback was they prioritized someone with direct fintech P&L experience."
-          - "[2026-10-06] Graceful rejection received. Will send keep-the-door-open response and connect with Jennifer on LinkedIn."
+          - "[2026-09-21] Stretch role but strong culture fit signal from job description."
+          - "[2026-10-04] Behavioral went well subjectively, but feedback was they prioritized someone with direct fintech P&L experience."
+          - "[2026-10-09] Graceful rejection received. Will send keep-the-door-open response and connect with Jennifer on LinkedIn."
         coverLetterGenerated: true
         tags: [fintech, chief-of-staff, rejected, learnings]
     
@@ -460,8 +460,8 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: hybrid
         postingUrl: https://canopyanalytics.com/careers/vp-operations
         status: discovered
-        dateDiscovered: "2026-10-12"
-        dateUpdated: "2026-10-12T10:30:00.000Z"
+        dateDiscovered: "2026-10-15"
+        dateUpdated: "2026-10-15T10:30:00.000Z"
         priority: medium
         excitement: 6
         source: LinkedIn
@@ -472,8 +472,8 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         contacts: []
         interviewRounds: []
         notes:
-          - "[2026-10-12] Found via LinkedIn job alert. Series C company, ~250 employees. JD emphasizes scaling ops infrastructure — strong match with current experience."
-          - "[2026-10-12] Research: CEO previously scaled ops at Tableau. COO role is new headcount, not backfill — likely greenfield build."
+          - "[2026-10-15] Found via LinkedIn job alert. Series C company, ~250 employees. JD emphasizes scaling ops infrastructure — strong match with current experience."
+          - "[2026-10-15] Research: CEO previously scaled ops at Tableau. COO role is new headcount, not backfill — likely greenfield build."
         coverLetterGenerated: false
         tags: [analytics, saas, vp-ops, discovered]
     
@@ -485,9 +485,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: remote
         postingUrl: https://stratoscloud.io/jobs/program-director
         status: screening
-        dateDiscovered: "2026-10-01"
-        dateApplied: "2026-10-03"
-        dateUpdated: "2026-10-13T11:00:00.000Z"
+        dateDiscovered: "2026-10-04"
+        dateApplied: "2026-10-06"
+        dateUpdated: "2026-10-16T11:00:00.000Z"
         priority: medium
         excitement: 7
         source: Recruiter outreach
@@ -502,14 +502,14 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Recruiter
         interviewRounds:
           - type: phone_screen
-            date: "2026-10-08"
+            date: "2026-10-11"
             interviewers: [Priya Nair]
             outcome: Passed — scheduling hiring manager screen
         notes:
-          - "[2026-10-01] Priya reached out on LinkedIn. Role aligns with cross-functional program delivery background."
-          - "[2026-10-03] Applied after reviewing JD in detail. Emphasized distributed team coordination and OKR alignment experience."
-          - "[2026-10-08] Good phone screen with Priya. 30 mins. She mentioned hiring manager is ex-AWS, values structured program rigor. Follow up if no response by Jun 17."
-        followUpDue: "2026-10-15"
+          - "[2026-10-04] Priya reached out on LinkedIn. Role aligns with cross-functional program delivery background."
+          - "[2026-10-06] Applied after reviewing JD in detail. Emphasized distributed team coordination and OKR alignment experience."
+          - "[2026-10-11] Good phone screen with Priya. 30 mins. She mentioned hiring manager is ex-AWS, values structured program rigor. Follow up if no response by Jun 17."
+        followUpDue: "2026-10-18"
         coverLetterGenerated: true
         tags: [cloud, infrastructure, program-director, screening]
     
@@ -521,9 +521,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: hybrid
         postingUrl: https://brightpathhealth.com/careers/sr-program-manager
         status: offer
-        dateDiscovered: "2026-09-09"
-        dateApplied: "2026-09-11"
-        dateUpdated: "2026-10-13T16:45:00.000Z"
+        dateDiscovered: "2026-09-12"
+        dateApplied: "2026-09-14"
+        dateUpdated: "2026-10-16T16:45:00.000Z"
         priority: high
         excitement: 8
         source: Referral
@@ -545,19 +545,19 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Recruiter
         interviewRounds:
           - type: phone_screen
-            date: "2026-09-18"
+            date: "2026-09-21"
             interviewers: [Diane Hartley]
             outcome: Advanced
           - type: behavioral
-            date: "2026-09-27"
+            date: "2026-09-30"
             interviewers: [Carlos Mendez, Samantha Osei]
             outcome: Advanced
           - type: panel
-            date: "2026-10-05"
+            date: "2026-10-08"
             interviewers: [Carlos Mendez, CTO, Head of Clinical Delivery]
             outcome: Advanced to offer
           - type: offer_call
-            date: "2026-10-12"
+            date: "2026-10-15"
             interviewers: [Diane Hartley, Carlos Mendez]
             outcome: Verbal offer extended
         offer:
@@ -571,16 +571,16 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             - $2,000 annual learning & development stipend
             - Flexible PTO
             - Home office stipend $1,500
-          startDate: "2026-11-18"
-          expiresDate: "2026-10-25"
+          startDate: "2026-11-21"
+          expiresDate: "2026-10-28"
           notes: "Strong offer — slightly below target base but equity and benefits are solid. Need to decide before Apr 7."
         notes:
-          - "[2026-09-09] Sam flagged this opening before it was even posted. Direct referral to Carlos."
-          - "[2026-09-27] Behavioral round felt strong. Sam prepped me on Carlos's communication style — direct, metrics-first."
-          - "[2026-10-05] Three-person panel, 2 hours. Good energy. CTO asked deep questions about cross-functional conflict resolution."
-          - "[2026-10-12] Offer received! Base $148K vs $155K ask. Need to negotiate or decide. Equity + benefits partially offset."
-          - "[2026-10-13] Reviewing total comp. Will counter on base — target $153K. Benefits package is excellent."
-        followUpDue: "2026-10-16"
+          - "[2026-09-12] Sam flagged this opening before it was even posted. Direct referral to Carlos."
+          - "[2026-09-30] Behavioral round felt strong. Sam prepped me on Carlos's communication style — direct, metrics-first."
+          - "[2026-10-08] Three-person panel, 2 hours. Good energy. CTO asked deep questions about cross-functional conflict resolution."
+          - "[2026-10-15] Offer received! Base $148K vs $155K ask. Need to negotiate or decide. Equity + benefits partially offset."
+          - "[2026-10-16] Reviewing total comp. Will counter on base — target $153K. Benefits package is excellent."
+        followUpDue: "2026-10-19"
         coverLetterGenerated: true
         tags: [healthcare, program-management, offer, negotiating-soon]
     
@@ -592,9 +592,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: hybrid
         postingUrl: https://apexconsultinggroup.com/careers/engagement-manager
         status: withdrawn
-        dateDiscovered: "2026-09-04"
-        dateApplied: "2026-09-07"
-        dateUpdated: "2026-10-09T13:00:00.000Z"
+        dateDiscovered: "2026-09-07"
+        dateApplied: "2026-09-10"
+        dateUpdated: "2026-10-12T13:00:00.000Z"
         priority: low
         excitement: 5
         source: Company site
@@ -609,14 +609,14 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Recruiter
         interviewRounds:
           - type: behavioral
-            date: "2026-09-22"
+            date: "2026-09-25"
             interviewers: [Bradley Kowalski, Senior Partner]
             outcome: Advanced — but role scope narrower than expected
         notes:
-          - "[2026-09-07] Applied based on strong brand name. JD was broad — assumed more strategic scope."
-          - "[2026-09-22] Behavioral round clarified role is primarily client delivery/billable hours — less internal transformation focus than expected."
-          - "[2026-09-27] After reflection, this role is a step sideways rather than forward. Travel requirements (60%+) also not sustainable."
-          - "[2026-10-09] Withdrew candidacy. Sent courteous email to Bradley thanking the team and keeping door open for future opportunities."
+          - "[2026-09-10] Applied based on strong brand name. JD was broad — assumed more strategic scope."
+          - "[2026-09-25] Behavioral round clarified role is primarily client delivery/billable hours — less internal transformation focus than expected."
+          - "[2026-09-30] After reflection, this role is a step sideways rather than forward. Travel requirements (60%+) also not sustainable."
+          - "[2026-10-12] Withdrew candidacy. Sent courteous email to Bradley thanking the team and keeping door open for future opportunities."
         coverLetterGenerated: true
         tags: [consulting, engagement-manager, withdrawn, culture-fit-mismatch]
     
@@ -628,9 +628,9 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
         remote: onsite
         postingUrl: https://lumendigital.com/jobs/head-of-operations
         status: applied
-        dateDiscovered: "2026-10-09"
-        dateApplied: "2026-10-11"
-        dateUpdated: "2026-10-11T17:30:00.000Z"
+        dateDiscovered: "2026-10-12"
+        dateApplied: "2026-10-14"
+        dateUpdated: "2026-10-14T17:30:00.000Z"
         priority: medium
         excitement: 7
         source: LinkedIn
@@ -644,11 +644,11 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
             relationship: Listed on JD as point of contact
         interviewRounds: []
         notes:
-          - "[2026-10-09] Noticed this role trending on LinkedIn. Fast-growing agency (~180 employees), recently acquired two boutique studios."
-          - "[2026-10-11] Applied with tailored resume emphasizing agency ops and vendor management. Highlighted team scaling from 40 to 120 in prior role."
-          - "[2026-10-11] Onsite requirement is a factor but Austin-based — manageable. Will wait for response before committing further."
-        followUpDue: "2026-10-18"
+          - "[2026-10-12] Noticed this role trending on LinkedIn. Fast-growing agency (~180 employees), recently acquired two boutique studios."
+          - "[2026-10-14] Applied with tailored resume emphasizing agency ops and vendor management. Highlighted team scaling from 40 to 120 in prior role."
+          - "[2026-10-14] Onsite requirement is a factor but Austin-based — manageable. Will wait for response before committing further."
+        followUpDue: "2026-10-21"
         coverLetterGenerated: true
         tags: [digital, agency, head-of-ops, applied]
     
-    lastUpdated: "2026-10-14T09:12:00.000Z"
+    lastUpdated: "2026-10-17T09:12:00.000Z"

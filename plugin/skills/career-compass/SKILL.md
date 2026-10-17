@@ -1,6 +1,6 @@
 ---
 name: career-compass
-description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, asking where to find openings or to find roles that match them, correcting an earlier answer or wanting to tell Career Compass's maker it got something wrong, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
+description: Use for any job-search or career task, whether or not the user names Career Compass. Triggers include pasting a job posting or résumé, asking "do I fit this role", tailoring a résumé or cover letter, tracking applications, a recruiter email, prepping for an interview, answering or rehearsing a specific interview question, questions to ask an interviewer, debriefing an interview, working out why applications or final rounds keep failing, a rejection, being laid off, whether a salary is fair for a role, weighing or negotiating an offer, telling you they accepted an offer or got the job, answering a job application form's questions, asking where to find openings or to find roles that match them, correcting an earlier answer or wanting to tell Career Compass's maker it got something wrong, not knowing where to start a job search, asking what Career Compass does or how to get started with it, or pasting a Career Compass card from an earlier chat.
 # Read-only tools only (readOnlyHint: true), so a first answer needs no permission prompt.
 # Every tool that writes still asks.
 allowed-tools:
@@ -517,4 +517,4 @@ for your read). When the user mentions a status change, offer to record it with
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.13.1 dashboard`.
+`npx -y career-compass-mcp@2.14.0 dashboard`.

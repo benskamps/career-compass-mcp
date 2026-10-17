@@ -61,7 +61,7 @@
 <header>
   <p class="eyebrow">Career Compass MCP</p>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated 2026-10-07 · applies to the <code>career-compass-mcp</code> MCP server, its bundled local dashboard, and the Career Compass plugin&#39;s skills in every Claude app, all versions.</p>
+  <p class="meta">Last updated 2026-10-17 · applies to the <code>career-compass-mcp</code> MCP server, its bundled local dashboard, and the Career Compass plugin&#39;s skills in every Claude app, all versions.</p>
 </header>
 
 <div class="lede">
@@ -69,11 +69,9 @@
 career history and job pipeline are plain YAML files in a directory you choose. Nothing is
 uploaded, and there is nothing for us to collect, store, sell, or hand over — because your
 data never reaches us in the first place.</p>
-<p>The server makes one outbound network request of its own, and only when you ask for it:
-the <code>check_setup</code> tool asks the public npm registry whether a newer version has been
-released. It sends nothing about you. Details under <a href="#update-checks">Update checks</a>.
-Commands you run yourself with <code>npx</code>, such as the dashboard command <code>check_setup</code> prints,
-are separate requests: npm downloads the package, and nothing about you is sent.</p>
+<p>The server makes no network requests of its own. Commands you run yourself with <code>npx</code>,
+such as the dashboard command <code>check_setup</code> prints, download the package from npm, and
+nothing about you is sent. Details under <a href="#updates">Updates</a>.</p>
 <p>In claude.ai chat (web, desktop and mobile) only the plugin&#39;s skills load, as instructions
 to Claude. The server does not run there, so Career Compass stores nothing and sends
 nothing. Details under <a href="#in-claudeai-chat">In claude.ai chat</a>.</p>
@@ -111,36 +109,15 @@ were away. Every tool updates it, read-only ones included; it holds no career hi
 stays in the folder, is readable only by you, and is never sent anywhere. Deleting it costs
 nothing but that note.</p>
 <p><strong>We never receive this data.</strong> There is no Career Compass account, no cloud sync, no
-backup service, and no telemetry or analytics of any kind. The only request the server
-makes to the internet on its own is the version check described below, which carries none
-of it.</p>
-<h2 id="update-checks">Update checks</h2>
-<p>The <code>check_setup</code> tool reports the health of your install, and part of that report is
-whether you are running the current release. To answer that it makes a single HTTPS GET to
-the public npm registry:</p>
-<pre><code>https://registry.npmjs.org/career-compass-mcp/latest
-</code></pre>
-<p>Precisely what that involves:</p>
-<ul>
-<li><strong>What is sent.</strong> The package name, in the URL. That is all. No account, no identifier,
-no career data, no pipeline data, no request body, no cookies, and no authentication
-header. It is the same request <code>npm view career-compass-mcp</code> makes, and npm&#39;s registry
-sees it the same way it sees anyone browsing a public package page. Your IP address is
-visible to the registry, as it is to any website you open.</li>
-<li><strong>What comes back.</strong> The published metadata for the latest version. Career Compass reads
-one field from it — the version number — and discards the rest.</li>
-<li><strong>When it happens.</strong> Only while <code>check_setup</code> is running, and only if its
-<code>checkForUpdates</code> parameter is true. It is false by default, so a setup check Claude runs
-on its own stays offline; Claude turns it on when you ask about updates. No other tool
-makes it, nothing makes it on startup, on a schedule, or in the background.</li>
-<li><strong>How to keep it off.</strong> Do nothing: without <code>checkForUpdates: true</code> the rest of the
-health check runs normally and no request is constructed.</li>
-<li><strong>When it fails.</strong> If you are offline, behind a proxy, or the registry is slow, the
-check times out after a few seconds and the report says it could not check. It is never
-an error and it never blocks the rest of the report.</li>
-</ul>
-<p>The npm registry is operated by npm, Inc. (GitHub/Microsoft) under its own privacy policy:
-<a href="https://docs.npmjs.com/policies/privacy">https://docs.npmjs.com/policies/privacy</a></p>
+backup service, and no telemetry or analytics of any kind. The server makes no requests
+to the internet on its own.</p>
+<h2 id="updates">Updates</h2>
+<p>Career Compass never checks for updates over the network. <code>check_setup</code> reports the
+version you have installed and how a newer one reaches you: the Claude plugin updates
+through the Claude directory, and a setup made with <code>npx</code> or <code>install</code> updates when you
+run <code>npx -y career-compass-mcp@latest install</code> yourself. Versions up to 2.13.1 could ask
+the public npm registry for the latest version number when you asked about updates; that
+request is gone.</p>
 <p>Career Compass runs nothing on a schedule. Any schedule, such as a morning briefing, is
 one you create yourself in your own Claude app; it runs locally on your computer and only
 reads.</p>
@@ -157,12 +134,11 @@ provider under <strong>their</strong> privacy policy, not this one:</p>
 </ul>
 <p>That is the only path by which your data leaves your machine, it happens because you asked
 for it, and it is governed by the terms of whichever client and model provider you chose.
-Career Compass itself sends none of your data anywhere — its one outbound request asks the
-npm registry about a version number and carries nothing else.</p>
+Career Compass itself sends none of your data anywhere.</p>
 <p>The bundled local dashboard (<code>career-compass-mcp dashboard</code>) serves pages from
 <code>127.0.0.1</code> on your own machine, renders them with no external assets, and makes no
 network calls. Starting it means running it, usually with <code>npx</code>, which downloads the
-package from the npm registry as described above.</p>
+package from the npm registry.</p>
 <p>If you start the dashboard with <code>--ask-claude</code>, its buttons run Claude Code on your
 computer. Claude Code sends the Career KB content it reads to Anthropic, under your own
 Claude account and billing, like any other Claude Code session. It is off unless you pass
@@ -175,7 +151,7 @@ MCP server above does not run in chat, so:</p>
 <ul>
 <li>nothing is written to your computer or anywhere else by Career Compass, and nothing
 carries over between chats;</li>
-<li>Career Compass makes no network requests, not even the update check;</li>
+<li>Career Compass makes no network requests;</li>
 <li>what you paste, and Claude&#39;s replies, are part of your Claude conversation, handled by
 Anthropic under its privacy policy (<a href="https://www.anthropic.com/legal/privacy">https://www.anthropic.com/legal/privacy</a>) exactly as
 any other chat is. We never see it.</li>

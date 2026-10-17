@@ -6,14 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, type ServerOptions } from "../server.js";
 import { PKG_VERSION } from "../version.js";
-import {
-  compareVersions,
-  checkNpmForUpdate,
-  probeLocalDashboard,
-  REGISTRY_URL,
-  type UpdateCheckResult,
-  type DashboardProbeResult,
-} from "../tools/doctor.js";
+import { probeLocalDashboard, type DashboardProbeResult } from "../tools/doctor.js";
 
 /**
  * Upgrade guard: the second install has to work as well as the first.
@@ -26,13 +19,11 @@ import {
  * an upgrade nothing in the product could have told her she needed.
  *
  * So this drives the same MCP-surface-only discipline over the *later* moments:
- * an aging data directory still loads, version drift is reported honestly, and
- * a fresh directory gets guidance rather than a wall of errors.
+ * an aging data directory still loads, the installed version is reported with
+ * how to update, and a fresh directory gets guidance rather than a wall of errors.
  *
- * Nothing here touches the network. The registry lookup and the dashboard probe
- * are injected, which is the whole reason `createServer` accepts overrides — a
- * test that reached npmjs.org would be slow, flaky, and would silently start
- * asserting whatever happened to be published that day.
+ * Nothing here touches the network. The dashboard probe is injected, which is
+ * the whole reason `createServer` accepts overrides.
  */
 
 const UNREACHABLE_DASHBOARD: DashboardProbeResult = {
@@ -43,9 +34,7 @@ const UNREACHABLE_DASHBOARD: DashboardProbeResult = {
 async function connect(options: ServerOptions = {}) {
   const server = createServer({
     doctor: {
-      // Both defaults reach outside the process, so both are stubbed unless a
-      // test deliberately overrides them.
-      checkForUpdate: async () => ({ ok: true, latest: PKG_VERSION }),
+      // Stubbed unless a test deliberately overrides it.
       probeDashboard: async () => UNREACHABLE_DASHBOARD,
       ...options.doctor,
     },
@@ -64,26 +53,12 @@ const textOf = (r: unknown) =>
 // ─── Network guard ────────────────────────────────────────────────────────────
 
 /**
- * No test in this file may reach the internet.
- *
- * `test:mcp` runs under `prepublishOnly`, so a test that talks to
- * registry.npmjs.org puts a publish at the mercy of registry weather — and it
- * fails on a plane for reasons that have nothing to do with the code. An
- * earlier version of this suite called the real `checkNpmForUpdate`, which fired
- * DNS, TCP and TLS to npm on every single run.
- *
- * So `fetch` is replaced for the whole file: loopback passes through (the
- * dashboard probe is genuinely local and worth exercising for real), and
- * anything else throws loudly rather than silently succeeding. Tests that need
- * registry behavior stub `fetch` with a canned response, which exercises more of
- * `checkNpmForUpdate` than the network ever did — HTTP 503 and a malformed body
- * are not states npm will produce on demand.
- *
- * Set `CAREER_COMPASS_LIVE_REGISTRY_TEST=1` to let the opt-in smoke test at the
- * bottom of this file talk to the real registry.
+ * No test in this file may reach the internet. Career Compass makes no
+ * outbound calls, and this guard is what keeps that claim enforced: `fetch` is
+ * replaced for the whole file, loopback passes through (the dashboard probe is
+ * genuinely local and worth exercising for real), and anything else throws.
  */
 const realFetch = globalThis.fetch;
-const LIVE_REGISTRY = Boolean(process.env.CAREER_COMPASS_LIVE_REGISTRY_TEST);
 
 function urlOf(input: RequestInfo | URL): string {
   if (typeof input === "string") return input;
@@ -94,23 +69,16 @@ function urlOf(input: RequestInfo | URL): string {
 const isLoopback = (url: string) =>
   /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?(\/|$)/.test(url);
 
-/** Swap in a canned registry response for one test. Undone by the afterEach. */
-function stubFetch(impl: (url: string, init?: RequestInit) => Promise<Response>): void {
-  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-    impl(urlOf(input), init)) as typeof globalThis.fetch;
-}
-
 beforeEach(() => {
   // `async` deliberately: real fetch signals failure by rejecting, never by
   // throwing synchronously, and a guard that behaves differently from the thing
   // it stands in for tests a code path production does not have.
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = urlOf(input);
-    if (isLoopback(url) || LIVE_REGISTRY) return realFetch(input as RequestInfo, init);
+    if (isLoopback(url)) return realFetch(input as RequestInfo, init);
     throw new Error(
-      `the test suite tried to reach ${url}. Tests must not make real network calls — ` +
-        `test:mcp runs under prepublishOnly, so registry flake would block a publish. ` +
-        `Stub fetch instead, or set CAREER_COMPASS_LIVE_REGISTRY_TEST=1 for the live smoke test.`,
+      `the test suite tried to reach ${url}. Tests must not make real network calls, ` +
+        `and Career Compass itself makes none.`,
     );
   }) as typeof globalThis.fetch;
 });
@@ -118,12 +86,6 @@ beforeEach(() => {
 afterEach(() => {
   globalThis.fetch = realFetch;
 });
-
-/** Bump the last segment of a version so "newer than installed" needs no literal. */
-function bumpPatch(version: string): string {
-  const [major, minor, patch] = version.split(".");
-  return `${major}.${minor}.${Number(patch) + 1}`;
-}
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -177,148 +139,6 @@ function writeLegacyDataDir(dir: string): void {
   );
 }
 
-// ─── Version comparison ───────────────────────────────────────────────────────
-
-describe("version comparison", () => {
-  it("orders ordinary releases", () => {
-    expect(compareVersions("2.3.0", "2.3.1")).toBeLessThan(0);
-    expect(compareVersions("2.3.0", "2.10.0")).toBeLessThan(0);
-    expect(compareVersions("2.3.0", "2.3.0")).toBe(0);
-    expect(compareVersions("3.0.0", "2.99.99")).toBeGreaterThan(0);
-  });
-
-  it("compares numerically, not as strings", () => {
-    // "2.10.0" < "2.9.0" lexicographically, which would report a user on the
-    // newer release as three versions behind.
-    expect(compareVersions("2.9.0", "2.10.0")).toBeLessThan(0);
-  });
-
-  it("ranks a prerelease below the release it leads to", () => {
-    expect(compareVersions("2.4.0-rc.1", "2.4.0")).toBeLessThan(0);
-    expect(compareVersions("2.4.0-rc.1", "2.4.0-rc.2")).toBeLessThan(0);
-  });
-
-  it("refuses to guess at an unparseable version", () => {
-    // PKG_VERSION is the string "unknown" when package.json can't be read.
-    // Returning 0 there would report a corrupt install as up to date.
-    expect(compareVersions("unknown", "2.3.0")).toBeNull();
-    expect(compareVersions("2.3.0", "")).toBeNull();
-  });
-});
-
-// ─── Version drift ────────────────────────────────────────────────────────────
-
-describe("check_setup reports version drift", () => {
-  let dataDir: string;
-  let original: string | undefined;
-
-  beforeEach(() => {
-    original = process.env.CAREER_DATA_PATH;
-    dataDir = mkdtempSync(path.join(tmpdir(), "cc-upgrade-"));
-    writeLegacyDataDir(dataDir);
-    process.env.CAREER_DATA_PATH = dataDir;
-  });
-
-  afterEach(() => {
-    if (original === undefined) delete process.env.CAREER_DATA_PATH;
-    else process.env.CAREER_DATA_PATH = original;
-    rmSync(dataDir, { recursive: true, force: true });
-  });
-
-  it("names the newer version and how to get it when the install is behind", async () => {
-    const latest = bumpPatch(PKG_VERSION);
-    const client = await connect({
-      doctor: { checkForUpdate: async () => ({ ok: true, latest }) },
-    });
-    try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
-      expect(out).toContain(PKG_VERSION);
-      expect(out).toContain(latest);
-      // A version number with no next step is trivia. The finding must carry one.
-      expect(out, "reported drift without telling the user what to do").toMatch(
-        /update career-compass-mcp to/i,
-      );
-    } finally {
-      await client.close();
-    }
-  });
-
-  it("says so plainly when the install is current", async () => {
-    const client = await connect();
-    try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
-      expect(out).toMatch(/current release/i);
-      expect(out).not.toMatch(/update career-compass-mcp to/i);
-    } finally {
-      await client.close();
-    }
-  });
-
-  it("treats running ahead of npm as fine, not as drift", async () => {
-    // Anyone working from source is ahead of the registry. Telling them to
-    // "upgrade" to an older version is how a health check loses credibility.
-    const client = await connect({
-      doctor: { checkForUpdate: async () => ({ ok: true, latest: "0.0.1" }) },
-    });
-    try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
-      expect(out).toMatch(/ahead of/i);
-      expect(out).not.toMatch(/update career-compass-mcp to/i);
-    } finally {
-      await client.close();
-    }
-  });
-
-  it("does not ask the registry unless asked to", async () => {
-    // PRIVACY.md promises the one outbound request happens only when the user
-    // asks for it, and the plugin's skill runs check_setup on first contact —
-    // so the default has to be off, or a first-time user reaches npm unasked.
-    let asked = false;
-    const client = await connect({
-      doctor: {
-        checkForUpdate: async () => {
-          asked = true;
-          return { ok: true, latest: PKG_VERSION };
-        },
-      },
-    });
-    try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
-      expect(asked, "check_setup with no arguments reached the npm registry").toBe(false);
-      expect(out).toMatch(/checkForUpdates: true/);
-    } finally {
-      await client.close();
-    }
-  });
-
-  it("never asks the registry when checkForUpdates is false", async () => {
-    let asked = false;
-    const client = await connect({
-      doctor: {
-        checkForUpdate: async () => {
-          asked = true;
-          return { ok: true, latest: PKG_VERSION };
-        },
-      },
-    });
-    try {
-      const out = textOf(
-        await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }),
-      );
-      expect(
-        asked,
-        "checkForUpdates: false still made the outbound call — the offline opt-out is not real",
-      ).toBe(false);
-      // And the rest of the report still runs.
-      expect(out).toMatch(/Data directory/);
-    } finally {
-      await client.close();
-    }
-  });
-});
-
-// ─── Offline grace ────────────────────────────────────────────────────────────
-
 describe("check_setup stays useful offline", () => {
   let dataDir: string;
   let original: string | undefined;
@@ -334,52 +154,6 @@ describe("check_setup stays useful offline", () => {
     if (original === undefined) delete process.env.CAREER_DATA_PATH;
     else process.env.CAREER_DATA_PATH = original;
     rmSync(dataDir, { recursive: true, force: true });
-  });
-
-  const OFFLINE: UpdateCheckResult = {
-    ok: false,
-    reason: "could not reach the npm registry (offline, or a proxy is in the way)",
-  };
-
-  it("reports an unreachable registry as unknown, not as a failure", async () => {
-    const client = await connect({ doctor: { checkForUpdate: async () => OFFLINE } });
-    try {
-      const result = await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } });
-      const out = textOf(result);
-
-      // Being offline is not an error condition of the tool.
-      expect((result as { isError?: boolean }).isError ?? false).toBe(false);
-      expect(out).toMatch(/could not (check|reach)/i);
-      expect(out, "an offline laptop was rendered as a broken install").not.toContain("❌ **Version**");
-      // The rest of the report is unaffected — that's what "graceful" means here.
-      expect(out).toMatch(/Career KB/);
-      expect(out).toMatch(/Pipeline/);
-    } finally {
-      await client.close();
-    }
-  });
-
-  it("survives a checker that throws, rather than failing the whole check", async () => {
-    // Negative control for the graceful-offline path: if the tool ever stops
-    // containing the update check, a thrown fetch error takes down a diagnostic
-    // that is most needed precisely when things are broken.
-    const client = await connect({
-      doctor: {
-        checkForUpdate: async () => {
-          throw new TypeError("fetch failed");
-        },
-      },
-    });
-    try {
-      const result = await client.callTool({ name: "check_setup", arguments: {} });
-      expect(
-        (result as { isError?: boolean }).isError ?? false,
-        "a failing update check took down the entire setup report",
-      ).toBe(false);
-      expect(textOf(result)).toMatch(/Career KB/);
-    } finally {
-      await client.close();
-    }
   });
 
   it("the real dashboard probe resolves rather than throws on a closed port", async () => {
@@ -400,87 +174,6 @@ describe("check_setup stays useful offline", () => {
  * the try/catch from `checkNpmForUpdate` turns it red, verified by doing exactly
  * that and watching it fail.
  */
-describe("checkNpmForUpdate", () => {
-  it("asks for the package name and sends nothing else", async () => {
-    let seenUrl = "";
-    let seenInit: RequestInit | undefined;
-    stubFetch(async (url, init) => {
-      seenUrl = url;
-      seenInit = init;
-      return new Response(JSON.stringify({ version: "9.9.9" }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    });
-
-    await checkNpmForUpdate();
-
-    expect(seenUrl).toBe(REGISTRY_URL);
-    expect(seenUrl).toContain("career-compass-mcp");
-    // PRIVACY.md promises an unauthenticated GET carrying nothing about the
-    // user. If that ever stops being true, it stops being true here first.
-    expect(seenInit?.body ?? null).toBeNull();
-    expect(seenInit?.method ?? "GET").toBe("GET");
-    expect(seenInit?.credentials ?? "same-origin").not.toBe("include");
-    const headerNames = Object.keys(
-      (seenInit?.headers ?? {}) as Record<string, string>,
-    ).map((h) => h.toLowerCase());
-    expect(headerNames).not.toContain("authorization");
-    expect(headerNames).not.toContain("cookie");
-  });
-
-  it("resolves rather than throws when the network is gone", async () => {
-    // NEGATIVE CONTROL: remove the try/catch in checkNpmForUpdate and this fails.
-    stubFetch(async () => {
-      throw new TypeError("fetch failed");
-    });
-    const result = await checkNpmForUpdate();
-    expect(result.ok).toBe(false);
-    expect((result as { reason: string }).reason).toMatch(/could not reach/i);
-  });
-
-  it("reports a timeout in its own words", async () => {
-    stubFetch(async () => {
-      const error = new Error("The operation was aborted due to timeout");
-      error.name = "TimeoutError";
-      throw error;
-    });
-    const result = await checkNpmForUpdate(1234);
-    expect(result.ok).toBe(false);
-    expect((result as { reason: string }).reason).toContain("1234ms");
-  });
-
-  it("does not mistake an error page for a version", async () => {
-    // A captive portal or corporate proxy answers 200-with-HTML as readily as
-    // npm answers 503, and neither is a version number.
-    stubFetch(async () => new Response("<html>Service Unavailable</html>", { status: 503 }));
-    const result = await checkNpmForUpdate();
-    expect(result.ok).toBe(false);
-    expect((result as { reason: string }).reason).toContain("503");
-  });
-
-  it("refuses a well-formed response with no version in it", async () => {
-    stubFetch(async () =>
-      new Response(JSON.stringify({ name: "career-compass-mcp" }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      }),
-    );
-    const result = await checkNpmForUpdate();
-    expect(result.ok).toBe(false);
-  });
-
-  it("returns the published version on a normal answer", async () => {
-    stubFetch(async () =>
-      new Response(JSON.stringify({ version: "9.9.9" }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      }),
-    );
-    expect(await checkNpmForUpdate()).toEqual({ ok: true, latest: "9.9.9" });
-  });
-});
-
 describe("the suite's own network guard", () => {
   it("refuses a non-loopback request", async () => {
     // Negative control for the guard itself: if this ever stops throwing, every
@@ -490,16 +183,6 @@ describe("the suite's own network guard", () => {
     );
   });
 
-  it.skipIf(!LIVE_REGISTRY)(
-    "[live] reaches the real npm registry and gets a version back",
-    async () => {
-      // Opt-in only: CAREER_COMPASS_LIVE_REGISTRY_TEST=1. Never runs in CI or
-      // under prepublishOnly, so registry weather cannot block a publish.
-      const result = await checkNpmForUpdate(8000);
-      expect(result.ok).toBe(true);
-      expect((result as { latest: string }).latest).toMatch(/^\d+\.\d+\.\d+/);
-    },
-  );
 });
 
 // ─── An aging data directory ──────────────────────────────────────────────────
@@ -727,13 +410,10 @@ describe("check_setup on an empty install", () => {
   it("still reports the version, so a stale install is caught before onboarding", async () => {
     // The failure mode this whole lane exists for: someone installs a stale
     // copy, follows onboarding, hits friction, and blames themselves.
-    const latest = bumpPatch(PKG_VERSION);
-    const client = await connect({
-      doctor: { checkForUpdate: async () => ({ ok: true, latest }) },
-    });
+    const client = await connect();
     try {
-      const out = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: true } }));
-      expect(out).toContain(latest);
+      const out = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
+      expect(out).toContain(PKG_VERSION);
     } finally {
       await client.close();
     }

@@ -119,7 +119,7 @@ describe("S4 — one spelling of the data folder, everywhere", () => {
     process.env.CAREER_DATA_PATH = process.platform === "win32" ? dataDir.replace(/\\/g, "/") : dataDir;
     const { client, server } = await connect();
     try {
-      const setup = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
+      const setup = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
       const resume = textOf(await client.callTool({ name: "tailor_resume", arguments: { posting: "PM" } }));
       expect(setup).toContain(dataDir);
       expect(resume).toContain(dataDir);
@@ -138,7 +138,7 @@ describe("S5 — the git tip is not a bash-only && chain", () => {
     writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: Alex Rivera\nsummary: Ops.\n", "utf-8");
     const { client, server } = await connect();
     try {
-      const setup = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
+      const setup = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
       const gitBlock = setup.split("\n").filter((l) => l.includes("git "));
       expect(gitBlock.length).toBeGreaterThanOrEqual(3);
       for (const line of gitBlock) expect(line).not.toContain("&&");

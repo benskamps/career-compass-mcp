@@ -241,7 +241,7 @@ Add the server:
 }
 ```
 
-Pin a version in `args` (`"career-compass-mcp@2.13.1"` rather than the bare name) if you can:
+Pin a version in `args` (`"career-compass-mcp@2.14.0"` rather than the bare name) if you can:
 Desktop starts the server twice at once, and an unpinned name reinstalls on every release,
 which can leave npx's cache half-written (see **On npx** below). `install` does this for you.
 
@@ -331,16 +331,13 @@ companies you are talking to, salary numbers, interview notes — lives in **pla
 on your own disk**.
 
 - **Where it lives:** `~/.career-compass/` by default, or wherever you point
-  `CAREER_DATA_PATH`. The directory is created on first run, on *your* machine, and is not
-  part of the npm package.
+  `CAREER_DATA_PATH`. The directory is created the first time you save something, on
+  *your* machine, and is not part of the npm package.
 - **Who sees it:** only the MCP client you connect it to, and through that client your model
   provider, under *their* policy — and only for the requests you make. Career Compass sends
   it nowhere on its own.
-- **The one request the server makes:** `check_setup` asks the public **npm registry**
-  whether a newer version has been released. It is an unauthenticated GET for the package
-  name, carrying nothing about you or your data, and it only happens when `check_setup` is
-  called with `checkForUpdates: true`, which Claude does when you ask about updates. It is
-  off by default. There is no analytics or phone-home path anywhere else in the package.
+- **The server makes no network requests.** No update check, no analytics, no
+  phone-home path anywhere in the package.
 - **Requests you run yourself:** any `npx … career-compass-mcp` command, including the
   dashboard command `check_setup` prints, has npm download the package from the same
   registry. That is npm fetching code, and it carries none of your data.

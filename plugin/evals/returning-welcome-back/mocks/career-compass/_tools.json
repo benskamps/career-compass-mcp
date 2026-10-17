@@ -1338,15 +1338,10 @@
     {
       "name": "check_setup",
       "title": "Check Career Compass Setup",
-      "description": "Health-check this Career Compass install and report everything at once: how it is running (plugin or standalone) and its version, whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, the recent backups of each section with how to restore one, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding that needs action comes with the one step that fixes it. Run it when something seems wrong, when the user asks whether it's working, or to find a backup to restore; not on first contact. Writes nothing.",
+      "description": "Health-check this Career Compass install and report everything at once: how it is running (plugin or standalone) and its version, whether your data directory exists and is writable, which Career KB sections are filled in, the recent backups of each section with how to restore one, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding that needs action comes with the one step that fixes it. Run it when something seems wrong, when the user asks whether it's working, or to find a backup to restore; not on first contact. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "checkForUpdates": {
-            "default": false,
-            "description": "Whether to ask the public npm registry which version is current. Off by default: pass true only when the user asks about updates or versions. This is the only outbound network call Career Compass ever makes: an unauthenticated GET for the package name, sending nothing about you or your data.",
-            "type": "boolean"
-          },
           "dashboardPort": {
             "default": 3141,
             "description": "Which loopback port to check for a running dashboard. Matches `career-compass-mcp dashboard --port`; the default is 3141.",
@@ -1361,7 +1356,7 @@
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": true
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "forbidden"

@@ -109,13 +109,12 @@ the Claude client you use, and only for the requests you make. When you ask
 `harvest_evidence` to look at a project folder, it reads that folder's git history locally
 and writes nothing.
 
-The plugin makes two kinds of network request, and neither carries your data:
+The plugin makes one kind of network request, and it carries none of your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.13.1` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.14.0` and its
   dependencies from the public npm registry.
-- **Update check, only when you ask:** the `check_setup` tool can ask the public npm
-  registry for the latest published version. It is off by default; Claude turns it on when
-  you ask whether there is an update.
+
+The server itself makes no network requests.
 
 Files stay until you delete them, apart from older backups: only the newest 5 `.bak` files
 per data file are kept. Removing the data folder removes everything. The full policy,
@@ -126,7 +125,7 @@ covering collection, storage, sharing, retention, and contact details, is at
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.13.1`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.14.0`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
