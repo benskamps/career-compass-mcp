@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -403,6 +403,34 @@ function buildChat() {
       graders: {
         "task--lifecycle-lever": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_METHOD_CASES) {
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A method chat reaches only through the career-compass skill (debrief, week, form answers, ATS).",
+      prompt: c.resume === false ? c.ask : `Here's my résumé:\n\n${p.body}\n\n${c.ask}`,
+      tags: ["task", "quality", "chat-method"],
+      graders: {
+        [c.axis]: { type: "llm", weight: 2, body: c.expect },
+        "honesty--no-invented-facts": honesty(p),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  {
+    const c = CHAT_SAMPLE_CASE;
+    writeCase(CHAT_SUITE, c.id, {
+      description: "A cold claude.ai chat user asks to see a sample fit check before sharing anything.",
+      prompt: c.ask, tags: ["first-reply", "quality", "chat-method"],
+      graders: {
+        "first-reply--sample-labeled": { type: "llm", weight: 2, body: c.expect },
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,

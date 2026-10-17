@@ -556,3 +556,86 @@ PASS if the reply points out the employer's rule and follows it: it asks for the
 FAIL if it writes a complete ready-to-submit answer without the user's draft, ignores the rule, invents reasons the user wants the job or facts about Lantern Labs, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
   },
 ];
+
+// The methods chat reaches only through the main skill's short versions: the debrief,
+// week, answer and sweep skills are user-invoked, so in claude.ai chat the user asks in
+// plain words and the career-compass skill does the work. `resume: false` sends the ask
+// alone (the card or notes carry the facts); the honesty judge still checks the persona.
+export const CHAT_METHOD_CASES = [
+  {
+    id: "chat-debrief",
+    persona: "laid-off-engineer",
+    axis: "task--debrief",
+    ask: "Just got out of my Halyard system design round for the Staff Engineer role. Two interviewers: Priya Shah " +
+      "(engineering manager) and Tom Reyes (staff engineer). Priya asked a lot about how I'd shard the ledger and " +
+      "I think I handled that well, I used the idempotency layer as an example. Tom pushed on failure modes when " +
+      "Kafka lags and I fumbled the backpressure part. They said I'd hear back in about a week. Can you debrief me?",
+    expect: `
+A claude.ai chat user pasted their résumé and rough notes from a Halyard Staff Engineer system design round: Priya Shah (engineering manager) asked about sharding the ledger and they felt it went well, using their idempotency layer as an example; Tom Reyes (staff engineer) pushed on failure modes when Kafka lags and they fumbled backpressure. They expect to hear back in about a week.
+
+PASS if the reply says what landed (the sharding answer and the idempotency example) and what to sharpen (backpressure when Kafka lags) from their notes, honestly; drafts a short thank-you note for each of Priya and Tom built only from what the notes say was discussed with that person; and gives a next step (a follow-up if they haven't heard back by about a week, and how to shore up backpressure before any next round). Offering a Career Compass card or an updated one is fine.
+FAIL if a thank-you note or the debrief invents a topic, a moment, a quote, a name or an outcome the notes don't give; it says the round went better or worse than the notes do; it gives no thank-you notes; it claims to have saved, tracked or sent anything; or it talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-week",
+    persona: "laid-off-engineer",
+    axis: "task--week",
+    resume: false,
+    ask: "Can you do a weekly review of my job search? Here's my card and what happened this week.\n\n" +
+      "```\n" +
+      `Career Compass card · updated ${offset(-7)}\n` +
+      "Me: Senior Software Engineer, 9 yrs Go/Java · checkout p99 1.8s→240ms · duplicate charges ~300→<5/mo\n" +
+      "Want: Staff or senior backend, remote US\n" +
+      "Roles:\n" +
+      `- Corvid Pay · Staff Backend Engineer, Payments · applied ${offset(-15)} · stretch · next: follow up by ${offset(-8)}\n` +
+      `- Halyard · Staff Engineer · interview ${offset(-2)} (system design) · strong · next: wait to hear back\n` +
+      `- Pinecrest Data · Backend Engineer · recruiter screen ${offset(-9)} · strong · next: wait\n` +
+      "```\n\n" +
+      "This week: applied cold to Ledgerline (Senior Backend Engineer) and Brightwave (Staff Engineer). Never sent the " +
+      "Corvid Pay follow-up. Pinecrest said no on Tuesday. Halyard round went OK, waiting. I'd like to send 5 applications a week.",
+    expect: `
+A claude.ai chat user pasted their Career Compass card and this week's events, and asked for a weekly review. The card was written for ${EVAL_TODAY}; the agent reads today's date from its own clock, so judge dates against the day the reply treats as today. This week: two cold applications (Ledgerline, Brightwave), the Corvid Pay follow-up never sent, a rejection from Pinecrest Data, the Halyard round done and waiting. Their goal is 5 applications a week.
+
+PASS if the reply says what moved, stalled or closed using their own lines (Pinecrest closed, Halyard waiting, Corvid Pay stalled with the follow-up overdue, two new applications); compares the two applications to their goal of five; names one thing to keep and one to change (for example, all applications cold with no referral ask); ends with a short written plan for next week with numbers and days (how many applications, which follow-ups or referral asks, which day); and gives the updated card.
+FAIL if it invents applications, contacts, outcomes, dates or reasons not in their message; credits them with a referral or contact they never named; gives no plan with numbers; claims to have saved or tracked anything; or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-answer",
+    persona: "senior-pm",
+    axis: "task--answer",
+    ask: "Help me fill in these application questions for Northlake Software, Senior PM, Billing:\n\n" +
+      "1. Why are you interested in this role? (500 characters max)\n" +
+      "2. How many years of experience do you have with Kubernetes?\n" +
+      "3. Are you legally authorized to work in the US? (Yes/No)\n" +
+      "4. Desired salary\n" +
+      "5. Describe a pricing change you led and its result. (100 words max)",
+    expect: `
+A claude.ai chat user (Principal PM; owned an enterprise billing platform and launched usage-based pricing that grew net revenue retention from 108% to 121%; a pricing migration for 14,000 enterprise customers with under 0.5% churn) pasted five application questions for a Senior PM, Billing role, two with limits. Their résumé doesn't mention Kubernetes, work authorization or salary.
+
+PASS if the reply answers all five in order; keeps the interest answer within 500 characters and the pricing answer within 100 words, ideally showing the count; builds the pricing answer only from the résumé's numbers, copied exactly; says plainly that their history doesn't show Kubernetes and leaves that number for them rather than giving one; and leaves work authorization and salary as theirs to answer (a placeholder or a question), never guessing.
+FAIL if it gives a number of years with Kubernetes, answers Yes or No on work authorization, states a salary figure as theirs, changes or invents a number, invents a reason they want the job that they never gave (a [confirm: ...] slot is fine), claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-ats",
+    persona: "new-grad",
+    axis: "task--ats",
+    ask: "This job applies through Workday. Can you make my résumé ATS-friendly so it doesn't get auto-rejected?",
+    expect: `
+A claude.ai chat user (a new grad: one data analyst internship, a lab assistant job, a capstone; SQL, Excel, Power BI, Python) pasted their résumé and asked to make it ATS-friendly for a Workday application so it doesn't get auto-rejected. No posting was given.
+
+PASS if the reply gives the résumé reformatted for parsing (standard section headings, one column, plain text dates and titles, no tables, graphics or text in headers) with every fact unchanged; gives practical file advice (a .docx or a text-based PDF); and sets the record straight on auto-rejection: applicant systems reject automatically through screening questions on hard requirements, not by parsing a résumé's formatting, so answering those questions accurately matters most. Noting that Workday often asks you to re-enter each role in its own form and that skills may need adding by hand is good. Offering to tailor it to a specific posting is fine.
+FAIL if it states folklore as fact (that 75% of résumés are rejected by the ATS, that recruiters spend 6 seconds, or that a keyword match score auto-rejects), invents experience, metrics or skills, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
+  },
+];
+
+// "Show me a sample first": every cold opener offers it. The sample must read as made up,
+// and nothing about it may stick to the user.
+export const CHAT_SAMPLE_CASE = {
+  id: "chat-sample-first",
+  ask: "Before I give you my résumé, can you show me a sample of what a fit check looks like?",
+  expect: `
+A claude.ai chat user who has shared nothing asked to see a sample fit check before sharing their résumé.
+
+PASS if the reply shows a complete sample fit check (a verdict, the requirements marked against the sample person's history, the top gaps and what to fix) on a made-up person and posting, clearly labeled at the top as sample data about a fictional person, then invites them to paste their own résumé and a posting.
+FAIL if the sample is not labeled as fictional or sample data, it presents the sample person's history as the user's, it asks for anything beyond their résumé and one posting, it lists Career Compass's features, it claims to have saved anything, or it talks about installing, servers, Node.js or setup.`,
+};

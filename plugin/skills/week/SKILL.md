@@ -25,7 +25,8 @@ read resources. Then, in this order:
    one or two tracked companies where asking someone is worth trying.
 7. **Next week's plan:** a short written plan with numbers and days: how many
    applications, which referrals to ask for, which follow-ups are due, and which day for
-   each. A written plan raised offers about 30% in a randomized study (see the
+   each. Next week starts at zero: this week's applications never count toward its
+   number. A written plan raised offers about 30% in a randomized study (see the
    career-compass skill's `evidence.md`); keep it to four lines.
 
 Cite the application (company, role) or journal entry (date and summary) behind every

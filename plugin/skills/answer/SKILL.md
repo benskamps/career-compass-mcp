@@ -23,8 +23,9 @@ The user wants answers to an application form's questions. The questions are bel
   or the profile (`salaryMin`/`salaryMax`, `openToRelocation`, `noticePeriod`), quoted as
   saved; otherwise `[confirm: ...]`. Never guess.
 - **"Years of experience with X":** count only from roles where their history names X.
-  If it can't support the number, flag it and give what it does support. Never round up,
-  and never answer yes to a requirement their history doesn't show.
+  If it can't support the number, flag it and give what it does support; when no role
+  names X, say so and leave the number as `[confirm: ...]`, never 0 or a guess. Never
+  round up, and never answer yes to a requirement their history doesn't show.
 - End with the placeholder footer when there are any: "2 things to confirm before
   sending: salary expectation, start date."
 - When they fill in a narrative answer (why they're leaving, a gap, work authorization),
