@@ -9,7 +9,7 @@ career-compass-mcp package).
 Targets: Program Manager, Director of Operations, Head of Customer Success, Chief of Staff,
 in healthcare technology, SaaS, logistics or fintech.
 
-Operations and program manager with 9 years across healthcare, logistics and SaaS.
+Operations and program manager with over 10 years across healthcare, logistics and SaaS.
 
 **Senior Program Manager, MedFlow Health Systems** (healthcare technology, remote), 2021-03 to present
 Enterprise digital health programs across 14 hospital systems; $8M annual budget; team of 6 PMs.

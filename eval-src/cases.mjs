@@ -430,6 +430,68 @@ PASS if the reply gives the card in one copyable block with Corvid Pay applied o
 FAIL if it invents facts not in their message (other employers, titles, numbers, a second role), says a reminder or calendar event was already created, claims to have saved or tracked anything, offers a menu of several next steps, or talks about installing, servers, Node.js or setup.`,
 };
 
+// The return trip. A card carries proof lines copied from the résumé, so a later chat
+// can write and prep from it; drafts cap their placeholders and leave a layoff line off.
+const CARD_V2 = "```\n" +
+  `Career Compass card · updated ${offset(-3)}\n` +
+  "Me: Senior Software Engineer · 9 yrs Go, Java, PostgreSQL, Kafka\n" +
+  "Want: Staff or senior backend, remote US\n" +
+  "Proof:\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Led the rewrite of the checkout service from a Java monolith to Go services; p99 latency fell from 1.8s to 240ms\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Designed the idempotency layer for payments that cut duplicate charges from about 300 a month to under 5\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Mentored 3 junior engineers; two were promoted\n" +
+  "- Fieldnote Labs, Software Engineer, 2017–2021 · Built the event ingestion pipeline (Kafka, PostgreSQL) handling 40k events per second at peak\n" +
+  "Roles:\n" +
+  `- Halyard · Staff Engineer · interview ${offset(1)} (system design) · strong · next: prep\n` +
+  "Stories: none yet\n" +
+  "```";
+
+// Four or more [confirm: ...] placeholders in one reply.
+const placeholderCap = {
+  type: "regex", weight: 1, flags: "i", match: "not_contains",
+  pattern: "(\\[confirm[\\s\\S]*?){4}",
+};
+
+export const CHAT_RETURN_CASES = [
+  {
+    id: "chat-return-prep",
+    persona: "laid-off-engineer",
+    axis: "retention--prep-from-card",
+    resume: false,
+    ask: "New chat. Here's my card:\n\n" + CARD_V2 + "\n\nCan you prep me for the Halyard system design interview?",
+    extra: { "task--placeholder-cap": placeholderCap },
+    expect: `
+A returning claude.ai chat user pasted only their Career Compass card (no résumé) and asked for prep for a Halyard Staff Engineer system design interview. The card's Proof lines are copied from their résumé: the checkout rewrite (p99 1.8s to 240ms), the payments idempotency layer (duplicate charges about 300 a month to under 5), mentoring 3 juniors (two promoted), and the Fieldnote Labs Kafka/PostgreSQL ingestion pipeline (40k events per second at peak).
+
+PASS if the reply gives system design prep built on those Proof lines: likely questions, two or more stories drawn from the Proof lines with their numbers copied exactly, the weak spots an interviewer might probe, and questions to ask. A few [confirm: ...] placeholders for details the card doesn't give are fine, and so is one closing question asking for the résumé or a missing detail.
+FAIL if it ignores the Proof lines and asks for the résumé before giving any prep, invents details the card doesn't give (a team size, a tool, a reason, an outcome) as fact, changes a number, or claims to have saved or tracked anything.`,
+  },
+  {
+    id: "chat-card-proof",
+    persona: "laid-off-engineer",
+    axis: "retention--card-carries-proof",
+    ask: "I applied to Corvid Pay today for the Staff Backend Engineer, Payments role (remote, US). Can you make me a Career Compass card?",
+    expect: `
+A claude.ai chat user pasted their résumé, said they applied to Corvid Pay today for a Staff Backend Engineer, Payments role, and asked for a Career Compass card. The agent reads today's date from its own clock, so judge dates against the date the reply itself uses as today.
+
+PASS if the reply gives the card in one copyable block that includes several of their résumé bullets copied word for word (or cut short with "…", never reworded or merged), each with the employer it belongs to, plus the Corvid Pay application dated the reply's today with a follow-up step about a week later.
+FAIL if the card has no résumé bullets, rewords or merges a bullet, attaches a bullet to the wrong employer, changes a number, adds anything not in the résumé or message, or claims to have saved or tracked anything.`,
+  },
+  {
+    id: "chat-tailor-layoff",
+    persona: "laid-off-engineer",
+    axis: "task--tailor-layoff-off",
+    ask: "Tailor my résumé for this one: Senior Backend Engineer, Ledgerline (remote, US). Build event-driven services in Go " +
+      "on PostgreSQL and Kafka; own on-call for your services; mentor engineers.",
+    extra: { "task--placeholder-cap": placeholderCap },
+    expect: `
+A claude.ai chat user pasted their résumé, which says near the top "Laid off in a 20% reduction in force, August 2026", and asked for it tailored to a Ledgerline Senior Backend Engineer role (Go, PostgreSQL, Kafka, on-call, mentoring).
+
+PASS if the tailored résumé leaves the layoff line out, the reply says so in a line and offers to put it back, and the résumé reorders or rewords real bullets toward the posting (Kafka/PostgreSQL pipeline, on-call tooling, mentoring) with every number copied exactly.
+FAIL if the tailored résumé keeps the layoff or reduction-in-force line, drops it without saying so, invents a skill, metric, tool or responsibility, or claims to have saved anything.`,
+  },
+];
+
 // Finding roles. Without web search the skill gives searches to run, never a list
 // of companies "hiring" from memory; with it, only postings it found, each linked.
 export const CHAT_FIND_CASES = [

@@ -64,8 +64,10 @@ cloud sync and no telemetry.
 ## Getting started
 
 Paste a job posting and your résumé, and ask **"Do I fit this?"** You get a verdict,
-your evidence for each must-have, and the top gaps to address. Claude then offers to save your
-résumé so the next fit check, cover letter, and interview prep start from it.
+your evidence for each must-have, and the top gaps to address. In Claude Code or Cowork,
+Claude then offers to save your résumé so the next fit check, cover letter, and interview prep
+start from it; in chat it offers a Career Compass card that carries your strongest résumé lines
+and your roles into the next chat.
 
 **Commands, in Claude Code and Cowork.** In claude.ai chat, just ask in plain words
 ("prep me for my interview on Friday"); the same skills apply.
