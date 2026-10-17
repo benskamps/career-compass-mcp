@@ -16,6 +16,7 @@ worth having, is the work good, and is every claim about the user true.
 | `build-suite.mjs` | Writes the suites into `plugin/evals/` and `plugin/evals-chat/`. Never edit those by hand. |
 | `scoreboard.mjs` | Rolls results up to one score per axis. |
 | `scoreboard.md` | One row per scored version. |
+| `runs/` | One file per `--append`: every case that missed on any run, and which graders. Commit it with the row; results folders are gitignored. |
 
 ## The two suites
 
@@ -75,7 +76,13 @@ claude plugin eval plugin --eval-dir evals-chat --tag trigger --ablation none --
 claude plugin eval plugin --eval-dir evals-chat --tag quality --runs 3 $COMMON --json chat.json
 claude plugin eval plugin --tag quality --runs 3 $COMMON --json tools.json
 
-node eval-src/scoreboard.mjs trigger.json chat.json tools.json --append
+# Finding roles with live search. WebSearch and WebFetch are gated, so the chat-find-web cases
+# carry the live-search tag instead of quality and run here, with the grant. The grant reaches
+# every case in the run, so keep it to that tag.
+claude plugin eval plugin --eval-dir evals-chat --tag live-search --ablation none --runs 3 \
+  --allow-tools WebSearch WebFetch $COMMON --json find-web.json
+
+node eval-src/scoreboard.mjs trigger.json chat.json tools.json find-web.json --append
 ```
 
 Every number the scoreboard prints carries its n and a 95% Wilson interval, and it warns
