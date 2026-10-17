@@ -3,7 +3,7 @@
   "displayName": "Career Compass",
   "icon": "./.claude-plugin/icon.png",
   "version": "2.14.0",
-  "description": "Paste a job posting and your resume to see how well you really fit. Then tailor your resume to that job, write the cover letter, and prep the interview without padding your history. Your next chat picks up where you left off. In Claude Code and Cowork it also remembers your career history and tracks every application, on your own computer.",
+  "description": "Honest job-fit checks in chat. Try it now: paste your resume and a job posting and ask \"Do I fit this?\" No posting at hand? Ask for \"a sample Career Compass fit check\" to see one first. Then tailor your resume, write the cover letter, and prep the interview without padding your history. In Claude Code and Cowork it also remembers your career history and tracks every application, on your own computer.",
   "author": {
     "name": "Ben Schippers",
     "url": "https://github.com/benskamps"
