@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.14.0 (2026-10-17)
+
+### Changed
+
+- **The server makes no network requests.** `check_setup` no longer asks the public npm
+  registry whether a newer version shipped, and its `checkForUpdates` option is gone. It
+  reports the installed version and how to update. The Claude plugin updates itself.
+- **No hidden folder until you save something.** Starting the server no longer creates
+  `~/.career-compass`. A plugin installed on claude.ai syncs into Claude Code and starts the
+  server in every session, so people who never used it got the folder anyway. The first
+  save creates it, and `check_setup` treats a missing folder as a fresh install.
+- **Career Compass shows up for layoffs and salary questions.** The skill now triggers on
+  a rejection, being laid off, whether a salary is fair, and weighing or negotiating an
+  offer. Six post-install prompts joined the trigger suite.
+
 ## 2.13.1 (2026-10-14)
 
 ### Fixed

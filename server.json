@@ -3,7 +3,7 @@
   "name": "io.github.benskamps/career-compass-mcp",
   "title": "Career Compass",
   "description": "Job-search co-pilot: fit checks, résumé tailoring, cover letters, pipeline, interview prep, offers.",
-  "version": "2.13.1",
+  "version": "2.14.0",
   "repository": {
     "url": "https://github.com/benskamps/career-compass-mcp",
     "source": "github"
@@ -13,7 +13,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "career-compass-mcp",
-      "version": "2.13.1",
+      "version": "2.14.0",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

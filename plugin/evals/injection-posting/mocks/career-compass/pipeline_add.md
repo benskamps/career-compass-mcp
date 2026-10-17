@@ -2,4 +2,4 @@
 ID: `5eed0001`
 Status: applied (defaulted — if you haven't applied yet, update it to `discovered`)
 Applied: {{input.dateApplied}}
-📅 Next up: your Veridian Health panel, Thu, Oct 15 (tomorrow).
+📅 Next up: your Veridian Health panel, Sun, Oct 18 (tomorrow).

@@ -7,13 +7,13 @@
 
 **Application context** (pipeline entry `demo-001`):
 - Status: interviewing
-- Applied: 2026-09-29
+- Applied: 2026-10-02
 - Posting: https://veridianhealth.com/careers/director-operations
 - Salary range on file: USD 155,000–185,000
 - Rounds recorded: 2
-  - phone screen (2026-10-04), with Rachel Torres: Passed — advancing to panel
-  - panel (2026-10-15), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
-- Notes: [2026-09-29] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-10-04] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-10-11] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
+  - phone screen (2026-10-07), with Rachel Torres: Passed — advancing to panel
+  - panel (2026-10-18), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
+- Notes: [2026-10-02] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-10-07] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-10-14] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
 - Contacts: Rachel Torres (Talent Acquisition Partner), David Kim (Chief Operating Officer)
 
 
@@ -68,11 +68,11 @@ No saved stories yet. For each new story you write, offer once to save it to `st
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 The first 2 entries are about Veridian Health.
 
-- 2026-10-04 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-27 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-10-06 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
-- 2026-09-30 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
-- 2026-09-09 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
+- 2026-10-07 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-09-30 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-10-09 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-10-03 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+- 2026-09-12 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 

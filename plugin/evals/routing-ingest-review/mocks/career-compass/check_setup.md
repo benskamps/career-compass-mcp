@@ -1,8 +1,8 @@
 # Career Compass — Setup Check
 
-Running as a standalone MCP server v2.13.1.
+Running as a standalone MCP server v2.14.0.
 
-✅ **Version** — v2.13.1 installed. The Claude plugin updates itself; set up with npx or `install`, run `npx -y career-compass-mcp@latest install` and restart your client to update.
+✅ **Version** — v2.14.0 installed. The Claude plugin updates itself; set up with npx or `install`, run `npx -y career-compass-mcp@latest install` and restart your client to update.
 ✅ **Data directory** — ~/.career-compass exists and is writable.
 ℹ️ **Git backup** — ~/.career-compass is not a git repository.
    → Turn it into one, in any shell:
