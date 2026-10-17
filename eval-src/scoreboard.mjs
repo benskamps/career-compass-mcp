@@ -11,7 +11,7 @@
 //   node eval-src/scoreboard.mjs a.json b.json   specific result files
 //   node eval-src/scoreboard.mjs --append        also add a row to eval-src/scoreboard.md
 
-import { existsSync, readdirSync, readFileSync, appendFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, appendFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +40,9 @@ if (!files.length) {
 const tally = Object.fromEntries(AXES.map((a) => [a, { pass: 0, total: 0 }]));
 const deltas = [];
 const worst = [];
+// Every case that missed on any run, with the graders that failed, so the next
+// person can see which cases cost the score without re-running the suite.
+const misses = [];
 let cost = 0;
 let judgeCost = 0;
 let minRuns = Infinity;
@@ -72,6 +75,18 @@ for (const file of files) {
     if (without?.length) {
       const mean = (rs) => rs.reduce((s, r) => s + r.score, 0) / rs.length;
       deltas.push(mean(runs) - mean(without));
+    }
+    const failed = {};
+    for (const run of runs) {
+      for (const g of run.graders ?? []) {
+        const missed = g.name === "activation--no-false-fire" ? g.passed : !g.passed;
+        if (missed) failed[g.name] = (failed[g.name] ?? 0) + 1;
+      }
+    }
+    if (Object.keys(failed).length) {
+      const clean = runs.filter((r) => (r.graders ?? []).every((g) =>
+        g.name === "activation--no-false-fire" ? !g.passed : g.passed)).length;
+      misses.push({ name: c.name, clean, runs: runs.length, failed });
     }
     if (typeof withScore === "number" && withScore < 1 && !c.name.startsWith("trigger-")) {
       worst.push([c.name, withScore]);
@@ -134,4 +149,16 @@ if (append) {
   }
   appendFileSync(board, `| ${date} | ${version} | ${AXES.map((a) => withCi(tally[a])).join(" | ")} | $${totalCost.toFixed(2)} |\n`);
   console.log(`\nAppended a row to ${board}`);
+
+  // Results folders are gitignored, so this file is the lasting record of which cases missed.
+  const missFile = join(here, "runs", `${date}-${version}.md`);
+  mkdirSync(dirname(missFile), { recursive: true });
+  const lines = misses.sort((a, b) => a.clean / a.runs - b.clean / b.runs || a.name.localeCompare(b.name))
+    .map((m) => `| ${m.name} | ${m.clean}/${m.runs} | ${Object.entries(m.failed).map(([g, n]) => `${g} ×${n}`).join(", ")} |`);
+  writeFileSync(missFile,
+    `# Cases that missed · ${version} · ${date}\n\n` +
+    "Written by `node eval-src/scoreboard.mjs --append`. A case is listed when any grader missed on any run; " +
+    "\"clean\" counts the runs where every grader passed.\n\n" +
+    `| Case | Clean runs | Missed graders |\n| --- | --- | --- |\n${lines.join("\n")}\n`);
+  console.log(`Wrote ${missFile} (${misses.length} case(s) with a miss)`);
 }
