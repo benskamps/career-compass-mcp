@@ -3,25 +3,19 @@ import { readFileSync } from "fs";
 import { spawnSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
-import { REGISTRY_URL } from "../tools/doctor.js";
+import { readdirSync } from "fs";
 import { BACKUP_RETENTION } from "../storage/file-store.js";
 
 /**
- * Privacy-claim truth: the shipped copy must not deny a request the code makes.
+ * Privacy-claim truth: the shipped copy has to match what the code does.
  *
- * Every user-facing surface used to end its privacy paragraph with "the server
- * makes no outbound network requests of its own." That was true until
- * `check_setup` landed, which GETs the public npm registry — and defaults to
- * doing so. PRIVACY.md was updated in the same change; manifest.json's
- * `long_description` and the README's Privacy Policy section were not, so the
- * bundle Claude Desktop shows a stranger, and the page GitHub shows them,
- * both asserted the opposite of the policy sitting next to them.
- *
- * A stale privacy claim is the one kind of documentation drift that cannot be
- * shrugged off as out-of-date copy: it is the claim the user is deciding on.
- * So the absolute is asserted absent from every surface, and the disclosure is
- * asserted present on every surface, rather than either being left to whoever
- * remembers.
+ * From 2.4 to 2.13.1, `check_setup` could GET the public npm registry, and this
+ * suite made every surface disclose that call. The call is gone, so every
+ * surface now says the server makes no network requests, and this suite holds
+ * the code to that: the server source may reach loopback (the dashboard probe)
+ * and nothing else. A stale privacy claim is the one kind of documentation
+ * drift that cannot be shrugged off as out-of-date copy: it is the claim the
+ * user is deciding on.
  */
 
 const repoRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
@@ -34,30 +28,6 @@ const manifest = JSON.parse(read("manifest.json")) as {
   description: string;
   long_description: string;
 };
-
-/**
- * Claims that the package never reaches the network at all.
- *
- * Deliberately narrow. The lite dashboard's own copy — "the page has no
- * external assets and makes no network calls" — is about the rendered HTML and
- * is still true, so a blanket "no network calls" match would flag an honest
- * sentence. These are the absolutes about the *software*.
- */
-const ABSOLUTE_DENIALS: { pattern: RegExp; label: string }[] = [
-  { pattern: /no outbound network requests?/i, label: '"no outbound network requests"' },
-  { pattern: /nothing phones home/i, label: '"nothing phones home"' },
-  { pattern: /never (?:makes|sends) (?:any )?(?:outbound )?(?:network )?requests?/i, label: '"never makes requests"' },
-];
-
-/** Does this surface deny all outbound traffic? Returns the claims it makes. */
-export function absoluteDenials(text: string): string[] {
-  return ABSOLUTE_DENIALS.filter(({ pattern }) => pattern.test(text)).map((c) => c.label);
-}
-
-/** Does this surface disclose the one call that exists? */
-export function disclosesRegistryCheck(text: string): boolean {
-  return /npm registry/i.test(text) && /check_setup/i.test(text);
-}
 
 /** Every surface a user reads before deciding to trust the package. */
 const SURFACES: { name: string; text: string }[] = [
@@ -73,9 +43,6 @@ const SURFACES: { name: string; text: string }[] = [
   { name: "docs/privacy.html", text: read("docs/privacy.html") },
   { name: "plugin/README.md", text: read("plugin/README.md") },
 ];
-
-/** The surfaces that carry a privacy *paragraph*, as opposed to a one-liner. */
-const POLICY_SURFACES = SURFACES.filter((s) => s.name !== "manifest.json description");
 
 /** The full policy, in every form it is published. */
 const FULL_POLICIES = SURFACES.filter((s) => /PRIVACY\.md|docs\/privacy/.test(s.name));
@@ -102,30 +69,40 @@ export function claimsSingleRequestForPackage(text: string): boolean {
   return /exactly one outbound network request/i.test(plain(text));
 }
 
+/** Every .ts file under src/, tests excluded. */
+function serverSources(dir = path.join(repoRoot, "src")): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) return e.name === "__tests__" ? [] : serverSources(p);
+    return e.name.endsWith(".ts") ? [p] : [];
+  });
+}
+
+/**
+ * Network calls in a source file that don't target loopback. A relative URL
+ * (the lite dashboard's page calling its own `/ask`) is same-origin, which is
+ * the local dashboard, so it counts as loopback.
+ */
+export function outboundCalls(source: string): string[] {
+  const calls = source.match(/\bfetch\(\s*[^,)]+|https?\.request\(|net\.connect\(/g) ?? [];
+  return calls.filter((c) => !/127\.0\.0\.1|localhost|fetch\(\s*["'`]\//.test(c));
+}
+
+/** Does this surface say the server makes no network requests? */
+export function statesNoRequests(text: string): boolean {
+  return /makes no (?:network )?requests|no network requests/i.test(plain(text));
+}
+
 describe("privacy claims match the code", () => {
-  it("the package really does make one outbound request (else this suite is theatre)", () => {
-    // If the registry check is ever removed, the absolutes below become true
-    // again and this test should be deleted rather than quietly kept passing.
-    expect(REGISTRY_URL).toMatch(/^https:\/\/registry\.npmjs\.org\//);
+  it("the server source makes no request beyond loopback", () => {
+    const found = serverSources().flatMap((f) =>
+      outboundCalls(readFileSync(f, "utf-8")).map((c) => `${path.relative(repoRoot, f)}: ${c}`),
+    );
+    expect(found, "every surface says the server makes no network requests").toEqual([]);
   });
 
-  it.each(SURFACES)("$name does not deny all outbound traffic", ({ text }) => {
-    const denials = absoluteDenials(text);
-    expect(
-      denials,
-      `this surface claims ${denials.join(", ")}, but check_setup GETs ${REGISTRY_URL} ` +
-        `when asked to. Say what the call is ` +
-        `instead of denying it — PRIVACY.md's "Update checks" section is the wording.`,
-    ).toEqual([]);
-  });
-
-  it.each(POLICY_SURFACES)("$name discloses the registry version check", ({ text }) => {
-    expect(
-      disclosesRegistryCheck(text),
-      `this surface never mentions check_setup's npm registry call. A privacy ` +
-        `paragraph that omits the only network request in the package is not honest ` +
-        `by being silent.`,
-    ).toBe(true);
+  it.each(FULL_POLICIES)("$name says the server makes no network requests", ({ text }) => {
+    expect(statesNoRequests(text)).toBe(true);
   });
 
   // ── What the policy itself has to say ──────────────────────────────────────
@@ -192,32 +169,13 @@ describe("privacy claims match the code", () => {
     expect(describesAskClaude(silent)).toBe(false);
   });
 
-  it("negative control: the sentence that actually shipped in 2.3.0 is caught", () => {
-    const shipped =
-      "It is local-first by design. There is no account, no cloud sync, and no " +
-      "telemetry — the server makes no outbound network requests of its own.";
-    expect(absoluteDenials(shipped)).toContain('"no outbound network requests"');
+  it("negative control: the 2.13.1 registry call is caught", () => {
+    expect(outboundCalls("const response = await fetch(REGISTRY_URL, {")).toHaveLength(1);
+    expect(outboundCalls("await fetch(`http://127.0.0.1:${port}/`, {")).toEqual([]);
+    expect(outboundCalls('await fetch("/ask",{method:"POST"})')).toEqual([]);
   });
 
-  it("negative control: 'nothing phones home' is caught", () => {
-    expect(absoluteDenials("No account, no cloud sync, no telemetry. Nothing phones home.")).toContain(
-      '"nothing phones home"',
-    );
-  });
-
-  it("negative control: a policy that omits the registry call fails the disclosure check", () => {
-    const silent =
-      "Career Compass runs entirely on your own computer. There is no account and " +
-      "no cloud sync. Your data is plain YAML in a directory you choose.";
-    expect(disclosesRegistryCheck(silent)).toBe(false);
-  });
-
-  it("negative control: the dashboard's honest 'no network calls' sentence is not flagged", () => {
-    // The guard must be narrow enough to leave true statements alone, or the
-    // next person deletes it instead of the false claim.
-    const honest =
-      "Data never leaves your machine - the page has no external assets and makes " +
-      "no network calls.";
-    expect(absoluteDenials(honest)).toEqual([]);
+  it("negative control: a policy that never says it makes no requests fails", () => {
+    expect(statesNoRequests("Your data is plain YAML in a directory you choose.")).toBe(false);
   });
 });

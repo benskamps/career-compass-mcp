@@ -31,8 +31,9 @@ import { PKG_NAME, PKG_VERSION } from "../version.js";
 // ─── Finding model ────────────────────────────────────────────────────────────
 
 /**
- * `unknown` is a first-class status, not a failure. The update check cannot
- * succeed offline, and rendering that as ❌ would teach users to ignore ❌.
+ * `unknown` is a first-class status, not a failure: a check that cannot run
+ * (the dashboard probe, say) is not a broken install, and rendering that as ❌
+ * would teach users to ignore ❌.
  */
 export type FindingStatus = "ok" | "warn" | "problem" | "unknown";
 
@@ -51,166 +52,20 @@ const GLYPH: Record<FindingStatus, string> = {
   unknown: "ℹ️",
 };
 
-// ─── Update check (the only outbound network call in this package) ────────────
-
-export type UpdateCheckResult =
-  | { ok: true; latest: string }
-  | { ok: false; reason: string };
-
-/** Injected so tests never touch the network. See {@link registerDoctorTools}. */
-export type UpdateChecker = () => Promise<UpdateCheckResult>;
-
-/** Where the update check asks. Exported so the privacy test can assert it. */
-export const REGISTRY_URL = `https://registry.npmjs.org/${PKG_NAME}/latest`;
+// ─── Version ──────────────────────────────────────────────────────────────────
 
 /**
- * Ask the public npm registry which version is current.
- *
- * This is the first and only outbound request Career Compass has ever made, in
- * a product whose entire pitch is that nothing leaves your machine — so the
- * shape of it matters more than the feature does:
- *
- * - It is an unauthenticated GET for a public package name. No headers that
- *   identify the user, no query string, no body, no cookies. The registry
- *   learns that someone asked about `career-compass-mcp`, which is the same
- *   thing `npm view` tells it.
- * - `/latest` rather than the full packument: one small JSON document instead
- *   of every version's metadata.
- * - It fails soft. A timeout, a DNS failure, an offline laptop, a corporate
- *   proxy returning HTML — all resolve to `{ ok: false }` with a human reason,
- *   never a thrown error. Being offline is not a problem with your install, and
- *   a health check that reports it as one is worse than no health check.
- * - It is skippable: `checkForUpdates: false` never constructs the request.
- *
- * Disclosed in PRIVACY.md under "Update checks".
+ * The installed version, and how a newer one arrives. No registry call: the
+ * plugin updates through the directory, and a server that never opens a
+ * connection is the only way "nothing leaves your machine" stays literally true.
  */
-export async function checkNpmForUpdate(timeoutMs = 3000): Promise<UpdateCheckResult> {
-  try {
-    const response = await fetch(REGISTRY_URL, {
-      signal: AbortSignal.timeout(timeoutMs),
-      headers: { accept: "application/json" },
-      redirect: "follow",
-    });
-    if (!response.ok) {
-      return { ok: false, reason: `the npm registry answered HTTP ${response.status}` };
-    }
-    const body = (await response.json()) as { version?: unknown };
-    if (typeof body.version !== "string") {
-      return { ok: false, reason: "the npm registry response had no version field" };
-    }
-    return { ok: true, latest: body.version };
-  } catch (error) {
-    const name = (error as { name?: string })?.name;
-    if (name === "TimeoutError" || name === "AbortError") {
-      return { ok: false, reason: `no answer from the npm registry within ${timeoutMs}ms` };
-    }
-    return { ok: false, reason: "could not reach the npm registry (offline, or a proxy is in the way)" };
-  }
-}
-
-// ─── Version comparison ───────────────────────────────────────────────────────
-
-interface ParsedVersion {
-  core: number[];
-  prerelease: string[];
-}
-
-function parseVersion(raw: string): ParsedVersion | null {
-  // Drop build metadata: semver says it takes no part in precedence.
-  const withoutBuild = raw.trim().replace(/^v/, "").split("+")[0];
-  const [corePart, ...preParts] = withoutBuild.split("-");
-  const core = corePart.split(".").map((n) => Number(n));
-  if (core.length !== 3 || core.some((n) => !Number.isInteger(n) || n < 0)) return null;
-  const prerelease = preParts.join("-");
-  return { core, prerelease: prerelease ? prerelease.split(".") : [] };
-}
-
-/**
- * Semver precedence, enough of it to answer "am I behind?" without a dependency.
- *
- * Returns a negative number when `a` precedes `b`, positive when it follows,
- * 0 when equal, and `null` when either side is unparseable — which is a real
- * case (`PKG_VERSION` is "unknown" if package.json can't be read) and must not
- * silently compare as "up to date".
- */
-export function compareVersions(a: string, b: string): number | null {
-  const left = parseVersion(a);
-  const right = parseVersion(b);
-  if (!left || !right) return null;
-
-  for (let i = 0; i < 3; i++) {
-    if (left.core[i] !== right.core[i]) return left.core[i] - right.core[i];
-  }
-
-  // 1.0.0-rc.1 precedes 1.0.0: a version WITH a prerelease is the earlier one.
-  if (left.prerelease.length === 0 && right.prerelease.length === 0) return 0;
-  if (left.prerelease.length === 0) return 1;
-  if (right.prerelease.length === 0) return -1;
-
-  for (let i = 0; i < Math.max(left.prerelease.length, right.prerelease.length); i++) {
-    const l = left.prerelease[i];
-    const r = right.prerelease[i];
-    if (l === undefined) return -1;
-    if (r === undefined) return 1;
-    const lNum = /^\d+$/.test(l);
-    const rNum = /^\d+$/.test(r);
-    if (lNum && rNum) {
-      if (Number(l) !== Number(r)) return Number(l) - Number(r);
-    } else if (lNum !== rNum) {
-      return lNum ? -1 : 1; // numeric identifiers rank below alphanumeric ones
-    } else if (l !== r) {
-      return l < r ? -1 : 1;
-    }
-  }
-  return 0;
-}
-
-function versionFinding(result: UpdateCheckResult | null): Finding {
-  if (result === null) {
-    return {
-      label: "Version",
-      status: "unknown",
-      detail: `v${PKG_VERSION} installed. Not compared against npm — the update check is off unless you ask for it.`,
-      fix: 'Say "check Career Compass for updates" to run this with checkForUpdates: true (one request to the public npm registry).',
-    };
-  }
-  if (!result.ok) {
-    return {
-      label: "Version",
-      status: "unknown",
-      detail: `v${PKG_VERSION} installed. Could not check for a newer one — ${result.reason}.`,
-      fix: "Nothing to do; this is a network condition, not a problem with your install.",
-    };
-  }
-
-  const order = compareVersions(PKG_VERSION, result.latest);
-  if (order === null) {
-    return {
-      label: "Version",
-      status: "unknown",
-      detail: `This install reports its version as "${PKG_VERSION}", which isn't a version number, so it can't be compared against v${result.latest} on npm.`,
-      fix: "Reinstall the package — a missing or unreadable package.json usually means a truncated download.",
-    };
-  }
-  if (order < 0) {
-    return {
-      label: "Version",
-      status: "warn",
-      detail: `v${PKG_VERSION} installed; v${result.latest} is the current release on npm.`,
-      fix: `Ask Claude: "update career-compass-mcp to ${result.latest}". Set up with npx or \`install\`: run \`npx -y career-compass-mcp@latest install\` and restart your client. Otherwise see the Upgrading section of the README for your install type (Claude Desktop bundle, npm, or source).`,
-    };
-  }
-  if (order > 0) {
-    return {
-      label: "Version",
-      status: "ok",
-      detail: `v${PKG_VERSION} installed, ahead of v${result.latest} on npm — you're running from source or a prerelease.`,
-    };
-  }
+function versionFinding(): Finding {
   return {
     label: "Version",
     status: "ok",
-    detail: `v${PKG_VERSION} is the current release.`,
+    detail:
+      `v${PKG_VERSION} installed. The Claude plugin updates itself; set up with npx or \`install\`, ` +
+      "run `npx -y career-compass-mcp@latest install` and restart your client to update.",
   };
 }
 
@@ -607,8 +462,7 @@ export type DashboardProbe = (port: number) => Promise<DashboardProbeResult>;
 /**
  * Probe the local dashboard.
  *
- * Loopback only, so this never leaves the machine and is not the network call
- * PRIVACY.md's update-check section is about. A closed port refuses instantly,
+ * Loopback only, so this never leaves the machine. A closed port refuses instantly,
  * so the timeout only matters when something is listening but wedged.
  */
 export async function probeLocalDashboard(port: number, timeoutMs = 1500): Promise<DashboardProbeResult> {
@@ -725,7 +579,7 @@ export interface ReportContext {
  * model's context right as it wrote its first reply (council 2.9.7, activation
  * note, doctor.ts:257 and :640). None of it is wrong, and none of it is what a
  * new user needs before their first answer. Anything that does need attention
- * (a newer version they asked about, leftover temp files) still gets its line.
+ * (leftover temp files, say) still gets its line.
  */
 function renderFresh(findings: Finding[], ctx: ReportContext): string {
   const lines = [
@@ -789,41 +643,31 @@ export function renderReport(findings: Finding[], freshInstall: boolean, ctx: Re
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 export interface DoctorDeps {
-  /** Defaults to {@link checkNpmForUpdate}. Tests inject a stub — the suite must never hit the network. */
-  checkForUpdate?: UpdateChecker;
   /** Defaults to {@link probeLocalDashboard}. */
   probeDashboard?: DashboardProbe;
 }
 
 export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): void {
-  const checkForUpdate = deps.checkForUpdate ?? checkNpmForUpdate;
   const probeDashboard = deps.probeDashboard ?? probeLocalDashboard;
 
   server.registerTool(
     "check_setup",
     {
       title: "Check Career Compass Setup",
-      // Reads files and asks the npm registry for a version number. It writes
-      // nothing — the data-directory check is a permission probe, not a test
-      // write — so a host may run it without prompting, which is the point:
-      // "why isn't this working" should not itself require a permission step.
-      // openWorldHint is true because of the registry call, and that is the
-      // honest answer even though the call sends nothing about the user.
+      // Reads files and probes the local dashboard port. It writes nothing —
+      // the data-directory check is a permission probe, not a test write — so
+      // a host may run it without prompting, which is the point: "why isn't
+      // this working" should not itself require a permission step. Nothing
+      // here leaves the machine, so openWorldHint is false like every tool.
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: true,
+        openWorldHint: false,
       },
       description:
-        "Health-check this Career Compass install and report everything at once: how it is running (plugin or standalone) and its version, whether a newer version has shipped, whether your data directory exists and is writable, which Career KB sections are filled in, the recent backups of each section with how to restore one, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding that needs action comes with the one step that fixes it. Run it when something seems wrong, when the user asks whether it's working, or to find a backup to restore; not on first contact. Writes nothing.",
+        "Health-check this Career Compass install and report everything at once: how it is running (plugin or standalone) and its version, whether your data directory exists and is writable, which Career KB sections are filled in, the recent backups of each section with how to restore one, whether the pipeline file parses, leftover temp files, and whether the dashboard is running. Every finding that needs action comes with the one step that fixes it. Run it when something seems wrong, when the user asks whether it's working, or to find a backup to restore; not on first contact. Writes nothing.",
       inputSchema: {
-        checkForUpdates: z
-          .boolean()
-          .default(false)
-          .describe(
-            "Whether to ask the public npm registry which version is current. Off by default: pass true only when the user asks about updates or versions. This is the only outbound network call Career Compass ever makes: an unauthenticated GET for the package name, sending nothing about you or your data.",
-          ),
         dashboardPort: z
           .number()
           .int()
@@ -835,22 +679,15 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
           ),
       },
     },
-    async ({ checkForUpdates, dashboardPort }) => {
+    async ({ dashboardPort }) => {
       const dataDir = getDataDir();
       const careerDir = join(dataDir, "career");
 
-      // Both of these reach outside the process, and a diagnostic is most needed
-      // exactly when things are failing — so a rejection from either must cost
-      // its own finding, never the whole report. `checkNpmForUpdate` and
-      // `probeLocalDashboard` already resolve rather than throw; this is the
-      // belt to their braces, and it holds for an override that is less careful.
-      const [update, sections, pipeline, orphans, claim, dashboard, git, backups] = await Promise.all([
-        checkForUpdates
-          ? checkForUpdate().catch((error: unknown) => ({
-              ok: false as const,
-              reason: `the update check itself failed (${(error as Error)?.message ?? String(error)})`,
-            }))
-          : Promise.resolve(null),
+      // A diagnostic is most needed exactly when things are failing, so a
+      // rejection from any check must cost its own finding, never the whole
+      // report. `probeLocalDashboard` already resolves rather than throws; this
+      // is the belt to its braces, and it holds for an override that is less careful.
+      const [sections, pipeline, orphans, claim, dashboard, git, backups] = await Promise.all([
         readSectionStates(careerDir),
         pipelineFinding(),
         orphanFinding(dataDir),
@@ -864,7 +701,7 @@ export function registerDoctorTools(server: McpServer, deps: DoctorDeps = {}): v
 
       const backupFinding = backupsFinding(backups);
       const findings: Finding[] = [
-        versionFinding(update),
+        versionFinding(),
         await dataDirFinding(dataDir),
         ...(git ? [git] : []),
         ...careerKbFindings(sections),

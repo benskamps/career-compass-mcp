@@ -12,8 +12,7 @@ allowed-tools:
 The user ran the Career Compass start command. Follow the career-compass skill's
 "First contact" guidance.
 
-1. If the Career Compass tools are available, call `check_setup` (offline; do not pass
-   `checkForUpdates`). If they are not, you are most likely in claude.ai chat: follow the
+1. If the Career Compass tools are available, call `check_setup`. If they are not, you are most likely in claude.ai chat: follow the
    career-compass skill's chat mode (no setup talk, no Node.js), and skip the saving steps
    below in favor of the Career Compass card. Onboarding here is the job-search answer
    itself, not getting the tools running:

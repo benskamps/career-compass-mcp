@@ -346,13 +346,13 @@ describe.skipIf(!gitAvailable)("check_setup git finding", () => {
     writeFileSync(path.join(dataDir, "career", "profile.yaml"), "name: Alex Rivera\nsummary: Ops.\n", "utf-8");
     const { client, server } = await connect();
     try {
-      const before = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
+      const before = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
       expect(before).toContain("Git backup");
       expect(before).toContain("not a git repository");
       expect(before).toContain("git init");
 
       execFileSync("git", ["init", "-q"], { cwd: dataDir, stdio: "ignore" });
-      const after = textOf(await client.callTool({ name: "check_setup", arguments: { checkForUpdates: false } }));
+      const after = textOf(await client.callTool({ name: "check_setup", arguments: {} }));
       expect(after).toContain("tracked in a git repository");
       expect(after).not.toContain("git init");
     } finally {

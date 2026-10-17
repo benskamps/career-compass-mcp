@@ -83,7 +83,7 @@ describe.skipIf(!existsSync(builtServer))("server startup", () => {
           jsonrpc: "2.0",
           id: 3,
           method: "tools/call",
-          params: { name: "check_setup", arguments: { checkForUpdates: false } },
+          params: { name: "check_setup", arguments: {} },
         },
         {
           jsonrpc: "2.0",

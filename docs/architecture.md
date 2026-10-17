@@ -22,7 +22,6 @@ flowchart TB
     E["<b>Your editor</b><br/>vim · VS Code · Finder"]
 
     subgraph net["off the machine"]
-        NPM(["npm registry<br/><i>the only outbound call</i>"])
     end
 
     subgraph server["career-compass-mcp — Node, stdio, on your machine"]
@@ -40,7 +39,6 @@ flowchart TB
     end
 
     C <-->|"stdio · JSON-RPC"| server
-    T -.->|"check_setup version check — skippable"| NPM
     T -->|"locked read + write"| Y
     R -->|read| Y
     Y -.->|"file change → notification"| R
@@ -48,9 +46,7 @@ flowchart TB
     E -->|"it's just YAML"| Y
 ```
 
-The dotted line to npm is the only outbound request the package makes: `check_setup`
-asking whether a newer version exists. It carries nothing about you, and
-`checkForUpdates: false` never constructs it.
+Nothing in the diagram leaves your machine: the package makes no outbound requests.
 
 ---
 
