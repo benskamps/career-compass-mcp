@@ -16,6 +16,7 @@ worth having, is the work good, and is every claim about the user true.
 | `build-suite.mjs` | Writes the suites into `plugin/evals/` and `plugin/evals-chat/`. Never edit those by hand. |
 | `scoreboard.mjs` | Rolls results up to one score per axis. |
 | `scoreboard.md` | One row per scored version. |
+| `runs/` | One file per `--append`: every case that missed on any run, and which graders. Commit it with the row; results folders are gitignored. |
 
 ## The two suites
 
