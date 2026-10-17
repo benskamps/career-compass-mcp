@@ -9,7 +9,35 @@ verdict (strong, stretch, or long shot), each of the posting's must-haves matche
 evidence from your background, and the top two gaps with how to address them in your
 application. You'll know whether to apply and what to fix first. No setup, no account.
 
-**It won't make things up.** Résumés, cover letters, and interview answers are written
+## Try it now
+
+Just installed it and not sure what to type? Open a new chat and send whichever of these
+fits where you are. Each one works on its own in claude.ai chat, Cowork and Claude Code.
+
+**You have a job in mind.** Send this, with your résumé and the posting pasted or attached
+underneath (a PDF is fine):
+
+```
+Here's my résumé and a job I'm considering. Do I fit this?
+```
+
+**You only have your résumé.**
+
+```
+Here's my résumé. What roles does it support today, and what would a screener skip?
+```
+
+**You have neither at hand.** See a full fit check on a made-up profile first, with nothing
+of yours shared. [Open it in Claude](https://claude.ai/new?q=Show%20me%20a%20sample%20Career%20Compass%20fit%20check.),
+or send:
+
+```
+Show me a sample Career Compass fit check.
+```
+
+## It won't make things up
+
+Résumés, cover letters, and interview answers are written
 from what you've actually done. When a detail is missing, like a number or a team size,
 the draft shows a `[confirm: …]` placeholder for you to fill in instead of inventing one.
 Offer reviews use only market data you provide, and say where to find more.
@@ -64,8 +92,10 @@ cloud sync and no telemetry.
 ## Getting started
 
 Paste a job posting and your résumé, and ask **"Do I fit this?"** You get a verdict,
-your evidence for each must-have, and the top gaps to address. Claude then offers to save your
-résumé so the next fit check, cover letter, and interview prep start from it.
+your evidence for each must-have, and the top gaps to address. In Claude Code and Cowork,
+Claude then offers to save your résumé so the next fit check, cover letter, and interview prep
+start from it. In claude.ai chat it offers a short Career Compass card instead, to paste into
+your next chat. No posting yet? Ask for **"a sample Career Compass fit check"** first.
 
 **Commands, in Claude Code and Cowork.** In claude.ai chat, just ask in plain words
 ("prep me for my interview on Friday"); the same skills apply.
