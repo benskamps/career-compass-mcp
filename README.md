@@ -20,6 +20,31 @@ tailor your résumé, write the cover letter and prep the interview without padd
 history. Free, MIT-licensed, and in Claude Code and Cowork your files stay on your own
 computer.
 
+## Try it now
+
+Just installed it and not sure what to type? Open a new chat and send whichever of these
+fits where you are. Each one works on its own in claude.ai chat, Cowork and Claude Code.
+
+**You have a job in mind.** Send this, with your résumé and the posting pasted or attached
+underneath (a PDF is fine):
+
+```
+Here's my résumé and a job I'm considering. Do I fit this?
+```
+
+**You only have your résumé.**
+
+```
+Here's my résumé. What roles does it support today, and what would a screener skip?
+```
+
+**You have neither at hand.** See a full fit check on a made-up profile first, with nothing
+of yours shared:
+
+```
+Show me a sample Career Compass fit check.
+```
+
 ## What a fit check looks like
 
 <p align="center">
