@@ -1,6 +1,6 @@
 ---
 description: Find open roles to apply to, from a pasted résumé.
-tags: [task, quality, find]
+tags: [task, live-search, find]
 max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Skill, WebSearch, WebFetch]

@@ -63,8 +63,11 @@ jobs:
       - name: Quality on Claude Code and Cowork (tools)
         run: claude plugin eval plugin --tag quality $EVAL_FLAGS --max-cost-usd 40 --json tools.json || true
 
+      - name: Finding roles with live search
+        run: claude plugin eval plugin --eval-dir evals-chat --tag live-search --ablation none --allow-tools WebSearch WebFetch $EVAL_FLAGS --max-cost-usd 10 --json find-web.json || true
+
       - name: Scoreboard
-        run: node eval-src/scoreboard.mjs trigger.json chat.json tools.json | tee -a "$GITHUB_STEP_SUMMARY"
+        run: node eval-src/scoreboard.mjs trigger.json chat.json tools.json find-web.json | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -73,6 +76,7 @@ jobs:
           path: |
             trigger.json
             chat.json
+            find-web.json
             tools.json
             plugin/evals/results/
             plugin/evals-chat/results/

@@ -383,7 +383,10 @@ function buildChat() {
     const p = personas[c.persona];
     writeCase(CHAT_SUITE, c.id, {
       description: "Find open roles to apply to, from a pasted résumé.",
-      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`, tags: ["task", "quality", "find"],
+      prompt: `Here's my résumé:\n\n${p.body}\n\n${c.ask}`,
+      // Live-search cases run on their own with WebSearch granted (see README), so the
+      // main quality run, which has no search, doesn't count them as failures.
+      tags: ["task", c.tools.includes("WebSearch") ? "live-search" : "quality", "find"],
       allowedTools: c.tools,
       graders: {
         "task--find": { type: "llm", weight: 2, body: c.expect },
