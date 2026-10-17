@@ -13,14 +13,14 @@ if (versionWarning) process.stderr.write(`${versionWarning}\n`);
 async function main(): Promise<void> {
   const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
   const { createServer } = await import("./server.js");
-  const { ensureDataDirs } = await import("./storage/file-store.js");
   const { setClaimHolderLabel } = await import("./storage/write-claim.js");
   const { stdioBanner } = await import("./stdio-banner.js");
 
   // Names this process in a write-claim refusal, so "another process is writing"
   // tells the user which one to close.
   setClaimHolderLabel("MCP server");
-  await ensureDataDirs();
+  // No data folder on startup: a plugin synced into Claude Code starts this
+  // server in every session, used or not. The first save creates the folder.
 
   const server = createServer();
   const transport = new StdioServerTransport();

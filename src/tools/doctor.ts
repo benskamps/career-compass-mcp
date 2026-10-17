@@ -3,7 +3,7 @@ import { access, readdir, readFile } from "fs/promises";
 import { constants as FS } from "fs";
 import { execFile } from "child_process";
 import { homedir } from "os";
-import { join, resolve } from "path";
+import { dirname, join, resolve } from "path";
 import { promisify } from "util";
 import { parse as parseYaml } from "yaml";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -267,11 +267,33 @@ async function dataDirFinding(dataDir: string): Promise<Finding> {
   try {
     await access(dataDir, FS.F_OK);
   } catch {
+    // Not created yet is normal: the first save creates it. What matters is
+    // whether that save could, so check the nearest folder that does exist.
+    let parent = dirname(dataDir);
+    for (;;) {
+      try {
+        await access(parent, FS.F_OK);
+        break;
+      } catch {
+        const up = dirname(parent);
+        if (up === parent) break;
+        parent = up;
+      }
+    }
+    try {
+      await access(parent, FS.W_OK);
+    } catch {
+      return {
+        label: "Data directory",
+        status: "problem",
+        detail: `${dataDir} does not exist, and ${parent} is not writable, so the first save would fail.`,
+        fix: "Point CAREER_DATA_PATH at a directory you own.",
+      };
+    }
     return {
       label: "Data directory",
-      status: "problem",
-      detail: `${dataDir} does not exist.`,
-      fix: "Restart your MCP client — the server creates this directory on startup. If it keeps failing, CAREER_DATA_PATH points somewhere you cannot create.",
+      status: "ok",
+      detail: `${dataDir} does not exist yet; it is created the first time you save something.`,
     };
   }
 
