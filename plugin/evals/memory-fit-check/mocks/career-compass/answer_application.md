@@ -14,7 +14,7 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Career KB
 **Name:** Alex Rivera
 **Contact:** alex.rivera@email.com · +1-555-0142 · Austin, TX · linkedin.com/in/alexrivera · alexrivera.dev
-**Summary on file:** Operations and program manager with 9 years of experience driving cross-functional initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous problems into structured execution plans and building high-trust relationships with both technical and non-technical stakeholders.
+**Summary on file:** Operations and program manager with over 10 years of experience driving cross-functional initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous problems into structured execution plans and building high-trust relationships with both technical and non-technical stakeholders.
 **Target roles:** Program Manager, Director of Operations, Head of Customer Success, Chief of Staff
 
 **Experience** (newest first, as stored)

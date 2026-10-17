@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -373,6 +373,22 @@ function buildChat() {
       graders: {
         "retention--come-back-reminder": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(personas[c.persona]),
+        "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-setup-talk": noSetupTalk,
+        "activation--skill-fired": skillFired,
+      },
+    }); n++;
+  }
+  for (const c of CHAT_RETURN_CASES) {
+    const p = personas[c.persona];
+    writeCase(CHAT_SUITE, c.id, {
+      description: "The return trip in claude.ai chat: a card that carries proof, prep from it, and a tailored résumé.",
+      prompt: c.resume === false ? c.ask : `Here's my résumé:\n\n${p.body}\n\n${c.ask}`,
+      tags: ["retention", "quality", "chat-return"],
+      graders: {
+        [c.axis]: { type: "llm", weight: 2, body: c.expect },
+        ...(c.extra ?? {}),
+        "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,

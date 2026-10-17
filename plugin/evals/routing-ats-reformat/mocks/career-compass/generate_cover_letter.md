@@ -2,7 +2,7 @@
 
 ## Career KB Summary
 **Name:** Alex Rivera
-**Summary:** Operations and program manager with 9 years of experience driving cross-functional initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous problems into structured execution plans and building high-trust relationships with both technical and non-technical stakeholders.
+**Summary:** Operations and program manager with over 10 years of experience driving cross-functional initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous problems into structured execution plans and building high-trust relationships with both technical and non-technical stakeholders.
 
 **Roles and scope:**
 - **Senior Program Manager @ MedFlow Health Systems** (2021-03 to present): Led enterprise-scale digital health initiatives across 14 hospital systems, managing $8M in annual program budgets and a team of 6 PMs.

@@ -168,7 +168,7 @@ Alex Rivera's saved Career KB and job pipeline (YAML files):
     linkedIn: linkedin.com/in/alexrivera
     portfolio: alexrivera.dev
     summary: >
-      Operations and program manager with 9 years of experience driving cross-functional
+      Operations and program manager with over 10 years of experience driving cross-functional
       initiatives across healthcare, logistics, and SaaS. Known for translating ambiguous
       problems into structured execution plans and building high-trust relationships with
       both technical and non-technical stakeholders.
