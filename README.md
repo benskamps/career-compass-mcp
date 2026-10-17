@@ -39,8 +39,7 @@ Here's my résumé. What roles does it support today, and what would a screener 
 ```
 
 **You have neither at hand.** See a full fit check on a made-up profile first, with nothing
-of yours shared. [Open it in Claude](https://claude.ai/new?q=Show%20me%20a%20sample%20Career%20Compass%20fit%20check.),
-or send:
+of yours shared:
 
 ```
 Show me a sample Career Compass fit check.
