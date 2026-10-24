@@ -266,7 +266,7 @@ Add the server:
 }
 ```
 
-Pin a version in `args` (`"career-compass-mcp@2.14.1"` rather than the bare name) if you can:
+Pin a version in `args` (`"career-compass-mcp@2.15.0"` rather than the bare name) if you can:
 Desktop starts the server twice at once, and an unpinned name reinstalls on every release,
 which can leave npx's cache half-written (see **On npx** below). `install` does this for you.
 

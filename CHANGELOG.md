@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.15.0 (2026-10-24)
+
+### Changed
+
+- **A cover letter and interview prep work before anything is saved.** Paste your résumé
+  and `generate_cover_letter` and `prepare_interview` write from it, the way the fit
+  check, the tailored résumé and form answers already did. Then they offer to save it.
+- **One spelling of a company everywhere.** An application saved as "Acme, Inc." is now
+  found when you ask for a letter, form answers, interview prep or the interview arc for
+  "Acme": the cached posting, rounds, notes and the stories that company already heard
+  all come along. Accents, "&" and suffixes like Inc, LLC and GmbH no longer split one
+  company into two.
+
+### Fixed
+
+- **Windows:** the test suite and the privacy page build now pass on a Windows checkout.
+  Text files check out with LF line endings, and the parsers accept CRLF anyway. CI now
+  runs the tests on Windows too.
+- `CAREER_DATA_PATH="~/..."` now works for `career-compass-mcp dashboard`, as it already
+  did for the server.
+- `dashboard --ask-claude` no longer leaves a temp folder behind each run.
+
 ## 2.14.1 (2026-10-17)
 
 ### Changed
