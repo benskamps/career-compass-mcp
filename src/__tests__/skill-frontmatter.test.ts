@@ -62,6 +62,16 @@ describe("plugin skill frontmatter", () => {
     }
   });
 
+  // claude.ai rejects a skill whose description is over 1,024 characters, and the
+  // main skill's description is the only thing chat reads before deciding to fire.
+  it("every description fits claude.ai's 1,024-character limit", () => {
+    for (const name of skills) {
+      const description = frontmatter(name).description;
+      expect(typeof description, `${name}: description should be a string`).toBe("string");
+      expect((description as string).length, `${name}: description is too long`).toBeLessThanOrEqual(1024);
+    }
+  });
+
   it("every command skill is user-invoked only, and the main skill routes it in plain words", () => {
     const main = readFileSync(path.join(SKILLS_DIR, "career-compass", "SKILL.md"), "utf-8");
     for (const name of skills.filter((n) => n !== "career-compass")) {

@@ -10,7 +10,7 @@ worth having, is the work good, and is every claim about the user true.
 | --- | --- |
 | `personas/` | 8 fictional job seekers. Each résumé is the only truth the honesty judge accepts about that person. |
 | `postings/` | One job posting per persona, with the expected verdict, strongest evidence and real gaps the fit-check judge grades against. |
-| `trigger/` | 60 prompts where Career Compass should fire and 30 where it should stay quiet (coding, recipes, and hiring-side asks such as writing a job description). |
+| `trigger/` | 93 prompts where Career Compass should fire, including short casual openers ("should i apply to this one", "here's the JD, thoughts?"), and 40 where it should stay quiet (coding, recipes, hiring-side asks such as writing a job description, and near misses such as applying sunscreen or countering on a house). |
 | `cases.mjs` | The task, memory and first-contact cases. |
 | `record-mocks.mjs` | Records the MCP tool mocks from the real server in this repo. |
 | `build-suite.mjs` | Writes the suites into `plugin/evals/` and `plugin/evals-chat/`. Never edit those by hand. |
@@ -110,8 +110,10 @@ For one case while iterating: `claude plugin eval plugin --case <name> --runs 1 
 **Quoting results.** A number that goes into a release decision quotes n and an interval
 (for example "11 of 12, 95% CI 65–99%") and comes from at least 3 runs per case, as above.
 A single run is for iterating: quote it as "n of m, 1 run", never as a percentage that
-settles anything. And trigger tuning is paused as a growth lever until the directory's own
-numbers say activation is the problem; activation already sits in the high 90s offline.
+settles anything. Trigger tuning resumed in 2.15.1: the directory showed about 1 in 5 claude.ai
+installs active after 28 days while offline activation sat in the high 90s, so the suite gained
+the short, casual openers real chat users type. Every description change re-runs the
+should-not-fire prompts too, so a broader description can't buy recall with false fires.
 The Actions tab has an **Evals** workflow that runs all three and uploads the results.
 
 ## Change the suite
