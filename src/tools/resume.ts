@@ -8,6 +8,7 @@ import { noCareerDataMessage } from "../empty-state.js";
 import { TRUTH_RULE, AI_POLICY_RULE } from "./truth-rule.js";
 import { formatRoles, formatAchievements, formatCredentials, formatProjects, narrativeBlock } from "./career-context.js";
 import { KB_OVER_PASTED, PASTED_RESUME_CLOSE, workFromPastedResume } from "./opportunity.js";
+import { sameCompany, sameRole } from "./names.js";
 import type { CareerData } from "../schemas/career-schema.js";
 
 export function registerResumeTools(server: McpServer): void {
@@ -142,7 +143,7 @@ ${TRUTH_RULE}`,
         "role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the " +
         "user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached " +
         "posting, role, and notes), or from just a company and role. Company claims come only from the posting or the " +
-        "user. Writes nothing.",
+        "user. Before anything is saved, pass the résumé they pasted as `resume`. Writes nothing.",
       inputSchema: {
         posting: z.string().optional().describe("Full job posting text. Optional: without it, the cached posting from the pipeline is used, or the letter is written from the role and your history"),
         company: z.string().describe("Company name"),
@@ -151,16 +152,21 @@ ${TRUTH_RULE}`,
         hiringManager: z.string().optional().describe("Hiring manager name if known"),
         tone: z.enum(["professional", "conversational", "enthusiastic", "concise"]).default("professional").describe("Voice of the letter. Match it to the company: professional for traditional or regulated employers, conversational for startups, enthusiastic when you genuinely want this one, concise when the posting asks for brevity."),
         angle: z.string().optional().describe("The key story or angle to lead with"),
+        resume: z.string().optional().describe(
+          "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is " +
+            "saved yet, so the first letter works before anything is saved.",
+        ),
       },
     },
-    async ({ posting, company, role, applicationId, hiringManager, tone, angle }) => {
+    async ({ posting, company, role, applicationId, hiringManager, tone, angle, resume }) => {
       // Note: `company` also orders the journal digest below (that company first).
       const read = await guardedRead(() => loadCareerData());
       if (!read.ok) return read.response;
       const career = read.value;
-      if (!career) {
+      const fromPasted = workFromPastedResume(career, resume);
+      if (!career && !fromPasted) {
         return {
-          content: [{ type: "text", text: noCareerDataMessage() }],
+          content: [{ type: "text", text: noCareerDataMessage({ resumeParam: "resume" }) }],
         };
       }
 
@@ -170,11 +176,9 @@ ${TRUTH_RULE}`,
       if (!posting || applicationId) {
         const pipeRead = await guardedRead(() => loadPipeline());
         if (!pipeRead.ok) return pipeRead.response;
-        const lc = (s: string) => s.trim().toLowerCase();
         const app = applicationId
           ? pipeRead.value.applications.find(a => a.id === applicationId)
-          : pipeRead.value.applications.find(a =>
-              lc(a.company) === lc(company) && (!role || lc(a.role) === lc(role)));
+          : pipeRead.value.applications.find(a => sameCompany(a.company, company) && (!role || sameRole(a.role, role)));
         if (app) {
           role = role ?? app.role;
           posting = posting ?? app.postingText;
@@ -191,18 +195,20 @@ ${TRUTH_RULE}`,
           type: "text",
           text: `# Cover Letter Generation
 
-## Career KB Summary
-**Name:** ${career.profile.name}
-**Summary:** ${career.profile.summary}
+${fromPasted
+  ? `## Career KB Summary\nNo saved Career KB with work history yet, so write from the résumé the user pasted:\n\n${embedUntrusted("pasted résumé", resume!)}${career ? `\n\n${narrativeBlock(career)}` : ""}`
+  : `## Career KB Summary
+**Name:** ${career!.profile.name}
+**Summary:** ${career!.profile.summary}
 **Roles and scope:**
-${formatRoles(career)}
+${formatRoles(career!)}
 
 **Top achievements (by role):**
-${formatAchievements(career, 2, 8)}
+${formatAchievements(career!, 2, 8)}
 
-${narrativeBlock(career)}
+${narrativeBlock(career!)}${resume?.trim() ? `\n\n${KB_OVER_PASTED}` : ""}`}
 
-${formatSignalDigest(career.journal, 4, company)}
+${formatSignalDigest(career?.journal, 4, company)}
 ${posting ? `## Job Posting\n${embedUntrusted("job posting", posting)}` : `## Job Posting\nNone available. Write the letter from the role${role ? ` (${role})` : ""}, the company name, and my history. Do not ask me for the posting first: deliver the letter, then say in one line that pasting the posting would let you sharpen it.`}
 ${appContext}
 
@@ -232,7 +238,7 @@ ${tone === "enthusiastic" ? "High energy, genuine excitement, mission-driven" : 
 ${tone === "concise" ? "Every sentence earns its place. Max 250 words total." : ""}
 
 Keep it under 400 words. Make it feel human, not templated, through plain specific language rather than invented story: each sentence about me is either a fact from the Career KB or a plain statement of what I would bring or want. No scenes, causes, surprises, or lessons the Career KB doesn't give ("when results were stuck", "I didn't call it that at the time"), no "I've always…", and no claims about how I work today unless I am working today.
-
+${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
 ${AI_POLICY_RULE}
 
 ${TRUTH_RULE}`,
@@ -283,9 +289,8 @@ ${TRUTH_RULE}`,
       if (company) {
         const pipeRead = await guardedRead(() => loadPipeline());
         if (pipeRead.ok) {
-          const lc = (t: string) => t.trim().toLowerCase();
           const app = pipeRead.value.applications.find(a =>
-            lc(a.company) === lc(company) && (!role || lc(a.role) === lc(role)));
+            sameCompany(a.company, company) && (!role || sameRole(a.role, role)));
           if (app) {
             role = role ?? app.role;
             posting = posting ?? app.postingText;

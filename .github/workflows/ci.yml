@@ -53,6 +53,31 @@ jobs:
       - name: Run npm-pack leak guard
         run: npm run pack:guard
 
+  # Windows is where people run this, and Linux CI never saw what broke there:
+  # CRLF checkouts (the privacy build spun forever, front matter went unparsed)
+  # and "\" in printed paths. Tests only; the leak guard is OS-independent.
+  mcp-windows:
+    name: MCP build + tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build MCP (tsc)
+        run: npm run build:mcp
+
+      - name: Run MCP tests
+        run: npm run test:mcp
+
   dashboard:
     name: Dashboard build + tests
     runs-on: ubuntu-latest

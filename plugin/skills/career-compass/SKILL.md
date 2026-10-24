@@ -61,7 +61,8 @@ first. Do not make them build a KB before they see anything.
    attach your résumé (a PDF is fine, or your LinkedIn profile saved as a PDF) and I'll do
    this now." Then do the ask with
    the tool, passing the pasted text as its `resume` parameter (`explore_opportunity`,
-   `tailor_resume`) rather than answering without it.
+   `tailor_resume`, `generate_cover_letter`, `prepare_interview`, `answer_application`)
+   rather than answering without it.
 3. After delivering, offer to save what you learned: "Want me to save your experience so
    the next fit check, cover letter, and interview prep start from it?" Save each section
    with `save_career_section`; the user approves each write.

@@ -27,7 +27,9 @@ const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week
 // ---------- inputs ----------
 
 function readFront(file) {
-  const text = readFileSync(file, "utf-8");
+  // LF only, so a CRLF checkout (Windows, core.autocrlf) parses the same and
+  // the generated suites stay byte-identical across platforms.
+  const text = readFileSync(file, "utf-8").replace(/\r\n?/g, "\n");
   const m = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   return { ...parse(m[1]), body: m[2].trim() };
 }
@@ -125,7 +127,8 @@ function kbText() {
     return readdirSync(dir).filter((f) => f.endsWith(".yaml")).sort().map((f) => join(dir, f));
   });
   return files
-    .map((f) => `--- ${f.split("/").slice(-2).join("/")}\n${shiftDates(readFileSync(f, "utf-8")).replace(/^#.*\n/gm, "").trim()}`)
+    // LF and "/" whatever the platform, so a Windows build writes the same graders.
+    .map((f) => `--- ${f.split(/[\\/]/).slice(-2).join("/")}\n${shiftDates(readFileSync(f, "utf-8").replace(/\r\n?/g, "\n")).replace(/^#.*\n/gm, "").trim()}`)
     .join("\n\n");
 }
 

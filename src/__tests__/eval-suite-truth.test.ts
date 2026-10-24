@@ -29,7 +29,9 @@ function tree(dir: string): Map<string, string> {
       if (entry === "results") continue;
       const full = path.join(d, entry);
       if (statSync(full).isDirectory()) walk(full);
-      else out.set(path.relative(dir, full), readFileSync(full, "utf-8"));
+      // LF only: a CRLF checkout (Windows, core.autocrlf) is the same suite. Keys
+      // use "/" so a Windows run compares the same names.
+      else out.set(path.relative(dir, full).split(path.sep).join("/"), readFileSync(full, "utf-8").replace(/\r\n?/g, "\n"));
     }
   };
   walk(dir);
@@ -77,7 +79,7 @@ describe("eval suite truth", () => {
   it("every grader is named for an axis the scoreboard knows", () => {
     for (const suite of ["evals", "evals-chat"]) {
       for (const [file] of tree(path.join(repoRoot, "plugin", suite))) {
-        if (!file.includes(`graders${path.sep}`)) continue;
+        if (!file.includes("graders/")) continue;
         const axis = path.basename(file, ".md").split("--")[0];
         expect(AXES, file).toContain(axis);
       }

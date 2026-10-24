@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "child_process";
-import { existsSync, writeFileSync, mkdtempSync } from "fs";
+import { existsSync, writeFileSync, mkdtempSync, rmSync } from "fs";
 import { randomBytes } from "crypto";
 import { tmpdir } from "os";
 import { delimiter, join, dirname } from "path";
@@ -70,9 +70,29 @@ export function ownCliPath(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "..", "bin", "cli.js");
 }
 
+/**
+ * Config folders this process made and still owns. Each `dashboard --ask-claude`
+ * run left one `cc-ask-*` folder in the temp directory for good: nothing removed
+ * it when the server closed. One exit hook for all of them (the CLI leaves through
+ * process.exit on Ctrl+C, before a server "close" event would fire), plus
+ * `dispose()` on the bridge for a server that closes and the process lives on.
+ */
+const ownedConfigDirs = new Set<string>();
+let exitHookInstalled = false;
+
+function removeConfigDir(dir: string): void {
+  ownedConfigDirs.delete(dir);
+  try { rmSync(dir, { recursive: true, force: true }); } catch { /* temp dir; the OS cleans it eventually */ }
+}
+
 /** Write the one-server MCP config Claude Code will use. Returns its path. */
 export function writeMcpConfig(dataDir: string, cliPath: string = ownCliPath()): string {
   const dir = mkdtempSync(join(tmpdir(), "cc-ask-"));
+  ownedConfigDirs.add(dir);
+  if (!exitHookInstalled) {
+    exitHookInstalled = true;
+    process.once("exit", () => { for (const d of [...ownedConfigDirs]) removeConfigDir(d); });
+  }
   const file = join(dir, "mcp.json");
   const cfg = {
     mcpServers: {
@@ -240,6 +260,10 @@ export interface AskBridge {
   token: string;
   /** The request handler for POST /ask. */
   handle(req: IncomingMessage, res: ServerResponse): Promise<void>;
+  /** The MCP config handed to Claude Code. */
+  mcpConfigPath: string;
+  /** Remove the MCP config folder this bridge wrote. A config path passed in is the caller's to keep. */
+  dispose(): void;
 }
 
 export const MAX_PROMPT_CHARS = 4000;
@@ -255,6 +279,7 @@ export function isAllowedOrigin(origin: string | undefined): boolean {
 
 export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcpConfigPath?: string; timeoutMs?: number; allowWrites?: boolean }): AskBridge {
   const token = randomBytes(24).toString("hex");
+  const ownsConfig = !opts.mcpConfigPath;
   const mcpConfigPath = opts.mcpConfigPath ?? writeMcpConfig(opts.dataDir);
   let inFlight = false;
 
@@ -302,5 +327,7 @@ export function createAskBridge(opts: { dataDir: string; cmd: ClaudeCommand; mcp
     res.end();
   }
 
-  return { token, handle };
+  const dispose = () => { if (ownsConfig) removeConfigDir(dirname(mcpConfigPath)); };
+
+  return { token, handle, mcpConfigPath, dispose };
 }

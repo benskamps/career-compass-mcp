@@ -10,6 +10,8 @@ import {
   formatCredentials, formatProjects, formatRoles, formatTestimonials, narrativeBlock, storyBankBlock,
   storiesAlreadyHeard, RECORD_STORY_USE, type StoryAudience,
 } from "./career-context.js";
+import { sameCompany, sameRole } from "./names.js";
+import { KB_OVER_PASTED, PASTED_RESUME_CLOSE, workFromPastedResume } from "./opportunity.js";
 import type { Application, CareerData, InterviewRound, JournalEntry, Pipeline } from "../schemas/career-schema.js";
 
 export function registerInterviewTools(server: McpServer): void {
@@ -30,7 +32,8 @@ export function registerInterviewTools(server: McpServer): void {
         "first, skipping any this company or interviewer already heard), likely questions for that round, questions to " +
         "ask, and the concerns to get ahead of, quoting their saved narrative where it applies. Finds the application by " +
         "id or company name and uses its posting, rounds, and contacts. For a later round in a process already under " +
-        "way, call interview_arc too so the prep doesn't repeat ground covered. Writes nothing.",
+        "way, call interview_arc too so the prep doesn't repeat ground covered. Before anything is saved, pass the " +
+        "résumé they pasted as `resume`. Writes nothing.",
       inputSchema: {
         applicationId: z.string().optional().describe("Pipeline application ID"),
         company: z.string().optional().describe("Company name (if no application ID)"),
@@ -39,9 +42,13 @@ export function registerInterviewTools(server: McpServer): void {
         interviewerInfo: z.string().optional().describe("Interviewer name, title, LinkedIn — helps personalize prep"),
         postingText: z.string().optional().describe("Job posting text for this role"),
         focusAreas: z.string().optional().describe("Specific topics or concerns to focus on"),
+        resume: z.string().optional().describe(
+          "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is " +
+            "saved yet, so the first prep works before anything is saved.",
+        ),
       },
     },
-    async ({ applicationId, company, role, interviewType, interviewerInfo, postingText, focusAreas }) => {
+    async ({ applicationId, company, role, interviewType, interviewerInfo, postingText, focusAreas, resume }) => {
       // Reads fail-closed: a corrupt profile.yaml or applications.yaml, or an
       // unavailable store, must surface as a repair sentence rather than a raw
       // transport error — the same graceful surfacing the write tools carry.
@@ -93,21 +100,21 @@ export function registerInterviewTools(server: McpServer): void {
         }
       }
 
-      if (!career) {
+      const fromPasted = workFromPastedResume(career, resume);
+      if (!career && !fromPasted) {
         return {
-          content: [{ type: "text", text: noCareerDataMessage() }],
+          content: [{ type: "text", text: noCareerDataMessage({ resumeParam: "resume" }) }],
         };
       }
 
-      const achievements = career.experience
-        .flatMap(e => e.achievements.map(a => ({
-          role: e.role,
-          company: e.company,
-          metric: a.metric,
-          context: a.context,
-          impact: a.impact,
-        })))
-        .slice(0, 20);
+      // A pasted résumé stands in for the KB sections until something is saved;
+      // a saved narrative or story bank (a profile with no history yet) still counts.
+      const background = fromPasted
+        ? `## Background
+No saved Career KB with work history yet, so prep from the résumé the user pasted:
+
+${embedUntrusted("pasted résumé", resume!)}${career ? `\n\n${narrativeBlock(career)}\n\n${storyBankBlock(career, audience)}` : ""}`
+        : careerBackground(career!, audience, resume);
 
       return {
         content: [{
@@ -121,32 +128,9 @@ ${interviewerInfo ? `**Interviewer:**\n${embedUntrusted("interviewer info", inte
 ${appContext}
 ${focusAreas ? `**Focus areas:**\n${embedUntrusted("focus areas", focusAreas)}` : ""}
 
-## Career Highlights (for STAR stories)
-${achievements.map(a => `- **${a.role} @ ${a.company}**: ${a.metric} — ${a.context} → ${a.impact}`).join("\n")}
+${background}
 
-## Candidate
-${career.profile.name}${career.profile.summary ? `: ${career.profile.summary.replace(/\s+/g, " ").trim()}` : ""}
-
-## Roles and scope
-${formatRoles(career, 8)}
-
-## Projects
-${formatProjects(career)}
-
-## Education and certifications
-${formatCredentials(career)}
-
-## Skills
-${career.skills.map(s => s.name).join(", ") || "None listed"}
-
-## What others have said
-${formatTestimonials(career)}
-
-${narrativeBlock(career)}
-
-${storyBankBlock(career, audience)}
-
-${formatSignalDigest(career.journal, 6, company)}
+${formatSignalDigest(career?.journal, 6, company)}
 ${postingText ? `## Job Posting\n${embedUntrusted("cached job posting", postingText)}` : ""}
 
 ---
@@ -158,7 +142,7 @@ Generate complete interview prep tailored to a ${interviewType.replace("_", " ")
 "Tell me about yourself" — tailored specifically to this role and company. Bridge my background to their context.
 
 ### 2. STAR Stories
-Start from the story bank: where a saved story fits a likely question, use it verbatim and say it is a saved one${career.stories.length ? ", skipping any this company or these interviewers have already heard" : ""}. Only then build new ones, each from a real achievement in the Career KB, written out in full, and offer once to save the new ones to \`stories\`. For each story, provide:
+Start from the story bank: where a saved story fits a likely question, use it verbatim and say it is a saved one${career?.stories.length ? ", skipping any this company or these interviewers have already heard" : ""}. Only then build new ones, each from a real achievement in the Career KB, written out in full, and offer once to save the new ones to \`stories\`. For each story, provide:
 - **Situation:** Brief context
 - **Task:** What I was responsible for
 - **Action:** What I specifically did (not "we")
@@ -191,7 +175,7 @@ Non-obvious connections between real items in my history and their world, things
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
 
 Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
-
+${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
 ${RESPONSE_SHAPE}
 
 ${COMPANY_FACTS_RULE}
@@ -519,8 +503,44 @@ function matchingJournal(
     if (byId.length > 0) return byId;
   }
   if (!company) return [];
-  const eq = (a: string | undefined, b: string) => a?.trim().toLowerCase() === b.trim().toLowerCase();
-  return journal.filter(e => eq(e.company, company) && (!role || eq(e.role, role)));
+  return journal.filter(e => sameCompany(e.company, company) && (!role || sameRole(e.role, role)));
+}
+
+/** The saved-KB half of prepare_interview: highlights, roles, story bank, all as saved. */
+function careerBackground(career: CareerData, audience: StoryAudience, resume: string | undefined): string {
+  const achievements = career.experience
+    .flatMap(e => e.achievements.map(a => ({
+      role: e.role,
+      company: e.company,
+      metric: a.metric,
+      context: a.context,
+      impact: a.impact,
+    })))
+    .slice(0, 20);
+  return `## Career Highlights (for STAR stories)
+${achievements.map(a => `- **${a.role} @ ${a.company}**: ${a.metric} — ${a.context} → ${a.impact}`).join("\n")}
+
+## Candidate
+${career.profile.name}${career.profile.summary ? `: ${career.profile.summary.replace(/\s+/g, " ").trim()}` : ""}
+
+## Roles and scope
+${formatRoles(career, 8)}
+
+## Projects
+${formatProjects(career)}
+
+## Education and certifications
+${formatCredentials(career)}
+
+## Skills
+${career.skills.map(s => s.name).join(", ") || "None listed"}
+
+## What others have said
+${formatTestimonials(career)}
+
+${narrativeBlock(career)}
+
+${storyBankBlock(career, audience)}${resume?.trim() ? `\n\n${KB_OVER_PASTED}` : ""}`;
 }
 
 /** Sort key that keeps undated items last without reordering them among themselves. */
@@ -550,13 +570,11 @@ export function findApplication(
 ): Application | undefined {
   if (applicationId) return pipeline.applications.find(a => a.id === applicationId);
   if (!company) return undefined;
-  const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  const want = norm(company);
   const byCompany = pipeline.applications
-    .filter(a => norm(a.company) === want)
+    .filter(a => sameCompany(a.company, company))
     .sort((a, b) => (b.dateUpdated ?? "").localeCompare(a.dateUpdated ?? ""));
   if (byCompany.length <= 1 || !role) return byCompany[0];
-  return byCompany.find(a => norm(a.role) === norm(role)) ?? byCompany[0];
+  return byCompany.find(a => sameRole(a.role, role)) ?? byCompany[0];
 }
 
 /** Statuses where a recorded offer is still live: on the table or being negotiated. */

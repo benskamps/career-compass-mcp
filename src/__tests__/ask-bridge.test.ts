@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Server } from "node:http";
 import { fileURLToPath } from "node:url";
 import {
-  parseStreamLine, buildClaudeArgs, resolveClaudeCommand, isAllowedOrigin, writeMcpConfig,
+  parseStreamLine, buildClaudeArgs, resolveClaudeCommand, isAllowedOrigin, writeMcpConfig, createAskBridge,
   CLAUDE_BIN_ENV, MAX_PROMPT_CHARS, READ_ONLY_TOOLS, WRITE_TOOLS,
 } from "../dashboard-lite/ask-bridge.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -134,6 +134,28 @@ describe("writeMcpConfig", () => {
     expect(cfg.mcpServers["career-compass"].args).toEqual(["C:/pkg/build/bin/cli.js"]);
     expect(cfg.mcpServers["career-compass"].env.CAREER_DATA_PATH).toBe("D:/data");
     rmSync(path.dirname(f), { recursive: true, force: true });
+  });
+});
+
+describe("the bridge's temp config", () => {
+  // Every `dashboard --ask-claude` run used to leave a cc-ask-* folder behind.
+  const cmd = { command: process.execPath, args: [FAKE] };
+
+  it("dispose() removes the folder the bridge wrote", () => {
+    const bridge = createAskBridge({ dataDir: "D:/data", cmd });
+    const dir = path.dirname(bridge.mcpConfigPath);
+    expect(existsSync(bridge.mcpConfigPath)).toBe(true);
+    bridge.dispose();
+    expect(existsSync(dir)).toBe(false);
+  });
+
+  it("leaves a config path the caller passed in alone", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "cc-ask-own-"));
+    const file = path.join(dir, "mcp.json");
+    writeFileSync(file, "{}");
+    createAskBridge({ dataDir: "D:/data", cmd, mcpConfigPath: file }).dispose();
+    expect(existsSync(file)).toBe(true);
+    rmSync(dir, { recursive: true, force: true });
   });
 });
 

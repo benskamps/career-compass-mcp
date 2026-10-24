@@ -1,4 +1,5 @@
 import type { JournalEntry } from "../schemas/career-schema.js";
+import { normalizeName } from "./names.js";
 
 /**
  * The tag every drafting surface puts on a journal entry Claude inferred rather
@@ -9,9 +10,9 @@ import type { JournalEntry } from "../schemas/career-schema.js";
  */
 export const INFERRED_TAG = "(Claude's inference — a hypothesis, not a fact about the user)";
 
-/** Same normalization `findApplication` uses: "Veridian Health, Inc." ≈ "veridian health inc". */
+/** Same normalization `findApplication` uses: "Veridian Health, Inc." ≈ "veridian health". */
 export function normCompany(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return normalizeName(name, "company");
 }
 
 /** One journal line, as the digest renders it. */

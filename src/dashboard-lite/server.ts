@@ -37,7 +37,7 @@ export function createLiteDashboardServer(options: LiteServerOptions = {}): Serv
     if (!bridge) bridge = createAskBridge({ dataDir: getDataDir(), cmd: options.ask.cmd, timeoutMs: options.ask.timeoutMs, allowWrites: options.ask.allowWrites });
     return bridge;
   };
-  return createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     // Checked before anything else, including the path: a rejected origin must
     // not learn which paths exist or how the server responds to them.
     if (!isAllowedHost(req.headers.host)) {
@@ -84,6 +84,9 @@ export function createLiteDashboardServer(options: LiteServerOptions = {}): Serv
       res.end(msg);
     }
   });
+  // The bridge's MCP config lives in a temp folder; it goes when the server does.
+  server.once("close", () => bridge?.dispose());
+  return server;
 }
 
 /**

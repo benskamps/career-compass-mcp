@@ -108,15 +108,22 @@ export function getDataDir(): string {
   // happened to start in.
   const configured = process.env.CAREER_DATA_PATH?.trim();
   const raw = configured ? configured : join(homedir(), ".career-compass");
-  if (raw === "~") return homedir();
-  if (raw.startsWith("~/") || raw.startsWith("~\\")) {
-    return join(homedir(), raw.slice(2));
-  }
+  const home = expandHome(raw);
+  if (home !== raw) return home;
   // One spelling of the folder everywhere it is printed. A value with mixed
   // separators (`C:\Users\me/data` — common on Windows) reached check_setup
   // verbatim while tailor_resume printed the same folder through path.join:
   // two tools, two spellings of one directory, on a first-run screen.
   return resolve(raw);
+}
+
+/** `~`, `~/x` and `~\\x` to the home directory; anything else unchanged. Shared with
+ *  the CLI, which resolves CAREER_DATA_PATH itself for the dashboard and used to
+ *  read `~/.career-compass` as a folder named `~` under the cwd. */
+export function expandHome(raw: string): string {
+  if (raw === "~") return homedir();
+  if (raw.startsWith("~/") || raw.startsWith("~\\")) return join(homedir(), raw.slice(2));
+  return raw;
 }
 
 function careerDir(): string { return join(getDataDir(), "career"); }
