@@ -72,10 +72,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build MCP (tsc)
-        run: npm run build:mcp
-
-      - name: Run MCP tests
+      # No separate build step here, on purpose: this is how a contributor runs
+      # it, and vitest.global-setup.ts must build build/ itself. 2.15.0 passed
+      # CI yet failed three tests on a pulled checkout with last release's build/.
+      - name: Run MCP tests (builds build/ itself)
         run: npm run test:mcp
 
   dashboard:

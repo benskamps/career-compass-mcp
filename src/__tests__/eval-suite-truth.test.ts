@@ -74,7 +74,9 @@ describe("eval suite truth", () => {
     });
     expectSameTree(path.join(out, "evals"), path.join(repoRoot, "plugin", "evals"));
     expectSameTree(path.join(out, "evals-chat"), path.join(repoRoot, "plugin", "evals-chat"));
-  });
+    // Spawns node and writes a few hundred files: about 1s on Linux, over the
+    // 5s default on a Windows runner.
+  }, 60_000);
 
   it("every grader is named for an axis the scoreboard knows", () => {
     for (const suite of ["evals", "evals-chat"]) {
