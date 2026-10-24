@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.15.1 (2026-10-24)
+
+### Changed
+
+- **Career Compass answers short, casual asks too.** "should i apply to this one", "here's
+  the JD", "rewrite my LinkedIn About", "they offered 85k, should I counter?", a referral
+  message, being ghosted after a final round, or "what jobs can I get with a biology
+  degree" now name the skill directly in its description, so chat reaches for it without
+  the user saying "Career Compass". Hiring-side work, such as writing a job description or
+  screening candidates, is named as out of scope.
+
+### Fixed
+
+- The eval scoreboard's per-case miss list no longer reports every should-not-fire prompt
+  that stayed quiet as a miss.
+
 ## 2.15.0 (2026-10-24)
 
 ### Changed

@@ -141,7 +141,7 @@ and writes nothing.
 
 The plugin makes one kind of network request, and it carries none of your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.15.0` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.15.1` and its
   dependencies from the public npm registry.
 
 The server itself makes no network requests.
@@ -155,7 +155,7 @@ covering collection, storage, sharing, retention, and contact details, is at
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.15.0`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.15.1`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search

@@ -79,13 +79,13 @@ for (const file of files) {
     const failed = {};
     for (const run of runs) {
       for (const g of run.graders ?? []) {
-        const missed = g.name === "activation--no-false-fire" ? g.passed : !g.passed;
-        if (missed) failed[g.name] = (failed[g.name] ?? 0) + 1;
+        // A grader that passed is never a miss. That holds for no-false-fire too: its
+        // pass means the skill stayed quiet; only the false-fire tally above inverts it.
+        if (!g.passed) failed[g.name] = (failed[g.name] ?? 0) + 1;
       }
     }
     if (Object.keys(failed).length) {
-      const clean = runs.filter((r) => (r.graders ?? []).every((g) =>
-        g.name === "activation--no-false-fire" ? !g.passed : g.passed)).length;
+      const clean = runs.filter((r) => (r.graders ?? []).every((g) => g.passed)).length;
       misses.push({ name: c.name, clean, runs: runs.length, failed });
     }
     if (typeof withScore === "number" && withScore < 1 && !c.name.startsWith("trigger-")) {
