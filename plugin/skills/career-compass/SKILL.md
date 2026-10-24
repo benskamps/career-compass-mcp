@@ -540,4 +540,4 @@ for your read). When the user mentions a status change, offer to record it with
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.14.1 dashboard`.
+`npx -y career-compass-mcp@2.15.0 dashboard`.
