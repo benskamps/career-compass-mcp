@@ -23,6 +23,7 @@ const __cliDir = fileURLToPath(new URL(".", import.meta.url));
  */
 import { readPkgVersion } from "../src/version.js";
 import { bundledSampleDir } from "../src/sample-data.js";
+import { expandHome } from "../src/storage/file-store.js";
 export { readPkgVersion };
 
 const pkgVersion = readPkgVersion(__cliDir);
@@ -273,14 +274,17 @@ function resolveDataPath(useSample: boolean): string {
     return sample;
   }
 
-  const configured = process.env.CAREER_DATA_PATH;
+  // Same reading as getDataDir in the server: blank means unset, and a leading
+  // `~` is the home folder (plugin.json's default is "~/.career-compass", and no
+  // shell expands it on the way here).
+  const configured = process.env.CAREER_DATA_PATH?.trim();
   if (!configured) {
     const fallback = join(homedir(), ".career-compass");
     ensureDataDirs(fallback);
     return fallback;
   }
 
-  const abs = resolve(configured);
+  const abs = resolve(expandHome(configured));
   if (!existsSync(abs)) {
     console.error(`Error: CAREER_DATA_PATH points at a folder that does not exist:\n  ${abs}`);
     if (abs !== configured) {

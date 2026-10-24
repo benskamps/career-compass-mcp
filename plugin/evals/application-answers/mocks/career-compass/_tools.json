@@ -147,7 +147,7 @@
     {
       "name": "generate_cover_letter",
       "title": "Generate Cover Letter",
-      "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Writes nothing.",
+      "description": "Draft a cover letter in the user's voice from their saved Career KB, built on real achievements that match the role and quoting their saved narrative (why they're looking, a gap, a switch) word for word. Use it when the user asks for a letter. Works from a pasted posting, from an application already in the pipeline (its cached posting, role, and notes), or from just a company and role. Company claims come only from the posting or the user. Before anything is saved, pass the résumé they pasted as `resume`. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -184,6 +184,10 @@
           },
           "angle": {
             "description": "The key story or angle to lead with",
+            "type": "string"
+          },
+          "resume": {
+            "description": "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is saved yet, so the first letter works before anything is saved.",
             "type": "string"
           }
         },
@@ -861,7 +865,7 @@
     {
       "name": "prepare_interview",
       "title": "Prepare Interview",
-      "description": "Prep the user for one upcoming interview: an opening pitch, STAR stories (saved ones from their story bank first, skipping any this company or interviewer already heard), likely questions for that round, questions to ask, and the concerns to get ahead of, quoting their saved narrative where it applies. Finds the application by id or company name and uses its posting, rounds, and contacts. For a later round in a process already under way, call interview_arc too so the prep doesn't repeat ground covered. Writes nothing.",
+      "description": "Prep the user for one upcoming interview: an opening pitch, STAR stories (saved ones from their story bank first, skipping any this company or interviewer already heard), likely questions for that round, questions to ask, and the concerns to get ahead of, quoting their saved narrative where it applies. Finds the application by id or company name and uses its posting, rounds, and contacts. For a later round in a process already under way, call interview_arc too so the prep doesn't repeat ground covered. Before anything is saved, pass the résumé they pasted as `resume`. Writes nothing.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -899,6 +903,10 @@
           },
           "focusAreas": {
             "description": "Specific topics or concerns to focus on",
+            "type": "string"
+          },
+          "resume": {
+            "description": "The résumé text the user pasted in this conversation. Used only when no Career KB with experience is saved yet, so the first prep works before anything is saved.",
             "type": "string"
           }
         },

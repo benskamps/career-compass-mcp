@@ -20,8 +20,10 @@ import { BACKUP_RETENTION } from "../storage/file-store.js";
 
 const repoRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 
+// LF only: a Windows checkout with core.autocrlf hands back CRLF, and the
+// front-matter and claim patterns below are written for "\n".
 function read(file: string): string {
-  return readFileSync(path.join(repoRoot, file), "utf-8");
+  return readFileSync(path.join(repoRoot, file), "utf-8").replace(/\r\n?/g, "\n");
 }
 
 const manifest = JSON.parse(read("manifest.json")) as {

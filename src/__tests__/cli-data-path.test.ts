@@ -113,6 +113,31 @@ describe.skipIf(!cliBuilt)("dashboard data path", () => {
     expect(run.port, `refused a folder that exists:\n${run.stderr}`).not.toBeNull();
   }, 30_000);
 
+  it("expands a leading ~ the way the server does", async () => {
+    // plugin.json's default data_dir is "~/.career-compass" and no shell expands
+    // it. The server always did; the dashboard read it as a folder named "~"
+    // under the cwd and refused to start.
+    const home = tempDir();
+    const cwd = tempDir();
+    mkdirSync(path.join(home, "cc-data"), { recursive: true });
+    // HOME is what os.homedir() reads on Linux and macOS, USERPROFILE on Windows.
+    const env = { HOME: home, USERPROFILE: home, CAREER_DATA_PATH: "~/cc-data" };
+
+    const run = await runDashboard(["--lite"], env, cwd);
+
+    expect(run.stderr).not.toContain("does not exist");
+    expect(run.port, `refused a folder that exists:\n${run.stderr}`).not.toBeNull();
+    expect(existsSync(path.join(cwd, "~")), "created a folder named ~ in the cwd").toBe(false);
+  }, 30_000);
+
+  it("names the expanded folder when a ~ path does not exist", async () => {
+    const home = tempDir();
+    const run = await runDashboard(["--lite"], { HOME: home, USERPROFILE: home, CAREER_DATA_PATH: "~/nowhere" }, tempDir());
+
+    expect(run.code).toBe(1);
+    expect(run.stderr).toContain(path.join(home, "nowhere"));
+  }, 30_000);
+
   it("--sample serves the bundled demo and ignores CAREER_DATA_PATH entirely", async () => {
     const cwd = tempDir();
     const bogus = path.join(cwd, "nowhere");

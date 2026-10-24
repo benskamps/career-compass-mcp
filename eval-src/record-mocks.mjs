@@ -143,6 +143,10 @@ function argsFor(tool) {
 function toMock(text, dataDir, isError) {
   const body = text
     .replaceAll(dataDir, DISPLAY_PATH)
+    // The server prints paths under the data folder with path.join, so on Windows
+    // the rest of the path keeps "\" after the "/"-spelled display root:
+    // "~/.career-compass\career". One spelling for the mocks on every platform.
+    .replace(/~\/\.career-compass((?:\\[^\s`\\]+)+)/g, (_, rest) => DISPLAY_PATH + rest.replaceAll("\\", "/"))
     .replace(/__IN_([A-Za-z0-9_]+)__/g, (_, f) => `{{input.${f}}}`)
     // The untrusted-content fence takes a random nonce per call; pin it so a
     // re-record is byte-identical when the server hasn't changed.

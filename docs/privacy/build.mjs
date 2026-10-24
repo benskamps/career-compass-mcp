@@ -37,10 +37,15 @@ function inline(text) {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[Number(i)]}</code>`);
 }
 
+/** CRLF and lone CR to LF. A Windows checkout (core.autocrlf) hands us CRLF, and
+ *  every pattern below is written for "\n": "## Heading\r" missed the heading match,
+ *  fell through to the paragraph loop, which refused it too and never advanced. */
+const lf = (s) => s.replace(/\r\n?/g, "\n");
+
 /** Markdown body (no front matter, no H1) to HTML blocks. */
 export function toHtml(md) {
   const out = [];
-  const lines = md.split("\n");
+  const lines = lf(md).split("\n");
   for (let i = 0; i < lines.length; ) {
     const line = lines[i];
     if (line.trim() === "" || line.trim() === "---") { i++; continue; }
@@ -70,13 +75,16 @@ export function toHtml(md) {
     }
     const para = [];
     while (i < lines.length && lines[i].trim() !== "" && !/^(#|- |```|---$)/.test(lines[i])) para.push(lines[i++]);
+    // A line no branch above took and the paragraph loop refused (a "#" that is not
+    // an h2/h3, say) still has to be consumed, or this loop never ends.
+    if (para.length === 0) para.push(lines[i++]);
     out.push(`<p>${inline(para.join("\n"))}</p>`);
   }
   return out.join("\n");
 }
 
 export function render(markdown, iconHref) {
-  const md = markdown.replace(/^---\n[\s\S]*?\n---\n/, "");
+  const md = lf(markdown).replace(/^---\n[\s\S]*?\n---\n/, "");
   const updated = md.match(/\*\*Last updated:\*\* (\S+)/)?.[1] ?? "";
   const applies = md.match(/\*\*Applies to:\*\* ([\s\S]+?)\n\n/)?.[1].replace(/\s+/g, " ") ?? "";
   const short = md.match(/## The short version\n([\s\S]*?)\n---\n/)?.[1] ?? "";
@@ -178,7 +186,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (check) {
       let current = "";
       try { current = readFileSync(file, "utf-8"); } catch { /* missing counts as stale */ }
-      if (current !== html) { console.error(`out of date: ${file}`); stale++; }
+      if (lf(current) !== html) { console.error(`out of date: ${file}`); stale++; }
     } else {
       writeFileSync(file, html);
     }

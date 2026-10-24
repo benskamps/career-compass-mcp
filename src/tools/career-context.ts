@@ -1,4 +1,5 @@
 import type { CareerData, NarrativeEntry, Story } from "../schemas/career-schema.js";
+import { sameCompany } from "./names.js";
 
 type StoryUse = Story["usedWith"][number];
 
@@ -110,7 +111,7 @@ function norm(t: string): string {
 /** Did this recorded telling happen in front of this audience? */
 function heardBy(use: StoryUse, audience: StoryAudience): boolean {
   if (use.applicationId && audience.applicationId && use.applicationId === audience.applicationId) return true;
-  if (use.company && audience.company && norm(use.company) === norm(audience.company)) return true;
+  if (sameCompany(use.company, audience.company)) return true;
   if (use.interviewer && audience.interviewers?.length) {
     const who = norm(use.interviewer);
     return who !== "" && audience.interviewers.some(i => norm(i).includes(who));

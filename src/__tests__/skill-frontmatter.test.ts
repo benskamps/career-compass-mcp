@@ -27,7 +27,8 @@ const PREFIX = "mcp__plugin_career-compass_career-compass__";
 
 function frontmatter(name: string): Record<string, unknown> {
   const text = readFileSync(path.join(SKILLS_DIR, name, "SKILL.md"), "utf-8");
-  const match = /^---\n([\s\S]*?)\n---\n/.exec(text);
+  // \r? so a CRLF checkout (Windows, core.autocrlf) still finds the block.
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(text);
   expect(match, `${name}/SKILL.md has no frontmatter`).not.toBeNull();
   return parseYaml(match![1]) as Record<string, unknown>;
 }

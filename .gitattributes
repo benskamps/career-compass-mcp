@@ -1,3 +1,10 @@
+# LF in the working tree on every platform. A Windows clone with core.autocrlf
+# checked out CRLF, and the front-matter and markdown parsers in the tests, the
+# eval builder and docs/privacy/build.mjs are written for "\n" (the privacy build
+# spun forever on "## Heading\r"). They now tolerate CRLF too; this keeps the
+# checkout from producing it in the first place.
+* text=auto eol=lf
+
 # Generated diagram figures: byte-stable output from tools/render-mermaid.mjs.
 # Without this, git line-ending normalisation rewrites them on every checkout
 # and the "same input -> identical output" guarantee looks broken when it is not.
