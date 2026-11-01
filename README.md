@@ -82,16 +82,16 @@ Claude: Stretch: strong on operations at scale, but no P&L or payments
 The real reply goes on with talking points, red flags and questions to ask. A "day in the
 life" of the role comes only when you ask for one.
 
-The same thing as a recording, against a different made-up posting:
+The same thing as a recording, in claude.ai chat with nothing installed but the skills,
+against a different made-up posting:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a Director of Operations posting and asks Do I fit this. Career Compass's explore_opportunity tool returns the sample candidate's evidence and preference contract, and Claude replies: Strong fit, pay inside the band, the first three must-haves matched to evidence, and two gaps, risk ops and payments regulation. Verdict: pursue it.">
+  <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a sample résumé and a Director of Operations posting and asks Do I fit this. The Career Compass skill loads, and Claude replies: Verdict: strong fit. It clears the knockouts, marks all four must-haves as met with quoted résumé lines, names two gaps, payments and risk ops, and level and scope, flags a skills-list number that doesn't match the résumé dates, and asks whether the user knows anyone at the company for a referral.">
 </p>
 
-*A real run:* the `explore_opportunity` output on the bundled sample data,
-and Claude's reply to it, trimmed for length (every cut is shown as "…"). It was recorded on
-an earlier release, which still put a numeric score next to the verdict; replies now give the
-verdict alone. Also as an
+*A real run on 2.15.1:* the posting, a sample résumé (fictional Alex Rivera) and Claude's
+reply with only the Career Compass skills loaded and no MCP tools, the way claude.ai chat
+runs it. The reply is trimmed for length, and every cut is shown as "…". Also as an
 [MP4](docs/assets/demo/demo.mp4); how it was made is in
 [docs/assets/demo/source](docs/assets/demo/source/README.md).
 

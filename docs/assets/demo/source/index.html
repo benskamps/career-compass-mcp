@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=1280, height=800">
 <title>Career Compass Demo</title>
 <!--
-  Career Compass MCP — "Do I fit this?" demo.
+  Career Compass — "Do I fit this?" demo, on the claude.ai chat path (skills, no MCP tools).
   Deterministic: the page is driven only by window.seek(t) (seconds). No wall-clock.
-  All quoted text is real: the job posting (input), an excerpt of the real
-  explore_opportunity tool result, and an excerpt of Claude's real reply.
-  Cuts are marked with "…"; nothing is reworded.
+  All quoted text is real: the user's message (material/prompt.md, résumé collapsed),
+  an excerpt of the career-compass skill, and an excerpt of Claude's real reply
+  (material/reply.md). Cuts are marked with "…"; nothing is reworded.
 -->
 <style>
 @font-face{font-family:"Fraunces";font-style:normal;font-weight:100 900;font-display:block;src:url(fonts/fraunces-normal-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -71,7 +71,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
 #user{display:flex;flex-direction:column;align-items:flex-end;margin-bottom:26px}
 #user .who{margin:0 4px 8px 0}
 .bubble{width:660px;background:var(--paper-deep);border:1px solid #e2d8c4;border-radius:16px 16px 4px 16px;padding:18px 22px 18px}
-.posting{position:relative;height:286px;overflow:hidden;font-size:14.5px;line-height:1.48;color:var(--ink)}
+.posting{position:relative;height:270px;overflow:hidden;font-size:14.5px;line-height:1.48;color:var(--ink)}
 .posting::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;background:linear-gradient(rgba(236,228,211,0),var(--paper-deep) 88%)}
 .posting .h{font-weight:600;font-size:15.5px}
 .posting .m{color:var(--ink-soft)}
@@ -116,18 +116,6 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
 .body ul li::before{content:"";position:absolute;left:6px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--clay)}
 .cut{color:var(--brass)}
 
-.comp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.fig{border:1px solid var(--rule);border-radius:12px;padding:10px 16px;background:#fbf8f2}
-.fig .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
-.fig .v{font-size:24px;font-weight:550;letter-spacing:-.01em;margin-top:2px}
-.fig.post .v{color:var(--clay-deep)}
-.bandbar{position:relative;height:30px;margin:2px 0 12px}
-.bandbar .axis{position:absolute;left:0;right:0;top:14px;height:1px;background:var(--rule)}
-.bandbar .you,.bandbar .them{position:absolute;height:8px;border-radius:5px}
-.bandbar .you{top:7px;background:rgba(90,107,60,.35);border:1px solid var(--sage)}
-.bandbar .them{top:17px;background:rgba(194,96,60,.35);border:1px solid var(--clay)}
-.bandbar .bl{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;line-height:14px}
-.bandbar .tk{position:absolute;top:0;font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);transform:translateX(-50%)}
 
 .verdict{margin-top:26px;max-width:860px;border:1px solid var(--rule);border-left:4px solid var(--sage);border-radius:12px;background:#fbf8f2;padding:16px 22px}
 .verdict .body{font-size:16px}
@@ -138,6 +126,15 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
   font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);letter-spacing:.02em}
 #cap .d{color:var(--brass)}
 
+.resume{position:relative;margin-bottom:12px;padding:10px 14px 30px;border:1px solid #d3c6ad;border-radius:10px;background:#f3ecdd;font-size:13px;line-height:1.5;color:var(--ink-soft);height:96px;overflow:hidden}
+.resume .rl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resume b{color:var(--ink);font-weight:600}
+.resume::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;background:linear-gradient(rgba(243,236,221,0),#f3ecdd 70%)}
+.resume .rtag{position:absolute;left:14px;bottom:7px;z-index:1;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+.panel-in .wr{white-space:normal}
+.tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sage);font-weight:600}
+.skip{margin:14px 0 0 2px;font-size:18px;color:var(--brass)}
+.verdict .go{color:var(--clay-deep)}
 .w{opacity:0}
 </style>
 </head>
@@ -152,16 +149,23 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
   <div id="win">
     <div id="bar">
       <div class="dots"><i></i><i></i><i></i></div>
-      <div class="title">New conversation</div>
-      <div class="conn"><b></b>MCP · career-compass</div>
+      <div class="title">New chat</div>
+      <div class="conn"><b></b>Skills only · no tools</div>
     </div>
 
     <div id="view"><div id="content">
 
-      <!-- 1. user -->
+
+      <!-- 1. user: material/prompt.md (résumé collapsed to its first lines) -->
       <div id="user">
         <div class="who">You</div>
         <div class="bubble">
+          <div class="resume">
+            <div class="rl"><b>Alex Rivera</b> · Austin, TX · open to remote, not to relocation · notice period 3 weeks</div>
+            <div class="rl">Operations and program manager with over 10 years across healthcare, logistics and SaaS.</div>
+            <div class="rl"><b>Senior Program Manager, MedFlow Health Systems</b> (healthcare technology, remote), 2021-03 to present</div>
+            <div class="rtag">Pasted résumé</div>
+          </div>
           <div class="posting">
             <p class="h">Director of Operations — Ledgerline (Series C payments platform, 600 people)</p>
             <p class="m">Remote (US). $165,000–$190,000 + equity.</p>
@@ -183,68 +187,34 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
         </div>
       </div>
 
-      <!-- 2. tool call -->
+      <!-- 2. skill load: excerpt of plugin/skills/career-compass/SKILL.md, "Doing the work without the tools" -->
       <div id="tool">
         <div class="chip">
           <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b2218"/><circle cx="16" cy="16" r="10" fill="#c2603c"/><path d="M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z" fill="#2b2218"/></svg>
-          <span>career-compass</span><span class="sep">·</span><span class="fn">explore_opportunity</span>
-          <span class="st" id="st"><span class="spin" id="spin"></span><span id="stx">running</span></span>
+          <span>Skill</span><span class="sep">·</span><span class="fn">career-compass</span>
+          <span class="st" id="st"><span class="spin" id="spin"></span><span id="stx">loading</span></span>
         </div>
         <div id="panel"><div class="panel-in" id="panelIn">
-          <div class="lbl"><span>Tool result · excerpt</span><span>Opportunity Analysis</span></div>
-          <div class="ln"><b>Evidence (achievements by role):</b></div>
-          <div class="ln">- <b>Senior Program Manager @ MedFlow Health Systems</b>: Reduced average patient onboarding time from 47 days to 11 days → Enabled 3x faster revenue recognition and eliminated $2.1M in compliance penalties over 18 months</div>
-          <div class="ln">- <b>Senior Program Manager @ MedFlow Health Systems</b>: Rebuilt vendor evaluation framework, reducing tool procurement cycle from 9 months to 6 weeks → Unlocked $4.3M in modernization budget and reduced vendor cost overruns by 22%</div>
-          <div class="ln">- <b>Operations Manager @ Apex Logistics Partners</b>: Grew on-time delivery rate from 81% to 97.3% in 14 months → Retained 3 major retail accounts worth $6.8M annually that were at risk of churning</div>
-          <div class="ln">…</div>
+          <div class="lbl"><span>SKILL.md · excerpt</span><span>Doing the work without the tools</span></div>
+          <div class="wr"><b>Fit check:</b> first, the knockouts: the hard requirements a screening question could reject on automatically, before a person reads anything <span class="k">…</span> Mark each clears, fails, or unknown.</div>
           <div class="gap"></div>
-          <div class="ln"><b>Preference contract — the hard constraints this fit must be checked against:</b></div>
-          <div class="ln"><span class="k">Salary band:</span> USD 140,000–180,000</div>
-          <div class="ln"><span class="k">Open to remote:</span> yes</div>
-          <div class="ln"><span class="k">Open to relocation:</span> no</div>
-          <div class="ln"><span class="k">Notice period:</span> 3 weeks</div>
-          <div class="ln"><span class="k">Target company size:</span> Series B, Series C, Mid-market (200-2000 employees)</div>
+          <div class="wr">Then mark each must-have meets (quote the résumé line), unclear <span class="k">…</span> or doesn't meet <span class="k">…</span></div>
+          <div class="gap"></div>
+          <div class="wr">Give a verdict (strong, stretch, or long shot) with the top two gaps and how to address each in the application.</div>
         </div></div>
       </div>
 
-      <!-- 3. reply -->
+      <!-- 3. reply: excerpt of material/reply.md -->
       <div id="reply">
         <div class="head" id="rhead"><span class="who">Claude</span><span class="pill" id="pill"><i></i>Strong fit</span></div>
-
-        <p class="lead"><span class="big stream" data-start="0" data-wps="7">Strong fit, 8/10.</span><span class="stream" data-start="0.45" data-wps="20">Every must-have is backed by numbers in your history, and the role clears your whole preference contract: pay, remote, and company size.</span></p>
-
-        <div class="sec" id="secComp">
-          <div class="sh"><span class="stream" data-start="1.9" data-wps="10">Compensation Check</span></div>
-          <div class="comp at" data-at="2.05">
-            <div class="fig post"><div class="k">Posting</div><div class="v">$165,000–$190,000 + equity</div></div>
-            <div class="fig"><div class="k">Your band</div><div class="v">$140,000–$180,000</div></div>
-          </div>
-          <div class="bandbar at" data-at="2.35" id="bandbar">
-          </div>
-          <div class="body"><b class="stream" data-start="2.6" data-wps="8">Inside the band.</b> <span class="stream" data-start="2.95" data-wps="22">Their floor ($165K) is $25K above yours. Their top ($190K) is $10K above your ceiling. You have room to anchor high.</span></div>
-        </div>
-
-        <div class="sec" id="secSkills">
-          <div class="sh"><span class="stream" data-start="4.2" data-wps="10">Skills Match</span></div>
-          <div class="body"><ol>
-            <li><span class="n at" data-at="4.35">1.</span><b class="stream" data-start="4.35" data-wps="24">"7+ years leading operations or program teams":</b> <span class="stream" data-start="4.65" data-wps="26">You managed a team of 42 at Apex Logistics (2018–2021) and you lead a team of 6 PMs at MedFlow (2021 to present). <span class="cut">…</span></span></li>
-            <li><span class="n at" data-at="5.7">2.</span><b class="stream" data-start="5.7" data-wps="24">"Scaling a process across multiple sites or business units":</b> <span class="stream" data-start="6.05" data-wps="26">At MedFlow you ran initiatives across 14 hospital systems. <span class="cut">…</span></span></li>
-            <li><span class="n at" data-at="6.55">3.</span><b class="stream" data-start="6.55" data-wps="24">"Vendor management and cost discipline":</b> <span class="stream" data-start="6.75" data-wps="26">You rebuilt the vendor evaluation framework, which cut tool procurement from 9 months to 6 weeks, unlocked $4.3M in modernization budget and reduced vendor cost overruns by 22%. <span class="cut">…</span></span></li>
-          </ol></div>
-        </div>
-
-        <div class="sec" id="secGaps">
-          <div class="sh"><span class="stream" data-start="8.0" data-wps="10">Skill Gaps</span></div>
-          <div class="body"><ul>
-            <li class="at" data-at="8.15"><b class="stream" data-start="8.15" data-wps="10">Risk ops.</b> <span class="stream" data-start="8.4" data-wps="26">This is one of the three areas the role owns, and nothing in your history covers it. <span class="cut">…</span></span></li>
-            <li class="at" data-at="9.15"><b class="stream" data-start="9.15" data-wps="14">Payments regulation and compliance depth.</b> <span class="stream" data-start="9.5" data-wps="26">The posting accepts healthcare, so this doesn't fail the requirement. <span class="cut">…</span></span></li>
-          </ul></div>
-        </div>
-
-        <div class="verdict at" data-at="10.2" id="verdict">
-          <div class="sh"><span class="stream" data-start="10.2" data-wps="10">Verdict</span></div>
-          <div class="body"><b class="go stream" data-start="10.4" data-wps="5">Pursue it.</b><span class="stream" data-start="10.8" data-wps="30">This is a Series C company within your size targets, the pay is inside your band, the role is remote, and the job is the kind of multi-site onboarding and cost work where your numbers are strongest. <span class="cut">…</span> Apply, but prepare for the compliance and risk-ops questions before the first interview.</span></div>
-        </div>
+        <p class="lead"><span class="stream big" data-start="0.00" data-wps="7">Verdict: strong fit.</span><span class="stream" data-start="0.58" data-wps="20">You meet all 4 must-haves, and the main gap is the fintech background, which is only a nice-to-have.</span></p>
+        <div class="sec" id="secKo"><div class="sh"><span class="stream" data-start="1.98" data-wps="10">Knockouts</span></div><div class="body"><ul><li class="at" data-at="2.20"><b class="stream" data-start="2.20" data-wps="22">Remote (US): clears.</b> <span class="stream" data-start="2.41" data-wps="26">You're in Austin and open to remote.</span></li><li class="at" data-at="2.93"><b class="stream" data-start="2.93" data-wps="22">7+ years leading ops or program teams: clears.</b> <span class="stream" data-start="3.38" data-wps="26">Your dates give about 8.4 years. <span class="cut">…</span></span></li></ul></div></div>
+        <div class="sec" id="secMust"><div class="sh"><span class="stream" data-start="4.10" data-wps="10">Must-haves</span></div><div class="body"><ul><li class="at" data-at="4.32"><b class="stream" data-start="4.32" data-wps="22">7+ years leading teams:</b> <span class="stream" data-start="4.58" data-wps="26"><span class="tag">meets</span>, per the dates above.</span></li><li class="at" data-at="5.06"><b class="stream" data-start="5.06" data-wps="22">Scaling a process across sites or business units:</b> <span class="stream" data-start="5.50" data-wps="26"><span class="tag">meets</span>. "Reduced average patient onboarding time from 47 days to 11 days after the acquisition of 3 regional health systems" <span class="cut">…</span></span></li><li class="at" data-at="6.60"><b class="stream" data-start="6.60" data-wps="22">Vendor management and cost discipline:</b> <span class="stream" data-start="6.91" data-wps="26"><span class="tag">meets</span>. You cut procurement "from 9 months to 6 weeks" and "cut vendor cost overruns by 22%". <span class="cut">…</span></span></li><li class="at" data-at="7.89"><b class="stream" data-start="7.89" data-wps="22">Regulated industry:</b> <span class="stream" data-start="8.06" data-wps="26"><span class="tag">meets</span>. Healthcare is one of the three industries Ledgerline names, <span class="cut">…</span></span></li></ul></div></div>
+        <p class="skip at" data-at="9.17">…</p>
+        <div class="sec" id="secGaps"><div class="sh"><span class="stream" data-start="9.47" data-wps="10">Top two gaps and how to handle them</span></div><div class="body"><ol><li><span class="n at" data-at="10.39">1.</span><b class="stream" data-start="10.39" data-wps="22">No payments background, and no "risk ops" on the résumé.</b> <span class="stream" data-start="10.92" data-wps="26">Ledgerline's role covers onboarding, support and risk ops. Your onboarding and compliance results map onto the first and third. <span class="cut">…</span></span></li><li><span class="n at" data-at="11.94">2.</span><b class="stream" data-start="11.94" data-wps="22">Level and scope.</b> <span class="stream" data-start="12.16" data-wps="26">You'd go from Senior Program Manager with 6 PMs to a Director in a 600-person company, and your largest team was the 42 at Apex. <span class="cut">…</span></span></li></ol></div></div>
+        <div class="sec"><div class="body"><b class="stream" data-start="13.61" data-wps="22">One fix before you apply:</b> <span class="stream" data-start="13.92" data-wps="28">your skills list says "program management (9 yrs)", but your dates show about 8.4 years leading ops or program teams, and Brightline was a CSM role. A screener checking the math could snag on that. <span class="cut">…</span></span></div></div>
+        <p class="skip at" data-at="15.70">…</p>
+        <div class="verdict at" data-at="16.00" id="verdict"><div class="body"><b class="stream go" data-start="16.00" data-wps="7">Do you know anyone at Ledgerline?</b><span class="stream" data-start="17.01" data-wps="22">A referral gets you to an interview far more often than a cold application.</span></div></div>
       </div>
 
     </div></div>
@@ -254,7 +224,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
 
   <div id="cap">
     <svg width="14" height="14" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b2218"/><circle cx="16" cy="16" r="10" fill="#c2603c"/><path d="M20.5 10.5 L14.5 17.5 L11.5 21.5 L17.5 14.5 Z" fill="#2b2218"/></svg>
-    <span>Real tool output</span><span class="d">·</span><span>career-compass-mcp 2.9.9</span><span class="d">·</span><span>bundled sample data (fictional Alex Rivera)</span>
+    <span>Real Claude reply</span><span class="d">·</span><span>Career Compass 2.15.1 skills, no MCP tools</span><span class="d">·</span><span>sample résumé (fictional Alex Rivera)</span>
   </div>
 </div>
 
@@ -266,10 +236,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
     chipIn: 2.9, resultAt: 4.1,           // spinner 3.1 -> 4.5
     openEnd: 4.6, closeStart: 7.7, closeEnd: 8.2,
     reply: 8.4,                            // reply-relative times in data-start/data-at
-    fadeOut: 23.0, total: 23.6
+    fadeOut: 29.4, total: 30.0
   };
   window.DURATION = T.total;
-  window.POSTER_T = 22.6;
+  window.POSTER_T = 29.0;
 
   const $ = s => document.querySelector(s);
   const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
@@ -277,15 +247,6 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
   const easeOut = x => { x=clamp(x,0,1); return 1-Math.pow(1-x,3); };
   const prog = (t,a,b)=>clamp((t-a)/(b-a),0,1);
 
-  // band bar: axis 130k..200k
-  (function(){
-    const bb = $('#bandbar'), lo=130, hi=200, W=100;
-    const x = v => ((v-lo)/(hi-lo)*W)+'%';
-    const mk=(cls,a,b)=>{const d=document.createElement('div');d.className=cls;d.style.left=x(a);d.style.width=((b-a)/(hi-lo)*W)+'%';bb.appendChild(d);};
-    mk('you',140,180); mk('them',165,190);
-    const lab=(txt,v,top,c)=>{const d=document.createElement('div');d.className='bl';d.textContent=txt;d.style.left='calc('+x(v)+' + 8px)';d.style.top=top+'px';d.style.color=c;bb.appendChild(d);};
-    lab('Your band',180,2,'#5a6b3c'); lab('Posting',190,13,'#8a3b1f');
-  })();
 
   // split .stream text into word spans
   const words = []; // {el, t}
@@ -377,7 +338,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--serif);-webkit-f
     $('#spin').style.transform = `rotate(${(t*420)%360}deg)`;
     let ok=$('#okmark'); if(!ok){ ok=document.createElement('span'); ok.id='okmark'; ok.className='ok'; ok.innerHTML='<svg width="8" height="8" viewBox="0 0 8 8"><path d="M1.2 4.2 3.2 6 6.8 1.8" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'; $('#st').insertBefore(ok,$('#stx')); }
     ok.style.display = running?'none':'flex';
-    $('#stx').textContent = running ? 'running…' : 'result received';
+    $('#stx').textContent = running ? 'loading…' : 'loaded';
     const ph = panelH(t); panel.style.height = ph.toFixed(2)+'px';
     panelIn.style.opacity = PANEL_H? clamp(ph/PANEL_H*1.4-0.2,0,1) : 0;
 
