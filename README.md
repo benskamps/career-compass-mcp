@@ -5,12 +5,6 @@
   </picture>
 </h1>
 
-[![npm](https://img.shields.io/npm/v/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
-[![npm downloads](https://img.shields.io/npm/dm/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D22-green.svg)](https://nodejs.org)
-[![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
-
 **Paste a job posting. Get an honest fit verdict.**
 
 Paste a job posting and your resume, and ask "Do I fit this?" You get a straight verdict
@@ -19,6 +13,16 @@ from your own background, and the top two gaps with how to handle them. Then Cla
 tailor your résumé, write the cover letter and prep the interview without padding your
 history. Free, MIT-licensed, and in Claude Code and Cowork your files stay on your own
 computer.
+
+## Get it in the Claude directory
+
+In the Claude app or on claude.ai, open **Customize → Plugins**, search for
+**Career Compass**, and add it. That's the whole install.
+
+| Where you use Claude | What you get |
+|---|---|
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting and Claude does the fit check, tailoring, interview prep or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
+| **Cowork** and **Claude Code** on your computer | The skills plus the local server: your career history and every application are kept as plain YAML on your computer, so later answers start from them. Needs **Node.js 22 or newer**. |
 
 ## Try it now
 
@@ -47,17 +51,7 @@ Show me a sample Career Compass fit check.
 
 ## What a fit check looks like
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a Director of Operations posting and asks Do I fit this. Career Compass's explore_opportunity tool returns the sample candidate's evidence and preference contract, and Claude replies: Strong fit, pay inside the band, the first three must-haves matched to evidence, and two gaps, risk ops and payments regulation. Verdict: pursue it.">
-</p>
-
-*A real run:* the `explore_opportunity` output on the bundled sample data,
-and Claude's reply to it, trimmed for length (every cut is shown as "…"). Also as an
-[MP4](docs/assets/demo/demo.mp4); how it was made is in
-[docs/assets/demo/source](docs/assets/demo/source/README.md).
-
-Another example in text, on the same fictional Alex Rivera who ships with the package and a
-different made-up posting:
+On the fictional Alex Rivera who ships with the package, and a made-up posting:
 
 ```
 You:    [pastes a VP of Operations posting from a payments company]
@@ -88,6 +82,19 @@ Claude: Stretch: strong on operations at scale, but no P&L or payments
 The real reply goes on with talking points, red flags and questions to ask. A "day in the
 life" of the role comes only when you ask for one.
 
+The same thing as a recording, against a different made-up posting:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a Director of Operations posting and asks Do I fit this. Career Compass's explore_opportunity tool returns the sample candidate's evidence and preference contract, and Claude replies: Strong fit, pay inside the band, the first three must-haves matched to evidence, and two gaps, risk ops and payments regulation. Verdict: pursue it.">
+</p>
+
+*A real run:* the `explore_opportunity` output on the bundled sample data,
+and Claude's reply to it, trimmed for length (every cut is shown as "…"). It was recorded on
+an earlier release, which still put a numeric score next to the verdict; replies now give the
+verdict alone. Also as an
+[MP4](docs/assets/demo/demo.mp4); how it was made is in
+[docs/assets/demo/source](docs/assets/demo/source/README.md).
+
 ## It won't pad your résumé
 
 Every sentence it writes about you has to come from your history or from what you told it.
@@ -102,17 +109,9 @@ When a stronger draft needs a fact it doesn't have, the draft says so in place:
 The sample record says what changed, not how many people did it, so the bullet asks. You
 fill in the bracket or cut it; nothing gets invented to sound stronger.
 
-## Get it in the Claude directory
+## Commands, and what it does over time
 
-In the Claude app or on claude.ai, open **Customize → Plugins**, search for
-**Career Compass**, and add it. That's the whole install.
-
-| Where you use Claude | What you get |
-|---|---|
-| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting and Claude does the fit check, tailoring, interview prep or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
-| **Cowork** and **Claude Code** on your computer | The skills plus the local server: your career history and every application are kept as plain YAML on your computer, so later answers start from them. Needs **Node.js 22 or newer**. |
-
-The commands below work in Claude Code and Cowork. In claude.ai chat, just ask in plain
+These commands work in Claude Code and Cowork. In claude.ai chat, just ask in plain
 words ("prep me for my interview on Friday").
 
 | Command | What it does |
@@ -181,6 +180,12 @@ with pages for [people who were laid off](https://benskamps.github.io/career-com
 ---
 
 ## For other MCP clients
+
+[![npm](https://img.shields.io/npm/v/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/career-compass-mcp.svg)](https://www.npmjs.com/package/career-compass-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-green.svg)](https://nodejs.org)
+[![MCP](https://img.shields.io/badge/MCP-server-7c4dff.svg)](https://modelcontextprotocol.io)
 
 Everything below is for running the server yourself, outside the Claude directory: Claude
 Desktop, Cursor, other MCP clients, or Claude Code without the plugin. If you installed the
