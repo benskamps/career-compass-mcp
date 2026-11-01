@@ -9,6 +9,16 @@ verdict (strong, stretch, or long shot), each of the posting's must-haves matche
 evidence from your background, and the top two gaps with how to address them in your
 application. You'll know whether to apply and what to fix first. No setup, no account.
 
+## Get it
+
+In the Claude app or on claude.ai, open **Customize → Plugins**, search for
+**Career Compass**, and add it. That's the whole install.
+
+| Where | What you get |
+|---|---|
+| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
+| **Claude Code**, and **Cowork sessions on your computer** | The skills plus a local server that remembers your history and tracks your applications. Needs **Node.js 22 or newer**. |
+
 ## Try it now
 
 Just installed it and not sure what to type? Open a new chat and send whichever of these
@@ -34,32 +44,22 @@ of yours shared:
 Show me a sample Career Compass fit check.
 ```
 
+You get the answer first. Then, in claude.ai chat, Claude offers a short Career Compass card
+carrying your strongest résumé lines and your roles into your next chat; in Claude Code and
+Cowork it offers to save your résumé so the next fit check, cover letter, and interview prep
+start from it.
+
 ## It won't make things up
 
-Résumés, cover letters, and interview answers are written
-from what you've actually done. When a detail is missing, like a number or a team size,
-the draft shows a `[confirm: …]` placeholder for you to fill in instead of inventing one.
-Offer reviews use only market data you provide, and say where to find more.
+Résumés, cover letters, and interview answers are written from what you've actually done.
+When a detail is missing, like a number or a team size, the draft shows a `[confirm: …]`
+placeholder for you to fill in instead of inventing one. Offer reviews use only market data
+you provide, and say where to find more. How we checked this is
+[further down](#measured-not-claimed).
 
-**Measured, not claimed.** We gave Claude 13 chat tasks for 8 fictional job seekers: fit
-checks, résumé tailoring, cover letters, interview prep, an offer, a recruiter email, a
-rejection, company research, and "what do I do today". Each task ran three times with
-Career Compass and three times with plain Claude, and a strict AI judge checked every reply
-against that person's résumé.
+## What else it does
 
-| | With Career Compass | Plain Claude |
-|---|---|---|
-| Nothing untrue said about you | **33 of 39** | 23 of 39 |
-| Did the job that was asked | **33 of 39** | 16 of 39 |
-
-The judge fails a reply for any claim the résumé doesn't support, including a stronger
-verb in a draft ("adopted" becoming "shipped"), a motive you never stated, or a skill
-borrowed from the posting. The six misses with Career Compass were of that kind; none
-added an employer, a title, a credential or a number. So read the drafts before you send them, and fill in the `[confirm: …]` spots.
-(Career Compass 2.11.2, October 2026. The cases and judge rubrics are in
-[eval-src](https://github.com/benskamps/career-compass-mcp/tree/main/eval-src).)
-
-Then it carries the whole search:
+Once the fit check is done, it carries the whole search:
 
 - **Tailor your résumé** to one posting, plus a version laid out for applicant tracking
   systems.
@@ -81,23 +81,9 @@ record, "prep me for my Veridian final" finds that application with its rounds a
 interviewers, and `/career-compass:today` gives you one "start here" move. There is no
 cloud sync and no telemetry.
 
-## Where it works
+## Commands
 
-| Where | What you get |
-|---|---|
-| **claude.ai chat** (web, desktop, mobile) | The skills only. Paste a résumé and a posting, and Claude does the fit check, tailoring, interview prep, or offer review in the conversation. A short Career Compass card carries your roles and dates into your next chat (keep it in a "Job search" Project and every chat there starts from it), and Claude can put your next follow-up on your calendar. |
-| **Claude Code**, and **Cowork sessions on your computer** | The skills plus a local server that remembers your history and tracks your applications. Needs **Node.js 22 or newer**. |
-
-## Getting started
-
-Paste a job posting and your résumé, and ask **"Do I fit this?"** You get a verdict,
-your evidence for each must-have, and the top gaps to address. In Claude Code and Cowork,
-Claude then offers to save your résumé so the next fit check, cover letter, and interview prep
-start from it. In claude.ai chat it offers a short Career Compass card instead, carrying your
-strongest résumé lines and your roles into your next chat. No posting yet? Ask for
-**"a sample Career Compass fit check"** first.
-
-**Commands, in Claude Code and Cowork.** In claude.ai chat, just ask in plain words
+These work in Claude Code and Cowork. In claude.ai chat, just ask in plain words
 ("prep me for my interview on Friday"); the same skills apply.
 
 | Command | What it does |
@@ -116,12 +102,25 @@ strongest résumé lines and your roles into your next chat. No posting yet? Ask
 You can also just ask: "Prep me for my panel interview at Acme on Friday", "I got an offer,
 is it good?", or "Run the Career Compass setup check."
 
-## Where your files live
+## Measured, not claimed
 
-In Claude Code and Cowork your history and pipeline are kept in `~/.career-compass/`. To
-keep them somewhere else, such as inside a folder you already back up, change the plugin's
-**Career data folder** setting (`data_path`). Leave it at the default unless you have a
-reason to move it.
+We gave Claude 13 chat tasks for 8 fictional job seekers: fit checks, résumé tailoring,
+cover letters, interview prep, an offer, a recruiter email, a rejection, company research,
+and "what do I do today". Each task ran three times with Career Compass and three times with
+plain Claude, and a strict AI judge checked every reply against that person's résumé.
+
+| | With Career Compass | Plain Claude |
+|---|---|---|
+| Nothing untrue said about you | **33 of 39** | 23 of 39 |
+| Did the job that was asked | **33 of 39** | 16 of 39 |
+
+The judge fails a reply for any claim the résumé doesn't support, including a stronger
+verb in a draft ("adopted" becoming "shipped"), a motive you never stated, or a skill
+borrowed from the posting. The six misses with Career Compass were of that kind; none
+added an employer, a title, a credential or a number. So read the drafts before you send
+them, and fill in the `[confirm: …]` spots.
+(Career Compass 2.11.2, October 2026. The cases and judge rubrics are in
+[eval-src](https://github.com/benskamps/career-compass-mcp/tree/main/eval-src).)
 
 ## Tell me what it got wrong
 
@@ -151,6 +150,13 @@ per data file are kept. Removing the data folder removes everything. The full po
 covering collection, storage, sharing, retention, and contact details, is at
 <https://benskamps.github.io/career-compass-mcp/privacy>. Questions or concerns:
 <https://github.com/benskamps/career-compass-mcp/issues>.
+
+## Where your files live
+
+In Claude Code and Cowork your history and pipeline are kept in `~/.career-compass/`. To
+keep them somewhere else, such as inside a folder you already back up, change the plugin's
+**Career data folder** setting (`data_path`). Leave it at the default unless you have a
+reason to move it.
 
 ## What this plugin installs
 
