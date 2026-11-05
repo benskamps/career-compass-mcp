@@ -92,8 +92,8 @@ which files each commit touched) to report what you measurably did there. It wri
 nothing, anywhere, and sends nothing.</li>
 </ul>
 <h2 id="where-it-is-stored">Where it is stored</h2>
-<p>In a single directory on your machine, set by the <code>CAREER_DATA_PATH</code> environment variable
-(in the plugin, the <strong>Career data folder</strong> setting). The default is <code>~/.career-compass/</code>. Files are ordinary YAML you can open, edit, back up,
+<p>In a single directory on your machine: <code>~/.career-compass/</code> by default, or the folder named by the
+<code>CAREER_DATA_PATH</code> environment variable when it is set. Files are ordinary YAML you can open, edit, back up,
 or delete with any text editor. While a write is in progress the folder also briefly holds a
 <code>.write-claim</code> file naming the process doing the writing, so a second Career Compass process
 (a dashboard, or a server registered in two clients) refuses rather than overwriting it. It is

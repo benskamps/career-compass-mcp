@@ -89,7 +89,7 @@ against a different made-up posting:
   <img src="https://raw.githubusercontent.com/benskamps/career-compass-mcp/main/docs/assets/demo/demo.gif" width="100%" alt="A chat: the user pastes a sample résumé and a Director of Operations posting and asks Do I fit this. The Career Compass skill loads, and Claude replies: Verdict: strong fit. It clears the knockouts, marks all four must-haves as met with quoted résumé lines, names two gaps, payments and risk ops, and level and scope, flags a skills-list number that doesn't match the résumé dates, and asks whether the user knows anyone at the company for a referral.">
 </p>
 
-*A real run on 2.15.1:* the posting, a sample résumé (fictional Alex Rivera) and Claude's
+*A real run (recorded on the previous patch release, with the same skills):* the posting, a sample résumé (fictional Alex Rivera) and Claude's
 reply with only the Career Compass skills loaded and no MCP tools, the way claude.ai chat
 runs it. The reply is trimmed for length, and every cut is shown as "…". Also as an
 [MP4](docs/assets/demo/demo.mp4); how it was made is in
@@ -271,7 +271,7 @@ Add the server:
 }
 ```
 
-Pin a version in `args` (`"career-compass-mcp@2.15.1"` rather than the bare name) if you can:
+Pin a version in `args` (`"career-compass-mcp@2.15.2"` rather than the bare name) if you can:
 Desktop starts the server twice at once, and an unpinned name reinstalls on every release,
 which can leave npx's cache half-written (see **On npx** below). `install` does this for you.
 
@@ -613,9 +613,9 @@ Alex Rivera) if you want to see the shape before writing your own.
 |---------|---------|-------------|
 | `CAREER_DATA_PATH` | `~/.career-compass` | Directory holding your career and pipeline YAML |
 
-Plugin users set the same thing in the plugin's settings as **Career data folder**
-(`data_path`, default `~/.career-compass`). The plugin passes it to the server as
-`CAREER_DATA_PATH`.
+The directory plugin has no folder setting since 2.15.2 (the directory's scan flagged it), so it
+uses `~/.career-compass` unless `CAREER_DATA_PATH` is set in the environment Claude starts the
+server from.
 
 ---
 

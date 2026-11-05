@@ -4,11 +4,8 @@
       "command": "npx",
       "args": [
         "-y",
-        "career-compass-mcp@2.15.1"
-      ],
-      "env": {
-        "CAREER_DATA_PATH": "${user_config.data_path}"
-      }
+        "career-compass-mcp@2.15.2"
+      ]
     }
   }
 }

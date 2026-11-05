@@ -66,23 +66,20 @@ describe("plugin bundle truth", () => {
     expect("npx -y career-compass-mcp dashboard".match(/npx(?:\s+-y)?\s+career-compass-mcp(?!@)/g)).not.toBeNull();
   });
 
-  it("data folder comes from a userConfig option that has a default", () => {
-    // The directory flags plugins that read settings from the user's
-    // environment; a userConfig option is the declared route. Cowork skips an
-    // MCP server whose option has no default, so the default is required too.
-    const plugin = readJson<{
-      userConfig?: Record<string, { type: string; default?: unknown; sensitive?: boolean }>;
-    }>("plugin/.claude-plugin/plugin.json");
-    const opt = plugin.userConfig?.data_path;
-    expect(opt?.type).toBe("directory");
-    expect(typeof opt?.default).toBe("string");
-    expect(opt?.sensitive ?? false).toBe(false);
+  it("plugin declares no userConfig and passes no environment to the server", () => {
+    // The directory's scan reads a userConfig folder option (default under ~)
+    // as "uses a credential from the user's machine" and held 2.15.1 for it.
+    // The server already defaults to ~/.career-compass, so the plugin declares
+    // nothing and passes nothing. Cowork also skips a server whose option has
+    // no default, so re-adding an option needs a default and a directory review.
+    const plugin = readJson<{ userConfig?: unknown }>("plugin/.claude-plugin/plugin.json");
+    expect(plugin.userConfig).toBeUndefined();
     const mcp = readJson<{
       mcpServers: Record<string, { env?: Record<string, string> }>;
     }>("plugin/.mcp.json");
-    expect(mcp.mcpServers["career-compass"].env).toEqual({
-      CAREER_DATA_PATH: "${user_config.data_path}",
-    });
+    expect(mcp.mcpServers["career-compass"].env).toBeUndefined();
+    const text = readFileSync(path.join(repoRoot, "plugin/.mcp.json"), "utf-8");
+    expect(text).not.toMatch(/user_config/);
   });
 
   it("plugin README does not name the environment variable", () => {

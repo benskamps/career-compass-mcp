@@ -132,15 +132,14 @@ is welcome in [Discussions](https://github.com/benskamps/career-compass-mcp/disc
 ## Privacy Policy
 
 Your data stays on your machine. Career Compass stores your career knowledge base and job
-pipeline as YAML in `~/.career-compass/`, or in the folder you choose in the plugin's
-**Career data folder** setting. It sends that data nowhere on its own: it is passed only to
+pipeline as YAML in `~/.career-compass/`. It sends that data nowhere on its own: it is passed only to
 the Claude client you use, and only for the requests you make. When you ask
 `harvest_evidence` to look at a project folder, it reads that folder's git history locally
 and writes nothing.
 
 The plugin makes one kind of network request, and it carries none of your data:
 
-- **Installing the server:** `npx` downloads `career-compass-mcp@2.15.1` and its
+- **Installing the server:** `npx` downloads `career-compass-mcp@2.15.2` and its
   dependencies from the public npm registry.
 
 The server itself makes no network requests.
@@ -153,15 +152,14 @@ covering collection, storage, sharing, retention, and contact details, is at
 
 ## Where your files live
 
-In Claude Code and Cowork your history and pipeline are kept in `~/.career-compass/`. To
-keep them somewhere else, such as inside a folder you already back up, change the plugin's
-**Career data folder** setting (`data_path`). Leave it at the default unless you have a
-reason to move it.
+In Claude Code and Cowork your history and pipeline are kept in `~/.career-compass/`, as
+plain YAML you can open, back up, or delete. If you changed the old **Career data folder**
+setting before 2.15.2, that setting is gone: move that folder's files into `~/.career-compass/`.
 
 ## What this plugin installs
 
 - **The Career Compass MCP server** (`.mcp.json`). Claude starts it on your computer with
-  `npx -y career-compass-mcp@2.15.1`, which downloads that exact published version of the
+  `npx -y career-compass-mcp@2.15.2`, which downloads that exact published version of the
   [`career-compass-mcp`](https://www.npmjs.com/package/career-compass-mcp) package from the
   public npm registry the first time it runs. It needs **Node.js 22 or newer**.
 - **Skills** in `skills/`. `career-compass` teaches Claude how to help with any job-search
