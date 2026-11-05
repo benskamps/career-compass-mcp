@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.15.2 (2026-11-05)
+
+### Changed
+
+- **The directory plugin no longer has a Career data folder setting.** The Claude
+  directory's policy scan began reading that option (a folder under `~`) as "uses a
+  credential from the user's machine" and flagged the live 2.15.1 listing for it. The
+  plugin now declares no `userConfig` and passes no environment to the server, which
+  already defaults to `~/.career-compass`. Anyone who moved the folder with that setting
+  should move its files into `~/.career-compass/`; `CAREER_DATA_PATH` still works when it
+  is set in the environment Claude starts from. The `.mcpb` Desktop extension keeps its
+  own folder option.
+
 ## 2.15.1 (2026-10-24)
 
 ### Changed

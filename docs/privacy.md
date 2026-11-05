@@ -45,8 +45,8 @@ Career Compass reads and writes the career information *you* give it:
 
 ## Where it is stored
 
-In a single directory on your machine, set by the `CAREER_DATA_PATH` environment variable
-(in the plugin, the **Career data folder** setting). The default is `~/.career-compass/`. Files are ordinary YAML you can open, edit, back up,
+In a single directory on your machine: `~/.career-compass/` by default, or the folder named by the
+`CAREER_DATA_PATH` environment variable when it is set. Files are ordinary YAML you can open, edit, back up,
 or delete with any text editor. While a write is in progress the folder also briefly holds a
 `.write-claim` file naming the process doing the writing, so a second Career Compass process
 (a dashboard, or a server registered in two clients) refuses rather than overwriting it. It is
