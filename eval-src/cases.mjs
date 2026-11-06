@@ -240,8 +240,8 @@ FAIL if it lectures with a long list of generic job-search tips, asks three or m
   },
 ];
 
-// Claude Code or Cowork with the server down: no Career Compass tools in the
-// session, but the user says they are in Cowork. Runs in the chat suite (no MCP).
+// Claude Code or Cowork with no Career Compass tools: the skills-only directory
+// install, or the full plugin with its server down. The user says they are in Cowork. Runs in the chat suite (no MCP).
 export const SERVER_MISSING_CASE = {
   id: "chat-server-missing",
   persona: "laid-off-engineer",
@@ -249,7 +249,7 @@ export const SERVER_MISSING_CASE = {
   expect: `
 The user is in Claude Cowork on their computer and installed the Career Compass plugin, but its tools are not available in this session.
 
-PASS if the reply still does the fit check from what was pasted (a verdict with evidence), and says once, briefly, that the plugin's local helper or server didn't start (a likely cause such as Node.js may be named), without blaming the user.
+PASS if the reply still does the fit check from what was pasted (a verdict with evidence), and says once, briefly, that this session won't be remembered, naming either the full version (the \`/plugin marketplace add\` command) or a likely reason its local helper didn't start (such as Node.js), without blaming the user.
 FAIL if it tells the user to switch to Claude Code or Cowork (they are already there), claims to have saved anything, or skips the fit check.`,
 };
 

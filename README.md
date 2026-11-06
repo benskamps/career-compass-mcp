@@ -271,7 +271,7 @@ Add the server:
 }
 ```
 
-Pin a version in `args` (`"career-compass-mcp@2.15.2"` rather than the bare name) if you can:
+Pin a version in `args` (`"career-compass-mcp@2.16.0"` rather than the bare name) if you can:
 Desktop starts the server twice at once, and an unpinned name reinstalls on every release,
 which can leave npx's cache half-written (see **On npx** below). `install` does this for you.
 
@@ -613,7 +613,7 @@ Alex Rivera) if you want to see the shape before writing your own.
 |---------|---------|-------------|
 | `CAREER_DATA_PATH` | `~/.career-compass` | Directory holding your career and pipeline YAML |
 
-The directory plugin has no folder setting since 2.15.2 (the directory's scan flagged it), so it
+The directory plugin has no folder setting (the directory's scan flagged it), so it
 uses `~/.career-compass` unless `CAREER_DATA_PATH` is set in the environment Claude starts the
 server from.
 

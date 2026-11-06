@@ -1,9 +1,17 @@
 # Changelog
 
-## Unreleased
+## 2.16.0 (2026-11-06)
 
 ### Changed
 
+- **The Claude directory plugin is skills only.** The directory now accepts MCP servers that
+  run on the user's computer only from Verified organizations, and refused 2.15.2 for it.
+  The directory bundle drops `server/` and `.mcp.json` (`scripts/build-plugin-skills.mjs`),
+  and its listing no longer says it remembers your history in Claude Code and Cowork
+  (`plugin/directory.json`). The full plugin, with the local server, installs in Claude
+  Code from this repo: `/plugin marketplace add benskamps/career-compass-mcp`, then
+  `/plugin install career-compass@career-compass`. In Claude Code or Cowork without the
+  tools, the skill names that route once instead of only blaming Node.js.
 - **Career Compass answers a job-search ask before anything is pasted.** "Can you look at
   my resume? I'll paste it next.", "here's the JD, thoughts?" or "Is this a good offer?"
   now load the skill on the first message, so the first reply is Career Compass's one-step

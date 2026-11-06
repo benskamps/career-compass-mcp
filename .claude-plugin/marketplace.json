@@ -1,0 +1,17 @@
+{
+  "name": "career-compass",
+  "owner": {
+    "name": "Ben Schippers",
+    "url": "https://github.com/benskamps"
+  },
+  "metadata": {
+    "description": "Career Compass, the full plugin: job-fit skills plus a local server that keeps your career history and applications on your computer."
+  },
+  "plugins": [
+    {
+      "name": "career-compass",
+      "source": "./plugin",
+      "description": "Career Compass with its local server: the skills plus a Career KB and application pipeline kept as YAML on your computer. Needs Node.js 22 or newer."
+    }
+  ]
+}
