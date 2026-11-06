@@ -92,3 +92,16 @@ The hiring manager ghosted me after the final round.
 what jobs can i get with a biology degree
 Should I quit before I have another job lined up?
 Is this a good offer?
+# Empty-handed openers: a job-search ask with nothing pasted yet (added 2.15.3).
+I'm going to paste a job posting, tell me if I should apply.
+Can you look at my resume? I'll paste it next.
+I have a job offer I need help thinking through.
+I got an interview next week, can you help me prep?
+help me with my job search
+I just got laid off. Where do I even start?
+I found a job I like but I'm not sure I'm qualified for it.
+Can you check if I'm a good fit for a role? I'll send the JD.
+I need to write a cover letter for a job.
+I keep applying and getting nothing back.
+a recruiter messaged me on linkedin, what do i say back
+Got a rejection email this morning.

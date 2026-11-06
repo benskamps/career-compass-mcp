@@ -39,3 +39,9 @@ Screen these five resumes for our open analyst role and rank them.
 Write a thank-you note to my neighbor for watching my dog.
 How do I negotiate a lower price on a used car?
 Write the LinkedIn headline for our company page. We sell payroll software.
+# Hiring-side asks with nothing pasted yet: the near misses for the empty-handed openers (added 2.15.3).
+Thoughts on this JD I wrote for my team? I'll paste it.
+I'm hiring a designer. Can you help me figure out what to look for?
+I need to make an offer to a candidate. Help me think it through.
+Can you review a candidate's resume for me? I'll paste it.
+I'm interviewing candidates next week. What should I ask them?
