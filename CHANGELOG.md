@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Career Compass answers a job-search ask before anything is pasted.** "Can you look at
+  my resume? I'll paste it next.", "here's the JD, thoughts?" or "Is this a good offer?"
+  now load the skill on the first message, so the first reply is Career Compass's one-step
+  ask instead of a generic "sure, paste it". Offline, these openers went from 34 of 42
+  runs to 41 of 42. Interviewing candidates is now named as hiring-side, alongside writing
+  a job description and screening.
+- The trigger suite gains 12 empty-handed openers, 5 hiring-side near misses, and 5
+  turn-2 cases that check the skill loads once the text arrives.
+
 ## 2.15.2 (2026-11-05)
 
 ### Changed

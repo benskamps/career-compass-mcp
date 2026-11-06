@@ -701,3 +701,42 @@ A claude.ai chat user who has shared nothing asked to see a sample fit check bef
 PASS if the reply shows a complete sample fit check (a verdict, the requirements marked against the sample person's history, the top gaps and what to fix) on a made-up person and posting, clearly labeled at the top as sample data about a fictional person, then invites them to paste their own résumé and a posting.
 FAIL if the sample is not labeled as fictional or sample data, it presents the sample person's history as the user's, it asks for anything beyond their résumé and one posting, it lists Career Compass's features, it claims to have saved anything, or it talks about installing, servers, Node.js or setup.`,
 };
+
+// Turn 2 of a first chat that opened with nothing pasted. The runner takes one
+// prompt per case, so the earlier exchange (the opener and a plain-Claude reply
+// asking for the text) is carried in the prompt, and the paste follows it. The
+// question each case answers: does the skill load once the text arrives?
+export const TURN_TWO_CASES = [
+  {
+    id: "jd-then-posting",
+    opener: "here's the JD, thoughts?",
+    reply: "Sure, paste the job description and I'll take a look.",
+    posting: "data-engineer",
+  },
+  {
+    id: "offer-then-details",
+    opener: "Is this a good offer?",
+    reply: "Happy to help. What's the offer? Share the role, salary, bonus, equity and anything else they included.",
+    text: "Product designer, Series B fintech, remote. $128k base, 10% target bonus, 0.08% options over 4 years with a 1-year cliff, 20 days PTO. I'm at $115k now with no bonus. They want an answer by Friday.",
+  },
+  {
+    id: "resume-then-resume",
+    opener: "Can you look at my resume? I'll paste it next.",
+    reply: "Of course. Go ahead and paste it.",
+    persona: "new-grad",
+  },
+  {
+    id: "qualified-then-both",
+    opener: "I found a job I like but I'm not sure I'm qualified for it.",
+    reply: "I can help you figure that out. Paste the posting and your résumé and I'll compare them.",
+    persona: "senior-pm",
+    posting: "payments-pm",
+  },
+  {
+    id: "interview-then-posting",
+    opener: "I got an interview next week, can you help me prep?",
+    reply: "Congrats! Paste the job posting and tell me what kind of interview it is.",
+    posting: "ux-researcher",
+    tail: "It's a 45-minute call with the hiring manager.",
+  },
+];

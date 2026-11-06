@@ -12,7 +12,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES, TURN_TWO_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -324,6 +324,19 @@ function buildChat() {
       graders: { "activation--no-false-fire": { ...skillFired, min: 0, max: 0, arm: "both" } },
     }); n++;
   });
+  for (const c of TURN_TWO_CASES) {
+    const parts = [];
+    if (c.persona) parts.push(c.posting ? `My résumé:\n\n${personas[c.persona].body}` : personas[c.persona].body);
+    if (c.posting) parts.push(c.persona ? `The job:\n\n${postings[c.posting].body}` : postings[c.posting].body);
+    if (c.text) parts.push(c.text);
+    if (c.tail) parts.push(c.tail);
+    const prompt = `Earlier in this chat:\n\nMe: ${c.opener}\nYou: ${c.reply}\n\nHere it is:\n\n${parts.join("\n\n")}`;
+    writeCase(CHAT_SUITE, `trigger-turn2-${c.id}`, {
+      description: `Turn 2 of a first chat that opened with nothing pasted ("${c.opener}"): the skill should load once the text arrives.`,
+      prompt, tags: ["trigger", "should-fire", "turn-two"], maxTurns: 4,
+      graders: { "activation--skill-fired": skillFired },
+    }); n++;
+  }
   for (const [id, p] of Object.entries(personas)) {
     const post = postingFor(id);
     writeCase(CHAT_SUITE, `chat-first-contact-${id}`, {

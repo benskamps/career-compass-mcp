@@ -10,7 +10,7 @@ worth having, is the work good, and is every claim about the user true.
 | --- | --- |
 | `personas/` | 8 fictional job seekers. Each résumé is the only truth the honesty judge accepts about that person. |
 | `postings/` | One job posting per persona, with the expected verdict, strongest evidence and real gaps the fit-check judge grades against. |
-| `trigger/` | 93 prompts where Career Compass should fire, including short casual openers ("should i apply to this one", "here's the JD, thoughts?"), and 40 where it should stay quiet (coding, recipes, hiring-side asks such as writing a job description, and near misses such as applying sunscreen or countering on a house). |
+| `trigger/` | 105 prompts where Career Compass should fire, including short casual openers ("should i apply to this one", "here's the JD, thoughts?") and asks with nothing pasted yet ("Can you look at my resume? I'll paste it next."), and 45 where it should stay quiet (coding, recipes, hiring-side asks such as writing a job description, and near misses such as applying sunscreen or countering on a house). |
 | `cases.mjs` | The task, memory and first-contact cases. |
 | `record-mocks.mjs` | Records the MCP tool mocks from the real server in this repo. |
 | `build-suite.mjs` | Writes the suites into `plugin/evals/` and `plugin/evals-chat/`. Never edit those by hand. |
