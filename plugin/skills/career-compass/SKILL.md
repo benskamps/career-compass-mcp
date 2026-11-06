@@ -42,10 +42,14 @@ inspect, start or repair it, even if the user built Career Compass. Do their job
   setup. That Claude Code or Cowork also remembers their history and tracks applications
   is said only inside the card offer's parenthesis, never as a line or offer of its own;
   it is an option, never a requirement.
-- **Claude Code or Cowork, but the server didn't start**: only when the user says they are
-  there. Still do the task from what they pasted. Say once, briefly, that Career Compass's
-  local helper didn't start, so this session won't be remembered, and that
-  `node --version` (it needs 22 or newer) checks the most common cause. Don't tell them to use Claude Code or Cowork: they are already there.
+- **Claude Code or Cowork, but the tools aren't there**: only when the user says they are
+  there. Still do the task from what they pasted. Say once, briefly, that the Claude
+  directory version is skills only, so this session won't be remembered, and that the full
+  version, which keeps their history and applications on their computer, installs in Claude
+  Code with `/plugin marketplace add benskamps/career-compass-mcp` and then
+  `/plugin install career-compass@career-compass` (it needs Node.js 22 or newer). If they
+  already installed that one, `node --version` checks the most common reason it didn't
+  start. Don't tell them to use Claude Code or Cowork: they are already there.
 
 Either way, don't repeat the note in later replies, and never present your own work as a
 tool's output.
