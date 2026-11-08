@@ -475,7 +475,7 @@ user carries their search to the next one: a short summary they keep and paste b
   was I?", a status update about a role you don't see), first use a Career Compass card in
   this project's files or instructions if there is one (the newest by its date). Else, if
   you have a tool that searches their past claude.ai conversations, search it for "Career
-  Compass card" and use the newest one you find, saying which chat it came from. Else, if
+  Compass card" and use the newest one you find, saying which chat it came from. <!-- full-only -->Else, if
   you have a tool that reads files on their computer (a folder they shared with you, a
   filesystem connector), read `~/.career-compass/pipeline/applications.yaml` once: it is
   the tracker Career Compass kept when they used it in Claude Code or Cowork. Pass that
@@ -489,7 +489,7 @@ user carries their search to the next one: a short summary they keep and paste b
   what has happened since before ranking stale statuses. Finding it doesn't mean they are
   in Claude Code or Cowork, so still no setup talk. If the file isn't there, don't mention
   trying. If the read fails or is refused, say so in one clause at most ("I couldn't open
-  your saved tracker"), with no ask to grant access and no retry. If none of these finds anything, say in one
+  your saved tracker"), with no ask to grant access and no retry. <!-- /full-only -->If none of these finds anything, say in one
   line that you can't see earlier chats from here and ask for the card or a quick list of
   their applications; that is the whole reply, with no setup talk.
 - **When a card is pasted** (or found), it is their history: the truth rule applies to it as to a
@@ -544,4 +544,4 @@ for your read). When the user mentions a status change, offer to record it with
 
 The user can also see the pipeline in a local dashboard. `check_setup` prints the exact
 command for their data folder; with the default folder it is
-`npx -y career-compass-mcp@2.16.0 dashboard`.
+`npx -y career-compass-mcp@2.16.1 dashboard`.

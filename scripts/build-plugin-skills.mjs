@@ -14,7 +14,11 @@
 // changes.
 //
 // What it does:
-//   1. Copies the skills, LICENSE, icon and privacy policy from the source checkout.
+//   1. Copies the skills, LICENSE, icon and privacy policy from the source checkout. In the
+//      skill files it drops each `allowed-tools` list (the directory accepts entries beyond
+//      Read/Grep/Glob/LS only from Verified organizations, and refused 2.16.0 for the MCP
+//      tool names) and every <!-- full-only --> ... <!-- /full-only --> span: instructions
+//      to read the full version's saved files on the user's computer.
 //   2. Writes plugin.json from plugin/.claude-plugin/plugin.json, with the fields in
 //      plugin/directory.json (the listing description) laid over it.
 //   3. Deletes server/ and .mcp.json, and sets the version in this repo's README.
@@ -45,6 +49,41 @@ if (at !== version) throw new Error(`CC_SOURCE_DIR is at ${at}, expected ${versi
 // 1. Skills and the files that travel with them.
 rmSync(join(ROOT, "skills"), { recursive: true, force: true });
 cpSync(join(src, "plugin", "skills"), join(ROOT, "skills"), { recursive: true });
+const ALLOWED = new Set(["Read", "Grep", "Glob", "LS"]);
+const skillFiles = [];
+const walkSkills = (d) => {
+  for (const e of readdirSync(d, { withFileTypes: true })) {
+    const p = join(d, e.name);
+    if (e.isDirectory()) walkSkills(p);
+    else if (e.name.endsWith(".md")) skillFiles.push(p);
+  }
+};
+walkSkills(join(ROOT, "skills"));
+for (const f of skillFiles) {
+  let text = readFileSync(f, "utf-8");
+  text = text.replace(/<!-- full-only -->[\s\S]*?<!-- \/full-only -->\n?/g, "");
+  if (text.startsWith("---\n")) {
+    const end = text.indexOf("\n---\n", 4);
+    const lines = text.slice(4, end).split("\n");
+    const kept = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (/^allowed-tools:/.test(lines[i])) {
+        // Drop the comment lines that explain the list, then the list itself.
+        while (kept.length && kept[kept.length - 1].startsWith("#")) kept.pop();
+        while (i + 1 < lines.length && /^\s+- /.test(lines[i + 1])) i++;
+        continue;
+      }
+      kept.push(lines[i]);
+    }
+    text = "---\n" + kept.join("\n") + text.slice(end);
+  }
+  if (/<!-- \/?full-only -->/.test(text)) throw new Error(`unbalanced full-only marker in ${relative(ROOT, f)}`);
+  const tools = text.match(/^allowed-tools:.*(?:\n\s+- .*)*/m);
+  if (tools && tools[0].split(/[\s,:\-\[\]]+/).slice(1).some((t) => t && !ALLOWED.has(t))) {
+    throw new Error(`allowed-tools beyond Read/Grep/Glob/LS in ${relative(ROOT, f)}`);
+  }
+  writeFileSync(f, text);
+}
 cpSync(join(src, "plugin", "LICENSE"), join(ROOT, "LICENSE"));
 cpSync(join(src, "plugin", ".claude-plugin", "icon.png"), join(ROOT, ".claude-plugin", "icon.png"));
 cpSync(join(src, "PRIVACY.md"), join(ROOT, "PRIVACY.md"));
@@ -92,7 +131,10 @@ Built from [v${version} in career-compass-mcp](${SOURCE_REPO}/tree/v${version}).
 
 - The plugin is skills only: \`skills/\`, the icon, the manifest, LICENSE and the privacy
   policy. There is no MCP server, no \`.mcp.json\`, and no program that runs on your
-  computer. Every skill file is a byte-for-byte copy of \`plugin/skills/\` at that commit.
+  computer.
+- Each skill file is \`plugin/skills/\` at that commit with two things removed: the
+  \`allowed-tools\` lists (they name the full version's MCP tools), and the passages marked
+  full-only, which tell Claude to read the full version's saved files on your computer.
 - \`plugin.json\` is \`plugin/.claude-plugin/plugin.json\` at that commit, with the listing
   fields in \`plugin/directory.json\` laid over it and the repository set to this one.
 - ${total} files in the plugin in total.

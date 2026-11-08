@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.16.1 (2026-11-08)
+
+### Changed
+
+- **The directory bundle's skills declare no `allowed-tools`.** The directory accepts
+  entries beyond Read, Grep, Glob and LS only from Verified organizations and refused
+  2.16.0 for the MCP tool names. `scripts/build-plugin-skills.mjs` drops those lists from
+  the directory copy only; the full plugin keeps them, so its read-only tools still run
+  without a prompt.
+- **The directory bundle no longer tells Claude to read files on your computer.** The
+  passages in `career-compass`, `start` and `today` that read the full version's saved
+  tracker and history from `~/.career-compass/` are marked full-only and left out of the
+  directory copy, in case they are what the scan reads as "uses a credential from the
+  user's machine".
+
 ## 2.16.0 (2026-11-06)
 
 ### Changed
