@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **The Career Compass card is the memory in Claude Code and Cowork without the server.**
+  On the skills-only directory version, when Claude can write files in the user's folder,
+  the card offer becomes "keep it in this folder as `career-compass-card.md`". After the
+  user's yes, Claude saves it there, rewrites it when something changes, and reads it
+  before the first answer of the next session, so the fit check, letter or "what's next"
+  starts from it. Reading alone doesn't count: in claude.ai chat, and anywhere Claude has
+  no file-writing tool, the card stays text to paste back, as before. The file sits in the
+  user's own working folder under a plain name; nothing reads a home or hidden folder.
+- **Eval suite `plugin/evals-folder/`** (6 cases): offering, saving, reading back,
+  writing a letter from, and updating the card file, plus staying quiet when there is none.
+  The chat card cases now also check that chat never mentions a card file.
+
+### Changed
+
+- **Letters keep years with what the résumé ties them to.** "9 years in Go and Java" no
+  longer becomes nine years with every tool on the card, the card's `Me:` line separates
+  total years from skills, "proudest" and similar words count as invented inner life, and
+  a letter is signed with the name on the résumé or card, else `[Your name]`.
+- **The directory bundle no longer names `~/.career-compass/`.** The "Named files" passage
+  (saving a tailored résumé under the full version's data folder) is marked full-only, so
+  the directory copy has no home-folder path left in it. The dashboard's `npx` line is
+  full-only too, and `scripts/build-plugin-skills.mjs` now fails if a skill or the
+  plugin README still names `~/.career-compass` (or a skill names `npx`).
+- **Honesty graders see the card.** Card cases pass the pasted or saved card to the honesty
+  judge, which never sees the prompt; before, the card's own roles and dates read as
+  invented.
+
 ## 2.16.1 (2026-11-08)
 
 ### Changed
