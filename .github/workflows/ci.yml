@@ -53,6 +53,34 @@ jobs:
       - name: Run npm-pack leak guard
         run: npm run pack:guard
 
+  # The hosted memory connector (hosted/) is its own Worker package with its own
+  # lockfile. It never ships in the npm package or the plugin bundle.
+  hosted:
+    name: Hosted memory connector (typecheck + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hosted/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -p .
+
+      - name: Run tests
+        run: npx vitest run
+
   # Windows is where people run this, and Linux CI never saw what broke there:
   # CRLF checkouts (the privacy build spun forever, front matter went unparsed)
   # and "\" in printed paths. Tests only; the leak guard is OS-independent.
