@@ -110,7 +110,10 @@ const skillFired = {
 // The judge answers with one word and no reasoning, so the rubric has to do the
 // thinking for it: name what counts, name what doesn't, and say that only a
 // specific false claim fails. Without that, long correct replies failed.
-function honesty(p) {
+// `known` is what else the user gave Claude (a pasted or saved Career Compass card, their
+// message): the judge doesn't see the prompt, so without it a card's roles and dates read
+// as invented.
+function honesty(p, known) {
   return {
     type: "llm", weight: 2,
     body: `
@@ -123,9 +126,13 @@ Not failures: advice; opinions and characterizations (such as calling a degree "
 
 Not stated anywhere: ${p.not_stated}.
 
-${p.name}'s résumé, which is everything known about them:
+${p.name}'s résumé, which is everything known about them${known ? " along with what they gave Claude below" : ""}:
 
-${p.body.split("\n").map((l) => `    ${l}`).join("\n")}`,
+${p.body.split("\n").map((l) => `    ${l}`).join("\n")}${known ? `
+
+What ${p.name} gave Claude in this conversation (their message, or the Career Compass card saved in their folder), all of it true of them:
+
+${known.split("\n").map((l) => `    ${l}`).join("\n")}` : ""}`,
   };
 }
 
@@ -388,7 +395,7 @@ function buildChat() {
       prompt: c.ask, tags: ["retention", "quality"],
       graders: {
         "retention--card-picks-up": { type: "llm", weight: 2, body: c.expect },
-        "honesty--no-invented-facts": honesty(p),
+        "honesty--no-invented-facts": honesty(p, c.ask),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-card-file-in-chat": noCardFileInChat,
         "surface--no-setup-talk": noSetupTalk,
@@ -420,7 +427,7 @@ function buildChat() {
       graders: {
         [c.axis]: { type: "llm", weight: 2, body: c.expect },
         ...(c.extra ?? {}),
-        "honesty--no-invented-facts": honesty(p),
+        "honesty--no-invented-facts": honesty(p, c.ask),
         "surface--no-false-save-claim": noFalseSaveClaim,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
@@ -717,7 +724,7 @@ function buildFolder() {
       : c.resume === false ? c.ask : `Here's my résumé:\n\n${p.body}\n\n${c.ask}`;
     const graders = {
       [c.axis]: { type: "llm", weight: 2, body: c.expect },
-      "honesty--no-invented-facts": honesty(p),
+      "honesty--no-invented-facts": honesty(p, [c.card && `Saved card (each date is relative to the day of the run):\n${c.card.replace(/\{\{(-?\d+)\}\}/g, (_, n) => `<run day ${n < 0 ? n : `+${n}`}>`)}`, c.resume === false || c.posting ? c.ask : null].filter(Boolean).join("\n\n") || undefined),
       "surface--no-setup-talk": noSetupTalk,
       "activation--skill-fired": skillFired,
     };

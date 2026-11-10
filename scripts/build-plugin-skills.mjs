@@ -78,6 +78,10 @@ for (const f of skillFiles) {
     text = "---\n" + kept.join("\n") + text.slice(end);
   }
   if (/<!-- \/?full-only -->/.test(text)) throw new Error(`unbalanced full-only marker in ${relative(ROOT, f)}`);
+  // The directory copy names no home-folder path and no command to run: the scan flagged
+  // plugin.json for "uses a credential from the user's machine" while these were in it.
+  const local = text.match(/~\/\.career-compass|\bnpx\b/);
+  if (local) throw new Error(`"${local[0]}" left in the directory copy of ${relative(ROOT, f)}; mark it full-only`);
   const tools = text.match(/^allowed-tools:.*(?:\n\s+- .*)*/m);
   if (tools && tools[0].split(/[\s,:\-\[\]]+/).slice(1).some((t) => t && !ALLOWED.has(t))) {
     throw new Error(`allowed-tools beyond Read/Grep/Glob/LS in ${relative(ROOT, f)}`);
@@ -102,6 +106,9 @@ writeFileSync(join(ROOT, ".claude-plugin", "plugin.json"), JSON.stringify(manife
 rmSync(join(ROOT, "server"), { recursive: true, force: true });
 rmSync(join(ROOT, ".mcp.json"), { force: true });
 const readme = join(ROOT, "README.md");
+if (/~\/\.career-compass/.test(readFileSync(readme, "utf-8"))) {
+  throw new Error("README.md names ~/.career-compass; say \"a folder on your computer\" instead");
+}
 writeFileSync(readme, readFileSync(readme, "utf-8").replace(/career-compass-mcp(@|\]\([^)]*\) v| v)\d+\.\d+\.\d+/g, (m) => m.replace(/\d+\.\d+\.\d+$/, version)));
 
 // 4. The directory's limits.
