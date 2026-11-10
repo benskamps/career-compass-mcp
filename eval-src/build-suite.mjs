@@ -7,12 +7,16 @@
 //   plugin/evals-chat/  Claude.ai: no MCP tools at all, so the skill has to work from
 //                       what the user pastes. Also holds the trigger suite, since the
 //                       Skill tool is then the only way the plugin can show up.
+//   plugin/evals-folder/ Claude Code or Cowork on the skills-only directory version: no
+//                       MCP tools, but the agent reads and writes files in its folder, so
+//                       the Career Compass card is kept there. Needs --scaffold and
+//                       --allow-tools Write Edit (see eval-src/README.md).
 
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES, TURN_TWO_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CARD_FILE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FOLDER_CASES, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES, TURN_TWO_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +25,7 @@ const repo = join(here, "..");
 const OUT = process.env.EVAL_SUITE_ROOT ?? join(repo, "plugin");
 const TOOLS_SUITE = join(OUT, "evals");
 const CHAT_SUITE = join(OUT, "evals-chat");
+const FOLDER_SUITE = join(OUT, "evals-folder");
 const MCP = "mcp__plugin_career-compass_career-compass__";
 const SKILLS = "career-compass|fit-check|start|today|interview-prep|debrief|week|sweep|find|feedback|answer";
 
@@ -56,15 +61,21 @@ function yamlList(items) {
 function frontmatter(fields) {
   const out = Object.entries(fields).filter(([, v]) => v !== undefined).map(([k, v]) => {
     if (Array.isArray(v)) return `${k}: ${yamlList(v)}`;
+    if (v && typeof v === "object") return `${k}: {${Object.entries(v).map(([a, b]) => `${a}: ${b}`).join(", ")}}`;
     if (typeof v === "string" && /[:#'"\n]|^\s|\s$/.test(v)) return `${k}: '${v.replaceAll("'", "''")}'`;
     return `${k}: ${v}`;
   });
   return `---\n${out.join("\n")}\n---\n`;
 }
 
-function writeCase(suite, name, { prompt, tags, graders, maxTurns = 12, description, allowedTools = ["Skill"] }) {
+function writeCase(suite, name, { prompt, tags, graders, maxTurns = 12, description, allowedTools = ["Skill"], scaffold }) {
   const dir = join(suite, name);
   mkdirSync(join(dir, "graders"), { recursive: true });
+  if (scaffold) {
+    // prompt.md can't carry a scaffold, so a small case.yaml does; the runner merges the two.
+    writeFileSync(join(dir, "case.yaml"), `schema_version: "1.0"\nname: ${name}\ncontext:\n  scaffold_script: scaffold.sh\n`);
+    writeFileSync(join(dir, "scaffold.sh"), scaffold, { mode: 0o755 });
+  }
   writeFileSync(join(dir, "prompt.md"), `${frontmatter({
     description,
     tags,
@@ -267,6 +278,9 @@ const noFalseSaveClaim = {
   flags: "i", match: "not_contains",
 };
 
+// claude.ai chat has no folder of theirs to keep a card file in.
+const noCardFileInChat = { type: "regex", weight: 0.5, flags: "i", match: "not_contains", pattern: "career-compass-card\\.md|in this folder" };
+
 const noUnaskedWrite = (tool) => ({ type: "tool_used", tool: `${MCP}${tool}`, min: 0, max: 0 });
 
 // Every write tool, graded on every case where the user didn't ask for a write.
@@ -376,6 +390,7 @@ function buildChat() {
         "retention--card-picks-up": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(p),
         "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-card-file-in-chat": noCardFileInChat,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
@@ -390,6 +405,7 @@ function buildChat() {
         "retention--come-back-reminder": { type: "llm", weight: 2, body: c.expect },
         "honesty--no-invented-facts": honesty(personas[c.persona]),
         "surface--no-false-save-claim": noFalseSaveClaim,
+        "surface--no-card-file-in-chat": noCardFileInChat,
         "surface--no-setup-talk": noSetupTalk,
         "activation--skill-fired": skillFired,
       },
@@ -676,11 +692,60 @@ FAIL if the reply asks the user to paste their résumé or background, gives gen
   return n;
 }
 
+// A scaffold that writes the card into the run's folder, each {{n}} as the run day plus n.
+function cardScaffold(card) {
+  const body = card.replace(/\{\{(-?\d+)\}\}/g, (_, n) => `$(day ${n})`);
+  return `#!/usr/bin/env bash
+# Generated by eval-src/build-suite.mjs: the Career Compass card a past session kept here.
+set -euo pipefail
+day() { node -e 'console.log(new Date(Date.now() + Number(process.argv[1]) * 864e5).toISOString().slice(0, 10))' -- "$1"; }
+cat > ${CARD_FILE} <<CARD
+${body}CARD
+`;
+}
+
+function buildFolder() {
+  resetSuite(FOLDER_SUITE);
+  let n = 0;
+  const cardFileRead = {
+    type: "tool_used", tool: "Read", min: 1,
+    input_match: CARD_FILE.replaceAll(".", "\\."),
+  };
+  for (const c of FOLDER_CASES) {
+    const p = personas[c.persona];
+    const prompt = c.posting ? resumeAndPosting(p, postingFor(c.persona), c.ask)
+      : c.resume === false ? c.ask : `Here's my résumé:\n\n${p.body}\n\n${c.ask}`;
+    const graders = {
+      [c.axis]: { type: "llm", weight: 2, body: c.expect },
+      "honesty--no-invented-facts": honesty(p),
+      "surface--no-setup-talk": noSetupTalk,
+      "activation--skill-fired": skillFired,
+    };
+    if (c.readsCard) graders["retention--card-file-read"] = cardFileRead;
+    for (const [path, exists] of Object.entries(c.files ?? {})) {
+      graders[exists ? "retention--card-file-written" : "trust--no-unasked-card-file"] = { type: "file_exists", path, exists };
+    }
+    for (const [path, pattern] of Object.entries(c.fileContains ?? {})) {
+      graders["retention--card-file-content"] = { type: "regex", target: { source: "file", path }, pattern, flags: "i" };
+    }
+    writeCase(FOLDER_SUITE, c.id, {
+      description: "Claude Code or Cowork on the skills-only version: the Career Compass card is kept as a file in the folder.",
+      prompt, tags: ["folder", "retention", "quality"],
+      allowedTools: ["Skill", "Read", "Glob", "Grep", "Write", "Edit"],
+      scaffold: c.card ? cardScaffold(c.card) : undefined,
+      graders,
+    }); n++;
+  }
+  return n;
+}
+
 if (!existsSync(join(here, "mocks", "empty"))) {
   console.error("No recorded mocks. Run `npm run eval:mocks` first.");
   process.exit(1);
 }
 const chat = buildChat();
 const tools = buildTools();
+const folder = buildFolder();
 console.log(`${CHAT_SUITE}: ${chat} cases`);
 console.log(`${TOOLS_SUITE}: ${tools} cases`);
+console.log(`${FOLDER_SUITE}: ${folder} cases`);

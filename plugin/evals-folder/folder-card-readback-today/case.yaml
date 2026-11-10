@@ -1,0 +1,4 @@
+schema_version: "1.0"
+name: folder-card-readback-today
+context:
+  scaffold_script: scaffold.sh

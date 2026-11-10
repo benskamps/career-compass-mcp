@@ -249,7 +249,7 @@ export const SERVER_MISSING_CASE = {
   expect: `
 The user is in Claude Cowork on their computer and installed the Career Compass plugin, but its tools are not available in this session.
 
-PASS if the reply still does the fit check from what was pasted (a verdict with evidence), and says once, briefly, that this session won't be remembered, naming either the full version (the \`/plugin marketplace add\` command) or a likely reason its local helper didn't start (such as Node.js), without blaming the user.
+PASS if the reply still does the fit check from what was pasted (a verdict with evidence), and says once, briefly, that the Career Compass card (kept in their folder, or pasted back) is what carries this to the next session, or that this session won't be remembered, naming either the full version (the \`/plugin marketplace add\` command) or a likely reason its local helper didn't start (such as Node.js), without blaming the user.
 FAIL if it tells the user to switch to Claude Code or Cowork (they are already there), claims to have saved anything, or skips the fit check.`,
 };
 
@@ -738,5 +738,115 @@ export const TURN_TWO_CASES = [
     reply: "Congrats! Paste the job posting and tell me what kind of interview it is.",
     posting: "ux-researcher",
     tail: "It's a 45-minute call with the hiring manager.",
+  },
+];
+
+// Claude Code or Cowork on the skills-only directory version: no Career Compass tools, but
+// the agent can read and write files in the folder it works in, so the Career Compass card
+// lives there as career-compass-card.md and is read back next session. Built into
+// plugin/evals-folder/. `card` is written into the folder by the case's scaffold before
+// the run, with each {{n}} replaced by the run day plus n days (the agent's own clock, so
+// the dates are fresh whenever the suite runs).
+export const CARD_FILE = "career-compass-card.md";
+const FOLDER_CARD = "Career Compass card · updated {{-3}}\n" +
+  "Me: Senior Software Engineer · 9 yrs Go, Java, PostgreSQL, Kafka\n" +
+  "Want: Staff or senior backend, remote US\n" +
+  "Proof:\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Led the rewrite of the checkout service from a Java monolith to Go services; p99 latency fell from 1.8s to 240ms\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Designed the idempotency layer for payments that cut duplicate charges from about 300 a month to under 5\n" +
+  "- Trailhead Commerce, Senior Software Engineer, 2021–2026 · Mentored 3 junior engineers; two were promoted\n" +
+  "- Fieldnote Labs, Software Engineer, 2017–2021 · Built the event ingestion pipeline (Kafka, PostgreSQL) handling 40k events per second at peak\n" +
+  "Roles:\n" +
+  "- Corvid Pay · Staff Backend Engineer, Payments · applied {{-9}} · stretch · next: follow up by {{-2}}\n" +
+  "- Halyard · Staff Engineer · interview {{1}} (system design) · strong · next: prep\n" +
+  "Stories: none yet\n";
+const FOLDER_CARD_FACTS = "a Corvid Pay Staff Backend Engineer application from nine days before the run with a follow-up that came due two days before it, and a Halyard Staff Engineer system design interview the day after the run";
+
+export const FOLDER_CASES = [
+  {
+    id: "folder-card-offer",
+    persona: "laid-off-engineer",
+    posting: true,
+    ask: "How well do I fit this? I need to start applying this week.",
+    axis: "retention--offers-card-file",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools), in a folder on their computer where the assistant can read and write files. They pasted their résumé and a Corvid Pay Staff Backend Engineer posting and asked how well they fit. Nothing was saved before.
+
+PASS if the reply does the fit check (a verdict with evidence from the résumé and the top gaps) and its closing offer is to keep a Career Compass card in this folder (career-compass-card.md, or "this folder") so the next session picks up from it, asking before writing it. A question at the very end about whether they know anyone at the company is fine, and so is a one-line offer to leave a layoff line off a tailored résumé.
+FAIL if it skips or shortchanges the fit check, writes or says it saved a card or any file without being asked, offers a menu of several next steps, or talks about installing, servers, Node.js or setup.`,
+    files: { [CARD_FILE]: false },
+  },
+  {
+    id: "folder-card-save",
+    persona: "laid-off-engineer",
+    resume: false,
+    ask: "I just applied to Corvid Pay for the Staff Backend Engineer, Payments role (remote, US). " +
+      "Quick background: Senior Software Engineer, 9 years in Go and Java; I cut checkout p99 from 1.8s to 240ms " +
+      "and took duplicate charges from about 300 a month to under 5. Can you make me a Career Compass card and keep it here so you remember next time?",
+    axis: "retention--card-file-saved",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools), in a folder where the assistant can write files. They applied to Corvid Pay today and asked for a Career Compass card kept in this folder. Their whole message is everything known about them.
+
+PASS if the reply shows the card (Corvid Pay applied on the reply's today, a follow-up step about a week later), says in a line that it saved the card to career-compass-card.md in this folder and will read it next session, and names the day it pays to come back.
+FAIL if it invents facts not in their message (other employers, titles, numbers, a second role), says it saved the card somewhere other than this folder, claims to have set a reminder or calendar event, or talks about installing, servers, Node.js or setup.`,
+    files: { [CARD_FILE]: true },
+    fileContains: { [CARD_FILE]: "Career Compass card[\\s\\S]*Corvid Pay" },
+  },
+  {
+    id: "folder-card-readback-today",
+    persona: "laid-off-engineer",
+    card: FOLDER_CARD,
+    resume: false,
+    ask: "What should I work on today in my job search?",
+    axis: "retention--reads-card-file",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools). Their folder holds the Career Compass card from their last session, career-compass-card.md, with ${FOLDER_CARD_FACTS}. They asked what to work on today and pasted nothing.
+
+PASS if the reply works from that card without asking for it: it leads with one start-here move (prep for the Halyard interview tomorrow, or the overdue Corvid Pay follow-up), names the other item in a line, and offers to do the first step rather than doing all of it unasked.
+FAIL if it asks the user to paste their card or list their applications, ignores the card, invents a role or date that isn't on it, or talks about installing, servers, Node.js or setup.`,
+    readsCard: true,
+  },
+  {
+    id: "folder-card-readback-letter",
+    persona: "laid-off-engineer",
+    card: FOLDER_CARD,
+    resume: false,
+    ask: "Can you write a cover letter for this one? Senior Backend Engineer, Ledgerline (remote, US). " +
+      "Build event-driven services in Go on PostgreSQL and Kafka; own on-call for your services; mentor engineers.",
+    axis: "retention--letter-from-card-file",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools). Their folder holds their Career Compass card, career-compass-card.md, whose Proof lines are copied from their résumé: the checkout rewrite (p99 1.8s to 240ms), the payments idempotency layer (duplicate charges about 300 a month to under 5), mentoring 3 juniors (two promoted), and the Fieldnote Labs Kafka/PostgreSQL ingestion pipeline (40k events per second at peak). It also lists ${FOLDER_CARD_FACTS}. They asked for a cover letter for a Ledgerline role and pasted no résumé.
+
+PASS if the reply writes the cover letter first, built on those Proof lines with their numbers copied exactly, and then at most briefly points out what has come due on the card (the Halyard interview or the overdue Corvid Pay follow-up) as an offer.
+FAIL if it asks for the résumé or the card before writing the letter, invents details the card doesn't give (a team size, a tool, an outcome) as fact, changes a number, or talks about installing, servers, Node.js or setup.`,
+    readsCard: true,
+  },
+  {
+    id: "folder-card-update",
+    persona: "laid-off-engineer",
+    card: FOLDER_CARD,
+    resume: false,
+    ask: "Good news: Corvid Pay replied and booked a phone screen with me for this Friday.",
+    axis: "retention--updates-card-file",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools). Their folder holds the Career Compass card they chose to keep there, career-compass-card.md, with ${FOLDER_CARD_FACTS}. They said Corvid Pay booked a phone screen for this Friday.
+
+PASS if the reply acknowledges the news, says in a line that it updated their card in career-compass-card.md (the Corvid Pay line now shows the phone screen on a real Friday date), keeps the Halyard interview, and offers one next step (such as prep for the screen).
+FAIL if it asks the user to paste their card, drops the Halyard line, invents facts not on the card or in the message, says it saved a different file, or talks about installing, servers, Node.js or setup.`,
+    fileContains: { [CARD_FILE]: "Corvid Pay[^\\n]*(screen|interview)[\\s\\S]*Halyard|Halyard[\\s\\S]*Corvid Pay[^\\n]*(screen|interview)" },
+    readsCard: true,
+  },
+  {
+    id: "folder-no-card-quiet",
+    persona: "laid-off-engineer",
+    resume: false,
+    ask: "What should I work on today in my job search?",
+    axis: "first-reply--no-card-yet",
+    expect: `
+The user is working in Claude Code or Cowork with the skills-only Career Compass (no Career Compass tools). Their folder has no Career Compass card. They asked what to work on today and pasted nothing.
+
+PASS if the reply is short and its main ask is their Career Compass card or a quick list of their applications (company, role, date applied, last contact), saying what it will do with it. One extra line for someone just starting out (paste a résumé and a posting for a fit check) is fine.
+FAIL if it mentions looking for or not finding a file, says it searched folders, invents applications, asks three or more questions, or talks about installing, servers, Node.js or setup.`,
+    files: { [CARD_FILE]: false },
   },
 ];
