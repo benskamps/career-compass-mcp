@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `npm run dev`. Never commit .dev.vars.
+PUBLIC_URL=http://localhost:8787
+GOOGLE_CLIENT_ID=local-test
+GOOGLE_CLIENT_SECRET=local-test
+CARD_KEY=replace-with-openssl-rand-base64-32-output
+DEV_FAKE_GOOGLE=1
