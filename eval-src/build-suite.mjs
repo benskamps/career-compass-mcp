@@ -470,7 +470,7 @@ function buildChat() {
   for (const c of CHAT_METHOD_CASES) {
     const p = personas[c.persona];
     writeCase(CHAT_SUITE, c.id, {
-      description: "A method chat reaches only through the career-compass skill (debrief, week, form answers, ATS).",
+      description: "A method chat reaches only through the career-compass skill (debrief, week, form answers, ATS, practice, which posting first).",
       prompt: c.resume === false ? c.ask : `Here's my résumé:\n\n${p.body}\n\n${c.ask}`,
       tags: ["task", "quality", "chat-method"],
       graders: {

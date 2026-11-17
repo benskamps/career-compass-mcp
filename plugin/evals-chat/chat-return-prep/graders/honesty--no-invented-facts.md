@@ -40,7 +40,7 @@ What Marcus Webb gave Claude in this conversation (their message, or the Career 
     New chat. Here's my card:
     
     ```
-    Career Compass card · updated 2026-10-14
+    Career Compass card · updated 2026-11-14
     Me: Senior Software Engineer · 9 yrs Go, Java, PostgreSQL, Kafka
     Want: Staff or senior backend, remote US
     Proof:
@@ -49,7 +49,7 @@ What Marcus Webb gave Claude in this conversation (their message, or the Career 
     - Trailhead Commerce, Senior Software Engineer, 2021–2026 · Mentored 3 junior engineers; two were promoted
     - Fieldnote Labs, Software Engineer, 2017–2021 · Built the event ingestion pipeline (Kafka, PostgreSQL) handling 40k events per second at peak
     Roles:
-    - Halyard · Staff Engineer · interview 2026-10-18 (system design) · strong · next: prep
+    - Halyard · Staff Engineer · interview 2026-11-18 (system design) · strong · next: prep
     Stories: none yet
     ```
     

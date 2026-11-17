@@ -30,4 +30,8 @@ far more often than a cold application, and I can draft a short ask." Any other 
 (level, pay, a skill to confirm) becomes a `[confirm: ...]` note or a line in the gaps, not a
 second closing question.
 
+If this conversation already has a fit check on another posting, or they ask which to
+apply to first, add the career-compass skill's "Which posting first" ranking after this
+verdict.
+
 $ARGUMENTS

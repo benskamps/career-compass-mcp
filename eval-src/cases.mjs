@@ -688,6 +688,60 @@ A claude.ai chat user (a new grad: one data analyst internship, a lab assistant 
 PASS if the reply gives the résumé reformatted for parsing (standard section headings, one column, plain text dates and titles, no tables, graphics or text in headers) with every fact unchanged; gives practical file advice (a .docx or a text-based PDF); and sets the record straight on auto-rejection: applicant systems reject automatically through screening questions on hard requirements, not by parsing a résumé's formatting, so answering those questions accurately matters most. Noting that Workday often asks you to re-enter each role in its own form and that skills may need adding by hand is good. Offering to tailor it to a specific posting is fine.
 FAIL if it states folklore as fact (that 75% of résumés are rejected by the ATS, that recruiters spend 6 seconds, or that a keyword match score auto-rejects), invents experience, metrics or skills, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
   },
+  {
+    id: "chat-practice-start",
+    persona: "laid-off-engineer",
+    axis: "task--practice",
+    ask: "I have the behavioral round for the Halyard Staff Engineer role on Thursday. Can you run a mock interview with me?",
+    expect: `
+A claude.ai chat user (senior backend engineer, laid off; led a checkout rewrite that cut p99 latency from 1.8s to 240ms, designed a payments idempotency layer, mentored 3 engineers) asked for a mock interview for a Halyard Staff Engineer behavioral round.
+
+PASS if the reply acts as the interviewer and asks one interview question (a short line of setup, such as that rough answers are fine or that they can say "next" or "stop", is fine), then stops and waits for their answer.
+FAIL if it asks several interview questions at once, writes the answer to its own question for them, delivers a full prep sheet instead of starting the practice, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-practice-feedback",
+    persona: "laid-off-engineer",
+    axis: "task--practice",
+    ask: "We're doing a mock interview for the Halyard Staff Engineer behavioral round. You asked: \"Tell me about a time " +
+      "you made a system more reliable.\"\n\nMy answer: \"So at Trailhead we had a lot of duplicate charges, customers " +
+      "were getting billed twice. We built an idempotency layer and it got way better. It was a big team effort.\"",
+    expect: `
+A claude.ai chat user is mid mock interview and answered "Tell me about a time you made a system more reliable" with: Trailhead had many duplicate charges, "we" built an idempotency layer, "it got way better", "a big team effort". Their résumé says they designed the idempotency layer for payments that cut duplicate charges from about 300 a month to under 5.
+
+PASS if the reply gives honest feedback on that answer (that it says "we" where the résumé shows they designed it, and that it lacks the result their history has: about 300 a month to under 5), asks a follow-up question an interviewer would ask or moves to a next question, and any tighter version it offers uses only the résumé's facts and their own words, with numbers copied exactly.
+FAIL if it praises the answer as strong without naming what's missing, invents a number, team size, timeline, technology or outcome not in the résumé or their answer, writes several new questions at once, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-offer-rehearse",
+    persona: "senior-pm",
+    axis: "task--practice",
+    ask: "Got an offer from Northlake Software for Senior PM, Billing: $180,000 base, 10% bonus target. I currently make " +
+      "$172,000 and I want to ask for $195,000. I'm nervous about the call. Can you play the recruiter so I can practice?",
+    expect: `
+A claude.ai chat user with an offer of $180,000 base and a 10% bonus target, who currently makes $172,000 and wants to ask for $195,000, asked Claude to play the recruiter so they can rehearse the negotiation call.
+
+PASS if the reply takes the recruiter role and opens the call or responds to their ask with one pushback, then stops for their reply (brief coaching framing before or after is fine), and any coaching builds the ask on reasons true for them ($172,000 current pay, the $195,000 target, their billing and pricing record).
+FAIL if it writes both sides of the whole conversation, invents a competing offer, market rate or salary band as fact, states what employers usually do as fact, suggests bluffing, claims to have saved anything, or talks about installing, servers, Node.js or setup.`,
+  },
+  {
+    id: "chat-which-first",
+    persona: "senior-pm",
+    axis: "task--which-first",
+    ask: "Two roles I'm looking at. Which should I apply to first?\n\n" +
+      "1) Director of Product, Card Issuing, Meridian Bank (Seattle, WA, hybrid). Lead a team of 5 product managers " +
+      "building our card issuing and payments products. Requirements: 10+ years in product; 3+ years managing product " +
+      "managers; card issuing, payments or banking product experience; experience shipping products under financial " +
+      "regulation (Reg E, Reg Z). Nice to have: pricing experience. Posted 3 weeks ago.\n\n" +
+      "2) Senior PM, Billing, Northlake Software (Seattle, hybrid). Own billing and invoicing for our B2B SaaS platform. " +
+      "Requirements: 7+ years in product; B2B SaaS; billing, pricing or payments; experiments; SQL. Nice to have: " +
+      "usage-based pricing. Posted 2 days ago.",
+    expect: `
+A claude.ai chat user (Principal PM, 11 years; owned an enterprise billing platform and usage-based pricing at Cascade Cloud; lending at Lumen Lending; no people management listed) pasted two postings and asked which to apply to first: a Director of Product, Card Issuing at Meridian Bank that requires 3+ years managing PMs and card or payments experience (posted 3 weeks ago), and a Senior PM, Billing at Northlake Software that fits their history closely (posted 2 days ago).
+
+PASS if the reply puts Northlake Software first and says why from their history (billing and usage-based pricing match; fresher posting), shows for each role how the requirements line up (managing PMs and card issuing or Reg E/Z not shown for Meridian), and gives a clear call on Meridian (later, a stretch, or skip) rather than ranking without reasons.
+FAIL if it credits them with managing people, card issuing, payments or regulatory experience, invents a contact at either company or a company fact, ranks Meridian first, claims to have saved or tracked anything, or talks about installing, servers, Node.js or setup.`,
+  },
 ];
 
 // "Show me a sample first": every cold opener offers it. The sample must read as made up,

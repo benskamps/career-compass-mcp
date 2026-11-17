@@ -1,9 +1,28 @@
 # Changelog
 
-## Unreleased
+## 2.17.0 (2026-11-17)
 
 ### Added
 
+- **Mock interviews that coach.** "Run a mock interview" now has a method instead of a
+  one-line offer: one question at a time, then after each answer how it would land, three
+  checks (the situation is clear, the action is theirs and not only "we", there is a
+  result with the number their history has), the follow-up a real interviewer would ask,
+  and a tighter version built only from their own words and history. After four or five
+  questions: the strongest answer, the one to rework, and the story still missing. Works
+  in claude.ai chat, the skills-only version and with the server (`prepare_interview`
+  now ends by offering it).
+- **Rehearse the offer call.** After an offer review that recommends a counter, Claude
+  can play the recruiter: one pushback at a time, framed as practice, with a tighter line
+  after each reply built on a reason that is true for the user. It never supplies a
+  competing offer, a market rate or a bluff. Ends with the script in their words.
+  `evaluate_offer` offers the same rehearsal.
+- **"Which should I apply to first?"** With two or more postings in a conversation, the
+  fit check ends in a short ranking: knockouts, must-haves met, posting date, anyone they
+  named at the company, verdict, then "Apply to <role> first" and a call on each of the
+  rest. A failed knockout goes last; a referral or a fresher posting breaks ties.
+- **Eval cases** `chat-practice-start`, `chat-practice-feedback`, `chat-offer-rehearse`
+  and `chat-which-first`.
 - **The Career Compass card is the memory in Claude Code and Cowork without the server.**
   On the skills-only directory version, when Claude can write files in the user's folder,
   the card offer becomes "keep it in this folder as `career-compass-card.md`". After the

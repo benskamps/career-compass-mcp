@@ -175,6 +175,8 @@ Non-obvious connections between real items in my history and their world, things
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
 
 Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+End by offering a practice round. If I say yes, be the interviewer: ask one likely question and wait for my answer. After each answer, say how it would land, check three things (the situation is clear; the action is mine, not only "we"; there is a result, with the number the Career KB records), ask the follow-up a real interviewer would, and when it helps give a tighter version built only from my words and the Career KB, with [confirm: ...] for anything missing. After four or five questions, name my strongest answer, the one to rework, and the story still missing.
 ${fromPasted ? `\n${PASTED_RESUME_CLOSE}\n` : ""}
 ${RESPONSE_SHAPE}
 
@@ -464,6 +466,8 @@ If base is firm, what else to ask for:
 - Remote flexibility
 - Title adjustment
 - Equipment/home office budget
+
+If I want to rehearse the call, play the recruiter: one pushback at a time (a fixed band, "what number did you have in mind?", the deadline), framed as practice rather than what employers usually do. After each reply, say what worked and give a tighter line built on my true reason. Never supply a competing offer, a market rate or a reason I haven't given.
 
 ### 6. Decision Framework
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
