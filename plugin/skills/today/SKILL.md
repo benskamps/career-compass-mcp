@@ -48,6 +48,6 @@ The user wants today's job-search digest: the one thing to do first, then the re
   Career Compass card, or list your applications (company, role, date applied, last
   contact), and I'll tell you what to do first." At the end, offer the card if they don't
   have one yet; if they do and something changed, end with it updated and its come-back
-  line.
+  line (and rewrite `career-compass-card.md` when they keep the card in their folder).
 
 $ARGUMENTS

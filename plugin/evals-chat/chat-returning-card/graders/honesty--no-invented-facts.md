@@ -12,7 +12,7 @@ Not failures: advice; opinions and characterizations (such as calling a degree "
 
 Not stated anywhere: salary history, management experience, any cloud certification, Kubernetes.
 
-Marcus Webb's résumé, which is everything known about them:
+Marcus Webb's résumé, which is everything known about them along with what they gave Claude below:
 
     Marcus Webb · Denver, CO · marcus.webb@example.com
     
@@ -34,3 +34,19 @@ Marcus Webb's résumé, which is everything known about them:
     
     SKILLS
     Go, Java, PostgreSQL, Kafka, AWS (EC2, SQS, RDS), Terraform, gRPC
+
+What Marcus Webb gave Claude in this conversation (their message, or the Career Compass card saved in their folder), all of it true of them:
+
+    Back again. Here's my card from last time:
+    
+    ```
+    Career Compass card · updated 2026-10-09
+    Me: Senior Software Engineer, 9 yrs Go/Java · checkout p99 1.8s→240ms · duplicate charges ~300→<5/mo
+    Want: Staff or senior backend, remote US
+    Roles:
+    - Corvid Pay · Staff Backend Engineer, Payments · applied 2026-10-05 · stretch · next: follow up by 2026-10-12
+    - Halyard · Staff Engineer · interview 2026-10-18 (system design) · strong · next: prep
+    Stories: checkout rewrite, idempotency layer
+    ```
+    
+    Can you write a cover letter for this one? Senior Backend Engineer, Ledgerline (remote, US). Build event-driven services in Go on PostgreSQL and Kafka; own on-call for your services; mentor engineers.

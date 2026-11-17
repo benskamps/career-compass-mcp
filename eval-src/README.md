@@ -24,6 +24,7 @@ worth having, is the work good, and is every claim about the user true.
 | --- | --- | --- |
 | `plugin/evals-chat/` | Claude.ai (web, mobile) | None. The skill has to work from what the user pastes. The trigger suite lives here too, since the Skill tool is then the only way the plugin can show up. |
 | `plugin/evals/` | Claude Code and Cowork | The real server's answers, recorded as mocks: an empty Career KB by default, and Alex Rivera's KB (`data/example`) for the memory cases. |
+| `plugin/evals-folder/` | Claude Code and Cowork on the skills-only directory version | None, but the agent can read and write files in its folder, so the Career Compass card is kept there as `career-compass-card.md`. Cases that start from a saved card write it with a `scaffold.sh` (dates relative to the run day). |
 
 ## Axes
 
@@ -82,7 +83,12 @@ claude plugin eval plugin --tag quality --runs 3 $COMMON --json tools.json
 claude plugin eval plugin --eval-dir evals-chat --tag live-search --ablation none --runs 3 \
   --allow-tools WebSearch WebFetch $COMMON --json find-web.json
 
-node eval-src/scoreboard.mjs trigger.json chat.json tools.json find-web.json --append
+# The card file in Claude Code and Cowork on the skills-only version. Its scaffolds write
+# the saved card into each run's folder, and saving it needs Write and Edit.
+claude plugin eval plugin --eval-dir evals-folder --scaffold --allow-tools Write Edit --ablation none \
+  --runs 3 $COMMON --json folder.json
+
+node eval-src/scoreboard.mjs trigger.json chat.json tools.json find-web.json folder.json --append
 ```
 
 Every number the scoreboard prints carries its n and a 95% Wilson interval, and it warns
