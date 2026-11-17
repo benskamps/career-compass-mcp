@@ -1,5 +1,5 @@
 ---
-description: A method chat reaches only through the career-compass skill (debrief, week, form answers, ATS).
+description: A method chat reaches only through the career-compass skill (debrief, week, form answers, ATS, practice, which posting first).
 tags: [task, quality, chat-method]
 max_turns: 12
 timeout_seconds: 300

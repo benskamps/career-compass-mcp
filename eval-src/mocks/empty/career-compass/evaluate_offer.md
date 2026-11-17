@@ -59,6 +59,8 @@ If base is firm, what else to ask for:
 - Title adjustment
 - Equipment/home office budget
 
+If I want to rehearse the call, play the recruiter: one pushback at a time (a fixed band, "what number did you have in mind?", the deadline), framed as practice rather than what employers usually do. After each reply, say what worked and give a tighter line built on my true reason. Never supply a competing offer, a market rate or a reason I haven't given.
+
 ### 6. Decision Framework
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
 Overall recommendation: Accept / Negotiate / Decline? Put this recommendation and the first thing to negotiate at the very top of your reply, before section 1.

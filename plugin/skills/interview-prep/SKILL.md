@@ -16,9 +16,11 @@ The user wants to prepare for an interview. Details they gave are below.
   career-compass skill, asking for a résumé if you have nothing of theirs.
 
 Interviewers increasingly score answers against set questions, so every story needs a
-clear situation, what they did, and a result from their history. Close by offering one
-practice round: you ask the likeliest question, they answer, you give honest feedback
-against what the role needs, then the next question.
+clear situation, what they did, and a result from their history. Close by offering a
+practice round, and run it by the career-compass skill's "Practice interview" method: one
+question at a time, then after each answer the three checks (situation, their own action,
+a result), the follow-up a real interviewer would ask, and a tighter version from their
+own words, until a short wrap-up after four or five questions.
 
 Never invent stories. Use their saved `stories` first, word for word, skipping any that
 `usedWith` shows this interviewer has already heard; draw new STAR stories only from their

@@ -57,11 +57,11 @@ No saved stories yet. For each new story you write, offer once to save it to `st
 ## Recent Career Signals (from your journal — 5 of 5)
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 
-- 2026-10-07 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-30 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-10-09 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
-- 2026-10-03 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
-- 2026-09-12 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
+- 2026-11-07 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-10-31 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-11-09 · **rejection_pattern** · Cascade Health Partners — Director of Operations — Reached the final round but lost to a candidate with direct healthcare-operations experience. _[healthcare-domain]_ (hard)
+- 2026-11-03 · **win** · Northwind Logistics — Senior Operations Manager — Renegotiated a core vendor contract, cutting spend 18% without cutting scope. _[negotiation]_ (positive)
+- 2026-10-13 · **skill_evidence** · Northwind Logistics — Senior Operations Manager — Cited in a performance review for cross-functional stakeholder alignment across 4 departments. _[stakeholder-management, data-storytelling]_ (positive)
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 
@@ -109,6 +109,8 @@ Non-obvious connections between real items in my history and their world, things
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
 
 Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+End by offering a practice round. If I say yes, be the interviewer: ask one likely question and wait for my answer. After each answer, say how it would land, check three things (the situation is clear; the action is mine, not only "we"; there is a result, with the number the Career KB records), ask the follow-up a real interviewer would, and when it helps give a tighter version built only from my words and the Career KB, with [confirm: ...] for anything missing. After four or five questions, name my strongest answer, the one to rework, and the story still missing.
 
 **Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.
 

@@ -7,13 +7,13 @@
 
 **Application context** (pipeline entry `demo-001`):
 - Status: interviewing
-- Applied: 2026-10-02
+- Applied: 2026-11-02
 - Posting: https://veridianhealth.com/careers/director-operations
 - Salary range on file: USD 155,000–185,000
 - Rounds recorded: 2
-  - phone screen (2026-10-07), with Rachel Torres: Passed — advancing to panel
-  - panel (2026-10-18), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
-- Notes: [2026-10-02] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-10-07] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-10-14] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
+  - phone screen (2026-11-07), with Rachel Torres: Passed — advancing to panel
+  - panel (2026-11-18), with David Kim, Head of Clinical Ops, VP Engineering. 90-minute panel. Prep STAR stories around cross-functional change management.
+- Notes: [2026-11-02] Tailored resume to emphasize healthcare ops experience. Used 'capacity optimization' framing from their JD.; [2026-11-07] Great phone screen. Rachel mentioned they want someone who can 'speak clinical AND exec.' Strong fit signal.; [2026-11-14] Panel confirmed. David Kim background: ex-McKinsey, 12 years hospital ops.
 - Contacts: Rachel Torres (Talent Acquisition Partner), David Kim (Chief Operating Officer)
 
 
@@ -68,12 +68,12 @@ No saved stories yet. For each new story you write, offer once to save it to `st
 Patterns captured from real interactions. Weave in recurring **strengths**; be mindful of noted **gaps/patterns**. Treat as context — don't fabricate claims from these.
 The first 2 entries are about Veridian Health.
 
-- 2026-10-07 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
-- 2026-09-30 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
-- 2026-10-16 · **note** · Cascade Health Partners — Read up on Cascade Health Partners before applying; nothing decided yet.
-- 2026-10-15 · **note** · Quillfeather Health — Read up on Quillfeather Health before applying; nothing decided yet.
-- 2026-10-14 · **note** · Harborview Digital Health — Read up on Harborview Digital Health before applying; nothing decided yet.
-- 2026-10-13 · **note** · Northwind Care — Read up on Northwind Care before applying; nothing decided yet.
+- 2026-11-07 · **interview_insight** · Veridian Health — Director of Operations — Capacity-optimization story landed well; stumbled on a regulatory/compliance question. _[stakeholder-management, healthcare-domain]_ (neutral)
+- 2026-10-31 · **fit_signal** · Veridian Health — Director of Operations — Strong ops-scale and process match for the role; the thin spot is clinical/healthcare domain depth. _[ops-scale, healthcare-domain]_ (neutral)
+- 2026-11-16 · **note** · Cascade Health Partners — Read up on Cascade Health Partners before applying; nothing decided yet.
+- 2026-11-15 · **note** · Quillfeather Health — Read up on Quillfeather Health before applying; nothing decided yet.
+- 2026-11-14 · **note** · Harborview Digital Health — Read up on Harborview Digital Health before applying; nothing decided yet.
+- 2026-11-13 · **note** · Northwind Care — Read up on Northwind Care before applying; nothing decided yet.
 
 **Recurring signals:** healthcare-domain ×3, stakeholder-management ×2
 
@@ -121,6 +121,8 @@ Non-obvious connections between real items in my history and their world, things
 Likely concerns they'll have about my background, and how to address them proactively and honestly.
 
 Before section 1, give me a three-line summary: the one story to lead with, the question I'm most likely to stumble on, and the one thing to prepare first.
+
+End by offering a practice round. If I say yes, be the interviewer: ask one likely question and wait for my answer. After each answer, say how it would land, check three things (the situation is clear; the action is mine, not only "we"; there is a result, with the number the Career KB records), ask the follow-up a real interviewer would, and when it helps give a tighter version built only from my words and the Career KB, with [confirm: ...] for anything missing. After four or five questions, name my strongest answer, the one to rework, and the story still missing.
 
 **Shape of your reply:** Open with the answer in two or three lines (the verdict, the draft, or the one thing to do first), then the detail. Skip any section that would only restate another or that you have nothing specific for. End with one offer of the next step, not a list of options.
 

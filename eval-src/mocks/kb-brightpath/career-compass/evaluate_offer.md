@@ -26,7 +26,7 @@ END_UNTRUSTED_0E7A1C55>>>
 ## Offer already on record for this application (`demo-006`, status offer)
 | Company | Role | Status | Base | Bonus | Equity | Start | Expires |
 |---|---|---|---|---|---|---|---|
-| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-11-21 | 2026-10-28 |
+| Brightpath Health (`demo-006`) | Sr. Program Manager | offer | USD 148,000 | USD 15,000 | 0.05% RSUs over 4 years | 2026-12-22 | 2026-11-28 |
 
 ---
 
@@ -69,6 +69,8 @@ If base is firm, what else to ask for:
 - Remote flexibility
 - Title adjustment
 - Equipment/home office budget
+
+If I want to rehearse the call, play the recruiter: one pushback at a time (a fixed band, "what number did you have in mind?", the deadline), framed as practice rather than what employers usually do. After each reply, say what worked and give a tighter line built on my true reason. Never supply a competing offer, a market rate or a reason I haven't given.
 
 ### 6. Decision Framework
 Score this offer on: compensation, growth, culture fit, role scope, company trajectory, risk. Score only what my data supports and mark the rest "unknown" with the question that would settle it.
