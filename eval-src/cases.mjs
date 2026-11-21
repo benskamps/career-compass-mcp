@@ -795,6 +795,42 @@ export const TURN_TWO_CASES = [
   },
 ];
 
+// Mid-chat install: the user was already working on a job-search task with plain Claude,
+// Claude suggested Career Compass, and they added it. Their next message carries no job
+// content, because the résumé and posting are already above. About half of claude.ai installs
+// arrive this way, and at most a third to a half of them ever use it (directory data,
+// 2026-10-06 and 2026-11-01). These cases check the skill side of that moment: it should load
+// and do the work on what is already in the chat, without asking for it again.
+export const MID_CHAT_INSTALL_CASES = [
+  {
+    id: "added-it",
+    persona: "senior-pm",
+    posting: "payments-pm",
+    ask: "How well do I fit this role?",
+    after: "ok I added Career Compass",
+  },
+  {
+    id: "redo-that",
+    persona: "laid-off-engineer",
+    posting: "staff-backend",
+    ask: "Should I apply to this?",
+    after: "installed it. can you do that again with it?",
+  },
+  {
+    id: "done",
+    persona: "new-grad",
+    posting: "junior-analyst",
+    ask: "Do I have a real shot at this one?",
+    after: "done",
+  },
+  {
+    id: "now-what",
+    posting: "ux-researcher",
+    ask: "thoughts on this job? I'm thinking of applying",
+    after: "added it, now what?",
+  },
+];
+
 // Claude Code or Cowork on the skills-only directory version: no Career Compass tools, but
 // the agent can read and write files in the folder it works in, so the Career Compass card
 // lives there as career-compass-card.md and is read back next session. Built into

@@ -16,7 +16,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CARD_FILE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FOLDER_CASES, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES, TURN_TWO_CASES } from "./cases.mjs";
+import { CHAT_CARD_CASE, CHAT_COLD_CASES, CHAT_METHOD_CASES, CHAT_SAMPLE_CASE, CHAT_FEEDBACK_CASES, CHAT_FIND_CASES, CHAT_KNOCKOUT_CASES, CHAT_REMINDER_CASE, CHAT_RETURN_CASES, CARD_FILE, CHAT_TASKS, COLD_OPENER_CASES, FEATURE_CASES, FEEDBACK_ASK, FOLDER_CASES, FIRST_CONTACT_POSTING_ONLY, MEMORY_CASES, ROUTING_CASES, SERVER_MISSING_CASE, SWEEP_CASES, TODAY_CASES, TURN_TWO_CASES, MID_CHAT_INSTALL_CASES } from "./cases.mjs";
 import { shiftDates } from "./eval-date.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -256,6 +256,25 @@ PASS if this reply delivers the answer to that question itself (a fit assessment
 FAIL if the reply mostly asks questions, describes what it could do instead of doing it, or puts setup steps before the answer.`,
 };
 
+// Mid-chat install: the material is already in the conversation.
+const usesWhatIsAbove = {
+  type: "llm", weight: 2,
+  body: `
+Earlier in this chat the user pasted their résumé and a job posting and asked how well they fit. They got a short generic answer, added a job-search plugin, and have now sent a short message such as "ok I added it" or "done".
+
+PASS if this reply goes straight to the fit check on the résumé and posting already in the chat: a clear verdict near the top, tied to specific items from that résumé and that posting. A brief opening line is fine.
+FAIL if the reply asks the user to paste or share the résumé or posting again, mainly explains what the plugin does or how to use it, or offers a menu of options instead of doing the fit check.`,
+};
+
+const postingAboveNeedsResume = {
+  type: "llm", weight: 2,
+  body: `
+Earlier in this chat the user pasted a job posting (no résumé) and asked for thoughts. They then added a job-search plugin and asked "now what?".
+
+PASS if the reply works from the posting already in the chat (for example names what that posting screens for) and its main ask is for the user's résumé or experience, pasted in, so it can give a fit verdict. It must not ask for the posting again.
+FAIL if it asks the user to paste the posting again, mainly explains the plugin's features, or offers a menu of options with no read of the posting.`,
+};
+
 const postingOnlyFirstReply = {
   type: "llm", weight: 2,
   body: `
@@ -356,6 +375,24 @@ function buildChat() {
       description: `Turn 2 of a first chat that opened with nothing pasted ("${c.opener}"): the skill should load once the text arrives.`,
       prompt, tags: ["trigger", "should-fire", "turn-two"], maxTurns: 4,
       graders: { "activation--skill-fired": skillFired },
+    }); n++;
+  }
+  for (const c of MID_CHAT_INSTALL_CASES) {
+    const parts = [];
+    if (c.persona) parts.push(`My résumé:\n\n${personas[c.persona].body}`);
+    parts.push(c.persona ? `The job:\n\n${postings[c.posting].body}` : postings[c.posting].body);
+    parts.push(c.ask);
+    const plain = c.persona
+      ? "You look like a reasonable match on several of the requirements, with a couple of gaps worth thinking about. There's a plugin, Career Compass, that does structured fit checks like this; you can add it if you want a closer look."
+      : "It looks like an interesting role. To tell you how well you'd fit, I'd need your background. There's a plugin, Career Compass, built for job-fit checks; you can add it if you want.";
+    const prompt = `Earlier in this chat:\n\nMe: ${parts.join("\n\n")}\n\nYou: ${plain}\n\n(I added Career Compass from that suggestion.)\n\n${c.after}`;
+    writeCase(CHAT_SUITE, `chat-midchat-install-${c.id}`, {
+      description: `Mid-chat install: the user added Career Compass from Claude's suggestion and says "${c.after}". The skill should load and work on what is already in the chat.`,
+      prompt, tags: ["trigger", "should-fire", "mid-chat-install"], maxTurns: 6,
+      graders: {
+        "activation--skill-fired": skillFired,
+        "first-reply--uses-what-is-above": c.persona ? usesWhatIsAbove : postingAboveNeedsResume,
+      },
     }); n++;
   }
   for (const [id, p] of Object.entries(personas)) {
