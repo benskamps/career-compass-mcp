@@ -37,5 +37,9 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "minimatch@>=7 <12": "^11.0.9",
+    "brace-expansion@>=3 <6": "^5.0.13"
   }
 }
