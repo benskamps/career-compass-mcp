@@ -11,7 +11,8 @@ application. You'll know whether to apply and what to fix first. No setup, no ac
 
 ## Get it
 
-In the Claude app or on claude.ai, open **Customize → Plugins**, search for
+**[Add Career Compass to Claude](https://claude.ai/customize/plugins/id/d064245b-6e22-4c7d-a5f3-e70b926fa474%40anthropic-plugin-directory?via=directory)** (opens its page in the Claude directory),
+or in the Claude app or on claude.ai open **Customize → Plugins**, search for
 **Career Compass**, and add it. That's the whole install.
 
 | Where | What you get |
